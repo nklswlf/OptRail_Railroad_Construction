@@ -28,7 +28,7 @@ s_mo = model.addVars(M, O, vtype=GRB.BINARY, name="s_mo")   # Strafkostenvariabl
 # Minimierung der Gesamtkosten: Kosten für Distanz, Arbeitswege, Strafkosten und Transport
 model.setObjective(
     gp.quicksum(R_c[c] * u[c] for c in C) -
-    gp.quicksum(D_oo[o, o'] * x[m, o] for m in M for o in O for o' in O) -
+    gp.quicksum(D_oo[o, o] * x[m, o] for m in M for o in O for o in O) -
     gp.quicksum(D_wj[w, o] * y[w, o] for w in W for o in O) -
     gp.quicksum(P_regular_mo[m, o] * s_mo[m, o] for m in M for o in O),
     GRB.MINIMIZE
