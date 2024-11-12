@@ -1,8 +1,8 @@
 from InputData import InputData
 
-def main():
+def TestInputData():
     # Ersetzen Sie "instance.json" durch den Namen Ihrer JSON-Datei
-    instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
+    instance_filename = "AnzahlAuftraege_NEW_10/Construction_a10_o107_m5_an57_ar12.json"
 
     # Erstellen einer InputData-Instanz
     data = InputData(instance_filename)
@@ -43,4 +43,4 @@ def main():
         print(row)
 
 if __name__ == "__main__":
-    main()
+    TestInputData()

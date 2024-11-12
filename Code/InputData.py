@@ -3,10 +3,6 @@ from pathlib import Path
 from typing import List, Tuple, Optional
 from datetime import datetime
 
-import json
-from pathlib import Path
-from typing import List, Optional
-from datetime import datetime
 
 class InputData:
     '''Class for creating Data objects based on formatted JSON Files containing the information of orders, machines, workers, attachments, and routes'''
