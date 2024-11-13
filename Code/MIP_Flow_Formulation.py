@@ -15,7 +15,7 @@ def Run_MIP():
     # 1. Modell erstellen
     model = gp.Model("MIP_Flow_Formulation")
 
-    # 2. Sets und Parameter
+    # 2a. Sets
     M = list()
     W_m = dict()
     N_m = dict()
@@ -47,27 +47,58 @@ def Run_MIP():
         C.append(order.site_number)
         N_c[order.site_number] = order.order_item_ids
 
-
-
-
-
-
     
+    # SETS für Jobs und Zeiten fehlen
+
+
+    day_difference = data.end_date - data.start_date
+    T_range = list(range(day_difference.days))
+
+
+    # 2b. Parameter
+
+    T = day_difference.days
+
+    d_ij = data.transport_routes
+    d_wj = data.work_routes
+
+    # Daten benötige ich noch von Daniel
+    S_Nmax = 10 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
+    S_max = 5 # Maximal Anzahl an Schichten im Zeitraum T_Smax
+    T_Smax = 7 # Zeitraum für S_max
+    T_Wmax = 10 # Maximale Arbeistzeit pro Schicht
+    
+    t_o = list()
+    for orderItem in data.order_items:
+        t_o.append(orderItem.duration)
+
+
+    # 3a. Laufende Indizes
+
+
+    K = range(len(C)) # ANNAHME: Es geht um die Baustellen als Indizierte Menge
+
+    I = range(len(N))
+    J = range(len(N)) # ANNAHME: Es geht bei I und J um die Bestllpositionen und nicht die Baustellen als Indizierte Menge
+
+
+    # 3b. Variablen erstellen
+    x = model.addVars(M, I, J, vtype=GRB.BINARY, name="x")  # Maschinenflussvariablen
+    y = model.addVars(W, I, J, vtype=GRB.BINARY, name="y")  # Arbeiterflussvariablen
+    z = model.addVars(A, I, J, vtype=GRB.BINARY, name="z")  # Anbaugeräteflussvariablen --> ANNAHME
+    
+    s = model.addVars(M, I, vtype=GRB.BINARY, name="s")     # Non-regular driver Nutzung
+    u = model.addVars(K, vtype=GRB.BINARY, name="u")     # (Komplette) Baustellen-Erfüllung True/False
 
 
 
-    # 3. Variablen erstellen
-    x = model.addVars(M, N, N, vtype=GRB.BINARY, name="x")  # Maschinenflussvariablen
-    y = model.addVars(W, N, N, vtype=GRB.BINARY, name="y")  # Arbeiterflussvariablen
-    z = model.addVars(A, N, N, vtype=GRB.BINARY, name="z")  # Anbaugeräteflussvariablen
-    s = model.addVars(M, N, vtype=GRB.BINARY, name="s")     # Non-regular driver Nutzung
-
-    # 4. Zielfunktion setzen (Beispielhaft)
+    # 4. Zielfunktion setzen
     model.setObjective(
-        gp.quicksum(dij[i, j] * x[m, i, j] for m in M for i in N for j in N) +
-        gp.quicksum(dij[i, j] * y[w, i, j] for w in W for i in N for j in N) +
-        gp.quicksum(dij[i, j] * z[a, i, j] for a in A for i in N for j in N),
-        GRB.MINIMIZE
+        gp.quicksum(100 * u[k] for k in K) -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
+        gp.quicksum(d_ij[i, j] * x[m, i, j] for m in M for i in I for j in J) + # Transportaufwand Maschinen
+        gp.quicksum(d_ij[i, j] * y[w, i, j] for w in W for i in I for j in J) + # Arbeitswegeaufwand Arbeiter
+        gp.quicksum(d_ij[i, j] * z[a, i, j] for a in A for i in I for j in J), # Transportaufwand Anbaugeräte
+        GRB.MAXIMIZE
     )
 
     # 5. Nebenbedingungen
