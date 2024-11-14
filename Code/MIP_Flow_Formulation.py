@@ -28,11 +28,18 @@ def Run_MIP():
                 N_m[machine.id].append(orderItem.id)
     
     W = list()
+    N_w = dict() # ANNAHME: N_w ist die Menge der Bestellungen, die ein Arbeiter bearbeiten kann
     for worker in data.workers:
         W.append(worker.personal_number)
+        for orderItem in data.order_items:
+            if orderItem.worker_qualifications == worker.qualifications:
+                if worker.personal_number not in N_w:
+                    N_w[worker.personal_number] = list()
+                N_w[worker.personal_number].append(orderItem.id)
     
     A = list()
     A_Class = list()
+    N_a = dict() # ANNAHME: N_a ist die Menge der Bestellungen, die ein Anbaugerät bearbeiten kann
     for attachment in data.attachments:
         A.append(attachment.id)
         A_Class.append(attachment.type)
@@ -48,10 +55,74 @@ def Run_MIP():
         N_c[order.site_number] = order.order_item_ids
 
     
-    # SETS für Jobs und Zeiten fehlen
+    start_date = data.start_date
+    end_date = data.end_date
 
 
-    day_difference = data.end_date - data.start_date
+    O_t = dict()  # Startzeiten --> im Modell angegeben    
+    O_t_end = dict()  # Endzeiten
+    O_t_start_inverted = dict()  # Umgekehrtes O_t (Startzeiten)
+    O_t_end_inverted = dict()  # Umgekehrtes O_t_end (Endzeiten)
+
+    SECONDS_IN_A_DAY = 86400
+
+    for orderItem in data.order_items:
+        orderID = orderItem.id 
+
+        # Startzeit
+        orderItem_start_date = orderItem.start_time
+        delta_start = (orderItem_start_date - start_date)
+        t_start = delta_start.total_seconds() / SECONDS_IN_A_DAY
+        
+        # Original O_t: Gruppiert nach Startzeit
+        if t_start not in O_t:
+            O_t[t_start] = []
+        O_t[t_start].append(orderID)
+        
+        # Invertiertes Dictionary O_t_start_inverted
+        O_t_start_inverted[orderID] = t_start
+
+        # Endzeit
+        orderItem_end_date = orderItem.end_time
+        delta_end = (orderItem_end_date - start_date)
+        t_end = delta_end.total_seconds() / SECONDS_IN_A_DAY
+
+        # O_t_end: Gruppiert nach Endzeit
+        if t_end not in O_t_end:
+            O_t_end[t_end] = []
+        O_t_end[t_end].append(orderID)
+        
+        # Invertiertes Dictionary O_t_end_inverted
+        O_t_end_inverted[orderID] = t_end
+
+
+
+
+
+    P_mn = dict()
+    S_mn = dict()
+
+    for m in M:
+        for n in N_m[m]:
+            P_mn[m,n] = list()
+            S_mn[m,n] = list()
+            for i in N_m[m]:
+                if n != i:
+                    start_time_n = O_t_start_inverted[n]
+                    end_time_n = O_t_end_inverted[n]
+                    start_time_i = O_t_start_inverted[i]
+                    end_time_i = O_t_end_inverted[i]
+
+                    if start_time_n > end_time_i:
+                        P_mn[m,n].append(i)
+
+                    if start_time_i > end_time_n:
+                        S_mn[m,n].append(i)
+            
+
+
+
+    day_difference = end_date - start_date
     T_range = list(range(day_difference.days))
 
 
@@ -73,8 +144,7 @@ def Run_MIP():
         t_o.append(orderItem.duration)
 
 
-    # 3a. Laufende Indizes
-
+    # 3a. Laufende Indizes --> Möglicherweise gar nicht nötig
 
     K = range(len(C)) # ANNAHME: Es geht um die Baustellen als Indizierte Menge
 
@@ -82,22 +152,23 @@ def Run_MIP():
     J = range(len(N)) # ANNAHME: Es geht bei I und J um die Bestllpositionen und nicht die Baustellen als Indizierte Menge
 
 
-    # 3b. Variablen erstellen
-    x = model.addVars(M, I, J, vtype=GRB.BINARY, name="x")  # Maschinenflussvariablen
-    y = model.addVars(W, I, J, vtype=GRB.BINARY, name="y")  # Arbeiterflussvariablen
-    z = model.addVars(A, I, J, vtype=GRB.BINARY, name="z")  # Anbaugeräteflussvariablen --> ANNAHME
+    # 3. Variablen erstellen
+    x = model.addVars(M, N, N, vtype=GRB.BINARY, name="x")  # Maschinenflussvariablen
+    y = model.addVars(W, N, N, vtype=GRB.BINARY, name="y")  # Arbeiterflussvariablen
+    z = model.addVars(A, N, N, vtype=GRB.BINARY, name="z")  # Anbaugeräteflussvariablen --> ANNAHME
     
-    s = model.addVars(M, I, vtype=GRB.BINARY, name="s")     # Non-regular driver Nutzung
-    u = model.addVars(K, vtype=GRB.BINARY, name="u")     # (Komplette) Baustellen-Erfüllung True/False
+    s = model.addVars(M, N, vtype=GRB.BINARY, name="s")     # Non-regular driver Nutzung
+    u = model.addVars(C, vtype=GRB.BINARY, name="u")     # (Komplette) Baustellen-Erfüllung True/False
 
 
 
     # 4. Zielfunktion setzen
     model.setObjective(
-        gp.quicksum(100 * u[k] for k in K) -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
-        gp.quicksum(d_ij[i, j] * x[m, i, j] for m in M for i in I for j in J) + # Transportaufwand Maschinen
-        gp.quicksum(d_ij[i, j] * y[w, i, j] for w in W for i in I for j in J) + # Arbeitswegeaufwand Arbeiter
-        gp.quicksum(d_ij[i, j] * z[a, i, j] for a in A for i in I for j in J), # Transportaufwand Anbaugeräte
+        gp.quicksum(100 * u[k] for k in C) -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
+        gp.quicksum(d_ij[i, j] * x[m, i, j] for m in M for i in N_m[m] for j in N_m[m]) + # Transportaufwand Maschinen
+        gp.quicksum(d_ij[i, j] * y[w, i, j] for w in W for i in N for j in N) + # Arbeitswegeaufwand Arbeiter
+        gp.quicksum(d_ij[i, j] * z[a, i, j] for a in A for i in N for j in N), # Transportaufwand Anbaugeräte
+        gp.quicksum(s[m, i] for m in M for i in N), # Strafkosten für Non-regular driver Nutzung
         GRB.MAXIMIZE
     )
 
