@@ -32,17 +32,24 @@ def Run_MIP():
     for worker in data.workers:
         W.append(worker.personal_number)
         for orderItem in data.order_items:
-            if orderItem.worker_qualifications == worker.qualifications:
+            if orderItem.worker_qualifications == []:
                 if worker.personal_number not in N_w:
                     N_w[worker.personal_number] = list()
                 N_w[worker.personal_number].append(orderItem.id)
+            elif orderItem.worker_qualifications == worker.qualifications:
+                if worker.personal_number not in N_w:
+                    N_w[worker.personal_number] = list()
+                N_w[worker.personal_number].append(orderItem.id)
+            
     
+    '''
     A = list()
     A_Class = list()
     N_a = dict() # ANNAHME: N_a ist die Menge der Bestellungen, die ein Anbaugerät bearbeiten kann
     for attachment in data.attachments:
         A.append(attachment.id)
         A_Class.append(attachment.type)
+    '''
         
     N = list()
     for orderItem in data.order_items:
@@ -97,8 +104,6 @@ def Run_MIP():
 
 
 
-
-
     P_mn = dict()
     S_mn = dict()
 
@@ -107,6 +112,29 @@ def Run_MIP():
             P_mn[m,n] = list()
             S_mn[m,n] = list()
             for i in N_m[m]:
+                if n != i:
+                    start_time_n = O_t_start_inverted[n]
+                    end_time_n = O_t_end_inverted[n]
+                    start_time_i = O_t_start_inverted[i]
+                    end_time_i = O_t_end_inverted[i]
+
+                    if start_time_n > end_time_i:  # Mit Travel time und kleiner gleich
+                        P_mn[m,n].append(i)
+
+                    if start_time_i > end_time_n:
+                        S_mn[m,n].append(i)
+
+
+    P_wn = dict()
+    S_wn = dict()
+
+    # Hier muss die Ruhezeit noch berücksichtigt werden
+
+    for w in W:
+        for n in N_w[w]:
+            P_wn[w,n] = list()
+            S_wn[w,n] = list()
+            for i in N_w[w]:
                 if n != i:
                     start_time_n = O_t_start_inverted[n]
                     end_time_n = O_t_end_inverted[n]
@@ -133,18 +161,17 @@ def Run_MIP():
     d_ij = data.transport_routes
     d_wj = data.work_routes
 
-    # Daten benötige ich noch von Daniel
-    S_Nmax = 10 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
-    S_max = 5 # Maximal Anzahl an Schichten im Zeitraum T_Smax
-    T_Smax = 7 # Zeitraum für S_max
-    T_Wmax = 10 # Maximale Arbeistzeit pro Schicht
+    S_Nmax = 5 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
+    S_max = 10 # Maximal Anzahl an Schichten im Zeitraum T_Smax
+    T_Smax = 14 # Zeitraum für S_max
+    T_Wmax = 40 # Maximale Arbeistzeit im Betrachtungszeitraum/Monat ?
     
     t_o = list()
     for orderItem in data.order_items:
         t_o.append(orderItem.duration)
 
 
-    # 3a. Laufende Indizes --> Möglicherweise gar nicht nötig
+    # XX. Laufende Indizes --> Möglicherweise gar nicht nötig
 
     K = range(len(C)) # ANNAHME: Es geht um die Baustellen als Indizierte Menge
 
@@ -155,8 +182,11 @@ def Run_MIP():
     # 3. Variablen erstellen
     x = model.addVars(M, N, N, vtype=GRB.BINARY, name="x")  # Maschinenflussvariablen
     y = model.addVars(W, N, N, vtype=GRB.BINARY, name="y")  # Arbeiterflussvariablen
-    z = model.addVars(A, N, N, vtype=GRB.BINARY, name="z")  # Anbaugeräteflussvariablen --> ANNAHME
     
+    '''
+    z = model.addVars(A, N, N, vtype=GRB.BINARY, name="z")  # Anbaugeräteflussvariablen --> ANNAHME
+    '''
+
     s = model.addVars(M, N, vtype=GRB.BINARY, name="s")     # Non-regular driver Nutzung
     u = model.addVars(C, vtype=GRB.BINARY, name="u")     # (Komplette) Baustellen-Erfüllung True/False
 
@@ -166,11 +196,15 @@ def Run_MIP():
     model.setObjective(
         gp.quicksum(100 * u[k] for k in C) -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
         gp.quicksum(d_ij[i, j] * x[m, i, j] for m in M for i in N_m[m] for j in N_m[m]) + # Transportaufwand Maschinen
-        gp.quicksum(d_ij[i, j] * y[w, i, j] for w in W for i in N for j in N) + # Arbeitswegeaufwand Arbeiter
-        gp.quicksum(d_ij[i, j] * z[a, i, j] for a in A for i in N for j in N), # Transportaufwand Anbaugeräte
+        gp.quicksum(d_ij[i, j] * y[w, i, j] for w in W for i in N for j in N) + # Arbeitswegeaufwand Arbeiter        
         gp.quicksum(s[m, i] for m in M for i in N), # Strafkosten für Non-regular driver Nutzung
         GRB.MAXIMIZE
     )
+
+    '''
+    gp.quicksum(d_ij[i, j] * z[a, i, j] for a in A for i in N for j in N), # Transportaufwand Anbaugeräte
+    '''
+
 
     # 5. Nebenbedingungen
     # Maschinenfluss-Balance
@@ -189,6 +223,7 @@ def Run_MIP():
                 name=f"worker_flow_balance_{w}_{i}"
             )
 
+    '''
     # Anbaugerätefluss-Balance
     for a in A:
         for i in N:
@@ -196,7 +231,8 @@ def Run_MIP():
                 gp.quicksum(z[a, j, i] for j in N) == gp.quicksum(z[a, i, j] for j in N),
                 name=f"attachment_flow_balance_{a}_{i}"
             )
-
+    '''
+            
     # Regelmäßige Fahrer - Nebenbedingung
     for m in M:
         for i in N:
