@@ -1,5 +1,6 @@
 import gurobipy as gp
 from gurobipy import GRB
+import pandas as pd
 from InputData import *
 from OutputData import *
 
@@ -7,6 +8,7 @@ from OutputData import *
 def Run_MIP():
     # Daten einlesen
     instance_filename = "AnzahlAuftraege_NEW_10/Construction_a10_o107_m5_an57_ar12.json"
+    #instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
 
     # Erstellen einer InputData-Instanz
     data = InputData(instance_filename)
@@ -21,7 +23,7 @@ def Run_MIP():
     N_m = dict()
     for machine in data.machines:
         M.append(machine.id)
-        W_m[machine.id] = machine.default_drivers
+        W_m[machine.id] = [int(driver) for driver in machine.default_drivers]
         N_m[machine.id] = list()
         for orderItem in data.order_items:
             if orderItem.machine_type == machine.type:
@@ -59,7 +61,8 @@ def Run_MIP():
     N_c = dict()
     for order in data.orders:
         C.append(order.site_number)
-        N_c[order.site_number] = order.order_item_ids
+        N_c[order.site_number] = [int(item_id) for item_id in order.order_item_ids]
+    print("C: ", C)
 
     
     start_date = data.start_date
@@ -115,8 +118,29 @@ def Run_MIP():
     P_mn = dict()
     S_mn = dict()
 
-    d_ij = data.transport_routes
-    d_wj = data.work_routes
+    d_ab = data.transport_routes
+    d_wb = data.work_routes
+    d_ij = list()
+    d_wj = list()
+
+    for i in data.order_items:
+        row = []
+        for j in data.order_items:
+            a = next((k for k,v in N_c.items() if i.id in v))
+            b = next((k for k,v in N_c.items() if j.id in v))
+            row.append(d_ab[a][b])
+        d_ij.append(row)
+
+
+    for i in data.workers:
+        row = []
+        for j in data.order_items:
+            a = next((k for k,v in N_c.items() if j.id in v))
+            row.append(d_wb[i.personal_number][a])
+        d_wj.append(row)
+
+
+
     SPEED = 1680 # Durchschnittliche Geschwindigkeit des Maschinentransports in 1680 km/Tag --> entspricht 70 km/h
 
     for m in M:
@@ -130,12 +154,12 @@ def Run_MIP():
                     start_time_i = O_t_start_inverted[i]
                     end_time_i = O_t_end_inverted[i]
 
+
                     if start_time_n >= end_time_i + d_ij[i][n] / SPEED: 
                         P_mn[m,n].append(i)
 
                     if start_time_i > end_time_n + d_ij[n][i] / SPEED:
                         S_mn[m,n].append(i)
-
 
     P_wn = dict()
     S_wn = dict()
@@ -154,10 +178,10 @@ def Run_MIP():
                     end_time_i = O_t_end_inverted[i]
 
                     if start_time_n >= end_time_i + P_time:
-                        P_mn[m,n].append(i)
+                        P_wn[w,n].append(i)
 
                     if start_time_i >= end_time_n + P_time:
-                        S_mn[m,n].append(i)
+                        S_wn[w,n].append(i)
             
 
 
@@ -170,8 +194,6 @@ def Run_MIP():
 
     T = day_difference.days
 
-    d_ij = data.transport_routes
-    d_wj = data.work_routes
 
     S_Nmax = 5 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
     S_max = 10 # Maximal Anzahl an Schichten im Zeitraum T_Smax
@@ -199,19 +221,25 @@ def Run_MIP():
     z = model.addVars(A, N, N, vtype=GRB.BINARY, name="z")  # Anbaugeräteflussvariablen --> ANNAHME
     '''
 
-    s = model.addVars(((m, i) for m in M for i in N_m[m]),vtype=GRB.BINARY,name="s")    # Non-regular driver Nutzung
+    r = model.addVars(((m, i) for m in M for i in N_m[m]),vtype=GRB.BINARY,name="r")    # Non-regular driver Nutzung
     u = model.addVars(C, vtype=GRB.BINARY, name="u")     # (Komplette) Baustellen-Erfüllung True/False
 
 
 
     # 4. Zielfunktion setzen
     model.setObjective(
-        gp.quicksum(100 * u[k] for k in C) -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
-        gp.quicksum(d_ij[i, j] * x[m, i, j] for m in M for i in N_m[m] for j in N_m[m]) + # Transportaufwand Maschinen
-        gp.quicksum(d_wj[w, j] * y[w, i, j] for w in W for i in N for j in N) + # Arbeitswegeaufwand Arbeiter        
-        gp.quicksum(s[m, i] for m in M for i in N), # Strafkosten für Non-regular driver Nutzung
+        gp.quicksum(10 * u[c] for c in C),
         GRB.MAXIMIZE
     )
+
+    '''
+        -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
+        gp.quicksum(d_ij[i][j] * x[m, i, j] for m in M for i in N_m[m] for j in N_m[m]) - # Transportaufwand Maschinen
+        gp.quicksum(d_wj[w][j] * y[w, i, j] for w in W for i in N_w[w] for j in N_w[w]) - # Arbeitswegeaufwand Arbeiter        
+        gp.quicksum(r[m, i] for m in M for i in N_m[m]), # Strafkosten für Non-regular driver Nutzung
+        GRB.MAXIMIZE
+    )
+    '''
 
     '''
     gp.quicksum(d_ij[i, j] * z[a, i, j] for a in A for i in N for j in N), # Transportaufwand Anbaugeräte
@@ -263,37 +291,61 @@ def Run_MIP():
                 gp.quicksum(z[a, j, i] for j in N) == gp.quicksum(z[a, i, j] for j in N),
                 name=f"attachment_flow_balance_{a}_{i}"
             )
-    '''
-            
+    ''' 
+
     # Regelmäßige Fahrer - Nebenbedingung
     for m in M:
         for i in N_m[m]:
             model.addConstr(
-                gp.quicksum(x[m, i, j] for j in S_mn[m,i]) <= gp.quicksum(y[w, i, j] for w in W_m[m] for j in S_wn[w,i]) + s[m, i],
+                gp.quicksum(x[m, i, j] for j in S_mn[m, i]) 
+                <= gp.quicksum(
+                    y[w, i, j] 
+                    for w in W_m[m] 
+                    if (w, i) in S_wn  # Überprüfe, ob der Schlüssel existiert
+                    for j in S_wn[(w, i)]
+                ) + r[m, i],
                 name=f"regular_driver_constraint_{m}_{i}"
             )
 
     # Baustellen-Erfüllung
-    for k in C:
-        for i in N_c[k]:
+    for c in C:
+        for i in N_c[c]:
             model.addConstr(
-                gp.quicksum(x[m, i, j] for m in M for j in S_mn[m,i]) == u[k],
-                name=f"machine_site_fulfillment_{k}_{i}"
+                gp.quicksum(x[m, i, j] for m in M if (m,i) in S_mn for j in S_mn[m,i]) == u[c],
+                name=f"machine_site_fulfillment_{c}_{i}"
             )
             model.addConstr(
-                gp.quicksum(y[w, i, j] for w in W for j in S_wn[w,i]) == u[k],
-                name=f"worker_site_fulfillment_{k}_{i}"
+                gp.quicksum(y[w, i, j] for w in W if (w,i) in S_wn for j in S_wn[w,i]) == u[c],
+                name=f"worker_site_fulfillment_{c}_{i}"
             )
+
 
     # Nachschicht-Beschränkung
+    '''
     for w in W:
-        for i in N_w[w]:
-            for t in T_range:
-                model.addConstr(
-                    gp.quicksum(y[w, i, j] for j in S_wn[w,i] if j in T_range) <= S_Nmax,
-                    name=f"night_shift_constraint_{w}_{i}_{t}"
-                )
+        for t in T_range with t <= T_Smax - S_max:
+            model.addConstr(
+                gp.quicksum(y[w, i, j] for i in P_wn[w][j] for j in D if j in T_range) >= 1,
+                name=f"shift_constraint_{w}_{t}"
+            )
+    '''
+        
+    # Schichtanzahl-Beschränkung
+    '''
+    for w in W:
+        for t in T_range:
+            model.addConstr(
+                gp.quicksum(y[w, i, j] for j in S_wn[w,i] if j in T_range) <= S_Nmax,
+                name=f"night_shift_constraint_{w}_{i}_{t}"
+            )
+    '''
 
+    # Arbeitszeit-Beschränkung
+    for w in W:
+        model.addConstr(
+            gp.quicksum(t_o[i]*y[w, i, j] for i in N_w[w] for j in S_wn[w,i]) <= T_Wmax,
+            name=f"work_time_constraint_{w}"
+        )
 
     # 6. Optimierung
     model.optimize()
@@ -302,10 +354,50 @@ def Run_MIP():
     if model.status == GRB.OPTIMAL:
         print("Optimale Lösung gefunden:")
         for v in model.getVars():
-            print(f"{v.varName} = {v.x}")
+            if v.x > 0.5:
+                print(f"{v.varName} = {v.x}")
         print(f"Zielfunktionswert = {model.objVal}")
     else:
         print("Keine optimale Lösung gefunden.")
+
+
+
+
+
+    # Maschinenfluss-Ergebnisse
+    machine_flows = []
+    for m in M:
+        for i in N_m[m]:
+            for j in N_m[m]:
+                if x[m, i, j].x > 0.5:  # Nur positive Variablen
+                    machine_flows.append([m, i, j, x[m, i, j].x])
+
+    # Arbeiterfluss-Ergebnisse
+    worker_flows = []
+    for w in W:
+        for i in N_w[w]:
+            for j in N_w[w]:
+                if y[w, i, j].x > 0.5:
+                    worker_flows.append([w, i, j, y[w, i, j].x])
+
+    # Baustellen-Erfüllung
+    site_fulfillment = []
+    for c in C:
+        site_fulfillment.append([c, u[c].x])
+
+    # Ergebnisse als DataFrame darstellen
+    df_machine = pd.DataFrame(machine_flows, columns=["Machine", "From Order", "To Order", "Flow"])
+    df_worker = pd.DataFrame(worker_flows, columns=["Worker", "From Order", "To Order", "Flow"])
+    df_site = pd.DataFrame(site_fulfillment, columns=["Site", "Fulfilled"])
+
+    # DataFrames anzeigen
+    print("Maschinenfluss:")
+    print(df_machine)
+    print("\nArbeiterfluss:")
+    print(df_worker)
+    print("\nBaustellen-Erfüllung:")
+    print(df_site)
+
 
 
 if __name__ == "__main__":
