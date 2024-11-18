@@ -7,8 +7,8 @@ from OutputData import *
 
 def Run_MIP():
     # Daten einlesen
-    instance_filename = "AnzahlAuftraege_NEW_10/Construction_a10_o107_m5_an57_ar12.json"
-    #instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
+    #instance_filename = "AnzahlAuftraege_NEW_10/Construction_a10_o107_m5_an57_ar12.json"
+    instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
 
     # Erstellen einer InputData-Instanz
     data = InputData(instance_filename)
@@ -187,12 +187,12 @@ def Run_MIP():
 
 
     day_difference = end_date - start_date
-    T_range = list(range(day_difference.days))
+    T_range = list(range(day_difference.days + 1))
 
 
     # 2b. Parameter
 
-    T = day_difference.days
+    T = day_difference.days + 1
 
 
     S_Nmax = 5 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
@@ -354,14 +354,17 @@ def Run_MIP():
     if model.status == GRB.OPTIMAL:
         print("Optimale Lösung gefunden:")
         for v in model.getVars():
-            if v.x > 0.5:
+            if v.x > 2:
                 print(f"{v.varName} = {v.x}")
         print(f"Zielfunktionswert = {model.objVal}")
     else:
         print("Keine optimale Lösung gefunden.")
 
 
-
+    print("P_mn: ", P_mn)
+    print("S_mn: ", S_mn)
+    print("P_wn: ", P_wn)
+    print("S_wn: ", S_wn)
 
 
     # Maschinenfluss-Ergebnisse
@@ -397,6 +400,8 @@ def Run_MIP():
     print(df_worker)
     print("\nBaustellen-Erfüllung:")
     print(df_site)
+
+    model.write("model.lp")
 
 
 

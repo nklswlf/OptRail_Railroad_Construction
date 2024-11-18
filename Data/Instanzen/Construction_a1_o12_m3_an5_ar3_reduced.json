@@ -18,34 +18,8 @@
             "Name": "ZWB_CAT_M323F1",
             "Typ": 2,
             "Stammfahrer": [
-                {
-                    "Personalnummer": 1,
-                    "Name": "Arbeiter_1",
-                    "Qualifikationen": [
-                        8,
-                        5,
-                        0,
-                        7
-                    ],
-                    "Wohnort": {
-                        "Item1": 15.219308023908784,
-                        "Item2": 9.011261029639869
-                    }
-                },
-                {
-                    "Personalnummer": 2,
-                    "Name": "Arbeiter_2",
-                    "Qualifikationen": [
-                        5,
-                        1,
-                        0,
-                        3
-                    ],
-                    "Wohnort": {
-                        "Item1": 14.776126628171712,
-                        "Item2": 90.6212759626197
-                    }
-                }
+                "2",
+                "1"
             ]
         },
         {
