@@ -142,11 +142,19 @@ def Run_MIP():
 
 
     SPEED = 1680 # Durchschnittliche Geschwindigkeit des Maschinentransports in 1680 km/Tag --> entspricht 70 km/h
+    
+    end = len(N)
 
     for m in M:
         for n in N_m[m]:
             P_mn[m,n] = list()
             S_mn[m,n] = list()
+
+            if n not in P_mn:
+                P_mn[m,end] = list()
+            P_mn[m,end].append(n) # Anfügen n als Vorgänger des Endknotens
+            S_mn[m,n].append(end) # Anfügen Endknoten als Nachfolger von n
+            
             for i in N_m[m]:
                 if n != i:
                     start_time_n = O_t_start_inverted[n]
@@ -155,11 +163,12 @@ def Run_MIP():
                     end_time_i = O_t_end_inverted[i]
 
 
-                    if start_time_n >= end_time_i + d_ij[i][n] / SPEED: 
+                    if start_time_n >= end_time_i: #+ d_ij[i][n] / SPEED: 
                         P_mn[m,n].append(i)
 
-                    if start_time_i > end_time_n + d_ij[n][i] / SPEED:
+                    if start_time_i > end_time_n:# + d_ij[n][i] / SPEED:
                         S_mn[m,n].append(i)
+
 
     P_wn = dict()
     S_wn = dict()
@@ -170,6 +179,12 @@ def Run_MIP():
         for n in N_w[w]:
             P_wn[w,n] = list()
             S_wn[w,n] = list()
+
+            if n not in P_wn:
+                P_wn[w,end] = list()
+            P_wn[w,end].append(n) # Anfügen n als Vorgänger des Endknotens
+            S_wn[w,n].append(end) # Anfügen Endknoten als Nachfolger von n
+            
             for i in N_w[w]:
                 if n != i:
                     start_time_n = O_t_start_inverted[n]
@@ -177,10 +192,10 @@ def Run_MIP():
                     start_time_i = O_t_start_inverted[i]
                     end_time_i = O_t_end_inverted[i]
 
-                    if start_time_n >= end_time_i + P_time:
+                    if start_time_n >= end_time_i:# + P_time:
                         P_wn[w,n].append(i)
 
-                    if start_time_i >= end_time_n + P_time:
+                    if start_time_i >= end_time_n:# + P_time:
                         S_wn[w,n].append(i)
             
 
@@ -189,6 +204,10 @@ def Run_MIP():
     day_difference = end_date - start_date
     T_range = list(range(day_difference.days + 1))
 
+    for m in M:
+        N_m[m].append(end)
+    for w in W:
+        N_w[w].append(end)
 
     # 2b. Parameter
 
@@ -312,11 +331,11 @@ def Run_MIP():
         for i in N_c[c]:
             model.addConstr(
                 gp.quicksum(x[m, i, j] for m in M if (m,i) in S_mn for j in S_mn[m,i]) == u[c],
-                name=f"machine_site_fulfillment_{c}_{i}"
+                name=f"machine_site_fulfillment_site:{c}_order:{i}"
             )
             model.addConstr(
                 gp.quicksum(y[w, i, j] for w in W if (w,i) in S_wn for j in S_wn[w,i]) == u[c],
-                name=f"worker_site_fulfillment_{c}_{i}"
+                name=f"worker_site_fulfillment_site:{c}_order:{i}"
             )
 
 
@@ -347,8 +366,24 @@ def Run_MIP():
             name=f"work_time_constraint_{w}"
         )
 
+    
+    # Testnebenbedingung
+    '''    
+    for c in C:
+        model.addConstr(
+            gp.quicksum(u[c] for c in C) == 1,
+            name=f"site_constraint_{c}"
+        )
+    '''
+
+
     # 6. Optimierung
     model.optimize()
+
+    if model.status == GRB.INFEASIBLE:
+        print("Das Modell ist nicht lösbar.")
+        model.computeIIS()
+        return
 
     # 7. Ergebnisse ausgeben
     if model.status == GRB.OPTIMAL:
