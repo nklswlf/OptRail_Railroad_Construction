@@ -7,8 +7,8 @@ from OutputData import *
 
 def Run_MIP():
     # Daten einlesen
-    #instance_filename = "AnzahlAuftraege_NEW_10/Construction_a10_o107_m5_an57_ar12.json"
-    instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
+    instance_filename = "AnzahlAuftraege_NEW_10/Construction_a10_o107_m5_an57_ar12.json"
+    #instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
 
     # Erstellen einer InputData-Instanz
     data = InputData(instance_filename)
@@ -28,7 +28,7 @@ def Run_MIP():
         for orderItem in data.order_items:
             if orderItem.machine_type == machine.type:
                 N_m[machine.id].append(orderItem.id)
-    
+
     W = list()
     N_w = dict() # ANNAHME: N_w ist die Menge der Bestellungen, die ein Arbeiter bearbeiten kann
     for worker in data.workers:
@@ -43,7 +43,7 @@ def Run_MIP():
                     N_w[worker.personal_number] = list()
                 N_w[worker.personal_number].append(orderItem.id)
             
-    
+
     '''
     A = list()
     A_Class = list()
@@ -56,7 +56,7 @@ def Run_MIP():
     N = list()
     for orderItem in data.order_items:
         N.append(orderItem.id)
-    
+
     C = list()
     N_c = dict()
     for order in data.orders:
@@ -64,7 +64,7 @@ def Run_MIP():
         N_c[order.site_number] = [int(item_id) for item_id in order.order_item_ids]
     print("C: ", C)
 
-    
+
     start_date = data.start_date
     end_date = data.end_date
 
@@ -142,16 +142,31 @@ def Run_MIP():
 
 
     SPEED = 1680 # Durchschnittliche Geschwindigkeit des Maschinentransports in 1680 km/Tag --> entspricht 70 km/h
-    
-    end = len(N)
+
+    start = len(N)
+    end = len(N) + 1
 
     for m in M:
         for n in N_m[m]:
+
+
+            if (m,start) not in P_mn:
+                P_mn[m,start] = list()
+                S_mn[m,start] = list()
+                S_mn[m,start].append(end) # Anfügen Endknoten als Nachfolger des Startknotens
+            if (m,end) not in P_mn:
+                P_mn[m,end] = list()
+                S_mn[m,end] = list()
+                P_mn[m,end].append(start) # Anfügen Startknoten als Vorgänger des Endknotens
+
+
             P_mn[m,n] = list()
             S_mn[m,n] = list()
 
-            if n not in P_mn:
-                P_mn[m,end] = list()
+
+            P_mn[m,n].append(start) # Anfügen Startknoten als Vorgänger von n
+            S_mn[m,start].append(n) # Anfügen n als Nachfolger des Startknotens
+
             P_mn[m,end].append(n) # Anfügen n als Vorgänger des Endknotens
             S_mn[m,n].append(end) # Anfügen Endknoten als Nachfolger von n
             
@@ -177,13 +192,24 @@ def Run_MIP():
 
     for w in W:
         for n in N_w[w]:
+            
+            if (w,start) not in P_wn:
+                P_wn[w,start] = list()
+                S_wn[w,start] = list()
+                S_wn[w,start].append(end)
+            if (w,end) not in P_wn:
+                P_wn[w,end] = list()
+                S_wn[w,end] = list()
+                P_wn[w,end].append(start)
+            
             P_wn[w,n] = list()
             S_wn[w,n] = list()
 
-            if n not in P_wn:
-                P_wn[w,end] = list()
-            P_wn[w,end].append(n) # Anfügen n als Vorgänger des Endknotens
-            S_wn[w,n].append(end) # Anfügen Endknoten als Nachfolger von n
+            P_wn[w,n].append(start)
+            S_wn[w,start].append(n)
+            
+            P_wn[w,end].append(n)
+            S_wn[w,n].append(end)
             
             for i in N_w[w]:
                 if n != i:
@@ -204,10 +230,6 @@ def Run_MIP():
     day_difference = end_date - start_date
     T_range = list(range(day_difference.days + 1))
 
-    for m in M:
-        N_m[m].append(end)
-    for w in W:
-        N_w[w].append(end)
 
     # 2b. Parameter
 
@@ -217,8 +239,8 @@ def Run_MIP():
     S_Nmax = 5 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
     S_max = 10 # Maximal Anzahl an Schichten im Zeitraum T_Smax
     T_Smax = 14 # Zeitraum für S_max
-    T_Wmax = 40 # Maximale Arbeistzeit im Betrachtungszeitraum/Monat ?
-    
+    T_Wmax = 160 # Maximale Arbeistzeit im Betrachtungszeitraum/Monat ?
+
     t_o = list()
     for orderItem in data.order_items:
         t_o.append(orderItem.duration)
@@ -233,8 +255,31 @@ def Run_MIP():
 
 
     # 3. Variablen erstellen
-    x = model.addVars(((m, i, j) for m in M for i in N_m[m] for j in N_m[m]),vtype=GRB.BINARY,name="x")  # Maschinenflussvariablen
-    y = model.addVars(((w, i, j) for w in W for i in N_w[w] for j in N_w[w]),vtype=GRB.BINARY,name="y")  # Arbeiterflussvariablen
+    # Variablen-Indizes definieren
+    indices_1 = [(m, i, j) for m in M for i in N_m[m] for j in N_m[m]]  # (m, i, j)
+    indices_2 = [(m, start, j) for m in M for j in N_m[m]]  # (m, start, j)
+    indices_3 = [(m, i, end) for m in M for i in N_m[m]]  # (m, i, end)
+    indices_4 = [(m, start, end) for m in M]  # (m, start, end)
+
+    # Alle Indizes kombinieren
+    all_indices = indices_1 + indices_2 + indices_3 + indices_4
+
+    # Variablen erstellen
+    x = model.addVars(all_indices, vtype=GRB.BINARY, name="x")
+    
+    # Variablen-Indizes definieren
+    indices_1 = [(w, i, j) for w in W for i in N_w[w] for j in N_w[w]]  # (w, i, j)
+    indices_2 = [(w, start, j) for w in W for j in N_w[w]]  # (w, start, j)
+    indices_3 = [(w, i, end) for w in W for i in N_w[w]]  # (w, i, end)
+    indices_4 = [(w, start, end) for w in W]  # (w, start, end)
+
+    # Alle Indizes kombinieren
+    all_indices = indices_1 + indices_2 + indices_3 + indices_4
+
+    # Variablen erstellen
+    y = model.addVars(all_indices, vtype=GRB.BINARY, name="y")
+        
+                    
     
     '''
     z = model.addVars(A, N, N, vtype=GRB.BINARY, name="z")  # Anbaugeräteflussvariablen --> ANNAHME
@@ -274,14 +319,12 @@ def Run_MIP():
                 name=f"machine_flow_balance_{m}_{i}"
             )
 
-
+    # Source Sink Balance für Maschinen
     for m in M:
-        for s in N_m[m]:
-            for t in N_m[m]:
-                if s != t:
-                    left_sum = gp.quicksum(x[m, s, j] for j in S_mn[m,s] if j != t)
-                    right_sum = gp.quicksum(x[m, i, t] for i in P_mn[m,t] if i != s)
-                    model.addConstr(left_sum == right_sum, name=f"machine_balance_{m}_{s}_{t}")
+        if (m,start) in S_mn and (m,end) in P_mn:
+            left_sum = gp.quicksum(x[m, start, j] for j in S_mn[m,start] if j != end)
+            right_sum = gp.quicksum(x[m, i, end] for i in P_mn[m,end] if i != start)
+            model.addConstr(left_sum == right_sum, name=f"machine_balance_{m}_start_end")
 
 
     # Arbeiterfluss-Balance
@@ -292,14 +335,12 @@ def Run_MIP():
                 name=f"worker_flow_balance_{w}_{i}"
             )
 
-
+    # Source Sink Balance für Arbeiter
     for w in W:
-        for s in N_w[w]:
-            for t in N_w[w]: 
-                if s != t: 
-                    left_sum = gp.quicksum(y[w, s, j] for j in S_wn[w, s] if j != t)
-                    right_sum = gp.quicksum(y[w, i, t] for i in P_wn[w, t] if i != s)
-                    model.addConstr(left_sum == right_sum, name=f"worker_balance_w_{w}_s{s}_t{t}")
+        if (w,start) in S_wn and (w,end) in P_wn:
+            left_sum = gp.quicksum(y[w, start, j] for j in S_wn[w,start] if j != end)
+            right_sum = gp.quicksum(y[w, i, end] for i in P_wn[w,end] if i != start)
+            model.addConstr(left_sum == right_sum, name=f"worker_balance_{w}_start_end")
 
 
     '''
@@ -310,7 +351,7 @@ def Run_MIP():
                 gp.quicksum(z[a, j, i] for j in N) == gp.quicksum(z[a, i, j] for j in N),
                 name=f"attachment_flow_balance_{a}_{i}"
             )
-    ''' 
+     
 
     # Regelmäßige Fahrer - Nebenbedingung
     for m in M:
@@ -325,17 +366,17 @@ def Run_MIP():
                 ) + r[m, i],
                 name=f"regular_driver_constraint_{m}_{i}"
             )
-
+    '''
     # Baustellen-Erfüllung
     for c in C:
         for i in N_c[c]:
             model.addConstr(
                 gp.quicksum(x[m, i, j] for m in M if (m,i) in S_mn for j in S_mn[m,i]) == u[c],
-                name=f"machine_site_fulfillment_site:{c}_order:{i}"
+                name=f"machine_site_fulfillment_site{c}_order{i}"
             )
             model.addConstr(
                 gp.quicksum(y[w, i, j] for w in W if (w,i) in S_wn for j in S_wn[w,i]) == u[c],
-                name=f"worker_site_fulfillment_site:{c}_order:{i}"
+                name=f"worker_site_fulfillment_site{c}_order{i}"
             )
 
 
@@ -365,10 +406,24 @@ def Run_MIP():
             gp.quicksum(t_o[i]*y[w, i, j] for i in N_w[w] for j in S_wn[w,i]) <= T_Wmax,
             name=f"work_time_constraint_{w}"
         )
-
+    
     
     # Testnebenbedingung
-    '''    
+      
+    for m in M:
+        model.addConstr(
+            gp.quicksum(x[m, start, j] for j in N_m[m]) + x[m,start, end] == 1,
+            name=f"machine_start_constraint_{m}"
+        )
+
+    for w in W:
+        model.addConstr(
+            gp.quicksum(y[w, start, j] for j in N_w[w]) + y[w,start, end] == 1,
+            name=f"worker_start_constraint_{w}"
+        )
+    
+    '''  
+
     for c in C:
         model.addConstr(
             gp.quicksum(u[c] for c in C) == 1,
@@ -376,6 +431,8 @@ def Run_MIP():
         )
     '''
 
+    print("Smn: ", S_mn)
+    print("Pmn: ", P_mn)
 
     # 6. Optimierung
     model.optimize()
@@ -389,17 +446,14 @@ def Run_MIP():
     if model.status == GRB.OPTIMAL:
         print("Optimale Lösung gefunden:")
         for v in model.getVars():
-            if v.x > 2:
+            if v.x > 0.5:
                 print(f"{v.varName} = {v.x}")
         print(f"Zielfunktionswert = {model.objVal}")
     else:
         print("Keine optimale Lösung gefunden.")
 
 
-    print("P_mn: ", P_mn)
-    print("S_mn: ", S_mn)
-    print("P_wn: ", P_wn)
-    print("S_wn: ", S_wn)
+
 
 
     # Maschinenfluss-Ergebnisse
