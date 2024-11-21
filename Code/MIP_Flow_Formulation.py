@@ -344,18 +344,13 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
 
     # 2. Zielfunktion setzen
     model.setObjective(
-        gp.quicksum(20 * u[c] for c in C) - gp.quicksum(r[m, i] for m in M for i in N_m[m]),
+        gp.quicksum(1000 * u[c] for c in C) -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
+        gp.quicksum(0.5 * d_ij[i][j] * x[m, i, j] for m in M for i in N_m[m] for j in N_m[m]) - # Transportaufwand Maschinen
+        gp.quicksum(0.5 * d_wj[w][j] * y[w, i, j] for w in W for i in N_w[w] for j in N_w[w]) - # Arbeitswegeaufwand Arbeiter        
+        gp.quicksum(10 * r[m, i] for m in M for i in N_m[m]), # Strafkosten für Non-regular driver Nutzung
         GRB.MAXIMIZE
     )
 
-    '''
-        -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
-        gp.quicksum(d_ij[i][j] * x[m, i, j] for m in M for i in N_m[m] for j in N_m[m]) - # Transportaufwand Maschinen
-        gp.quicksum(d_wj[w][j] * y[w, i, j] for w in W for i in N_w[w] for j in N_w[w]) - # Arbeitswegeaufwand Arbeiter        
-        gp.quicksum(r[m, i] for m in M for i in N_m[m]), # Strafkosten für Non-regular driver Nutzung
-        GRB.MAXIMIZE
-    )
-    '''
 
 
 
@@ -405,9 +400,6 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
                 gp.quicksum(y[w, start, j] for j in N_w[w]) + y[w,start, end] == 1,
                 name=f"worker_start_constraint_{w}"
         )
-
-    print("W_m:",W_m)
-    print("S_wn:",S_wn)
 
     # Regelmäßige Fahrer - Nebenbedingung
     for m in M:
