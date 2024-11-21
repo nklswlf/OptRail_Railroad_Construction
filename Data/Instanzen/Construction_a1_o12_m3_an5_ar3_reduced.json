@@ -17,7 +17,7 @@
             "Baujahr": 0,
             "Name": "ZWB_CAT_M323F1",
             "Typ": 2,
-            "Stammfahrer": [
+            "StammfahrerStrings": [
                 "2",
                 "1"
             ]
