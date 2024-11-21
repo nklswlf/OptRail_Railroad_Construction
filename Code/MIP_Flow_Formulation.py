@@ -5,177 +5,19 @@ from InputData import *
 from OutputData import *
 
 
+
+
 def Run_MIP():
     # Daten einlesen
     instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
 
-
     M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T, S_Nmax, S_max, T_Smax, T_Wmax, t_o = DefineData(instance_filename)
 
-
-    # 1. Modell erstellen
-    model = gp.Model("MIP_Flow_Formulation")
+    model,x,y,r,u = DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T, S_Nmax, S_max, T_Smax, T_Wmax, t_o)
 
     
-
-
-
-    # 3. Variablen erstellen
-    
-    # Variablen-Indizes definieren
-    indices_1 = [(m, i, j) for m in M for i in N_m[m] for j in N_m[m]]  # (m, i, j)
-    indices_2 = [(m, start, j) for m in M for j in N_m[m]]  # (m, start, j)
-    indices_3 = [(m, i, end) for m in M for i in N_m[m]]  # (m, i, end)
-    indices_4 = [(m, start, end) for m in M]  # (m, start, end)
-    all_indices = indices_1 + indices_2 + indices_3 + indices_4
-    # Maschinenfluss Variablen erstellen
-    x = model.addVars(all_indices, vtype=GRB.BINARY, name="x")
-    
-    # Variablen-Indizes definieren
-    indices_1 = [(w, i, j) for w in W for i in N_w[w] for j in N_w[w]]  # (w, i, j)
-    indices_2 = [(w, start, j) for w in W for j in N_w[w]]  # (w, start, j)
-    indices_3 = [(w, i, end) for w in W for i in N_w[w]]  # (w, i, end)
-    indices_4 = [(w, start, end) for w in W]  # (w, start, end)
-    all_indices = indices_1 + indices_2 + indices_3 + indices_4
-    # Arbeiterfluss Variablen erstellen
-    y = model.addVars(all_indices, vtype=GRB.BINARY, name="y")
-
-    # Non-regular driver Nutzung
-    r = model.addVars(((m, i) for m in M for i in N_m[m]),vtype=GRB.BINARY,name="r")
-
-    # (Komplette) Baustellen-Erfüllung True/False
-    u = model.addVars(C, vtype=GRB.BINARY, name="u")
-
-
-
-    # 4. Zielfunktion setzen
-    model.setObjective(
-        gp.quicksum(10 * u[c] for c in C),
-        GRB.MAXIMIZE
-    )
-
-    '''
-        -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
-        gp.quicksum(d_ij[i][j] * x[m, i, j] for m in M for i in N_m[m] for j in N_m[m]) - # Transportaufwand Maschinen
-        gp.quicksum(d_wj[w][j] * y[w, i, j] for w in W for i in N_w[w] for j in N_w[w]) - # Arbeitswegeaufwand Arbeiter        
-        gp.quicksum(r[m, i] for m in M for i in N_m[m]), # Strafkosten für Non-regular driver Nutzung
-        GRB.MAXIMIZE
-    )
-    '''
-
-
-
-    # 5. Nebenbedingungen
-    # Maschinenfluss-Balance
-    for m in M:
-        for i in N_m[m]:
-            model.addConstr(
-                gp.quicksum(x[m, j, i] for j in P_mn[m,i]) == gp.quicksum(x[m, i, j] for j in S_mn[m, i]),
-                name=f"machine_flow_balance_{m}_{i}"
-            )
-
-    # Source Sink Balance für Maschinen
-    for m in M:
-        if (m,start) in S_mn and (m,end) in P_mn:
-            left_sum = gp.quicksum(x[m, start, j] for j in S_mn[m,start] if j != end)
-            right_sum = gp.quicksum(x[m, i, end] for i in P_mn[m,end] if i != start)
-            model.addConstr(left_sum == right_sum, name=f"machine_balance_{m}_start_end")
-
-
-    # Arbeiterfluss-Balance
-    for w in W:
-        for i in N_w[w]:
-            model.addConstr(
-                gp.quicksum(y[w, j, i] for j in P_wn[w,i]) == gp.quicksum(y[w, i, j] for j in S_wn[w,i]),
-                name=f"worker_flow_balance_{w}_{i}"
-            )
-
-    # Source Sink Balance für Arbeiter
-    for w in W:
-        if (w,start) in S_wn and (w,end) in P_wn:
-            left_sum = gp.quicksum(y[w, start, j] for j in S_wn[w,start] if j != end)
-            right_sum = gp.quicksum(y[w, i, end] for i in P_wn[w,end] if i != start)
-            model.addConstr(left_sum == right_sum, name=f"worker_balance_{w}_start_end")
-
-    # Extra-Flussnebenbedingung
-    extra_constraint = True
-    if extra_constraint:
-        for m in M:
-            model.addConstr(
-                gp.quicksum(x[m, start, j] for j in N_m[m]) + x[m,start, end] == 1,
-                name=f"machine_start_constraint_{m}"
-            )
-
-        for w in W:
-            model.addConstr(
-                gp.quicksum(y[w, start, j] for j in N_w[w]) + y[w,start, end] == 1,
-                name=f"worker_start_constraint_{w}"
-        )
-
-
-    # Regelmäßige Fahrer - Nebenbedingung
-    for m in M:
-        for i in N_m[m]:
-            model.addConstr(
-                gp.quicksum(x[m, i, j] for j in S_mn[m, i]) 
-                <= gp.quicksum(
-                    y[w, i, j] 
-                    for w in W_m[m] 
-                    if (w, i) in S_wn  # Überprüfe, ob der Schlüssel existiert
-                    for j in S_wn[(w, i)]
-                ) + r[m, i],
-                name=f"regular_driver_constraint_{m}_{i}"
-            )
-
-    # Baustellen-Erfüllung
-    for c in C:
-        for i in N_c[c]:
-            model.addConstr(
-                gp.quicksum(x[m, i, j] for m in M if (m,i) in S_mn for j in S_mn[m,i]) == u[c],
-                name=f"machine_site_fulfillment_site{c}_order{i}"
-            )
-            model.addConstr(
-                gp.quicksum(y[w, i, j] for w in W if (w,i) in S_wn for j in S_wn[w,i]) == u[c],
-                name=f"worker_site_fulfillment_site{c}_order{i}"
-            )
-
-
-    # Nachschicht-Beschränkung
-    '''
-    for w in W:
-        for t in T_range with t <= T_Smax - S_max:
-            model.addConstr(
-                gp.quicksum(y[w, i, j] for i in P_wn[w][j] for j in D if j in T_range) >= 1,
-                name=f"shift_constraint_{w}_{t}"
-            )
-    '''
-        
-    # Schichtanzahl-Beschränkung
-    '''
-    for w in W:
-        for t in T_range:
-            model.addConstr(
-                gp.quicksum(y[w, i, j] for j in S_wn[w,i] if j in T_range) <= S_Nmax,
-                name=f"night_shift_constraint_{w}_{i}_{t}"
-            )
-    '''
-
-    # Arbeitszeit-Beschränkung
-    for w in W:
-        model.addConstr(
-            gp.quicksum(t_o[i]*y[w, i, j] for i in N_w[w] for j in S_wn[w,i]) <= T_Wmax,
-            name=f"work_time_constraint_{w}"
-        )
-    
-    
-
-    # 6. Optimierung
     model.optimize()
 
-    if model.status == GRB.INFEASIBLE:
-        print("Das Modell ist nicht lösbar.")
-        model.computeIIS()
-        return
 
     # 7. Ergebnisse ausgeben
     if model.status == GRB.OPTIMAL:
@@ -237,10 +79,11 @@ def Run_MIP():
     print(df_worker)
     print("\nBaustellen-Erfüllung:")
     print(df_site)
+    print("/nRegular Driver nicht beachtet:")
+    summe = sum(r[m, i].x for m in M for i in N_m[m])
+    print("Anzahl an Aufträgen mit Non-regular driver von Gesamt: ", int(summe), "/", len(N))
 
     model.write("model.lp")
-
-
 
 
 def DefineData(instance_filename):
@@ -468,7 +311,152 @@ def DefineData(instance_filename):
     return M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T, S_Nmax, S_max, T_Smax, T_Wmax, t_o
 
 
+def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T, S_Nmax, S_max, T_Smax, T_Wmax, t_o):
 
+    model = gp.Model("MIP_Flow_Formulation")
+
+    # 1. Variablen erstellen
+    # Variablen-Indizes definieren
+    indices_1 = [(m, i, j) for m in M for i in N_m[m] for j in N_m[m]]  # (m, i, j)
+    indices_2 = [(m, start, j) for m in M for j in N_m[m]]  # (m, start, j)
+    indices_3 = [(m, i, end) for m in M for i in N_m[m]]  # (m, i, end)
+    indices_4 = [(m, start, end) for m in M]  # (m, start, end)
+    all_indices = indices_1 + indices_2 + indices_3 + indices_4
+    # Maschinenfluss Variablen erstellen
+    x = model.addVars(all_indices, vtype=GRB.BINARY, name="x")
+    
+    # Variablen-Indizes definieren
+    indices_1 = [(w, i, j) for w in W for i in N_w[w] for j in N_w[w]]  # (w, i, j)
+    indices_2 = [(w, start, j) for w in W for j in N_w[w]]  # (w, start, j)
+    indices_3 = [(w, i, end) for w in W for i in N_w[w]]  # (w, i, end)
+    indices_4 = [(w, start, end) for w in W]  # (w, start, end)
+    all_indices = indices_1 + indices_2 + indices_3 + indices_4
+    # Arbeiterfluss Variablen erstellen
+    y = model.addVars(all_indices, vtype=GRB.BINARY, name="y")
+
+    # Non-regular driver Nutzung
+    r = model.addVars(((m, i) for m in M for i in N_m[m]),vtype=GRB.BINARY,name="r")
+
+    # (Komplette) Baustellen-Erfüllung True/False
+    u = model.addVars(C, vtype=GRB.BINARY, name="u")
+
+    print("W_m: ", W_m)
+
+    # 2. Zielfunktion setzen
+    model.setObjective(
+        gp.quicksum(20 * u[c] for c in C) - gp.quicksum(r[m, i] for m in M for i in N_m[m]),
+        GRB.MAXIMIZE
+    )
+
+    '''
+        -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
+        gp.quicksum(d_ij[i][j] * x[m, i, j] for m in M for i in N_m[m] for j in N_m[m]) - # Transportaufwand Maschinen
+        gp.quicksum(d_wj[w][j] * y[w, i, j] for w in W for i in N_w[w] for j in N_w[w]) - # Arbeitswegeaufwand Arbeiter        
+        gp.quicksum(r[m, i] for m in M for i in N_m[m]), # Strafkosten für Non-regular driver Nutzung
+        GRB.MAXIMIZE
+    )
+    '''
+
+
+
+    # 3. Nebenbedingungen
+    # Maschinenfluss-Balance
+    for m in M:
+        for i in N_m[m]:
+            model.addConstr(
+                gp.quicksum(x[m, j, i] for j in P_mn[m,i]) == gp.quicksum(x[m, i, j] for j in S_mn[m, i]),
+                name=f"machine_flow_balance_{m}_{i}"
+            )
+
+    # Source Sink Balance für Maschinen
+    for m in M:
+        if (m,start) in S_mn and (m,end) in P_mn:
+            left_sum = gp.quicksum(x[m, start, j] for j in S_mn[m,start] if j != end)
+            right_sum = gp.quicksum(x[m, i, end] for i in P_mn[m,end] if i != start)
+            model.addConstr(left_sum == right_sum, name=f"machine_balance_{m}_start_end")
+
+
+    # Arbeiterfluss-Balance
+    for w in W:
+        for i in N_w[w]:
+            model.addConstr(
+                gp.quicksum(y[w, j, i] for j in P_wn[w,i]) == gp.quicksum(y[w, i, j] for j in S_wn[w,i]),
+                name=f"worker_flow_balance_{w}_{i}"
+            )
+
+    # Source Sink Balance für Arbeiter
+    for w in W:
+        if (w,start) in S_wn and (w,end) in P_wn:
+            left_sum = gp.quicksum(y[w, start, j] for j in S_wn[w,start] if j != end)
+            right_sum = gp.quicksum(y[w, i, end] for i in P_wn[w,end] if i != start)
+            model.addConstr(left_sum == right_sum, name=f"worker_balance_{w}_start_end")
+
+    # Extra-Flussnebenbedingung
+    extra_constraint = True
+    if extra_constraint:
+        for m in M:
+            model.addConstr(
+                gp.quicksum(x[m, start, j] for j in N_m[m]) + x[m,start, end] == 1,
+                name=f"machine_start_constraint_{m}"
+            )
+
+        for w in W:
+            model.addConstr(
+                gp.quicksum(y[w, start, j] for j in N_w[w]) + y[w,start, end] == 1,
+                name=f"worker_start_constraint_{w}"
+        )
+
+    print("W_m:",W_m)
+    print("S_wn:",S_wn)
+
+    # Regelmäßige Fahrer - Nebenbedingung
+    for m in M:
+        for i in N_m[m]:
+                model.addConstr(
+                    gp.quicksum(x[m, i, j] for j in S_mn[m, i]) <= gp.quicksum(y[w, i, j] for w in W_m[m] for j in S_wn[w, i]) + r[m, i],
+                    name=f"regular_driver_constraint_{m}_{i}")
+
+    # Baustellen-Erfüllung
+    for c in C:
+        for i in N_c[c]:
+            model.addConstr(
+                gp.quicksum(x[m, i, j] for m in M if (m,i) in S_mn for j in S_mn[m,i]) == u[c],
+                name=f"machine_site_fulfillment_site{c}_order{i}"
+            )
+            model.addConstr(
+                gp.quicksum(y[w, i, j] for w in W if (w,i) in S_wn for j in S_wn[w,i]) == u[c],
+                name=f"worker_site_fulfillment_site{c}_order{i}"
+            )
+
+
+    # Nachschicht-Beschränkung
+    '''
+    for w in W:
+        for t in T_range with t <= T_Smax - S_max:
+            model.addConstr(
+                gp.quicksum(y[w, i, j] for i in P_wn[w][j] for j in D if j in T_range) >= 1,
+                name=f"shift_constraint_{w}_{t}"
+            )
+    '''
+        
+    # Schichtanzahl-Beschränkung
+    '''
+    for w in W:
+        for t in T_range:
+            model.addConstr(
+                gp.quicksum(y[w, i, j] for j in S_wn[w,i] if j in T_range) <= S_Nmax,
+                name=f"night_shift_constraint_{w}_{i}_{t}"
+            )
+    '''
+
+    # Arbeitszeit-Beschränkung
+    for w in W:
+        model.addConstr(
+            gp.quicksum(t_o[i]*y[w, i, j] for i in N_w[w] for j in S_wn[w,i]) <= T_Wmax,
+            name=f"work_time_constraint_{w}"
+        )
+
+    return model, x, y, r, u
 
 
 
