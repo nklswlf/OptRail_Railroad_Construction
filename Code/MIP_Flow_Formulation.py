@@ -3,32 +3,40 @@ from gurobipy import GRB
 import pandas as pd
 from InputData import *
 from OutputData import *
+import json
+
+# Instanz-Datei
+instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
 
 
+# Definition der Abeitszeit-Parameter
+S_Nmax = 3 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
+S_max = 2 # Maximal Anzahl an Schichten im Zeitraum T_Smax
+T_Smax = 3 # Zeitraum für S_max
+T_Wmax = 160 # Maximale Arbeistzeit im Betrachtungszeitraum/Monat
 
 
 def Run_MIP():
-    # Daten einlesen
-    instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
 
-    M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T, S_Nmax, S_max, T_Smax, T_Wmax, t_o = DefineData(instance_filename)
+    M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T, t_o, D_r, N_r = DefineData(instance_filename)
 
-    model,x,y,r,u = DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T, S_Nmax, S_max, T_Smax, T_Wmax, t_o)
+    model,x,y,r,u = DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T,t_o, D_r, N_r)
 
     
     model.optimize()
+    
 
 
-    # 7. Ergebnisse ausgeben
+    # Ergebnisse ausgeben
     if model.status == GRB.OPTIMAL:
         print("Optimale Lösung gefunden:")
         for v in model.getVars():
             if v.x > 0.5:
-                print(f"{v.varName} = {v.x}")
+                #print(f"{v.varName} = {v.x}")
+                pass
         print(f"Zielfunktionswert = {model.objVal}")
     else:
         print("Keine optimale Lösung gefunden.")
-
 
 
 
@@ -73,17 +81,29 @@ def Run_MIP():
     df_site = pd.DataFrame(site_fulfillment, columns=["Site", "Fulfilled"])
 
     # DataFrames anzeigen
-    print("Maschinenfluss:")
+    print("\nMaschinenfluss:")
     print(df_machine)
     print("\nArbeiterfluss:")
     print(df_worker)
     print("\nBaustellen-Erfüllung:")
     print(df_site)
-    print("/nRegular Driver nicht beachtet:")
+    print("\nRegular Driver nicht beachtet:")
     summe = sum(r[m, i].x for m in M for i in N_m[m])
     print("Anzahl an Aufträgen mit Non-regular driver von Gesamt: ", int(summe), "/", len(N))
 
     model.write("model.lp")
+
+
+    
+    
+
+
+
+
+
+
+
+
 
 
 def DefineData(instance_filename):
@@ -132,6 +152,8 @@ def DefineData(instance_filename):
     end_date = data.end_date
 
     O_t = dict()  # Tag an dem der Auftrag startet
+    D_r = dict()  # Tagschichten mit Tag als Key
+    N_r = dict()  # Alle Schichten mit Tag als Key
     O_t_start = dict()  # Startzeiten  
     O_t_end = dict()  # Endzeiten
     O_t_start_inverted = dict()  # Umgekehrtes O_t (Startzeiten)
@@ -153,7 +175,18 @@ def DefineData(instance_filename):
         if t_start_int not in O_t:
             O_t[t_start_int] = []
         O_t[t_start_int].append(orderID)
-        
+
+
+        # D_r Tagschichten mit Tag als Key
+        if t_start_int not in D_r:
+            D_r[t_start_int] = []
+        if orderItem.start_time.hour <= 12:
+            D_r[t_start_int].append(orderID)
+         
+        # N_r Alle Schichten mit Tag als Key
+        if t_start_int not in N_r:
+            N_r[t_start_int] = []
+        N_r[t_start_int].append(orderID)
         
         # Startzeit
         if t_start not in O_t_start:
@@ -297,23 +330,28 @@ def DefineData(instance_filename):
 
     T = day_difference.days + 1
 
-    S_Nmax = 5 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
-    S_max = 10 # Maximal Anzahl an Schichten im Zeitraum T_Smax
-    T_Smax = 14 # Zeitraum für S_max
-    T_Wmax = 160 # Maximale Arbeistzeit im Betrachtungszeitraum/Monat ?
+    # T anpassen wenn Instanz nicht über den gesamten Zeitraum geht
+    end_date_adjusted = start_date
+    for orderItem in data.order_items:
+        if end_date_adjusted < orderItem.start_time:
+            end_date_adjusted = orderItem.start_time
+    T = (end_date_adjusted - start_date).days + 1
+
+
+
 
     t_o = list()
     for orderItem in data.order_items:
         t_o.append(orderItem.duration)
 
 
+    return M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T,t_o, D_r, N_r
 
-    return M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T, S_Nmax, S_max, T_Smax, T_Wmax, t_o
 
-
-def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T, S_Nmax, S_max, T_Smax, T_Wmax, t_o):
+def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range, T, t_o, D_r, N_r):
 
     model = gp.Model("MIP_Flow_Formulation")
+
 
     # 1. Variablen erstellen
     # Variablen-Indizes definieren
@@ -340,7 +378,6 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
     # (Komplette) Baustellen-Erfüllung True/False
     u = model.addVars(C, vtype=GRB.BINARY, name="u")
 
-    print("W_m: ", W_m)
 
     # 2. Zielfunktion setzen
     model.setObjective(
@@ -350,9 +387,6 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
         gp.quicksum(10 * r[m, i] for m in M for i in N_m[m]), # Strafkosten für Non-regular driver Nutzung
         GRB.MAXIMIZE
     )
-
-
-
 
     # 3. Nebenbedingungen
     # Maschinenfluss-Balance
@@ -422,24 +456,21 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
 
 
     # Nachschicht-Beschränkung
-    '''
     for w in W:
-        for t in T_range with t <= T_Smax - S_max:
-            model.addConstr(
-                gp.quicksum(y[w, i, j] for i in P_wn[w][j] for j in D if j in T_range) >= 1,
-                name=f"shift_constraint_{w}_{t}"
-            )
-    '''
+        for t in T_range:
+            if t <= T - S_Nmax:
+                model.addConstr(
+                    gp.quicksum(y[w, i ,j] for r in range(t, t + S_Nmax + 1) if r in D_r for j in D_r[r] for i in P_wn[w, j]) >= 1,
+                    name=f"night_shift_constraint_{w}_t{t}"
+                )
         
     # Schichtanzahl-Beschränkung
-    '''
     for w in W:
         for t in T_range:
             model.addConstr(
-                gp.quicksum(y[w, i, j] for j in S_wn[w,i] if j in T_range) <= S_Nmax,
-                name=f"night_shift_constraint_{w}_{i}_{t}"
+                gp.quicksum(y[w, i, j] for r in range(t, t + T_Smax) if r in N_r for j in N_r[r] for i in P_wn[w, j]) <= S_max,
+                name=f"shift_number_constraint_{w}_t{t}"
             )
-    '''
 
     # Arbeitszeit-Beschränkung
     for w in W:
@@ -449,6 +480,11 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
         )
 
     return model, x, y, r, u
+
+
+
+
+
 
 
 
