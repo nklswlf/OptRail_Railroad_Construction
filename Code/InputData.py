@@ -13,8 +13,25 @@ class InputData:
 
         :param instance_filename: Name of the JSON file containing the data.
         '''
-        self._data_path = str((Path.cwd().parent / "Data" / "Instanzen" / instance_filename).resolve())
+        self._data_path, self._parent_folder = self._find_instance_file(instance_filename)
         self._load_data()
+
+    def _find_instance_file(self, instance_filename: str) -> tuple[str, str]:
+        '''
+        Recursively search for the instance file in the Data/Instanzen directory
+        and store the parent folder where the file is found.
+
+        :param instance_filename: Name of the file to search for.
+        :return: A tuple containing the absolute path to the found file and the parent folder name.
+        :raises FileNotFoundError: If the file is not found in the directory.
+        '''
+        base_path = Path.cwd().parent / "Data" / "Instanzen"
+        for file_path in base_path.rglob(instance_filename):  # Recursively search for the file
+            return str(file_path.resolve()), file_path.parent.name  # Return file path and parent folder name
+
+        raise FileNotFoundError(f"File '{instance_filename}' not found in directory '{base_path}'.")
+
+
 
     def _load_data(self) -> None:
         ''' Load data from the JSON file and initialize lists of objects. '''
