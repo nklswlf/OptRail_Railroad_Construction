@@ -5,8 +5,17 @@ from InputData import *
 from OutputData import *
 import json
 
+
+
+# import gantt diagram function from different top folder
+from pathlib import Path
+import sys
+sys.path.append(str(Path.cwd().parent))
+from Data.Gantt_Plan import CreateGanttDiagram
+
 # Instanz-Datei
 instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
+
 
 
 # Definition der Abeitszeit-Parameter
@@ -18,7 +27,7 @@ T_Wmax = 160 # Maximale Arbeistzeit im Betrachtungszeitraum/Monat
 
 def Run_MIP():
 
-    M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T, t_o, D_r, N_r = DefineData(instance_filename)
+    data, M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T, t_o, D_r, N_r = DefineData(instance_filename)
 
     model,x,y,r,u = DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T,t_o, D_r, N_r)
 
@@ -94,8 +103,89 @@ def Run_MIP():
     model.write("model.lp")
 
 
+    # Ergebnisse in Output-Datei speichern
+    solution_data = {"Arbeiterzuweisung": {}}
+
+    for w in W:
+        current_worker = next(worker for worker in data.workers if worker.personal_number == w)   
+        for i in N_w[w]:
+            current_orderItem = next(orderItem for orderItem in data.order_items if orderItem.id == i)            
+            for j in N_w[w]:
+                if i != j and y[w, i, j].x > 0.5:
+                    if current_worker.name not in solution_data["Arbeiterzuweisung"]:
+                        solution_data["Arbeiterzuweisung"][current_worker.name] = []
+                    set = {"ID": current_orderItem.id,
+                           "Start": current_orderItem.start_time.isoformat(),
+                           "Ende": current_orderItem.end_time.isoformat(),
+                           "Dauer": current_orderItem.duration,
+                           "Auftragsnummer": current_orderItem.order_number,
+                           "MaschinenTyp": current_orderItem.machine_type,
+                           "AnbaugeraeteTypen": current_orderItem.equipment_types,
+                           "Arbeiterqualifikationen": current_orderItem.worker_qualifications,
+                           "zugewieseneMaschine" : current_orderItem.assigned_machine,
+                           "Typ": current_orderItem.type}
+                    solution_data["Arbeiterzuweisung"][current_worker.name].append(set)
+
+
+            if y[w, i, end].x > 0.5:
+                set = {"ID": current_orderItem.id,
+                          "Start": current_orderItem.start_time.isoformat(),
+                          "Ende": current_orderItem.end_time.isoformat(),
+                          "Dauer": current_orderItem.duration,
+                          "Auftragsnummer": current_orderItem.order_number,
+                          "MaschinenTyp": current_orderItem.machine_type,
+                          "AnbaugeraeteTypen": current_orderItem.equipment_types,
+                          "Arbeiterqualifikationen": current_orderItem.worker_qualifications,
+                          "zugewieseneMaschine" : current_orderItem.assigned_machine,
+                          "Typ": current_orderItem.type}
+                solution_data["Arbeiterzuweisung"][current_worker.name].append(set)
+
+    solution_data["Maschinenzuweisung"] = {}
+
+    for m in M:
+        current_machine = next(machine for machine in data.machines if machine.id == m)
+        for i in N_m[m]:
+            current_orderItem = next(orderItem for orderItem in data.order_items if orderItem.id == i)            
+            for j in N_m[m]:
+                if i != j and x[m, i, j].x > 0.5:
+                    if current_machine.name not in solution_data["Maschinenzuweisung"]:
+                        solution_data["Maschinenzuweisung"][current_machine.name] = []
+                    set = {"ID": current_orderItem.id,
+                        "Start": current_orderItem.start_time.isoformat(),
+                        "Ende": current_orderItem.end_time.isoformat(),
+                        "Dauer": current_orderItem.duration,
+                        "Auftragsnummer": current_orderItem.order_number,
+                        "MaschinenTyp": current_orderItem.machine_type,
+                        "AnbaugeraeteTypen": current_orderItem.equipment_types,
+                        "Arbeiterqualifikationen": current_orderItem.worker_qualifications,
+                        "zugewieseneMaschine" : current_orderItem.assigned_machine,
+                        "Typ": current_orderItem.type}
+                    solution_data["Maschinenzuweisung"][current_machine.name].append(set)
+            if x[m, i, end].x > 0.5:
+                set = {"ID": current_orderItem.id,
+                        "Start": current_orderItem.start_time.isoformat(),
+                        "Ende": current_orderItem.end_time.isoformat(),
+                        "Dauer": current_orderItem.duration,
+                        "Auftragsnummer": current_orderItem.order_number,
+                        "MaschinenTyp": current_orderItem.machine_type,
+                        "AnbaugeraeteTypen": current_orderItem.equipment_types,
+                        "Arbeiterqualifikationen": current_orderItem.worker_qualifications,
+                        "zugewieseneMaschine" : current_orderItem.assigned_machine,
+                        "Typ": current_orderItem.type}
+                solution_data["Maschinenzuweisung"][current_machine.name].append(set)
+
+
+    parent_folder = data._parent_folder
+    print(parent_folder)
+    solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder
+    solution_path.mkdir(parents=True, exist_ok=True)
+    output_filename = solution_path / f"Loesung_{instance_filename}"
+    with open(output_filename, "w") as output_file:
+        json.dump(solution_data, output_file, indent=4)
+
+
     
-    
+    CreateGanttDiagram(instance_filename, parent_folder)
 
 
 
@@ -345,7 +435,7 @@ def DefineData(instance_filename):
         t_o.append(orderItem.duration)
 
 
-    return M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T,t_o, D_r, N_r
+    return data, M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T,t_o, D_r, N_r
 
 
 def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range, T, t_o, D_r, N_r):
