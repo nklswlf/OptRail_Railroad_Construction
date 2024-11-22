@@ -4,14 +4,7 @@ import pandas as pd
 from InputData import *
 from OutputData import *
 import json
-
-
-
-# import gantt diagram function from different top folder
-from pathlib import Path
-import sys
-sys.path.append(str(Path.cwd().parent))
-from Data.Gantt_Plan import CreateGanttDiagram
+from Gantt_Plan import CreateGanttDiagram
 
 # Instanz-Datei
 instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
