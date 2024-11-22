@@ -6,13 +6,17 @@ import os
 
 def CreateGanttDiagram(input_file, parent_folder):
 
-    output_file = "Loesung_" + input_file
+    instance = input_file.split('Construction_')[1].split('_reduced')[0]
 
+    # Berechne das Skriptverzeichnis
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    input_file_path = os.path.join(script_dir, "Instanzen", parent_folder, input_file)
-    output_file_path = os.path.join(script_dir, "Solution", parent_folder, output_file)
+    
+    # Baue die Dateipfade basierend auf dem Skriptverzeichnis
+    input_file_path = os.path.join(script_dir, "..", "Data", "Instanzen", parent_folder, input_file)
+    output_file_path = os.path.join(script_dir, "..", "Data", "Solution", parent_folder, "Loesung_" + input_file)
+    
 
-    site = input_file.split('Construction_')[1].split('_reduced')[0]
+    
 
     with open(input_file_path, 'r') as file:
         inputData = json.load(file)
@@ -53,7 +57,7 @@ def CreateGanttDiagram(input_file, parent_folder):
     df['Shift_Type'] = df['Start'].apply(shift_type)
 
     # Funktion zur Ermittlung der Baustellennummer basierend auf der ID
-    def get_site_id(task_id):
+    def get_instance_id(task_id):
         # Die Baustellennummer wird den Bestellpositionen aus der Eingabedatei entnommen
         for task in inputData['Bestellpositionen']:
             if task['ID'] == task_id:
@@ -61,7 +65,7 @@ def CreateGanttDiagram(input_file, parent_folder):
         return None
 
     # Baustellennummer zur DataFrame hinzufügen
-    df['Baustellennummer'] = df['ID'].apply(get_site_id)
+    df['Baustellennummer'] = df['ID'].apply(get_instance_id)
 
 
     # Erstellen des Gantt-Diagramms
@@ -79,11 +83,6 @@ def CreateGanttDiagram(input_file, parent_folder):
                     xaxis_title="Datum", 
                     yaxis_title="Arbeiter")
 
-    # Gantt-Diagramm anzeigen
-    fig.show()
-
-    # HTML-Datei speichern, um das Diagramm extern anzuzeigen
-    fig.write_html("Shift_Plan_"+site+".html")
 
     # Anzeige der Arbeiter ohne zugewiesene Schicht
     print(f"Arbeiter ohne Schicht: {not_assigned_worker}")
@@ -121,7 +120,7 @@ def CreateGanttDiagram(input_file, parent_folder):
     df_combined = pd.concat([df_machines, df_attachments])
 
     # Funktion zur Ermittlung der Baustellennummer basierend auf der ID
-    def get_site_id_for_combined(task_id):
+    def get_instance_id_for_combined(task_id):
         # Die Baustellennummer wird den Bestellpositionen aus der Eingabedatei entnommen
         for task in inputData['Bestellpositionen']:
             if task['ID'] == task_id:
@@ -129,7 +128,7 @@ def CreateGanttDiagram(input_file, parent_folder):
         return None
 
     # Baustellennummer zur DataFrame hinzufügen
-    df_combined['Baustellennummer'] = df_combined['ID'].apply(get_site_id_for_combined)
+    df_combined['Baustellennummer'] = df_combined['ID'].apply(get_instance_id_for_combined)
 
     # Gantt-Diagramm für Maschinen und Anbaugeräte erstellen, farblich nach Baustellennummer unterschieden
     fig_combined = px.timeline(
@@ -152,11 +151,42 @@ def CreateGanttDiagram(input_file, parent_folder):
         yaxis_title="Name"
     )
 
+
+
+
+
+    # Gantt-Diagramm anzeigen
+    fig.show()
+
+    # HTML-Datei speichern, um das Diagramm extern anzuzeigen
+    #fig.write_html(html_file_path,"Shift_Plan_"+instance+".html")
+    # Pfad für die HTML-Datei berechnen
+    # Absoluter Pfad zur HTML-Datei
+    html_file_path_shift = os.path.join(script_dir, "..", "Data", "Solution", parent_folder, f"Shift_Plan_{instance}.html")
+    
+    # Zielordner erstellen, falls nicht vorhanden
+    html_folder = os.path.dirname(html_file_path_shift)
+    os.makedirs(html_folder, exist_ok=True)
+
+    # HTML-Datei speichern
+    fig.write_html(html_file_path_shift)
+
+
+
+    html_file_path_machine = os.path.join(script_dir, "..", "Data", "Solution", parent_folder, f"Machine_Plan_{instance}.html")
+
+    # Zielordner erstellen, falls nicht vorhanden
+    html_folder = os.path.dirname(html_file_path_machine)
+    os.makedirs(html_folder, exist_ok=True)
+
+    # HTML-Datei speichern
+    fig_combined.write_html(html_file_path_machine)
+
+    
     # Gantt-Diagramm anzeigen
     fig_combined.show()
 
-    # HTML-Datei speichern, um das Diagramm extern anzuzeigen
-    fig_combined.write_html("Machine_Plan_"+site+".html")
+
 
     # Anzeige der Maschinen ohne zugewiesene Schicht
     print(f"Maschinen ohne Einsatz: {not_assigned_machines}")
