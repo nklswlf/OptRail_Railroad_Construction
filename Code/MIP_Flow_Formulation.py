@@ -7,14 +7,19 @@ import json
 from Gantt_Plan import CreateGanttDiagram
 
 # Instanz-Datei
-instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
+#instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
+#instance_filename = "Construction_a3_o80_m10_an10_ar9_reduced.json"
+instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
+
+#instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
+#instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
 
 
 
 # Definition der Abeitszeit-Parameter
-S_Nmax = 3 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
-S_max = 2 # Maximal Anzahl an Schichten im Zeitraum T_Smax
-T_Smax = 3 # Zeitraum für S_max
+S_Nmax = 9 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
+S_max = 10 # Maximal Anzahl an Schichten im Zeitraum T_Smax
+T_Smax = 14 # Zeitraum für S_max
 T_Wmax = 160 # Maximale Arbeistzeit im Betrachtungszeitraum/Monat
 
 
@@ -121,6 +126,8 @@ def Run_MIP():
 
 
             if y[w, i, end].x > 0.5:
+                if current_worker.name not in solution_data["Arbeiterzuweisung"]:
+                    solution_data["Arbeiterzuweisung"][current_worker.name] = []
                 set = {"ID": current_orderItem.id,
                           "Start": current_orderItem.start_time.isoformat(),
                           "Ende": current_orderItem.end_time.isoformat(),
@@ -182,13 +189,6 @@ def Run_MIP():
 
 
 
-
-
-
-
-
-
-
 def DefineData(instance_filename):
 
     data = InputData(instance_filename)
@@ -242,7 +242,7 @@ def DefineData(instance_filename):
     O_t_start_inverted = dict()  # Umgekehrtes O_t (Startzeiten)
     O_t_end_inverted = dict()  # Umgekehrtes O_t_end (Endzeiten)
 
-    SECONDS_IN_A_DAY = 86400
+    SECONDS_IN_A_DAY = 86400 # 
 
     for orderItem in data.order_items:
         orderID = orderItem.id 
@@ -521,9 +521,10 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
     # Regelmäßige Fahrer - Nebenbedingung
     for m in M:
         for i in N_m[m]:
-                model.addConstr(
-                    gp.quicksum(x[m, i, j] for j in S_mn[m, i]) <= gp.quicksum(y[w, i, j] for w in W_m[m] for j in S_wn[w, i]) + r[m, i],
-                    name=f"regular_driver_constraint_{m}_{i}")
+                if (m,i) in S_mn:
+                    model.addConstr(
+                        gp.quicksum(x[m, i, j] for j in S_mn[m, i]) <= gp.quicksum(y[w, i, j] for w in W_m[m] if (w,i) in S_wn for j in S_wn[w, i]) + r[m, i],
+                        name=f"regular_driver_constraint_{m}_{i}")
 
     # Baustellen-Erfüllung
     for c in C:
@@ -543,7 +544,7 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
         for t in T_range:
             if t <= T - S_Nmax:
                 model.addConstr(
-                    gp.quicksum(y[w, i ,j] for r in range(t, t + S_Nmax + 1) if r in D_r for j in D_r[r] for i in P_wn[w, j]) >= 1,
+                    gp.quicksum(y[w, i ,j] for r in range(t, t + S_Nmax + 1) if r in D_r for j in D_r[r] if (w,j) in P_wn for i in P_wn[w, j]) >= 1,
                     name=f"night_shift_constraint_{w}_t{t}"
                 )
         
@@ -551,7 +552,7 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
     for w in W:
         for t in T_range:
             model.addConstr(
-                gp.quicksum(y[w, i, j] for r in range(t, t + T_Smax) if r in N_r for j in N_r[r] for i in P_wn[w, j]) <= S_max,
+                gp.quicksum(y[w, i, j] for r in range(t, t + T_Smax) if r in N_r for j in N_r[r] if (w,j) in P_wn for i in P_wn[w, j]) <= S_max,
                 name=f"shift_number_constraint_{w}_t{t}"
             )
 
