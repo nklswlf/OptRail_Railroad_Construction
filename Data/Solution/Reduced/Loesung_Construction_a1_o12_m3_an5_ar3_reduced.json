@@ -2,9 +2,9 @@
     "Arbeiterzuweisung": {
         "Arbeiter_0": [
             {
-                "ID": 4,
-                "Start": "2024-08-04T07:00:00",
-                "Ende": "2024-08-04T18:00:00",
+                "ID": 2,
+                "Start": "2024-08-03T07:00:00",
+                "Ende": "2024-08-03T18:00:00",
                 "Dauer": 11,
                 "Auftragsnummer": "0",
                 "MaschinenTyp": 2,
@@ -15,41 +15,18 @@
                 "Arbeiterqualifikationen": [],
                 "zugewieseneMaschine": null,
                 "Typ": 0
-            }
-        ],
-        "Arbeiter_1": [
-            {
-                "ID": 0,
-                "Start": "2024-08-02T07:00:00",
-                "Ende": "2024-08-02T18:00:00",
-                "Dauer": 11,
-                "Auftragsnummer": "0",
-                "MaschinenTyp": 2,
-                "AnbaugeraeteTypen": [],
-                "Arbeiterqualifikationen": [],
-                "zugewieseneMaschine": null,
-                "Typ": 0
             },
             {
-                "ID": 1,
-                "Start": "2024-08-02T19:00:00",
-                "Ende": "2024-08-03T06:00:00",
+                "ID": 4,
+                "Start": "2024-08-04T07:00:00",
+                "Ende": "2024-08-04T18:00:00",
                 "Dauer": 11,
                 "Auftragsnummer": "0",
                 "MaschinenTyp": 2,
-                "AnbaugeraeteTypen": [],
-                "Arbeiterqualifikationen": [],
-                "zugewieseneMaschine": null,
-                "Typ": 0
-            },
-            {
-                "ID": 5,
-                "Start": "2024-08-04T19:00:00",
-                "Ende": "2024-08-05T06:00:00",
-                "Dauer": 11,
-                "Auftragsnummer": "0",
-                "MaschinenTyp": 2,
-                "AnbaugeraeteTypen": [],
+                "AnbaugeraeteTypen": [
+                    1,
+                    7
+                ],
                 "Arbeiterqualifikationen": [],
                 "zugewieseneMaschine": null,
                 "Typ": 0
@@ -79,18 +56,6 @@
                 "Typ": 0
             },
             {
-                "ID": 9,
-                "Start": "2024-08-06T19:00:00",
-                "Ende": "2024-08-07T06:00:00",
-                "Dauer": 11,
-                "Auftragsnummer": "0",
-                "MaschinenTyp": 2,
-                "AnbaugeraeteTypen": [],
-                "Arbeiterqualifikationen": [],
-                "zugewieseneMaschine": null,
-                "Typ": 0
-            },
-            {
                 "ID": 10,
                 "Start": "2024-08-07T07:00:00",
                 "Ende": "2024-08-07T18:00:00",
@@ -103,18 +68,15 @@
                 "Typ": 0
             }
         ],
-        "Arbeiter_2": [
+        "Arbeiter_1": [
             {
-                "ID": 2,
-                "Start": "2024-08-03T07:00:00",
-                "Ende": "2024-08-03T18:00:00",
+                "ID": 0,
+                "Start": "2024-08-02T07:00:00",
+                "Ende": "2024-08-02T18:00:00",
                 "Dauer": 11,
                 "Auftragsnummer": "0",
                 "MaschinenTyp": 2,
-                "AnbaugeraeteTypen": [
-                    1,
-                    7
-                ],
+                "AnbaugeraeteTypen": [],
                 "Arbeiterqualifikationen": [],
                 "zugewieseneMaschine": null,
                 "Typ": 0
@@ -135,6 +97,18 @@
                 "Typ": 0
             },
             {
+                "ID": 5,
+                "Start": "2024-08-04T19:00:00",
+                "Ende": "2024-08-05T06:00:00",
+                "Dauer": 11,
+                "Auftragsnummer": "0",
+                "MaschinenTyp": 2,
+                "AnbaugeraeteTypen": [],
+                "Arbeiterqualifikationen": [],
+                "zugewieseneMaschine": null,
+                "Typ": 0
+            },
+            {
                 "ID": 7,
                 "Start": "2024-08-05T19:00:00",
                 "Ende": "2024-08-06T06:00:00",
@@ -147,9 +121,35 @@
                 "Typ": 0
             },
             {
+                "ID": 9,
+                "Start": "2024-08-06T19:00:00",
+                "Ende": "2024-08-07T06:00:00",
+                "Dauer": 11,
+                "Auftragsnummer": "0",
+                "MaschinenTyp": 2,
+                "AnbaugeraeteTypen": [],
+                "Arbeiterqualifikationen": [],
+                "zugewieseneMaschine": null,
+                "Typ": 0
+            },
+            {
                 "ID": 11,
                 "Start": "2024-08-07T19:00:00",
                 "Ende": "2024-08-08T06:00:00",
+                "Dauer": 11,
+                "Auftragsnummer": "0",
+                "MaschinenTyp": 2,
+                "AnbaugeraeteTypen": [],
+                "Arbeiterqualifikationen": [],
+                "zugewieseneMaschine": null,
+                "Typ": 0
+            }
+        ],
+        "Arbeiter_2": [
+            {
+                "ID": 1,
+                "Start": "2024-08-02T19:00:00",
+                "Ende": "2024-08-03T06:00:00",
                 "Dauer": 11,
                 "Auftragsnummer": "0",
                 "MaschinenTyp": 2,
