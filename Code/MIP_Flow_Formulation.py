@@ -7,27 +7,35 @@ import json
 from Gantt_Plan import CreateGanttDiagram
 
 # Instanz-Datei
+# Reduced
 #instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
-#instance_filename = "Construction_a3_o80_m10_an10_ar9_reduced.json"
-instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
+instance_filename = "Construction_a3_o80_m10_an10_ar9_reduced.json"
+#instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
 
+# 10 Baustellen
 #instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
 #instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
+
+# 20 Baustellen
+#instance_filename = "Construction_a20_o276_m12_an101_ar25.json"
+
+# 50 Baustellen
+#instance_filename = "Construction_a50_o578_m28_an276_ar66.json"
 
 
 
 # Definition der Abeitszeit-Parameter
-S_Nmax = 9 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
-S_max = 10 # Maximal Anzahl an Schichten im Zeitraum T_Smax
-T_Smax = 14 # Zeitraum für S_max
+S_Nmax = 3 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
+S_max = 3 # Maximal Anzahl an Schichten im Zeitraum T_Smax
+T_Smax = 8 # Zeitraum für S_max
 T_Wmax = 160 # Maximale Arbeistzeit im Betrachtungszeitraum/Monat
 
 
 def Run_MIP():
 
-    data, M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T, t_o, D_r, N_r = DefineData(instance_filename)
+    data, M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T, t_o, D_r, N_r, A_r = DefineData(instance_filename)
 
-    model,x,y,r,u = DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T,t_o, D_r, N_r)
+    model,x,y,r,u = DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T,t_o, D_r, N_r, A_r)
 
     
     model.optimize()
@@ -188,7 +196,6 @@ def Run_MIP():
     CreateGanttDiagram(instance_filename, parent_folder)
 
 
-
 def DefineData(instance_filename):
 
     data = InputData(instance_filename)
@@ -236,7 +243,8 @@ def DefineData(instance_filename):
 
     O_t = dict()  # Tag an dem der Auftrag startet
     D_r = dict()  # Tagschichten mit Tag als Key
-    N_r = dict()  # Alle Schichten mit Tag als Key
+    N_r = dict()  # Nachtschichten mit Tag als Key
+    A_r = dict()  # Alle Schichten mit Tag als Key
     O_t_start = dict()  # Startzeiten  
     O_t_end = dict()  # Endzeiten
     O_t_start_inverted = dict()  # Umgekehrtes O_t (Startzeiten)
@@ -265,11 +273,17 @@ def DefineData(instance_filename):
             D_r[t_start_int] = []
         if orderItem.start_time.hour <= 12:
             D_r[t_start_int].append(orderID)
-         
-        # N_r Alle Schichten mit Tag als Key
+
+        # N_r Nachtschichten mit Tag als Key
         if t_start_int not in N_r:
             N_r[t_start_int] = []
-        N_r[t_start_int].append(orderID)
+        if orderItem.start_time.hour > 12:
+            N_r[t_start_int].append(orderID)
+         
+        # A_r Alle Schichten mit Tag als Key
+        if t_start_int not in A_r:
+            A_r[t_start_int] = []
+        A_r[t_start_int].append(orderID)
         
         # Startzeit
         if t_start not in O_t_start:
@@ -428,10 +442,10 @@ def DefineData(instance_filename):
         t_o.append(orderItem.duration)
 
 
-    return data, M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T,t_o, D_r, N_r
+    return data, M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range,  T,t_o, D_r, N_r, A_r
 
 
-def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range, T, t_o, D_r, N_r):
+def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_wj, start, end, T_range, T, t_o, D_r, N_r, A_r):
 
     model = gp.Model("MIP_Flow_Formulation")
 
@@ -480,14 +494,7 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
                 name=f"machine_flow_balance_{m}_{i}"
             )
 
-    # Source Sink Balance für Maschinen
-    for m in M:
-        if (m,start) in S_mn and (m,end) in P_mn:
-            left_sum = gp.quicksum(x[m, start, j] for j in S_mn[m,start] if j != end)
-            right_sum = gp.quicksum(x[m, i, end] for i in P_mn[m,end] if i != start)
-            model.addConstr(left_sum == right_sum, name=f"machine_balance_{m}_start_end")
-
-
+    
     # Arbeiterfluss-Balance
     for w in W:
         for i in N_w[w]:
@@ -496,36 +503,50 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
                 name=f"worker_flow_balance_{w}_{i}"
             )
 
-    # Source Sink Balance für Arbeiter
+
+    # Start- und Endknoten-Bedingungen
+    for m in M:
+        if (m,start) in S_mn:
+            model.addConstr(
+                gp.quicksum(x[m, start, j] for j in S_mn[m,start]) == 1,
+                name=f"machine_start_constraint_{m}"
+            )
+    for w in W:
+        if (w,start) in S_wn:
+            model.addConstr(
+                gp.quicksum(y[w, start, j] for j in S_wn[w,start]) == 1,
+                name=f"worker_start_constraint_{w}"
+        )
+
+
+    # Source Sink Balance für Maschinen --> nicht mehr benötigt, da Start- und Endknoten-Bedingungen
+    '''
+    for m in M:
+        if (m,start) in S_mn and (m,end) in P_mn:
+            left_sum = gp.quicksum(x[m, start, j] for j in S_mn[m,start] if j != end)
+            right_sum = gp.quicksum(x[m, i, end] for i in P_mn[m,end] if i != start)
+            model.addConstr(left_sum == right_sum, name=f"machine_balance_{m}_start_end")
+    '''
+
+    # Source Sink Balance für Arbeiter --> nicht mehr benötigt, da Start- und Endknoten-Bedingungen
+    '''
     for w in W:
         if (w,start) in S_wn and (w,end) in P_wn:
             left_sum = gp.quicksum(y[w, start, j] for j in S_wn[w,start] if j != end)
             right_sum = gp.quicksum(y[w, i, end] for i in P_wn[w,end] if i != start)
             model.addConstr(left_sum == right_sum, name=f"worker_balance_{w}_start_end")
+    '''
 
-    # Extra-Flussnebenbedingung
-    extra_constraint = True
-    if extra_constraint:
-        for m in M:
-            model.addConstr(
-                gp.quicksum(x[m, start, j] for j in N_m[m]) + x[m,start, end] == 1,
-                name=f"machine_start_constraint_{m}"
-            )
 
-        for w in W:
-            model.addConstr(
-                gp.quicksum(y[w, start, j] for j in N_w[w]) + y[w,start, end] == 1,
-                name=f"worker_start_constraint_{w}"
-        )
 
     # Regelmäßige Fahrer - Nebenbedingung
     for m in M:
         for i in N_m[m]:
-                if (m,i) in S_mn:
-                    model.addConstr(
-                        gp.quicksum(x[m, i, j] for j in S_mn[m, i]) <= gp.quicksum(y[w, i, j] for w in W_m[m] if (w,i) in S_wn for j in S_wn[w, i]) + r[m, i],
-                        name=f"regular_driver_constraint_{m}_{i}")
+                model.addConstr(
+                    gp.quicksum(x[m, i, j] for j in S_mn[m, i]) <= gp.quicksum(y[w, i, j] for w in W_m[m] if (w,i) in S_wn for j in S_wn[w, i]) + r[m, i],
+                    name=f"regular_driver_constraint_{m}_{i}")
 
+    
     # Baustellen-Erfüllung
     for c in C:
         for i in N_c[c]:
@@ -539,7 +560,8 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
             )
 
 
-    # Nachschicht-Beschränkung
+    # Nachschicht-Beschränkung --> Alte Variante der Nachtschicht-Beschränkung (eine andere Schicht muss innerhalb der nächsten X Tage folgen)
+    '''
     for w in W:
         for t in T_range:
             if t <= T - S_Nmax:
@@ -547,14 +569,27 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
                     gp.quicksum(y[w, i ,j] for r in range(t, t + S_Nmax + 1) if r in D_r for j in D_r[r] if (w,j) in P_wn for i in P_wn[w, j]) >= 1,
                     name=f"night_shift_constraint_{w}_t{t}"
                 )
-        
+    '''
+
+    # Nachtschicht-Beschränkung --> Neue Variante der Nachtschicht-Beschränkung (maximal X Nachtschichten hintereinander, danach kann eine Pause folgen oder eine Tagesschicht)
+    for w in W:
+        for t in T_range:
+            if t <= T - S_Nmax:
+                model.addConstr(
+                    gp.quicksum(y[w, i ,j] for t_ in range(t, t + S_Nmax + 1) if t_ in N_r for j in N_r[t_] if (w,j) in P_wn for i in P_wn[w, j]) <= S_Nmax,
+                    name=f"night_shift_constraint_{w}_t{t}"
+                )
+
+
+
     # Schichtanzahl-Beschränkung
     for w in W:
         for t in T_range:
-            model.addConstr(
-                gp.quicksum(y[w, i, j] for r in range(t, t + T_Smax) if r in N_r for j in N_r[r] if (w,j) in P_wn for i in P_wn[w, j]) <= S_max,
-                name=f"shift_number_constraint_{w}_t{t}"
-            )
+            if t <= T - T_Smax:
+                model.addConstr(
+                    gp.quicksum(y[w, i, j] for t_ in range(t, t + T_Smax) if t_ in A_r for j in A_r[t_] if (w,j) in P_wn for i in P_wn[w, j]) <= S_max,
+                    name=f"shift_number_constraint_{w}_t{t}"
+                )
 
     # Arbeitszeit-Beschränkung
     for w in W:
