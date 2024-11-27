@@ -13,9 +13,11 @@ from Gantt_Plan import CreateGanttDiagram
 #instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
 
 # 10 Baustellen
-instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
+#instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
 #instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
 #instance_filename = "Construction_a10_o119_m5_an54_ar13.json"
+instance_filename = "Construction_a10_o144_m6_an53_ar12.json"
+
 
 # 15 Baustellen
 #instance_filename = "Construction_a15_o191_m8_an74_ar18.json"
