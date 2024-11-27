@@ -9,15 +9,18 @@ from Gantt_Plan import CreateGanttDiagram
 # Instanz-Datei
 # Reduced
 #instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
-instance_filename = "Construction_a3_o80_m10_an10_ar9_reduced.json"
+#instance_filename = "Construction_a3_o80_m10_an10_ar9_reduced.json"
 #instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
 
 # 10 Baustellen
 #instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
 #instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
 
+# 15 Baustellen
+instance_filename = "Construction_a15_o191_m8_an74_ar18.json"
+
 # 20 Baustellen
-#instance_filename = "Construction_a20_o276_m12_an101_ar25.json"
+#instance_filename = "Construction_a20_o259_m11_an101_ar26.json"
 
 # 50 Baustellen
 #instance_filename = "Construction_a50_o578_m28_an276_ar66.json"
@@ -25,9 +28,9 @@ instance_filename = "Construction_a3_o80_m10_an10_ar9_reduced.json"
 
 
 # Definition der Abeitszeit-Parameter
-S_Nmax = 3 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
-S_max = 3 # Maximal Anzahl an Schichten im Zeitraum T_Smax
-T_Smax = 8 # Zeitraum für S_max
+S_Nmax = 5 # Maximal Anzahl an aufeinanderfolgenden Nachtschichten
+S_max = 10 # Maximal Anzahl an Schichten im Zeitraum T_Smax
+T_Smax = 14 # Zeitraum für S_max
 T_Wmax = 160 # Maximale Arbeistzeit im Betrachtungszeitraum/Monat
 
 
@@ -478,9 +481,11 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
 
     # 2. Zielfunktion setzen
     model.setObjective(
-        gp.quicksum(1000 * u[c] for c in C) -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
+        gp.quicksum(100000 * u[c] for c in C) -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
         gp.quicksum(0.5 * d_ij[i][j] * x[m, i, j] for m in M for i in N_m[m] for j in N_m[m]) - # Transportaufwand Maschinen
         gp.quicksum(0.5 * d_wj[w][j] * y[w, i, j] for w in W for i in N_w[w] for j in N_w[w]) - # Arbeitswegeaufwand Arbeiter        
+        gp.quicksum(5 * x[m, start, j] for m in M for j in N_m[m]) - # Fixkosten für Maschinen
+        gp.quicksum(100 * y[w, start, j] for w in W for j in N_w[w]) - # Fixkosten für Arbeiter   
         gp.quicksum(10 * r[m, i] for m in M for i in N_m[m]), # Strafkosten für Non-regular driver Nutzung
         GRB.MAXIMIZE
     )
@@ -599,7 +604,6 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
         )
 
     return model, x, y, r, u
-
 
 
 
