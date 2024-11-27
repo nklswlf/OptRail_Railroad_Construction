@@ -13,11 +13,11 @@ from Gantt_Plan import CreateGanttDiagram
 #instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
 
 # 10 Baustellen
-#instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
+instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
 #instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
 
 # 15 Baustellen
-instance_filename = "Construction_a15_o191_m8_an74_ar18.json"
+#instance_filename = "Construction_a15_o191_m8_an74_ar18.json"
 
 # 20 Baustellen
 #instance_filename = "Construction_a20_o259_m11_an101_ar26.json"
@@ -193,6 +193,9 @@ def Run_MIP():
     output_filename = solution_path / f"Loesung_{instance_filename}"
     with open(output_filename, "w") as output_file:
         json.dump(solution_data, output_file, indent=4)
+
+
+    print("Runtime:" + model.Runtime + " Sekunden")
 
 
     
@@ -484,7 +487,7 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
         gp.quicksum(100000 * u[c] for c in C) -  # Baustellen-Erfüllung --> Fällt bspw. 100x ins Gewicht
         gp.quicksum(0.5 * d_ij[i][j] * x[m, i, j] for m in M for i in N_m[m] for j in N_m[m]) - # Transportaufwand Maschinen
         gp.quicksum(0.5 * d_wj[w][j] * y[w, i, j] for w in W for i in N_w[w] for j in N_w[w]) - # Arbeitswegeaufwand Arbeiter        
-        gp.quicksum(5 * x[m, start, j] for m in M for j in N_m[m]) - # Fixkosten für Maschinen
+        gp.quicksum(100 * x[m, start, j] for m in M for j in N_m[m]) - # Fixkosten für Maschinen
         gp.quicksum(100 * y[w, start, j] for w in W for j in N_w[w]) - # Fixkosten für Arbeiter   
         gp.quicksum(10 * r[m, i] for m in M for i in N_m[m]), # Strafkosten für Non-regular driver Nutzung
         GRB.MAXIMIZE
