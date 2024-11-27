@@ -15,6 +15,8 @@ from Gantt_Plan import CreateGanttDiagram
 # 10 Baustellen
 instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
 #instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
+#instance_filename = "Construction_a10_o118_m6_an53_ar13.json"
+#instance_filename = "Construction_a10_o119_m5_an54_ar13.json"
 
 # 15 Baustellen
 #instance_filename = "Construction_a15_o191_m8_an74_ar18.json"
@@ -479,7 +481,7 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
         gp.quicksum(0.5 * d_wj[w][j] * y[w, i, j] for w in W for i in N_w[w] for j in N_w[w]) - # Arbeitswegeaufwand Arbeiter        
         gp.quicksum(100 * x[m, start, j] for m in M for j in N_m[m]) - # Fixkosten für Maschinen
         gp.quicksum(100 * y[w, start, j] for w in W for j in N_w[w]) - # Fixkosten für Arbeiter   
-        gp.quicksum(10 * r[i] for i in N), # Strafkosten für Non-regular driver Nutzung
+        gp.quicksum(10 * r[i] for m in M for i in N_m[m]), # Strafkosten für Non-regular driver Nutzung
         GRB.MAXIMIZE
     )
 
