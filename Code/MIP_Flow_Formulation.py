@@ -106,7 +106,7 @@ def Run_MIP():
     print("\nBaustellen-Erfüllung:")
     print(df_site)
     print("\nRegular Driver nicht beachtet:")
-    summe = sum(r[m, i].x for m in M for i in N_m[m])
+    summe = sum(r[i].x for i in N)
     print("Anzahl an Aufträgen mit Non-regular driver von Gesamt: ", int(summe), "/", len(N))
 
     model.write("model.lp")
@@ -476,7 +476,7 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
     y = model.addVars(all_indices, vtype=GRB.BINARY, name="y")
 
     # Non-regular driver Nutzung
-    r = model.addVars(((m, i) for m in M for i in N_m[m]),vtype=GRB.BINARY,name="r")
+    r = model.addVars(N,vtype=GRB.BINARY,name="r")
 
     # (Komplette) Baustellen-Erfüllung True/False
     u = model.addVars(C, vtype=GRB.BINARY, name="u")
@@ -489,7 +489,7 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
         gp.quicksum(0.5 * d_wj[w][j] * y[w, i, j] for w in W for i in N_w[w] for j in N_w[w]) - # Arbeitswegeaufwand Arbeiter        
         gp.quicksum(100 * x[m, start, j] for m in M for j in N_m[m]) - # Fixkosten für Maschinen
         gp.quicksum(100 * y[w, start, j] for w in W for j in N_w[w]) - # Fixkosten für Arbeiter   
-        gp.quicksum(10 * r[m, i] for m in M for i in N_m[m]), # Strafkosten für Non-regular driver Nutzung
+        gp.quicksum(10 * r[i] for i in N), # Strafkosten für Non-regular driver Nutzung
         GRB.MAXIMIZE
     )
 
@@ -551,7 +551,7 @@ def DefineModel(M, W, W_m, N_m, N_w, N, C, N_c, P_mn, S_mn, P_wn, S_wn, d_ij, d_
     for m in M:
         for i in N_m[m]:
                 model.addConstr(
-                    gp.quicksum(x[m, i, j] for j in S_mn[m, i]) <= gp.quicksum(y[w, i, j] for w in W_m[m] if (w,i) in S_wn for j in S_wn[w, i]) + r[m, i],
+                    gp.quicksum(x[m, i, j] for j in S_mn[m, i]) <= gp.quicksum(y[w, i, j] for w in W_m[m] if (w,i) in S_wn for j in S_wn[w, i]) + r[i],
                     name=f"regular_driver_constraint_{m}_{i}")
 
     
