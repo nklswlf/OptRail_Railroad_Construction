@@ -54,6 +54,8 @@ class InputData:
             self._transport_routes = self._convert_square_2d_list(data.get("TransportwegeString", {}))
             self._work_routes = self._convert_rectangular_2d_list(data.get("ArbeitswegeString", {}))
 
+            print(f"Data loaded from '{self._data_path}' in folder '{self._parent_folder}'.")
+
     def _convert_square_2d_list(self, routes_dict: dict) -> List[List[Optional[float]]]:
         ''' Convert a nested dictionary of routes to a square 2D list (matrix) '''
         max_index = max(int(key) for key in routes_dict.keys())

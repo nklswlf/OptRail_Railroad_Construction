@@ -1,7 +1,7 @@
 from InputData import InputData
 
 def TestInputData():
-    instance_filename = "AnzahlAuftraege_NEW_10/Construction_a10_o107_m5_an57_ar12.json"
+    instance_filename = "Construction_a20_o276_m12_an101_ar25.json"
 
     # Erstellen einer InputData-Instanz
     data = InputData(instance_filename)
@@ -40,6 +40,11 @@ def TestInputData():
     print("\nWork Routes:")
     for row in data.work_routes:
         print(row)
+
+    for order in data.orders:
+        print(order.order_number)
+        print(order.order_item_ids)
+        
 
 if __name__ == "__main__":
     TestInputData()
