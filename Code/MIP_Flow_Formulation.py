@@ -45,17 +45,6 @@ def Run_MIP():
     
 
 
-    # Ergebnisse ausgeben
-    if model.status == GRB.OPTIMAL:
-        print("Optimale Lösung gefunden:")
-        for v in model.getVars():
-            if v.x > 0.5:
-                #print(f"{v.varName} = {v.x}")
-                pass
-        print(f"Zielfunktionswert = {model.objVal}")
-    else:
-        print("Keine optimale Lösung gefunden.")
-
 
 
 
@@ -195,7 +184,8 @@ def Run_MIP():
         json.dump(solution_data, output_file, indent=4)
 
 
-    print("Runtime:" + model.Runtime + " Sekunden")
+    print("Runtime:" , round(model.Runtime,4) , " Sekunden")
+    print(f"Zielfunktionswert = {model.objVal}")
 
 
     
