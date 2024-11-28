@@ -1,0 +1,1274 @@
+{
+    "WorkerAssignments": {
+        "Arbeiter_1": [
+            {
+                "ID": 0,
+                "Start": "2024-08-08T07:00:00",
+                "End": "2024-08-08T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 2,
+                "Start": "2024-08-09T07:00:00",
+                "End": "2024-08-09T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 4,
+                "Start": "2024-08-10T07:00:00",
+                "End": "2024-08-10T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 6,
+                "Start": "2024-08-11T07:00:00",
+                "End": "2024-08-11T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 8,
+                "Start": "2024-08-12T07:00:00",
+                "End": "2024-08-12T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 10,
+                "Start": "2024-08-13T07:00:00",
+                "End": "2024-08-13T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 13,
+                "Start": "2024-08-14T19:00:00",
+                "End": "2024-08-15T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 15,
+                "Start": "2024-08-15T19:00:00",
+                "End": "2024-08-16T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 17,
+                "Start": "2024-08-16T19:00:00",
+                "End": "2024-08-17T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 19,
+                "Start": "2024-08-17T19:00:00",
+                "End": "2024-08-18T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            }
+        ],
+        "Arbeiter_3": [
+            {
+                "ID": 5,
+                "Start": "2024-08-10T19:00:00",
+                "End": "2024-08-11T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 9,
+                "Start": "2024-08-12T19:00:00",
+                "End": "2024-08-13T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 11,
+                "Start": "2024-08-13T19:00:00",
+                "End": "2024-08-14T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 14,
+                "Start": "2024-08-15T07:00:00",
+                "End": "2024-08-15T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 16,
+                "Start": "2024-08-16T07:00:00",
+                "End": "2024-08-16T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 18,
+                "Start": "2024-08-17T07:00:00",
+                "End": "2024-08-17T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 21,
+                "Start": "2024-08-18T19:00:00",
+                "End": "2024-08-19T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 23,
+                "Start": "2024-08-19T19:00:00",
+                "End": "2024-08-20T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 25,
+                "Start": "2024-08-20T19:00:00",
+                "End": "2024-08-21T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 27,
+                "Start": "2024-08-21T19:00:00",
+                "End": "2024-08-22T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            }
+        ],
+        "Arbeiter_7": [
+            {
+                "ID": 100,
+                "Start": "2024-08-06T07:00:00",
+                "End": "2024-08-06T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "3",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 101,
+                "Start": "2024-08-07T07:00:00",
+                "End": "2024-08-07T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "3",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 102,
+                "Start": "2024-08-08T07:00:00",
+                "End": "2024-08-08T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "3",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 103,
+                "Start": "2024-08-09T07:00:00",
+                "End": "2024-08-09T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "3",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 104,
+                "Start": "2024-08-10T07:00:00",
+                "End": "2024-08-10T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "3",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 105,
+                "Start": "2024-08-11T07:00:00",
+                "End": "2024-08-11T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "3",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 110,
+                "Start": "2024-08-21T07:00:00",
+                "End": "2024-08-21T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "6",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 111,
+                "Start": "2024-08-22T07:00:00",
+                "End": "2024-08-22T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "6",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 112,
+                "Start": "2024-08-23T07:00:00",
+                "End": "2024-08-23T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "6",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 113,
+                "Start": "2024-08-26T07:00:00",
+                "End": "2024-08-26T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "7",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 114,
+                "Start": "2024-08-27T07:00:00",
+                "End": "2024-08-27T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "7",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 115,
+                "Start": "2024-08-28T07:00:00",
+                "End": "2024-08-28T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "7",
+                "MachineType": 1,
+                "EquipmentTypes": [
+                    8,
+                    10
+                ],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 116,
+                "Start": "2024-08-20T07:00:00",
+                "End": "2024-08-20T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "8",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            }
+        ],
+        "Arbeiter_11": [
+            {
+                "ID": 1,
+                "Start": "2024-08-08T19:00:00",
+                "End": "2024-08-09T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 3,
+                "Start": "2024-08-09T19:00:00",
+                "End": "2024-08-10T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 7,
+                "Start": "2024-08-11T19:00:00",
+                "End": "2024-08-12T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 12,
+                "Start": "2024-08-14T07:00:00",
+                "End": "2024-08-14T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 20,
+                "Start": "2024-08-18T07:00:00",
+                "End": "2024-08-18T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 22,
+                "Start": "2024-08-19T07:00:00",
+                "End": "2024-08-19T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 24,
+                "Start": "2024-08-20T07:00:00",
+                "End": "2024-08-20T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 26,
+                "Start": "2024-08-21T07:00:00",
+                "End": "2024-08-21T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 106,
+                "Start": "2024-08-04T06:00:00",
+                "End": "2024-08-04T15:00:00",
+                "Duration": 9,
+                "OrderNumber": "4",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 107,
+                "Start": "2024-08-05T06:00:00",
+                "End": "2024-08-05T15:00:00",
+                "Duration": 9,
+                "OrderNumber": "4",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 108,
+                "Start": "2024-08-26T07:00:00",
+                "End": "2024-08-26T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "5",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 109,
+                "Start": "2024-08-27T07:00:00",
+                "End": "2024-08-27T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "5",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 117,
+                "Start": "2024-08-16T07:00:00",
+                "End": "2024-08-16T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "9",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 118,
+                "Start": "2024-08-17T07:00:00",
+                "End": "2024-08-17T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "9",
+                "MachineType": 1,
+                "EquipmentTypes": [
+                    0,
+                    8
+                ],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            }
+        ]
+    },
+    "MachineAssignments": {
+        "ZWB_Liebherr_A922_Rail0": [
+            {
+                "ID": 0,
+                "Start": "2024-08-08T07:00:00",
+                "End": "2024-08-08T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 1,
+                "Start": "2024-08-08T19:00:00",
+                "End": "2024-08-09T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 2,
+                "Start": "2024-08-09T07:00:00",
+                "End": "2024-08-09T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 4,
+                "Start": "2024-08-10T07:00:00",
+                "End": "2024-08-10T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 6,
+                "Start": "2024-08-11T07:00:00",
+                "End": "2024-08-11T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 8,
+                "Start": "2024-08-12T07:00:00",
+                "End": "2024-08-12T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 10,
+                "Start": "2024-08-13T07:00:00",
+                "End": "2024-08-13T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 13,
+                "Start": "2024-08-14T19:00:00",
+                "End": "2024-08-15T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 15,
+                "Start": "2024-08-15T19:00:00",
+                "End": "2024-08-16T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 106,
+                "Start": "2024-08-04T06:00:00",
+                "End": "2024-08-04T15:00:00",
+                "Duration": 9,
+                "OrderNumber": "4",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 107,
+                "Start": "2024-08-05T06:00:00",
+                "End": "2024-08-05T15:00:00",
+                "Duration": 9,
+                "OrderNumber": "4",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 108,
+                "Start": "2024-08-26T07:00:00",
+                "End": "2024-08-26T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "5",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 109,
+                "Start": "2024-08-27T07:00:00",
+                "End": "2024-08-27T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "5",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 116,
+                "Start": "2024-08-20T07:00:00",
+                "End": "2024-08-20T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "8",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 117,
+                "Start": "2024-08-16T07:00:00",
+                "End": "2024-08-16T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "9",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 118,
+                "Start": "2024-08-17T07:00:00",
+                "End": "2024-08-17T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "9",
+                "MachineType": 1,
+                "EquipmentTypes": [
+                    0,
+                    8
+                ],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            }
+        ],
+        "ZWB_Liebherr_A922_Rail2": [
+            {
+                "ID": 3,
+                "Start": "2024-08-09T19:00:00",
+                "End": "2024-08-10T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 5,
+                "Start": "2024-08-10T19:00:00",
+                "End": "2024-08-11T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 7,
+                "Start": "2024-08-11T19:00:00",
+                "End": "2024-08-12T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 9,
+                "Start": "2024-08-12T19:00:00",
+                "End": "2024-08-13T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 11,
+                "Start": "2024-08-13T19:00:00",
+                "End": "2024-08-14T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 12,
+                "Start": "2024-08-14T07:00:00",
+                "End": "2024-08-14T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 14,
+                "Start": "2024-08-15T07:00:00",
+                "End": "2024-08-15T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 16,
+                "Start": "2024-08-16T07:00:00",
+                "End": "2024-08-16T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 17,
+                "Start": "2024-08-16T19:00:00",
+                "End": "2024-08-17T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 18,
+                "Start": "2024-08-17T07:00:00",
+                "End": "2024-08-17T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 19,
+                "Start": "2024-08-17T19:00:00",
+                "End": "2024-08-18T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 20,
+                "Start": "2024-08-18T07:00:00",
+                "End": "2024-08-18T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 21,
+                "Start": "2024-08-18T19:00:00",
+                "End": "2024-08-19T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 22,
+                "Start": "2024-08-19T07:00:00",
+                "End": "2024-08-19T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 23,
+                "Start": "2024-08-19T19:00:00",
+                "End": "2024-08-20T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 24,
+                "Start": "2024-08-20T07:00:00",
+                "End": "2024-08-20T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 25,
+                "Start": "2024-08-20T19:00:00",
+                "End": "2024-08-21T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 26,
+                "Start": "2024-08-21T07:00:00",
+                "End": "2024-08-21T18:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 27,
+                "Start": "2024-08-21T19:00:00",
+                "End": "2024-08-22T06:00:00",
+                "Duration": 11,
+                "OrderNumber": "0",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [],
+                "AssignedMachine": null,
+                "Type": 0
+            }
+        ],
+        "ZWB_Liebherr_A922_Rail4": [
+            {
+                "ID": 100,
+                "Start": "2024-08-06T07:00:00",
+                "End": "2024-08-06T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "3",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 101,
+                "Start": "2024-08-07T07:00:00",
+                "End": "2024-08-07T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "3",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 102,
+                "Start": "2024-08-08T07:00:00",
+                "End": "2024-08-08T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "3",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 103,
+                "Start": "2024-08-09T07:00:00",
+                "End": "2024-08-09T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "3",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 104,
+                "Start": "2024-08-10T07:00:00",
+                "End": "2024-08-10T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "3",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 105,
+                "Start": "2024-08-11T07:00:00",
+                "End": "2024-08-11T17:00:00",
+                "Duration": 10,
+                "OrderNumber": "3",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 110,
+                "Start": "2024-08-21T07:00:00",
+                "End": "2024-08-21T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "6",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 111,
+                "Start": "2024-08-22T07:00:00",
+                "End": "2024-08-22T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "6",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 112,
+                "Start": "2024-08-23T07:00:00",
+                "End": "2024-08-23T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "6",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 113,
+                "Start": "2024-08-26T07:00:00",
+                "End": "2024-08-26T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "7",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 114,
+                "Start": "2024-08-27T07:00:00",
+                "End": "2024-08-27T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "7",
+                "MachineType": 1,
+                "EquipmentTypes": [],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            },
+            {
+                "ID": 115,
+                "Start": "2024-08-28T07:00:00",
+                "End": "2024-08-28T16:00:00",
+                "Duration": 9,
+                "OrderNumber": "7",
+                "MachineType": 1,
+                "EquipmentTypes": [
+                    8,
+                    10
+                ],
+                "WorkerQualifications": [
+                    9,
+                    4
+                ],
+                "AssignedMachine": null,
+                "Type": 0
+            }
+        ]
+    }
+}
