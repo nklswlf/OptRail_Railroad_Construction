@@ -15,7 +15,7 @@ class FlowFormulation:
         self.instance = instance_filename.split('Construction_')[1].split('.json')[0]
         self.data = None
         self.model = None
-        self.objective = "weighted" # weighted or hierarchical
+        #self.objective_strategy = objective_strategy
 
         # ========================
         # 1. Sets
@@ -97,12 +97,12 @@ class FlowFormulation:
         # 1. Process Machines
         # ========================
         for machine in self.data.machines:
-            self.M.append(machine.id)
-            self.W_m[machine.id] = [int(driver) for driver in machine.default_drivers]
-            self.N_m[machine.id] = []
+            self.M.append(machine.name)
+            self.W_m[machine.name] = [int(driver) for driver in machine.default_drivers]
+            self.N_m[machine.name] = []
             for orderItem in self.data.order_items:
                 if orderItem.machine_type == machine.type:
-                    self.N_m[machine.id].append(orderItem.id)
+                    self.N_m[machine.name].append(orderItem.id)
 
         # ========================
         # 2. Process Workers
@@ -309,8 +309,10 @@ class FlowFormulation:
         # ========================
         # 2. Set Objective Function
         # ========================
+
+        self.objective_strategy = "weighted"
         
-        if self.objective == "weighted":
+        if self.objective_strategy == "weighted":
             self.model.setObjective(
                 gp.quicksum(100000 * u[c] for c in self.C) -
                 gp.quicksum(0.5 * self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]) -
@@ -320,7 +322,7 @@ class FlowFormulation:
                 gp.quicksum(10 * r[i] for i in self.N),
                 GRB.MAXIMIZE
             )
-        elif self.objective == "hierarchical":
+        elif self.objective_strategy == "hierarchical":
             self.model.setObjective(
                 gp.quicksum(u[c] for c in self.C),
                 GRB.MAXIMIZE
@@ -474,16 +476,16 @@ class FlowFormulation:
         # ========================
         # 3. Site Fulfillment Results
         # ========================
-        site_fulfillment = []
+        self.site_fulfillment = {}
         for c in self.C:
+            self.site_fulfillment[c] = False
             if self.model.getVarByName(f"u[{c}]").x > 0.5:
-                site_fulfillment.append([c, True])
-            else:
-                site_fulfillment.append([c, False])
-        sum_finished_sites = sum(self.model.getVarByName(f"u[{c}]").x for c in self.C)
-        sum_total_sites = len(self.C)
-        sum_finished_order_items = sum(self.model.getVarByName(f"x[{m},{i},{j}]").x for m in self.M for i in self.N_m[m] for j in self.N_m[m]) + sum(self.model.getVarByName(f"x[{m},{i},{self.end}]").x for m in self.M for i in self.N_m[m])
-        sum_order_items = len(self.N)
+                self.site_fulfillment[c] = True
+
+        self.sum_finished_sites = sum(self.model.getVarByName(f"u[{c}]").x for c in self.C)
+        self.sum_total_sites = len(self.C)
+        self.sum_finished_order_items = sum(self.model.getVarByName(f"x[{m},{i},{j}]").x for m in self.M for i in self.N_m[m] for j in self.N_m[m]) + sum(self.model.getVarByName(f"x[{m},{i},{self.end}]").x for m in self.M for i in self.N_m[m])
+        self.sum_order_items = len(self.N)
 
 
         # ========================
@@ -492,47 +494,47 @@ class FlowFormulation:
         
         number_of_machines = len(self.M)
         number_of_workers = len(self.W)
-        number_of_used_worker = sum(self.model.getVarByName(f"y[{w},{self.start},{j}]").x for w in self.W for j in self.N_w[w])
-        number_of_used_machines = sum(self.model.getVarByName(f"x[{m},{self.start},{j}]").x for m in self.M for j in self.N_m[m])
-        non_regular_driver_count = sum(self.model.getVarByName(f"r[{i}]").x for i in self.N)
+        self.number_of_used_worker = sum(self.model.getVarByName(f"y[{w},{self.start},{j}]").x for w in self.W for j in self.N_w[w])
+        self.number_of_used_machines = sum(self.model.getVarByName(f"x[{m},{self.start},{j}]").x for m in self.M for j in self.N_m[m])
+        self.non_regular_driver_count = sum(self.model.getVarByName(f"r[{i}]").x for i in self.N)
 
-        distance_machine = {}
+        self.distance_machine = {}
         for m in self.M:
-            distance_machine[m] = {"Distance": 0, "Utilization": False}
+            self.distance_machine[m] = {"Distance": 0, "Utilization": False}
             for i in self.N_m[m]:
                 for j in self.N_m[m]:
                     if i != j and self.model.getVarByName(f"x[{m},{i},{j}]").x > 0.5:
-                        distance_machine[m]["Distance"] += self.d_ij[i][j]
-                        distance_machine[m]["Utilization"] = True
+                        self.distance_machine[m]["Distance"] += self.d_ij[i][j]
+                        self.distance_machine[m]["Utilization"] = True
 
 
-        total_distance_machine = sum(distance_machine[m]["Distance"] for m in self.M)
+        self.total_distance_machine = sum(self.distance_machine[m]["Distance"] for m in self.M)
         
         
-        distance_worker = {}
+        self.distance_worker = {}
         for w in self.W:
-            distance_worker[w] = 0
+            self.distance_worker[w] = 0
             for i in self.N_w[w]:
                 for j in self.N_w[w]:
                     if i != j and self.model.getVarByName(f"y[{w},{i},{j}]").x > 0.5:
-                        distance_worker[w] += self.d_wj[w][j]
+                        self.distance_worker[w] += self.d_wj[w][j]
 
-        total_distance_worker = sum(distance_worker.values())
+        self.total_distance_worker = sum(self.distance_worker.values())
 
 
         # ========================
         # 4. Working Hours of Workers
         # ========================
 
-        working_hours = {}
+        self.working_hours = {}
         for w in self.W:
-            working_hours[w] = 0
+            self.working_hours[w] = 0
             for i in self.N_w[w]:
                 for j in self.N_w[w]:
                     if i != j and self.model.getVarByName(f"y[{w},{i},{j}]").x > 0.5:
-                        working_hours[w] += self.t_o[i]
+                        self.working_hours[w] += self.t_o[i]
 
-        total_working_hours = sum(working_hours.values())
+        self.total_working_hours = sum(self.working_hours.values())
 
 
 
@@ -541,10 +543,10 @@ class FlowFormulation:
         # ========================
         df_machine = pd.DataFrame(machine_flows, columns=["Machine", "From Order", "To Order"])
         df_worker = pd.DataFrame(worker_flows, columns=["Worker", "From Order", "To Order"])
-        df_site = pd.DataFrame(site_fulfillment, columns=["Site", "Fulfilled"])
-        df_transport = pd.DataFrame.from_dict(distance_machine, orient="index")
-        df_worker_transport = pd.DataFrame.from_dict(distance_worker, columns=["Distance"], orient="index")
-        df_working_hours = pd.DataFrame.from_dict(working_hours, columns=["Working Hours"], orient="index")
+        df_site = pd.DataFrame.from_dict(self.site_fulfillment, columns=["Fulfilled"], orient="index")
+        df_transport = pd.DataFrame.from_dict(self.distance_machine, orient="index")
+        df_worker_transport = pd.DataFrame.from_dict(self.distance_worker, columns=["Distance"], orient="index")
+        df_working_hours = pd.DataFrame.from_dict(self.working_hours, columns=["Working Hours"], orient="index")
 
         # ========================
         # 6. Display Results
@@ -555,31 +557,31 @@ class FlowFormulation:
         print(df_worker)
         print("\nTransport Distance:")
         print(df_transport)
-        print(f"Total Transport Distance: {total_distance_machine}")
+        print(f"Total Transport Distance: {self.total_distance_machine}")
         print("\nWork Distance:")
         print(df_worker_transport)
-        print(f"Total Work Distance: {total_distance_worker}")
+        print(f"Total Work Distance: {self.total_distance_worker}")
         print("\nWorking Hours:")
         print(df_working_hours)
-        print(f"Total Working Hours: {total_working_hours}")
+        print(f"Total Working Hours: {self.total_working_hours}")
         print("\nSite Fulfillment:")
         print(df_site)
-        print(f"\nNumber of fulfilled sites: {int(sum_finished_sites)} / {sum_total_sites}")
-        print(f"Number of fulfilled order items: {int(sum_finished_order_items)} / {sum_order_items}")
-        print(f"Number of non-regular drivers used: {int(non_regular_driver_count)} / {int(sum_finished_order_items)}")
-        print(f"\nNumber of used machines: {int(number_of_used_machines)} / {number_of_machines}")
-        print(f"Number of used workers: {int(number_of_used_worker)} / {number_of_workers}")
+        print(f"\nNumber of fulfilled sites: {int(self.sum_finished_sites)} / {self.sum_total_sites}")
+        print(f"Number of fulfilled order items: {int(self.sum_finished_order_items)} / {self.sum_order_items}")
+        print(f"Number of non-regular drivers used: {int(self.non_regular_driver_count)} / {int(self.sum_finished_order_items)}")
+        print(f"\nNumber of used machines: {int(self.number_of_used_machines)} / {number_of_machines}")
+        print(f"Number of used workers: {int(self.number_of_used_worker)} / {number_of_workers}")
 
 
     def save_solution_to_file(self):
         """Save the optimization results to an output file."""
         print("\nSaving solution to output file...")
 
-        solution_data = {"Arbeiterzuweisung": {}}
-
         # ========================
         # 1. Worker Assignments
         # ========================
+        solution_data = {"Arbeiterzuweisung": {}}
+
         for w in self.W:
             current_worker = next(worker for worker in self.data.workers if worker.personal_number == w)
             for i in self.N_w[w]:
@@ -624,7 +626,7 @@ class FlowFormulation:
         solution_data["Maschinenzuweisung"] = {}
 
         for m in self.M:
-            current_machine = next(machine for machine in self.data.machines if machine.id == m)
+            current_machine = next(machine for machine in self.data.machines if machine.name == m)
             for i in self.N_m[m]:
                 current_order_item = next(orderItem for orderItem in self.data.order_items if orderItem.id == i)
                 for j in self.N_m[m]:
@@ -661,6 +663,35 @@ class FlowFormulation:
                     }
                     solution_data["Maschinenzuweisung"][current_machine.name].append(assignment)
 
+        solution_data["RechenzeitInSekunden"] = self.model.Runtime
+        solution_data["Zielfunktionswert"] = self.model.objVal
+
+        solution_data["Baustellenanzahl"] = self.sum_total_sites
+        solution_data["Baustellenfertig"] = self.sum_finished_sites
+
+        solution_data["Baustellebearbeitet"] = self.site_fulfillment
+        
+        solution_data["OrderItemsanzahl"] = self.sum_order_items
+        solution_data["OrderItemsfertig"] = self.sum_finished_order_items
+        solution_data["NichtregulaereFahrer"] = self.non_regular_driver_count
+
+        solution_data["MaschinenanzahlGesamt"] = len(self.M)
+        solution_data["MaschinenGenutzt"] = self.number_of_used_machines
+        solution_data["MaschinenGenutztDetails"] = {key: value["Utilization"] for key, value in self.distance_machine.items()}
+        
+        solution_data["TransportdistanzGesamt"] = self.total_distance_machine
+        solution_data["Transportdistanz"] = {key: value["Distance"] for key, value in self.distance_machine.items()}
+
+        solution_data["ArbeiteranzahlGesamt"] = len(self.W)
+        solution_data["ArbeiterGenutzt"] = self.number_of_used_worker
+
+        solution_data["ArbeitswegGesamt"] = self.total_distance_worker
+        solution_data["Arbeitsweg"] = self.distance_worker
+
+        solution_data["ArbeitszeitGesamt"] = self.total_working_hours
+        solution_data["Arbeitszeit"] = self.working_hours
+
+
         # ========================
         # 3. Save Solution Data to File
         # ========================
@@ -688,12 +719,12 @@ class FlowFormulation:
 if __name__ == "__main__":
 
     # Reduced
-    instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
+    #instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
     #instance_filename = "Construction_a3_o80_m10_an10_ar9_reduced.json"
     #instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
 
     # 10 Sites --> "Construction_a10_o118_m6_an53_ar13.json": Instance not duable since one order has no order items
-    #instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
+    instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
     #instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
     #instance_filename = "Construction_a10_o119_m5_an54_ar13.json"
     #instance_filename = "Construction_a10_o144_m6_an53_ar12.json"
