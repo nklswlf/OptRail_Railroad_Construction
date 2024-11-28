@@ -29,7 +29,7 @@ class GanttDiagramGenerator:
         """
         self.input_file = input_file
         self.parent_folder = parent_folder
-        self.instance = input_file.split('Construction_')[1].split('_reduced')[0]
+        self.instance = input_file.split('Construction_')[1].split('.json')[0]
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
 
         # Paths for input and output files
@@ -37,7 +37,7 @@ class GanttDiagramGenerator:
             self.script_dir, "..", "Data", "Instanzen", parent_folder, input_file
         )
         self.output_file_path = os.path.join(
-            self.script_dir, "..", "Data", "Solution", parent_folder, f"Loesung_{input_file}"
+            self.script_dir, "..", "Data", "Solution", parent_folder, self.instance , f"Solution_{input_file}"
         )
 
         # Load input and output data
@@ -56,8 +56,12 @@ class GanttDiagramGenerator:
         """
         Generate Gantt diagrams for both worker shifts and machine assignments.
         """
+        print(f"Creating Gantt diagrams for instance {self.instance}...")
+
         self._create_shift_plan()
         self._create_machine_plan()
+
+        print(f"Gantt diagrams have been created.\n")
 
     def _create_shift_plan(self):
         """
@@ -90,7 +94,7 @@ class GanttDiagramGenerator:
             color_discrete_map={"Early Shift": "lightblue", "Late Shift": "lightcoral"}
         )
         fig.update_layout(
-            title="Worker Assignments with Site Information",
+            title=f"Worker Assignments with Site Information for Instance {self.instance}",
             xaxis_title="Date", yaxis_title="Worker"
         )
 
@@ -132,7 +136,7 @@ class GanttDiagramGenerator:
             }
         )
         fig.update_layout(
-            title="Machine and Attachment Assignments by Site",
+            title=f"Machine and Attachment Assignments by Site for Instance {self.instance}",
             xaxis_title="Date", yaxis_title="Name"
         )
 
@@ -153,9 +157,10 @@ class GanttDiagramGenerator:
         """
         Save the Gantt chart as an HTML file and display it.
         """
+
         html_file_path = os.path.join(
-            self.script_dir, "..", "Data", "Solution", self.parent_folder, file_name
+            self.script_dir, "..", "Data", "Solution", self.parent_folder, self.instance, file_name
         )
         os.makedirs(os.path.dirname(html_file_path), exist_ok=True)
         fig.write_html(html_file_path)
-        fig.show()
+        #fig.show()
