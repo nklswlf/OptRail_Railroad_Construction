@@ -12,6 +12,7 @@ class FlowFormulation:
     
     def __init__(self, instance_filename):
         self.instance_filename = instance_filename
+        self.instance = instance_filename.split('Construction_')[1].split('.json')[0]
         self.data = None
         self.model = None
 
@@ -78,7 +79,7 @@ class FlowFormulation:
 
     def load_instance(self):
         """Load the instance data from a JSON file."""
-        print("Loading instance data...")
+        print("\nLoading instance data...")
         current_time = time()
         self.data = InputData(self.instance_filename)
         elapsed_time = time() - current_time
@@ -88,7 +89,7 @@ class FlowFormulation:
         
     def preprocess_data(self):
         """Preprocess the input data for optimization."""
-        print("Preprocessing data...")
+        print("\nPreprocessing data...")
         current_time = time()
         
         # ========================
@@ -274,7 +275,7 @@ class FlowFormulation:
         """Create and configure the Gurobi optimization model."""
 
         current_time = time()
-        print("Creating optimization model...")
+        print("\nCreating optimization model...")
         self.model = gp.Model("Flow_Formulation")
 
         # ========================
@@ -410,7 +411,7 @@ class FlowFormulation:
 
     def solve_model(self):
         """Solve the optimization model."""
-        print("Solving the model...")
+        print("\nSolving the model...")
         self.model.optimize()
 
         print("Time elapsed: {:.2f} seconds".format(self.model.Runtime))
@@ -418,7 +419,7 @@ class FlowFormulation:
 
     def postprocess_results(self):
         """Extract and display results after model optimization."""
-        print("Postprocessing results...")
+        print("\nPostprocessing results...")
 
         # ========================
         # 1. Machine Flow Results
@@ -553,18 +554,18 @@ class FlowFormulation:
         print(f"Total Working Hours: {total_working_hours}")
         print("\nSite Fulfillment:")
         print(df_site)
-        print(f"\nNumber of fulfilled sites: {sum_finished_sites} / {sum_total_sites}")
-        print(f"Number of fulfilled order items: {sum_finished_order_items} / {sum_order_items}")
-        print(f"Number of non-regular drivers used: {non_regular_driver_count} / {sum_finished_order_items}")
-        print(f"\nNumber of used machines: {number_of_used_machines} / {number_of_machines}")
-        print(f"Number of used workers: {number_of_used_worker} / {number_of_workers}")
+        print(f"\nNumber of fulfilled sites: {int(sum_finished_sites)} / {sum_total_sites}")
+        print(f"Number of fulfilled order items: {int(sum_finished_order_items)} / {sum_order_items}")
+        print(f"Number of non-regular drivers used: {int(non_regular_driver_count)} / {int(sum_finished_order_items)}")
+        print(f"\nNumber of used machines: {int(number_of_used_machines)} / {number_of_machines}")
+        print(f"Number of used workers: {int(number_of_used_worker)} / {number_of_workers}")
 
 
     def save_solution_to_file(self):
         """Save the optimization results to an output file."""
-        print("Saving solution to output file...")
+        print("\nSaving solution to output file...")
 
-        solution_data = {"WorkerAssignments": {}}
+        solution_data = {"Arbeiterzuweisung": {}}
 
         # ========================
         # 1. Worker Assignments
@@ -575,42 +576,42 @@ class FlowFormulation:
                 current_order_item = next(orderItem for orderItem in self.data.order_items if orderItem.id == i)
                 for j in self.N_w[w]:
                     if i != j and self.model.getVarByName(f"y[{w},{i},{j}]").x > 0.5:
-                        if current_worker.name not in solution_data["WorkerAssignments"]:
-                            solution_data["WorkerAssignments"][current_worker.name] = []
+                        if current_worker.name not in solution_data["Arbeiterzuweisung"]:
+                            solution_data["Arbeiterzuweisung"][current_worker.name] = []
                         assignment = {
                             "ID": current_order_item.id,
                             "Start": current_order_item.start_time.isoformat(),
-                            "End": current_order_item.end_time.isoformat(),
-                            "Duration": current_order_item.duration,
-                            "OrderNumber": current_order_item.order_number,
-                            "MachineType": current_order_item.machine_type,
-                            "EquipmentTypes": current_order_item.equipment_types,
-                            "WorkerQualifications": current_order_item.worker_qualifications,
-                            "AssignedMachine": current_order_item.assigned_machine,
-                            "Type": current_order_item.type,
+                            "Ende": current_order_item.end_time.isoformat(),
+                            "Dauer": current_order_item.duration,
+                            "Auftragsnummer": current_order_item.order_number,
+                            "MaschinenTyp": current_order_item.machine_type,
+                            "AnbaugeraeteTypen": current_order_item.equipment_types,
+                            "Arbeiterqualifikationen": current_order_item.worker_qualifications,
+                            "zugewieseneMaschine": current_order_item.assigned_machine,
+                            "Typ": current_order_item.type,
                         }
-                        solution_data["WorkerAssignments"][current_worker.name].append(assignment)
+                        solution_data["Arbeiterzuweisung"][current_worker.name].append(assignment)
                 if self.model.getVarByName(f"y[{w},{i},end]").x > 0.5:
-                    if current_worker.name not in solution_data["WorkerAssignments"]:
-                        solution_data["WorkerAssignments"][current_worker.name] = []
+                    if current_worker.name not in solution_data["Arbeiterzuweisung"]:
+                        solution_data["Arbeiterzuweisung"][current_worker.name] = []
                     assignment = {
                         "ID": current_order_item.id,
                         "Start": current_order_item.start_time.isoformat(),
-                        "End": current_order_item.end_time.isoformat(),
-                        "Duration": current_order_item.duration,
-                        "OrderNumber": current_order_item.order_number,
-                        "MachineType": current_order_item.machine_type,
-                        "EquipmentTypes": current_order_item.equipment_types,
-                        "WorkerQualifications": current_order_item.worker_qualifications,
-                        "AssignedMachine": current_order_item.assigned_machine,
-                        "Type": current_order_item.type,
+                        "Ende": current_order_item.end_time.isoformat(),
+                        "Dauer": current_order_item.duration,
+                        "Auftragsnummer": current_order_item.order_number,
+                        "MaschinenTyp": current_order_item.machine_type,
+                        "AnbaugeraeteTypen": current_order_item.equipment_types,
+                        "Arbeiterqualifikationen": current_order_item.worker_qualifications,
+                        "zugewieseneMaschine": current_order_item.assigned_machine,
+                        "Typ": current_order_item.type,
                     }
-                    solution_data["WorkerAssignments"][current_worker.name].append(assignment)
+                    solution_data["Arbeiterzuweisung"][current_worker.name].append(assignment)
 
         # ========================
         # 2. Machine Assignments
         # ========================
-        solution_data["MachineAssignments"] = {}
+        solution_data["Maschinenzuweisung"] = {}
 
         for m in self.M:
             current_machine = next(machine for machine in self.data.machines if machine.id == m)
@@ -618,49 +619,49 @@ class FlowFormulation:
                 current_order_item = next(orderItem for orderItem in self.data.order_items if orderItem.id == i)
                 for j in self.N_m[m]:
                     if i != j and self.model.getVarByName(f"x[{m},{i},{j}]").x > 0.5:
-                        if current_machine.name not in solution_data["MachineAssignments"]:
-                            solution_data["MachineAssignments"][current_machine.name] = []
+                        if current_machine.name not in solution_data["Maschinenzuweisung"]:
+                            solution_data["Maschinenzuweisung"][current_machine.name] = []
                         assignment = {
                             "ID": current_order_item.id,
                             "Start": current_order_item.start_time.isoformat(),
-                            "End": current_order_item.end_time.isoformat(),
-                            "Duration": current_order_item.duration,
-                            "OrderNumber": current_order_item.order_number,
-                            "MachineType": current_order_item.machine_type,
-                            "EquipmentTypes": current_order_item.equipment_types,
-                            "WorkerQualifications": current_order_item.worker_qualifications,
-                            "AssignedMachine": current_order_item.assigned_machine,
-                            "Type": current_order_item.type,
+                            "Ende": current_order_item.end_time.isoformat(),
+                            "Dauer": current_order_item.duration,
+                            "Auftragsnummer": current_order_item.order_number,
+                            "MaschinenTyp": current_order_item.machine_type,
+                            "AnbaugeraeteTypen": current_order_item.equipment_types,
+                            "Arbeiterqualifikationen": current_order_item.worker_qualifications,
+                            "zugewieseneMaschine": current_order_item.assigned_machine,
+                            "Typ": current_order_item.type,
                         }
-                        solution_data["MachineAssignments"][current_machine.name].append(assignment)
+                        solution_data["Maschinenzuweisung"][current_machine.name].append(assignment)
                 if self.model.getVarByName(f"x[{m},{i},end]").x > 0.5:
-                    if current_machine.name not in solution_data["MachineAssignments"]:
-                        solution_data["MachineAssignments"][current_machine.name] = []
+                    if current_machine.name not in solution_data["Maschinenzuweisung"]:
+                        solution_data["Maschinenzuweisung"][current_machine.name] = []
                     assignment = {
                         "ID": current_order_item.id,
                         "Start": current_order_item.start_time.isoformat(),
-                        "End": current_order_item.end_time.isoformat(),
-                        "Duration": current_order_item.duration,
-                        "OrderNumber": current_order_item.order_number,
-                        "MachineType": current_order_item.machine_type,
-                        "EquipmentTypes": current_order_item.equipment_types,
-                        "WorkerQualifications": current_order_item.worker_qualifications,
-                        "AssignedMachine": current_order_item.assigned_machine,
-                        "Type": current_order_item.type,
+                        "Ende": current_order_item.end_time.isoformat(),
+                        "Dauer": current_order_item.duration,
+                        "Auftragsnummer": current_order_item.order_number,
+                        "MaschinenTyp": current_order_item.machine_type,
+                        "AnbaugeraeteTypen": current_order_item.equipment_types,
+                        "Arbeiterqualifikationen": current_order_item.worker_qualifications,
+                        "zugewieseneMaschine": current_order_item.assigned_machine,
+                        "Typ": current_order_item.type,
                     }
-                    solution_data["MachineAssignments"][current_machine.name].append(assignment)
+                    solution_data["Maschinenzuweisung"][current_machine.name].append(assignment)
 
         # ========================
         # 3. Save Solution Data to File
         # ========================
         parent_folder = self.data._parent_folder
-        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder
+        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.instance
         solution_path.mkdir(parents=True, exist_ok=True)
         output_filename = solution_path / f"Solution_{self.instance_filename}"
         with open(output_filename, "w") as output_file:
             json.dump(solution_data, output_file, indent=4)
 
-        print(f"Solution saved to: {output_filename}")
+        print(f"Solution saved to: {output_filename} \n")
 
 
     def execute(self):
@@ -682,9 +683,9 @@ if __name__ == "__main__":
     #instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
 
     # 10 Sites --> "Construction_a10_o118_m6_an53_ar13.json": Instance not duable since one order has no order items
-    #instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
+    instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
     #instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
-    instance_filename = "Construction_a10_o119_m5_an54_ar13.json"
+    #instance_filename = "Construction_a10_o119_m5_an54_ar13.json"
     #instance_filename = "Construction_a10_o144_m6_an53_ar12.json"
 
     # 15 Sites
