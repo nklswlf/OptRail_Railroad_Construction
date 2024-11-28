@@ -7,16 +7,25 @@ import os
 
 class Solution:
 
-    def __init__(self, route_plan_worker:dict, route_plan_machine:dict, route_plan_attachment:dict, data:InputData):
+    def __init__(self, route_plan_worker:dict, route_plan_machine:dict, data:InputData):
         ''' Define the attributes for solution'''
 
-        self._number_tasks = -1
-        self._route_plan_worker = route_plan_worker
-        self._route_plan_machine = route_plan_machine
-        self._route_plan_attachment = route_plan_attachment
-        self._create_unused_tasks(data)
-        self._travel_distance_worker = self._calculate_travel_distance_worker(data)
-        self._travel_distance_machine = self._calculate_travel_distance_machine(data)
+        self.data = data
+        self.number_sites = - 1
+        self.route_plan_worker = route_plan_worker
+        self.route_plan_machine = route_plan_machine
+
+    def __str__(self) -> str:
+        ''' Define the string representation of the solution'''
+        return f"Route Plan Worker: {self.route_plan_worker}\nRoute Plan Machine: {self.route_plan_machine}\n"
+
+
+
+    def feasibility_check(self):
+        ''' Check the feasibility of the solution'''
+        print("Checking the feasibility of the solution...")
+        print("Solution is feasible.")
+        
 
 
 

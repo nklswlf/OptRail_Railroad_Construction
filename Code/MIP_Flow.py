@@ -4,8 +4,9 @@ import json
 from pathlib import Path
 import pandas as pd
 from InputData import *
-from OutputData import GanttDiagramGenerator
+from OutputData import *
 from time import time
+from itertools import groupby
 
 
 class FlowFormulation:
@@ -436,42 +437,104 @@ class FlowFormulation:
         # ========================
         # 1. Machine Flow Results
         # ========================
+
+        # Direclty for terminal output
         machine_flows = []
         for m in self.M:
             for i in self.N_m[m]:
                 for j in self.N_m[m]:
-                    machine_flow_var = self.model.getVarByName(f"x[{m},{self.start},{j}]")
-                    if machine_flow_var and machine_flow_var.x > 0.5 and [m, self.start, j] not in machine_flows:
-                        machine_flows.append([m, self.start, j])
+                    for flow in [
+                        (self.start, j),
+                        (i, j),
+                        (i, self.end),
+                        (self.start, self.end)
+                    ]:
+                        machine_flow_var = self.model.getVarByName(f"x[{m},{flow[0]},{flow[1]}]")
+                        if machine_flow_var and machine_flow_var.x > 0.5:
+                            flow_entry = [m, flow[0], flow[1]]
+                            if flow_entry not in machine_flows:
+                                machine_flows.append(flow_entry)
+
+        sorted_machine_flows = []
+        for machine, group in groupby(sorted(machine_flows, key=lambda x: x[0]), key=lambda x: x[0]):
+            sorted_group = sorted(
+                list(group),
+                key=lambda x: (
+                    0 if x[1] == 'start' else
+                    2 if x[2] == 'end' else
+                    1,
+                    self.O_t_start_inverted.get(x[2], float('inf'))
+                )
+            )
+            sorted_machine_flows.extend(sorted_group)
+
+
+        # Route plan for Solution object
+        self.route_plan_machine = {m: [] for m in self.M}
+        for m in self.M:
+            for i in self.N_m[m]:
+                for j in self.N_m[m]:
                     machine_flow_var = self.model.getVarByName(f"x[{m},{i},{j}]")
-                    if machine_flow_var and machine_flow_var.x > 0.5:
-                        machine_flows.append([m, i, j])
+                    if machine_flow_var and machine_flow_var.x > 0.5 and i not in self.route_plan_machine[m]:
+                        self.route_plan_machine[m].append(i)
                 machine_flow_var = self.model.getVarByName(f"x[{m},{i},{self.end}]")
-                if machine_flow_var and machine_flow_var.x > 0.5 and [m, i, self.end] not in machine_flows:
-                    machine_flows.append([m, i, self.end])
-            machine_flow_var = self.model.getVarByName(f"x[{m},{self.start},{self.end}]")
-            if machine_flow_var and machine_flow_var.x > 0.5 and [m, self.start, self.end] not in machine_flows:
-                machine_flows.append([m, self.start, self.end])
+                if machine_flow_var and machine_flow_var.x > 0.5 and i not in self.route_plan_machine[m]:
+                    self.route_plan_machine[m].append(i)
+        for m in self.M:
+            self.route_plan_machine[m] = sorted(self.route_plan_machine[m], key=lambda x: self.O_t_start_inverted[x])
+
+
 
         # ========================
         # 2. Worker Flow Results
         # ========================
+
+        # Direclty for terminal output
         worker_flows = []
         for w in self.W:
             for i in self.N_w[w]:
                 for j in self.N_w[w]:
-                    worker_flow_var = self.model.getVarByName(f"y[{w},{self.start},{j}]")
-                    if worker_flow_var and worker_flow_var.x > 0.5 and [w, self.start, j] not in worker_flows:
-                        worker_flows.append([w, self.start, j])
+
+                    for flow in [
+                        (self.start, j),
+                        (i, j),
+                        (i, self.end),
+                        (self.start, self.end)
+                    ]:
+                        worker_flow_var = self.model.getVarByName(f"y[{w},{flow[0]},{flow[1]}]")
+                        if worker_flow_var and worker_flow_var.x > 0.5:
+                            flow_entry = [w, flow[0], flow[1]]
+                            if flow_entry not in worker_flows:
+                                worker_flows.append(flow_entry)
+
+        sorted_worker_flows = []
+        for worker, group in groupby(sorted(worker_flows, key=lambda x: x[0]), key=lambda x: x[0]):
+            sorted_group = sorted(
+                list(group),
+                key=lambda x: (
+                    0 if x[1] == 'start' else  
+                    2 if x[2] == 'end' else  
+                    1,  
+                    self.O_t_start_inverted.get(x[2], float('inf'))  
+                )
+            )
+            sorted_worker_flows.extend(sorted_group)
+
+
+        # Route plan for Solution object
+        self.route_plan_worker = {w: [] for w in self.W}
+        for w in self.W:
+            for i in self.N_w[w]:
+                for j in self.N_w[w]:
                     worker_flow_var = self.model.getVarByName(f"y[{w},{i},{j}]")
-                    if worker_flow_var and worker_flow_var.x > 0.5:
-                        worker_flows.append([w, i, j])
+                    if worker_flow_var and worker_flow_var.x > 0.5 and i not in self.route_plan_worker[w]:
+                        self.route_plan_worker[w].append(i)
                 worker_flow_var = self.model.getVarByName(f"y[{w},{i},{self.end}]")
-                if worker_flow_var and worker_flow_var.x > 0.5 and [w, i, self.end] not in worker_flows:
-                    worker_flows.append([w, i, self.end])
-            worker_flow_var = self.model.getVarByName(f"y[{w},{self.start},{self.end}]")
-            if worker_flow_var and worker_flow_var.x > 0.5 and [w, self.start, self.end] not in worker_flows:
-                worker_flows.append([w, self.start, self.end])
+                if worker_flow_var and worker_flow_var.x > 0.5 and i not in self.route_plan_worker[w]:
+                    self.route_plan_worker[w].append(i)
+        for w in self.W:
+            self.route_plan_worker[w] = sorted(self.route_plan_worker[w], key=lambda x: self.O_t_start_inverted[x])
+
 
         # ========================
         # 3. Site Fulfillment Results
@@ -541,8 +604,8 @@ class FlowFormulation:
         # ========================
         # 5. Create DataFrames
         # ========================
-        df_machine = pd.DataFrame(machine_flows, columns=["Machine", "From Order", "To Order"])
-        df_worker = pd.DataFrame(worker_flows, columns=["Worker", "From Order", "To Order"])
+        df_machine = pd.DataFrame(sorted_machine_flows, columns=["Machine", "From Order", "To Order"])
+        df_worker = pd.DataFrame(sorted_worker_flows, columns=["Worker", "From Order", "To Order"])
         df_site = pd.DataFrame.from_dict(self.site_fulfillment, columns=["Fulfilled"], orient="index")
         df_transport = pd.DataFrame.from_dict(self.distance_machine, orient="index")
         df_worker_transport = pd.DataFrame.from_dict(self.distance_worker, columns=["Distance"], orient="index")
@@ -570,7 +633,7 @@ class FlowFormulation:
         print(f"Number of fulfilled order items: {int(self.sum_finished_order_items)} / {self.sum_order_items}")
         print(f"Number of non-regular drivers used: {int(self.non_regular_driver_count)} / {int(self.sum_finished_order_items)}")
         print(f"\nNumber of used machines: {int(self.number_of_used_machines)} / {number_of_machines}")
-        print(f"Number of used workers: {int(self.number_of_used_worker)} / {number_of_workers}")
+        print(f"Number of used workers: {int(self.number_of_used_worker)} / {number_of_workers}\n")
 
 
     def save_solution_to_file(self):
@@ -712,6 +775,10 @@ class FlowFormulation:
         self.create_optimization_model()
         self.solve_model()
         self.postprocess_results()
+        solution = Solution(self.route_plan_worker, self.route_plan_machine, self.data)
+        print(solution)
+        solution.feasibility_check()
+
         self.save_solution_to_file()
         GanttDiagramGenerator(self.instance_filename, self.data._parent_folder).create_gantt_diagrams()
 
