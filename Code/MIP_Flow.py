@@ -15,6 +15,7 @@ class FlowFormulation:
         self.instance = instance_filename.split('Construction_')[1].split('.json')[0]
         self.data = None
         self.model = None
+        self.objective = "weighted" # weighted or hierarchical
 
         # ========================
         # 1. Sets
@@ -253,13 +254,15 @@ class FlowFormulation:
         day_difference = self.end_date - self.start_date
         self.T_range = list(range(day_difference.days + 1))
         self.T = day_difference.days + 1
-
+        
+        '''
         end_date_adjusted = self.start_date
         for orderItem in self.data.order_items:
             if end_date_adjusted < orderItem.start_time:
                 end_date_adjusted = orderItem.start_time
         self.T = (end_date_adjusted - self.start_date).days + 1
-
+        
+        '''
         # ========================
         # 8. Order Item Durations
         # ========================
@@ -306,15 +309,22 @@ class FlowFormulation:
         # ========================
         # 2. Set Objective Function
         # ========================
-        self.model.setObjective(
-            gp.quicksum(100000 * u[c] for c in self.C) -
-            gp.quicksum(0.5 * self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]) -
-            gp.quicksum(0.5 * self.d_wj[w][j] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in self.N_w[w]) -
-            gp.quicksum(100 * x[m, self.start, j] for m in self.M for j in self.N_m[m]) -
-            gp.quicksum(100 * y[w, self.start, j] for w in self.W for j in self.N_w[w]) -
-            gp.quicksum(10 * r[i] for i in self.N),
-            GRB.MAXIMIZE
-        )
+        
+        if self.objective == "weighted":
+            self.model.setObjective(
+                gp.quicksum(100000 * u[c] for c in self.C) -
+                gp.quicksum(0.5 * self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]) -
+                gp.quicksum(0.5 * self.d_wj[w][j] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in self.N_w[w]) -
+                gp.quicksum(100 * x[m, self.start, j] for m in self.M for j in self.N_m[m]) -
+                gp.quicksum(100 * y[w, self.start, j] for w in self.W for j in self.N_w[w]) -
+                gp.quicksum(10 * r[i] for i in self.N),
+                GRB.MAXIMIZE
+            )
+        elif self.objective == "hierarchical":
+            self.model.setObjective(
+                gp.quicksum(u[c] for c in self.C),
+                GRB.MAXIMIZE
+            )
 
         # ========================
         # 3. Add Constraints
@@ -678,12 +688,12 @@ class FlowFormulation:
 if __name__ == "__main__":
 
     # Reduced
-    #instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
+    instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
     #instance_filename = "Construction_a3_o80_m10_an10_ar9_reduced.json"
     #instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
 
     # 10 Sites --> "Construction_a10_o118_m6_an53_ar13.json": Instance not duable since one order has no order items
-    instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
+    #instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
     #instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
     #instance_filename = "Construction_a10_o119_m5_an54_ar13.json"
     #instance_filename = "Construction_a10_o144_m6_an53_ar12.json"
