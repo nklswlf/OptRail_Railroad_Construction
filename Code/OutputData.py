@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import plotly.express as px
 import os
+from datetime import timedelta
 
 
 class Solution:
@@ -24,7 +25,59 @@ class Solution:
     def feasibility_check(self):
         ''' Check the feasibility of the solution'''
         print("Checking the feasibility of the solution...")
+
+        for machine_name, route in self.route_plan_machine.items():
+
+            machine_object = next((m for m in self.data.machines if m.name == machine_name), None)
+            
+            order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
+
+            # Check if the machine type is correct for the order items in the route
+            for order_item in order_item_objects:
+                if machine_object.type != order_item.machine_type:
+                    #print(f"Machine {machine_name} is not correct assigned to order item {order_item.id}.")
+                    return False
+                else:
+                    #print(f"Machine {machine_name} is wanted in order item {order_item.id}.")
+                    pass
+
+            
+            # Check if the sequence of the order items is correct
+            for order_item_i in order_item_objects:
+                for order_item_j in order_item_objects:
+                    order_item_i_index = order_item_objects.index(order_item_i)
+                    order_item_j_index = order_item_objects.index(order_item_j)
+
+                    
+
+                    if order_item_i_index + 1 == order_item_j_index:
+
+                        order_i = next((order for order in self.data.orders if int(order_item_i.id) in [int(item) for item in order.order_item_ids]), None)
+                        order_j = next((order for order in self.data.orders if int(order_item_j.id) in [int(item) for item in order.order_item_ids]), None)
+                        
+                        distance = self.data.transport_routes[order_i.site_number][order_j.site_number]
+                        travel_time = (distance / self.data._transport_speed_kmh)
+                        travel_time = timedelta(hours=travel_time)
+                        print(f"Travel time between order {order_i.order_number} and order {order_j.order_number} is {travel_time}.")
+                        
+
+                        if order_item_i.end_time + travel_time >= order_item_j.start_time:
+                            print(f"Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
+                            return False
+                        else:
+                            print(f"Order item {order_item_i.id} is correctly sequenced with order item {order_item_j.id}.")
+                            pass
+
+            
+                
+        
+            
+
+
+
+
         print("Solution is feasible.")
+        return True
         
 
 

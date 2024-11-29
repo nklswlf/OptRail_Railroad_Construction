@@ -11,10 +11,8 @@ from itertools import groupby
 
 class FlowFormulation:
     
-    def __init__(self, instance_filename):
-        self.instance_filename = instance_filename
-        self.instance = instance_filename.split('Construction_')[1].split('.json')[0]
-        self.data = None
+    def __init__(self, data):
+        self.data = data
         self.model = None
         #self.objective_strategy = objective_strategy
 
@@ -65,28 +63,17 @@ class FlowFormulation:
         # ========================
         # 5. Occupational Safety Constants
         # ========================
-        self.S_Nmax = 5 # Max consecutive night shifts
-        self.S_max = 10 # Max shifts in a time period
-        self.T_Smax = 14 # Time period for max shifts
-        self.T_Wmax = 160 # Max working hours in the full planning horizon
-        
+        self.S_Nmax = data._consecutive_night_shifts
+        self.S_max = data._max_shifts_in_time_period
+        self.T_Smax = data._time_period_for_max_shifts
+        self.T_Wmax = data._max_working_hours
 
         # ========================
         # 6. Other Constants
         # ========================
-        self.SECONDS_IN_A_DAY = 86400  # Number of seconds in a day
-        self.TRANSPORT_SPEED = 1680  # Machine transport speed (km/day)
-        self.TIME_BETWEEN_SHIFTS = 9 / 24  # Rest period between shifts (in days)
-
-
-    def load_instance(self):
-        """Load the instance data from a JSON file."""
-        print("\nLoading instance data...")
-        current_time = time()
-        self.data = InputData(self.instance_filename)
-        elapsed_time = time() - current_time
-        print("Instance data loaded successfully.")
-        print(f"Time elapsed: {elapsed_time:.2f} seconds")
+        self.SECONDS_IN_A_DAY = data._seconds_a_day
+        self.TRANSPORT_SPEED = data._transport_speed_kmh * 24  # Machine transport speed (km/day)
+        self.TIME_BETWEEN_SHIFTS = data._hours_between_shifts / 24  # Rest period between shifts (in days)
 
         
     def preprocess_data(self):
@@ -262,13 +249,12 @@ class FlowFormulation:
             if end_date_adjusted < orderItem.start_time:
                 end_date_adjusted = orderItem.start_time
         self.T = (end_date_adjusted - self.start_date).days + 1
-        
         '''
+
         # ========================
         # 8. Order Item Durations
         # ========================
         self.t_o = [orderItem.duration for orderItem in self.data.order_items]
-
 
         elapsed_time = time() - current_time
         print("Data preprocessed successfully.")
@@ -312,22 +298,38 @@ class FlowFormulation:
         # ========================
 
         self.objective_strategy = "weighted"
+        test = True
         
         if self.objective_strategy == "weighted":
-            self.model.setObjective(
-                gp.quicksum(100000 * u[c] for c in self.C) -
-                gp.quicksum(0.5 * self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]) -
-                gp.quicksum(0.5 * self.d_wj[w][j] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in self.N_w[w]) -
-                gp.quicksum(100 * x[m, self.start, j] for m in self.M for j in self.N_m[m]) -
-                gp.quicksum(100 * y[w, self.start, j] for w in self.W for j in self.N_w[w]) -
-                gp.quicksum(10 * r[i] for i in self.N),
-                GRB.MAXIMIZE
-            )
+            
+            if test == True:
+
+                self.model.setObjective(
+                    gp.quicksum(100000 * u[c] for c in self.C),
+                    GRB.MAXIMIZE
+                )
+            else:
+                self.model.setObjective(
+                    gp.quicksum(100000 * u[c] for c in self.C) -
+                    gp.quicksum(0.5 * self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]) -
+                    gp.quicksum(0.5 * self.d_wj[w][j] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in self.N_w[w]) -
+                    gp.quicksum(100 * x[m, self.start, j] for m in self.M for j in self.N_m[m]) -
+                    gp.quicksum(100 * y[w, self.start, j] for w in self.W for j in self.N_w[w]) -
+                    gp.quicksum(10 * r[i] for i in self.N),
+                    GRB.MAXIMIZE
+                )
+
         elif self.objective_strategy == "hierarchical":
-            self.model.setObjective(
-                gp.quicksum(u[c] for c in self.C),
-                GRB.MAXIMIZE
-            )
+            
+            self.model.setObjectiveN(-1 * gp.quicksum(u[c] for c in self.C), index = 0, priority = 10)
+
+            self.model.setObjectiveN(gp.quicksum(r[i] for i in self.N), index = 1, priority = 5)
+
+            self.model.setObjectiveN(gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]), index = 3, priority = 1)
+
+            self.model.setObjectiveN(gp.quicksum(self.d_wj[w][j] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in self.N_w[w]), index = 4, priority = 1)
+
+
 
         # ========================
         # 3. Add Constraints
@@ -759,9 +761,9 @@ class FlowFormulation:
         # 3. Save Solution Data to File
         # ========================
         parent_folder = self.data._parent_folder
-        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.instance
+        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.data.instance
         solution_path.mkdir(parents=True, exist_ok=True)
-        output_filename = solution_path / f"Solution_{self.instance_filename}"
+        output_filename = solution_path / f"Solution_{self.data.instance_filename}"
         with open(output_filename, "w") as output_file:
             json.dump(solution_data, output_file, indent=4)
 
@@ -770,43 +772,14 @@ class FlowFormulation:
 
     def execute(self):
         """Run the full optimization workflow."""
-        self.load_instance()
+        
         self.preprocess_data()
         self.create_optimization_model()
         self.solve_model()
         self.postprocess_results()
-        solution = Solution(self.route_plan_worker, self.route_plan_machine, self.data)
-        print(solution)
-        solution.feasibility_check()
 
-        self.save_solution_to_file()
-        GanttDiagramGenerator(self.instance_filename, self.data._parent_folder).create_gantt_diagrams()
+        MIP_solution = Solution(self.route_plan_worker, self.route_plan_machine, self.data)
 
+        return MIP_solution
 
-if __name__ == "__main__":
-
-    # Reduced
-    #instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
-    #instance_filename = "Construction_a3_o80_m10_an10_ar9_reduced.json"
-    #instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
-
-    # 10 Sites --> "Construction_a10_o118_m6_an53_ar13.json": Instance not duable since one order has no order items
-    instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
-    #instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
-    #instance_filename = "Construction_a10_o119_m5_an54_ar13.json"
-    #instance_filename = "Construction_a10_o144_m6_an53_ar12.json"
-
-    # 15 Sites
-    #instance_filename = "Construction_a15_o191_m8_an74_ar18.json"
-
-    # 20 Sites
-    #instance_filename = "Construction_a20_o259_m11_an101_ar26.json"
-
-    # 50 Sites
-    #instance_filename = "Construction_a50_o578_m28_an276_ar66.json"
-
-
-
-    # Initialize and run the optimization
-    optimizer = FlowFormulation(instance_filename)
-    optimizer.execute()
+        
