@@ -23,6 +23,7 @@ class InputData:
         self._max_shifts_in_time_period = 10 # Max shifts in a time period
         self._time_period_for_max_shifts = 14 # Time period for max shifts in days
         self._max_working_hours = 160 # Max working hours in the full planning horizon
+        self._day_and_night_shift_boundary = 12 # Start before 12 is day shift, after 12 is night shift
 
         # Default values for Machine and Worker characteristics
         self._seconds_a_day = 86400  # Number of seconds in a day

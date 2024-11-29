@@ -9,9 +9,9 @@ import MIP_Flow
 #instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
 
 # 10 Sites --> "Construction_a10_o118_m6_an53_ar13.json": Instance not duable since one order has no order items
-instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
+#instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
 #instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
-#instance_filename = "Construction_a10_o119_m5_an54_ar13.json"
+instance_filename = "Construction_a10_o119_m5_an54_ar13.json"
 #instance_filename = "Construction_a10_o144_m6_an53_ar12.json"
 
 # 15 Sites
