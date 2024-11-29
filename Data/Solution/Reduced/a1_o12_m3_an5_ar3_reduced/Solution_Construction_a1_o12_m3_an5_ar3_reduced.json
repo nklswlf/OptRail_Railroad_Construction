@@ -317,8 +317,8 @@
             }
         ]
     },
-    "RechenzeitInSekunden": 0.009401082992553711,
-    "Zielfunktionswert": 100000.0,
+    "RechenzeitInSekunden": 0.008629083633422852,
+    "Zielfunktionswert": 1.0,
     "Baustellenanzahl": 1,
     "Baustellenfertig": 1.0,
     "Baustellebearbeitet": {

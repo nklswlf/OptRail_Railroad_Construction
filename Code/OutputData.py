@@ -26,7 +26,13 @@ class Solution:
         ''' Check the feasibility of the solution'''
         print("Checking the feasibility of the solution...")
 
+        # ========================
+        # 1. Machine Route Feasibility
+        # ========================
+
+
         for machine_name, route in self.route_plan_machine.items():
+            print(f"\nChecking route for machine {machine_name}...")
 
             machine_object = next((m for m in self.data.machines if m.name == machine_name), None)
             
@@ -35,20 +41,19 @@ class Solution:
             # Check if the machine type is correct for the order items in the route
             for order_item in order_item_objects:
                 if machine_object.type != order_item.machine_type:
-                    #print(f"Machine {machine_name} is not correct assigned to order item {order_item.id}.")
+                    print(f"Machine {machine_name} is not correct assigned to order item {order_item.id}.")
                     return False
                 else:
                     #print(f"Machine {machine_name} is wanted in order item {order_item.id}.")
                     pass
 
             
-            # Check if the sequence of the order items is correct
+            # Check if the sequence of the order items is correct with start, end and travel times
             for order_item_i in order_item_objects:
                 for order_item_j in order_item_objects:
+
                     order_item_i_index = order_item_objects.index(order_item_i)
                     order_item_j_index = order_item_objects.index(order_item_j)
-
-                    
 
                     if order_item_i_index + 1 == order_item_j_index:
 
@@ -56,19 +61,109 @@ class Solution:
                         order_j = next((order for order in self.data.orders if int(order_item_j.id) in [int(item) for item in order.order_item_ids]), None)
                         
                         distance = self.data.transport_routes[order_i.site_number][order_j.site_number]
-                        travel_time = (distance / self.data._transport_speed_kmh)
-                        travel_time = timedelta(hours=travel_time)
-                        print(f"Travel time between order {order_i.order_number} and order {order_j.order_number} is {travel_time}.")
-                        
+                        travel_time_double = (distance / self.data._transport_speed_kmh)
+                        travel_time = timedelta(hours=travel_time_double)
 
                         if order_item_i.end_time + travel_time >= order_item_j.start_time:
                             print(f"Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
                             return False
                         else:
-                            print(f"Order item {order_item_i.id} is correctly sequenced with order item {order_item_j.id}.")
+                            #print(f"Order item {order_item_i.id} is correctly sequenced with order item {order_item_j.id}.")
                             pass
-
             
+            print(f"Route for machine {machine_name} is feasible.")
+
+        
+        # ========================
+        # 2. Worker Route Feasibility
+        # ========================
+            
+        for worker_id, route in self.route_plan_worker.items():
+            print(f"\nChecking route for worker {worker_id}...")
+
+            worker_object = next((w for w in self.data.workers if w.personal_number == worker_id), None)
+            
+            order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
+            
+
+            # Check if the worker qualifications are correct for the order items in the route
+            for order_item in order_item_objects:
+                if order_item.worker_qualifications:
+                    if not set(order_item.worker_qualifications).issubset(set(worker_object.qualifications)):
+                        print(f"Worker {worker_id} (Qualifications: {worker_object.qualifications}) does not have the correct qualifications for order item {order_item.id} (Qualifications: {order_item.worker_qualifications}).")
+                        return False
+                    else:
+                        #print(f"Worker {worker_id} is wanted in order item {order_item.id}.")
+                        pass             
+                else:
+                    #print(f"Worker {worker_id} is wanted in order item {order_item.id}.")
+                    pass
+            
+            
+            # Check if the sequence of the order items is correct with start, end and break times
+            for order_item_i in order_item_objects:
+                for order_item_j in order_item_objects:
+
+                    order_item_i_index = order_item_objects.index(order_item_i)
+                    order_item_j_index = order_item_objects.index(order_item_j)
+
+                    if order_item_i_index + 1 == order_item_j_index:
+                        
+                        break_time_double = self.data._hours_between_shifts
+                        break_time = timedelta(hours=break_time_double)
+                        
+
+                        if order_item_i.end_time + break_time >= order_item_j.start_time:
+                            print(f"Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
+                            return False
+                        else:
+                            #print(f"Order item {order_item_i.id} is correctly sequenced with order item {order_item_j.id}.")
+                            pass
+            
+
+            # Check if the worker does not work more than 5 consecutive night shifts
+            checked_indices = set()
+            for i, order_item_i in enumerate(order_item_objects):
+                if i in checked_indices:
+                    continue
+                if order_item_i.start_time.hour >= self.data._day_and_night_shift_boundary:
+                    night_shifts = 1
+
+                    for j in range(i + 1, len(order_item_objects)):
+                        order_item_j = order_item_objects[j]
+
+                        time_difference = (order_item_j.start_time - order_item_i.start_time).days
+
+                        if time_difference == night_shifts:
+                            if order_item_j.start_time.hour >= self.data._day_and_night_shift_boundary:
+                                night_shifts += 1
+                                checked_indices.add(j)
+                            else:
+                                break
+                        else:
+                            break
+
+                    if night_shifts > self.data._consecutive_night_shifts:
+                        print(f"Worker {worker_id} has more than {self.data._consecutive_night_shifts} consecutive night shifts ({night_shifts}).")
+                        return False
+
+                    checked_indices.add(i)
+
+
+
+            # Check if the worker does not work more than 10 shifts in 14 days
+
+
+
+            # Check if the worker does not work more than 160 hours in a month
+
+
+                        
+
+
+
+
+            print(f"Route for worker {worker_id} is feasible.")
                 
         
             

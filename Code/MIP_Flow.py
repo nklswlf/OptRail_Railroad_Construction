@@ -99,9 +99,9 @@ class FlowFormulation:
             self.W.append(worker.personal_number)
             self.N_w[worker.personal_number] = []
             for orderItem in self.data.order_items:
-                if not orderItem.worker_qualifications:
+                if not orderItem.worker_qualifications:  # Keine Qualifikationen erforderlich
                     self.N_w[worker.personal_number].append(orderItem.id)
-                elif orderItem.worker_qualifications == worker.qualifications:
+                elif set(orderItem.worker_qualifications).issubset(set(worker.qualifications)):  # Qualifikationen sind abgedeckt
                     self.N_w[worker.personal_number].append(orderItem.id)
 
         # ========================
@@ -132,13 +132,13 @@ class FlowFormulation:
             # D_r: Day shifts grouped by day
             if t_start_int not in self.D_r:
                 self.D_r[t_start_int] = []
-            if orderItem.start_time.hour <= 12:
+            if orderItem.start_time.hour <= self.data._day_and_night_shift_boundary:
                 self.D_r[t_start_int].append(orderID)
 
             # N_r: Night shifts grouped by day
             if t_start_int not in self.N_r:
                 self.N_r[t_start_int] = []
-            if orderItem.start_time.hour > 12:
+            if orderItem.start_time.hour > self.data._day_and_night_shift_boundary:
                 self.N_r[t_start_int].append(orderID)
 
             # A_r: All shifts grouped by day
@@ -305,7 +305,7 @@ class FlowFormulation:
             if test == True:
 
                 self.model.setObjective(
-                    gp.quicksum(100000 * u[c] for c in self.C),
+                    gp.quicksum(u[c] for c in self.C),
                     GRB.MAXIMIZE
                 )
             else:
