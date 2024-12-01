@@ -146,6 +146,9 @@ class Solution:
                     if night_shifts > self.data._consecutive_night_shifts:
                         print(f"Worker {worker_id} has more than {self.data._consecutive_night_shifts} consecutive night shifts ({night_shifts}).")
                         return False
+                    else:
+                        #print(f"Worker {worker_id} is within the allowed night shift limit for this period.")
+                        pass
 
                     checked_indices.add(i)
 
@@ -153,12 +156,35 @@ class Solution:
 
             # Check if the worker does not work more than 10 shifts in 14 days
 
+            for i, order_item_i in enumerate(order_item_objects):
+                window_start = order_item_i.start_time
+                window_end = window_start + timedelta(days=self.data._time_period_for_max_shifts)
+                shift_count = 0
+
+                for order_item_j in order_item_objects:
+                    if window_start <= order_item_j.start_time < window_end:
+                        shift_count += 1
+        
+                if shift_count > self.data._max_shifts_in_time_period:
+                    print(f"Worker {worker_id} has more than {self.data._max_shifts_in_time_period} shifts ({shift_count}) within the {self.data._time_period_for_max_shifts}-day period starting on {window_start}.")
+                    return False
+                else:
+                    #print(f"Worker {worker_id} is within the allowed shift limit for this period.")
+                    pass
+
+            
 
 
             # Check if the worker does not work more than 160 hours in a month
 
+            total_duration_hours = sum(order_item.duration for order_item in order_item_objects)
 
-                        
+            if total_duration_hours > self.data._max_working_hours:
+                print(f"Worker {worker_id} exceeds the maximum allowed total working hours ({self.data._max_working_hours} hours) with {total_duration_hours:.2f} hours.")
+                return False
+            else:
+                #print(f"Worker {worker_id} satisfies the total working hours constraint ({total_duration_hours:.2f} hours <= {self.data._max_working_hours} hours).")
+                pass
 
 
 
@@ -168,10 +194,7 @@ class Solution:
         
             
 
-
-
-
-        print("Solution is feasible.")
+        print("\nFeasibility check completed. Solution is feasible.")
         return True
         
 
