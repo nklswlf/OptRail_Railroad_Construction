@@ -599,6 +599,10 @@ class FlowFormulation:
                     if i != j and self.model.getVarByName(f"y[{w},{i},{j}]").x > 0.5:
                         self.working_hours[w] += self.t_o[i]
 
+                if self.model.getVarByName(f"y[{w},{i},end]").x > 0.5:
+                    self.working_hours[w] += self.t_o[i]
+                    
+
         self.total_working_hours = sum(self.working_hours.values())
 
 
