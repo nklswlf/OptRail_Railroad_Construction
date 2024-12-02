@@ -323,12 +323,12 @@ class FlowFormulation:
 
 
             # The higher the priority value, the earlier the objective function is considered
-            CONSTRUCTION_FULLFILLMENT_PRIORITY = 10
+            CONSTRUCTION_FULLFILLMENT_PRIORITY = 6
             MACHINE_TRANSPORT_DISTANCE_PRIORITY = 2
             WORKER_WORK_DISTANCE_PRIORITY = 2
-            MACHINE_FIXED_COST_PRIORITY = 5
-            WORKER_FIXED_COST_PRIORITY = 5
-            PENALTY_COST_NON_REGULAR_DRIVER_PRIORITY = 1
+            MACHINE_FIXED_COST_PRIORITY = 3
+            WORKER_FIXED_COST_PRIORITY = 3
+            PENALTY_COST_NON_REGULAR_DRIVER_PRIORITY = 5
 
             
             # Construction fulfillment
@@ -569,9 +569,9 @@ class FlowFormulation:
             if self.model.getVarByName(f"u[{c}]").x > 0.5:
                 self.site_fulfillment[c] = True
 
-        self.sum_finished_sites = sum(self.model.getVarByName(f"u[{c}]").x for c in self.C)
+        self.sum_finished_sites = round(sum(self.model.getVarByName(f"u[{c}]").x for c in self.C))
         self.sum_total_sites = len(self.C)
-        self.sum_finished_order_items = sum(self.model.getVarByName(f"x[{m},{i},{j}]").x for m in self.M for i in self.N_m[m] for j in self.N_m[m]) + sum(self.model.getVarByName(f"x[{m},{i},{self.end}]").x for m in self.M for i in self.N_m[m])
+        self.sum_finished_order_items = round(sum(self.model.getVarByName(f"x[{m},{i},{j}]").x for m in self.M for i in self.N_m[m] for j in self.N_m[m]) + sum(self.model.getVarByName(f"x[{m},{i},{self.end}]").x for m in self.M for i in self.N_m[m]))
         self.sum_order_items = len(self.N)
 
 
@@ -581,9 +581,9 @@ class FlowFormulation:
         
         number_of_machines = len(self.M)
         number_of_workers = len(self.W)
-        self.number_of_used_worker = sum(self.model.getVarByName(f"y[{w},{self.start},{j}]").x for w in self.W for j in self.N_w[w])
-        self.number_of_used_machines = sum(self.model.getVarByName(f"x[{m},{self.start},{j}]").x for m in self.M for j in self.N_m[m])
-        self.non_regular_driver_count = sum(self.model.getVarByName(f"r[{i}]").x for i in self.N)
+        self.number_of_used_worker = round(sum(self.model.getVarByName(f"y[{w},{self.start},{j}]").x for w in self.W for j in self.N_w[w]))
+        self.number_of_used_machines = round(sum(self.model.getVarByName(f"x[{m},{self.start},{j}]").x for m in self.M for j in self.N_m[m]))
+        self.non_regular_driver_count = round(sum(self.model.getVarByName(f"r[{i}]").x for i in self.N))
 
         self.distance_machine = {}
         for m in self.M:
@@ -796,6 +796,20 @@ class FlowFormulation:
             json.dump(solution_data, output_file, indent=4)
 
         print(f"Solution saved to: {output_filename} \n")
+
+
+        # ========================
+        # 4. Extra File with Variables
+        # ========================
+
+        solution = {}
+        for var in self.model.getVars():
+            #if round(var.X) > 0:
+                solution[var.VarName] = round(var.X)
+
+        output_filename = solution_path / f"Variables_{self.data.instance_filename}"
+        with open(output_filename, "w") as output_file:
+            json.dump(solution, output_file, indent=4)
 
 
     def execute(self):
