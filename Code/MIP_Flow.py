@@ -50,7 +50,7 @@ class FlowFormulation:
         self.P_wn = {}  # Predecessors for worker order items
         self.S_wn = {}  # Successors for worker order items
         self.d_ij = []  # Distance matrix for machines (transport routes)
-        self.d_wj = []  # Distance matrix for workers (work routes)
+        self.d_wi = []  # Distance matrix for workers (work routes)
 
         # ========================
         # 4. Time and Range
@@ -176,7 +176,7 @@ class FlowFormulation:
             for j in self.data.order_items:
                 a = next((k for k, v in self.N_c.items() if j.id in v))
                 row.append(self.data.work_routes[i.personal_number][a])
-            self.d_wj.append(row)
+            self.d_wi.append(row)
 
         # ========================
         # 6. Calculate Predecessors and Successors
@@ -297,37 +297,59 @@ class FlowFormulation:
         # 2. Set Objective Function
         # ========================
 
-        self.objective_strategy = "weighted"
-        test = True
+        self.objective_strategy = "hierarchical"
+
+
+        CONSTRUCTION_REVENUE = 1000000
+        MACHINE_FIXED_COST = 10000
+        WORKER_FIXED_COST = 10000
+        PENALTY_COST_NON_REGULAR_DRIVER = 400
+
+
         
         if self.objective_strategy == "weighted":
             
-            if test == True:
-
-                self.model.setObjective(
-                    gp.quicksum(u[c] for c in self.C),
-                    GRB.MAXIMIZE
-                )
-            else:
-                self.model.setObjective(
-                    gp.quicksum(100000 * u[c] for c in self.C) -
-                    gp.quicksum(0.5 * self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]) -
-                    gp.quicksum(0.5 * self.d_wj[w][j] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in self.N_w[w]) -
-                    gp.quicksum(100 * x[m, self.start, j] for m in self.M for j in self.N_m[m]) -
-                    gp.quicksum(100 * y[w, self.start, j] for w in self.W for j in self.N_w[w]) -
-                    gp.quicksum(10 * r[i] for i in self.N),
-                    GRB.MAXIMIZE
-                )
+            self.model.setObjective(
+                gp.quicksum(CONSTRUCTION_REVENUE * u[c] for c in self.C) -
+                gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]) -
+                gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end])) -
+                gp.quicksum(MACHINE_FIXED_COST * x[m, self.start, j] for m in self.M for j in self.N_m[m]) -
+                gp.quicksum(WORKER_FIXED_COST * y[w, self.start, j] for w in self.W for j in self.N_w[w]) -
+                gp.quicksum(PENALTY_COST_NON_REGULAR_DRIVER * r[i] for i in self.N),
+                GRB.MAXIMIZE
+            )
 
         elif self.objective_strategy == "hierarchical":
+
+
+            # The higher the priority value, the earlier the objective function is considered
+            CONSTRUCTION_FULLFILLMENT_PRIORITY = 10
+            MACHINE_TRANSPORT_DISTANCE_PRIORITY = 2
+            WORKER_WORK_DISTANCE_PRIORITY = 2
+            MACHINE_FIXED_COST_PRIORITY = 5
+            WORKER_FIXED_COST_PRIORITY = 5
+            PENALTY_COST_NON_REGULAR_DRIVER_PRIORITY = 1
+
             
-            self.model.setObjectiveN(-1 * gp.quicksum(u[c] for c in self.C), index = 0, priority = 10)
+            # Construction fulfillment
+            self.model.setObjectiveN(-CONSTRUCTION_REVENUE * gp.quicksum(u[c] for c in self.C), index = 0, priority = CONSTRUCTION_FULLFILLMENT_PRIORITY)
 
-            self.model.setObjectiveN(gp.quicksum(r[i] for i in self.N), index = 1, priority = 5)
+            # Machine transport distance
+            self.model.setObjectiveN(gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]), index = 1, priority = MACHINE_TRANSPORT_DISTANCE_PRIORITY)
 
-            self.model.setObjectiveN(gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]), index = 3, priority = 1)
+            # Worker work distance
+            self.model.setObjectiveN(gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end])), index = 2, priority = WORKER_WORK_DISTANCE_PRIORITY)
 
-            self.model.setObjectiveN(gp.quicksum(self.d_wj[w][j] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in self.N_w[w]), index = 4, priority = 1)
+            # Machine fixed costs
+            self.model.setObjectiveN(gp.quicksum(MACHINE_FIXED_COST * x[m, self.start, j] for m in self.M for j in self.N_m[m]), index = 3, priority = MACHINE_FIXED_COST_PRIORITY)
+
+            # Worker fixed costs
+            self.model.setObjectiveN(gp.quicksum(WORKER_FIXED_COST * y[w, self.start, j] for w in self.W for j in self.N_w[w]), index = 4, priority = WORKER_FIXED_COST_PRIORITY)
+
+            # Penalty costs for non-regular drivers
+            self.model.setObjectiveN(gp.quicksum(PENALTY_COST_NON_REGULAR_DRIVER * r[i] for i in self.N), index = 5, priority = PENALTY_COST_NON_REGULAR_DRIVER_PRIORITY)
+
+
 
 
 
@@ -582,7 +604,9 @@ class FlowFormulation:
             for i in self.N_w[w]:
                 for j in self.N_w[w]:
                     if i != j and self.model.getVarByName(f"y[{w},{i},{j}]").x > 0.5:
-                        self.distance_worker[w] += self.d_wj[w][j]
+                        self.distance_worker[w] += self.d_wi[w][i]
+                if self.model.getVarByName(f"y[{w},{i},end]").x > 0.5:
+                    self.distance_worker[w] += self.d_wi[w][i]
 
         self.total_distance_worker = sum(self.distance_worker.values())
 
@@ -765,7 +789,7 @@ class FlowFormulation:
         # 3. Save Solution Data to File
         # ========================
         parent_folder = self.data._parent_folder
-        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.data.instance
+        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.data.instance / self.objective_strategy
         solution_path.mkdir(parents=True, exist_ok=True)
         output_filename = solution_path / f"Solution_{self.data.instance_filename}"
         with open(output_filename, "w") as output_file:
@@ -784,6 +808,6 @@ class FlowFormulation:
 
         MIP_solution = Solution(self.route_plan_worker, self.route_plan_machine, self.data)
 
-        return MIP_solution
+        return MIP_solution, self.objective_strategy
 
         

@@ -155,28 +155,25 @@ class Solution:
 
 
             # Check if the worker does not work more than 10 shifts in 14 days
-
             for i, order_item_i in enumerate(order_item_objects):
-                window_start = order_item_i.start_time
+                window_start = order_item_i.start_time.date()
                 window_end = window_start + timedelta(days=self.data._time_period_for_max_shifts)
                 shift_count = 0
 
                 for order_item_j in order_item_objects:
-                    if window_start <= order_item_j.start_time < window_end:
+                    if window_start <= order_item_j.start_time.date() < window_end:
                         shift_count += 1
-        
+
                 if shift_count > self.data._max_shifts_in_time_period:
                     print(f"Worker {worker_id} has more than {self.data._max_shifts_in_time_period} shifts ({shift_count}) within the {self.data._time_period_for_max_shifts}-day period starting on {window_start}.")
                     return False
                 else:
                     #print(f"Worker {worker_id} is within the allowed shift limit for this period.")
                     pass
-
             
 
 
             # Check if the worker does not work more than 160 hours in a month
-
             total_duration_hours = sum(order_item.duration for order_item in order_item_objects)
 
             if total_duration_hours > self.data._max_working_hours:
@@ -203,7 +200,7 @@ class Solution:
 
 
 class GanttDiagramGenerator:
-    def __init__(self, input_file, parent_folder):
+    def __init__(self, input_file, parent_folder, optimization_strategy):
         """
         Initialize the GanttDiagramGenerator with input file and parent folder.
         """
@@ -211,13 +208,14 @@ class GanttDiagramGenerator:
         self.parent_folder = parent_folder
         self.instance = input_file.split('Construction_')[1].split('.json')[0]
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
+        self.optimization_strategy = optimization_strategy
 
         # Paths for input and output files
         self.input_file_path = os.path.join(
             self.script_dir, "..", "Data", "Instanzen", parent_folder, input_file
         )
         self.output_file_path = os.path.join(
-            self.script_dir, "..", "Data", "Solution", parent_folder, self.instance , f"Solution_{input_file}"
+            self.script_dir, "..", "Data", "Solution", parent_folder, self.instance, self.optimization_strategy, f"Solution_{input_file}"
         )
 
         # Load input and output data
@@ -339,7 +337,7 @@ class GanttDiagramGenerator:
         """
 
         html_file_path = os.path.join(
-            self.script_dir, "..", "Data", "Solution", self.parent_folder, self.instance, file_name
+            self.script_dir, "..", "Data", "Solution", self.parent_folder, self.instance, self.optimization_strategy ,file_name
         )
         os.makedirs(os.path.dirname(html_file_path), exist_ok=True)
         fig.write_html(html_file_path)
