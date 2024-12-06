@@ -297,7 +297,7 @@ class FlowFormulation:
         # 2. Set Objective Function
         # ========================
 
-        self.objective_strategy = "weighted"
+        self.objective_strategy = "epsilon_constraint"
 
 
         CONSTRUCTION_REVENUE = 1000000
@@ -305,63 +305,99 @@ class FlowFormulation:
         WORKER_FIXED_COST = 10000
         PENALTY_COST_NON_REGULAR_DRIVER = 400
 
-        test = True
+
+        CONSTRUCTION_FULLFILLMENT_PRIORITY = 6
+        MACHINE_TRANSPORT_DISTANCE_PRIORITY = 2
+        WORKER_WORK_DISTANCE_PRIORITY = 2
+        MACHINE_FIXED_COST_PRIORITY = 3
+        WORKER_FIXED_COST_PRIORITY = 3
+        PENALTY_COST_NON_REGULAR_DRIVER_PRIORITY = 5
+
+
         
         if self.objective_strategy == "weighted":
 
-            if test:
+            priority = 1  # Gleiche Priorität für alle Ziele
 
-                    self.model.setObjective(
-                    gp.quicksum(CONSTRUCTION_REVENUE * u[c] for c in self.C),
-                    GRB.MAXIMIZE
-                )
+            # Construction fulfillment
+            self.model.setObjectiveN(-CONSTRUCTION_REVENUE * gp.quicksum(u[c] for c in self.C), index=0, priority=priority)
+
+            # Machine transport distance
+            self.model.setObjectiveN(gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]), index=1, priority=priority)
+
+            # Worker work distance
+            self.model.setObjectiveN(gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end])), index=2, priority=priority)
+
+            # Machine fixed costs
+            self.model.setObjectiveN(gp.quicksum(MACHINE_FIXED_COST * x[m, self.start, j] for m in self.M for j in self.N_m[m]), index=3, priority=priority)
+
+            # Worker fixed costs
+            self.model.setObjectiveN(gp.quicksum(WORKER_FIXED_COST * y[w, self.start, j] for w in self.W for j in self.N_w[w]), index=4, priority=priority)
+
+            # Penalty costs for non-regular drivers
+            self.model.setObjectiveN(gp.quicksum(PENALTY_COST_NON_REGULAR_DRIVER * r[i] for i in self.N), index=5, priority=priority)
 
 
-
-            else:
-            
-                self.model.setObjective(
-                    gp.quicksum(CONSTRUCTION_REVENUE * u[c] for c in self.C) -
-                    gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]) -
-                    gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end])) -
-                    gp.quicksum(MACHINE_FIXED_COST * x[m, self.start, j] for m in self.M for j in self.N_m[m]) -
-                    gp.quicksum(WORKER_FIXED_COST * y[w, self.start, j] for w in self.W for j in self.N_w[w]) -
-                    gp.quicksum(PENALTY_COST_NON_REGULAR_DRIVER * r[i] for i in self.N),
-                    GRB.MAXIMIZE
-                )
 
         elif self.objective_strategy == "hierarchical":
 
+            # Hierarchische Methode mit Prioritäten
+            self.model.setObjectiveN(-CONSTRUCTION_REVENUE * gp.quicksum(u[c] for c in self.C), index=0, priority=CONSTRUCTION_FULLFILLMENT_PRIORITY)
 
-            # The higher the priority value, the earlier the objective function is considered
-            CONSTRUCTION_FULLFILLMENT_PRIORITY = 6
-            MACHINE_TRANSPORT_DISTANCE_PRIORITY = 2
-            WORKER_WORK_DISTANCE_PRIORITY = 2
-            MACHINE_FIXED_COST_PRIORITY = 3
-            WORKER_FIXED_COST_PRIORITY = 3
-            PENALTY_COST_NON_REGULAR_DRIVER_PRIORITY = 5
+            self.model.setObjectiveN(gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]), index=1, priority=MACHINE_TRANSPORT_DISTANCE_PRIORITY)
 
-            
-            # Construction fulfillment
-            self.model.setObjectiveN(-CONSTRUCTION_REVENUE * gp.quicksum(u[c] for c in self.C), index = 0, priority = CONSTRUCTION_FULLFILLMENT_PRIORITY)
+            self.model.setObjectiveN(gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end])), index=2, priority=WORKER_WORK_DISTANCE_PRIORITY)
 
-            # Machine transport distance
-            self.model.setObjectiveN(gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]), index = 1, priority = MACHINE_TRANSPORT_DISTANCE_PRIORITY)
+            self.model.setObjectiveN(gp.quicksum(MACHINE_FIXED_COST * x[m, self.start, j] for m in self.M for j in self.N_m[m]), index=3, priority=MACHINE_FIXED_COST_PRIORITY)
 
-            # Worker work distance
-            self.model.setObjectiveN(gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end])), index = 2, priority = WORKER_WORK_DISTANCE_PRIORITY)
+            self.model.setObjectiveN(gp.quicksum(WORKER_FIXED_COST * y[w, self.start, j] for w in self.W for j in self.N_w[w]), index=4, priority=WORKER_FIXED_COST_PRIORITY)
 
-            # Machine fixed costs
-            self.model.setObjectiveN(gp.quicksum(MACHINE_FIXED_COST * x[m, self.start, j] for m in self.M for j in self.N_m[m]), index = 3, priority = MACHINE_FIXED_COST_PRIORITY)
-
-            # Worker fixed costs
-            self.model.setObjectiveN(gp.quicksum(WORKER_FIXED_COST * y[w, self.start, j] for w in self.W for j in self.N_w[w]), index = 4, priority = WORKER_FIXED_COST_PRIORITY)
-
-            # Penalty costs for non-regular drivers
-            self.model.setObjectiveN(gp.quicksum(PENALTY_COST_NON_REGULAR_DRIVER * r[i] for i in self.N), index = 5, priority = PENALTY_COST_NON_REGULAR_DRIVER_PRIORITY)
+            self.model.setObjectiveN(gp.quicksum(PENALTY_COST_NON_REGULAR_DRIVER * r[i] for i in self.N), index=5, priority=PENALTY_COST_NON_REGULAR_DRIVER_PRIORITY)
 
 
 
+        elif self.objective_strategy == "epsilon_constraint":
+
+            # ε-Constraint-Methode
+            # Hauptzielfunktion: Maximierung der Bauauftrags-Erfüllung
+            self.model.setObjective(
+                gp.quicksum(CONSTRUCTION_REVENUE * u[c] for c in self.C),
+                GRB.MAXIMIZE
+            )
+
+            # Nebenbedingungen für sekundäre Ziele mit ε-Schranken
+            epsilon_machine_distance = 1000  # Beispielwert für Schranke
+            epsilon_worker_distance = 500  # Beispielwert für Schranke
+
+            self.model.addConstr(
+                gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]) <= epsilon_machine_distance,
+                "MachineTransportDistanceConstraint"
+            )
+
+            self.model.addConstr(
+                gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end])) <= epsilon_worker_distance,
+                "WorkerWorkDistanceConstraint"
+            )
+
+            # Weitere Ziele können hier in ähnlicher Weise als Constraints hinzugefügt werden
+            epsilon_machine_fixed_cost = 20000
+            epsilon_worker_fixed_cost = 15000
+
+            self.model.addConstr(
+                gp.quicksum(MACHINE_FIXED_COST * x[m, self.start, j] for m in self.M for j in self.N_m[m]) <= epsilon_machine_fixed_cost,
+                "MachineFixedCostConstraint"
+            )
+
+            self.model.addConstr(
+                gp.quicksum(WORKER_FIXED_COST * y[w, self.start, j] for w in self.W for j in self.N_w[w]) <= epsilon_worker_fixed_cost,
+                "WorkerFixedCostConstraint"
+            )
+
+            epsilon_penalty_cost = 2000
+            self.model.addConstr(
+                gp.quicksum(PENALTY_COST_NON_REGULAR_DRIVER * r[i] for i in self.N) <= epsilon_penalty_cost,
+                "PenaltyCostConstraint"
+            )
 
 
         # ========================

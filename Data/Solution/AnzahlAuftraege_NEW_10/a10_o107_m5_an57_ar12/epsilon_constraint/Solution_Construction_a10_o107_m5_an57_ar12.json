@@ -1,0 +1,168 @@
+{
+    "Arbeiterzuweisung": {
+        "Arbeiter_4": [
+            {
+                "ID": 25,
+                "Start": "2024-08-19T19:00:00",
+                "Ende": "2024-08-20T05:00:00",
+                "Dauer": 10,
+                "Auftragsnummer": "4",
+                "MaschinenTyp": 1,
+                "AnbaugeraeteTypen": [],
+                "Arbeiterqualifikationen": [
+                    9,
+                    4
+                ],
+                "zugewieseneMaschine": null,
+                "Typ": 0
+            },
+            {
+                "ID": 26,
+                "Start": "2024-08-20T19:00:00",
+                "Ende": "2024-08-21T05:00:00",
+                "Dauer": 10,
+                "Auftragsnummer": "4",
+                "MaschinenTyp": 1,
+                "AnbaugeraeteTypen": [],
+                "Arbeiterqualifikationen": [
+                    9,
+                    4
+                ],
+                "zugewieseneMaschine": null,
+                "Typ": 0
+            },
+            {
+                "ID": 27,
+                "Start": "2024-08-21T19:00:00",
+                "Ende": "2024-08-22T05:00:00",
+                "Dauer": 10,
+                "Auftragsnummer": "4",
+                "MaschinenTyp": 1,
+                "AnbaugeraeteTypen": [],
+                "Arbeiterqualifikationen": [
+                    9,
+                    4
+                ],
+                "zugewieseneMaschine": null,
+                "Typ": 0
+            }
+        ]
+    },
+    "Maschinenzuweisung": {
+        "ZWB_Liebherr_A922_Rail4": [
+            {
+                "ID": 25,
+                "Start": "2024-08-19T19:00:00",
+                "Ende": "2024-08-20T05:00:00",
+                "Dauer": 10,
+                "Auftragsnummer": "4",
+                "MaschinenTyp": 1,
+                "AnbaugeraeteTypen": [],
+                "Arbeiterqualifikationen": [
+                    9,
+                    4
+                ],
+                "zugewieseneMaschine": null,
+                "Typ": 0
+            },
+            {
+                "ID": 26,
+                "Start": "2024-08-20T19:00:00",
+                "Ende": "2024-08-21T05:00:00",
+                "Dauer": 10,
+                "Auftragsnummer": "4",
+                "MaschinenTyp": 1,
+                "AnbaugeraeteTypen": [],
+                "Arbeiterqualifikationen": [
+                    9,
+                    4
+                ],
+                "zugewieseneMaschine": null,
+                "Typ": 0
+            },
+            {
+                "ID": 27,
+                "Start": "2024-08-21T19:00:00",
+                "Ende": "2024-08-22T05:00:00",
+                "Dauer": 10,
+                "Auftragsnummer": "4",
+                "MaschinenTyp": 1,
+                "AnbaugeraeteTypen": [],
+                "Arbeiterqualifikationen": [
+                    9,
+                    4
+                ],
+                "zugewieseneMaschine": null,
+                "Typ": 0
+            }
+        ]
+    },
+    "RechenzeitInSekunden": 2.476430892944336,
+    "Zielfunktionswert": 1000000.0,
+    "Baustellenanzahl": 10,
+    "Baustellenfertig": 1,
+    "Baustellebearbeitet": {
+        "0": false,
+        "1": false,
+        "2": false,
+        "3": false,
+        "4": true,
+        "5": false,
+        "6": false,
+        "7": false,
+        "8": false,
+        "9": false
+    },
+    "OrderItemsanzahl": 107,
+    "OrderItemsfertig": 3,
+    "NichtregulaereFahrer": 4,
+    "MaschinenanzahlGesamt": 5,
+    "MaschinenGenutzt": 1,
+    "MaschinenGenutztDetails": {
+        "ZWB_Liebherr_A922_Rail0": false,
+        "ZWB_Liebherr_A922_Rail1": false,
+        "ZWB_Liebherr_A922_Rail2": false,
+        "ZWB_Liebherr_A922_Rail3": false,
+        "ZWB_Liebherr_A922_Rail4": true
+    },
+    "TransportdistanzGesamt": 0.0,
+    "Transportdistanz": {
+        "ZWB_Liebherr_A922_Rail0": 0,
+        "ZWB_Liebherr_A922_Rail1": 0,
+        "ZWB_Liebherr_A922_Rail2": 0,
+        "ZWB_Liebherr_A922_Rail3": 0,
+        "ZWB_Liebherr_A922_Rail4": 0.0
+    },
+    "ArbeiteranzahlGesamt": 12,
+    "ArbeiterGenutzt": 1,
+    "ArbeitswegGesamt": 32.44426637587441,
+    "Arbeitsweg": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 32.44426637587441,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0,
+        "10": 0,
+        "11": 0
+    },
+    "ArbeitszeitGesamt": 30,
+    "Arbeitszeit": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 30,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0,
+        "10": 0,
+        "11": 0
+    }
+}
