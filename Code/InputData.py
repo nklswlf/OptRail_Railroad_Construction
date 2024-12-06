@@ -30,6 +30,17 @@ class InputData:
         self._transport_speed_kmh = 70  # Machine transport speed (km/h)
         self._hours_between_shifts = 9  # Rest period between shifts in hours
 
+
+        # Default values for costs
+        self._construction_revenue = 1000000  # Imaginary revenue for the construction project
+        self._machine_fixed_cost = 9000  # Fixed cost for using a machine in a month / renting price per machine in a month
+        self._worker_fixed_cost = 4800  # Fixed cost for using a worker / salary + costs per worker in a month
+        self._penalty_cost_non_regular_driver = (self._worker_fixed_cost/20) * 0.2  # 48 euro per shift since 20 shifts per month and 20% of the cost
+        self._worker_travel_cost_per_km = 0.5  # Travel cost per km for a worker
+        self._machine_transport_cost_per_km = 1.6  # Transport cost per km for a machine
+
+        
+
         
 
     def _find_instance_file(self) -> tuple[str, str]:

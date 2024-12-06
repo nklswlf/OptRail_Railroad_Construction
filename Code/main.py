@@ -34,7 +34,7 @@ def main():
 
     if feasible:
         optimizer.save_solution_to_file()
-        OutputData.GanttDiagramGenerator(data.instance_filename , data._parent_folder, optimization_strategy).create_gantt_diagrams()
+        #OutputData.GanttDiagramGenerator(data.instance_filename , data._parent_folder, optimization_strategy).create_gantt_diagrams()
 
 
 

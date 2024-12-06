@@ -300,104 +300,60 @@ class FlowFormulation:
         self.objective_strategy = "epsilon_constraint"
 
 
-        CONSTRUCTION_REVENUE = 1000000
-        MACHINE_FIXED_COST = 10000
-        WORKER_FIXED_COST = 10000
-        PENALTY_COST_NON_REGULAR_DRIVER = 400
+        # Definition of the objective criteria/functions
+        self.construction_fulfillment = gp.quicksum(u[c] for c in self.C)
+        self.machine_transport_distance = gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m])
+        self.worker_work_distance = gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end]))
+        self.machine_usage = gp.quicksum(x[m, self.start, j] for m in self.M for j in self.N_m[m])
+        self.worker_usage = gp.quicksum(y[w, self.start, j] for w in self.W for j in self.N_w[w])
+        self.non_regular_driver_usage = gp.quicksum(r[i] for i in self.N)
 
 
-        CONSTRUCTION_FULLFILLMENT_PRIORITY = 6
-        MACHINE_TRANSPORT_DISTANCE_PRIORITY = 2
-        WORKER_WORK_DISTANCE_PRIORITY = 2
-        MACHINE_FIXED_COST_PRIORITY = 3
-        WORKER_FIXED_COST_PRIORITY = 3
-        PENALTY_COST_NON_REGULAR_DRIVER_PRIORITY = 5
 
-
-        
         if self.objective_strategy == "weighted":
 
-            priority = 1  # Gleiche Priorität für alle Ziele
-
-            # Construction fulfillment
-            self.model.setObjectiveN(-CONSTRUCTION_REVENUE * gp.quicksum(u[c] for c in self.C), index=0, priority=priority)
-
-            # Machine transport distance
-            self.model.setObjectiveN(gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]), index=1, priority=priority)
-
-            # Worker work distance
-            self.model.setObjectiveN(gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end])), index=2, priority=priority)
-
-            # Machine fixed costs
-            self.model.setObjectiveN(gp.quicksum(MACHINE_FIXED_COST * x[m, self.start, j] for m in self.M for j in self.N_m[m]), index=3, priority=priority)
-
-            # Worker fixed costs
-            self.model.setObjectiveN(gp.quicksum(WORKER_FIXED_COST * y[w, self.start, j] for w in self.W for j in self.N_w[w]), index=4, priority=priority)
-
-            # Penalty costs for non-regular drivers
-            self.model.setObjectiveN(gp.quicksum(PENALTY_COST_NON_REGULAR_DRIVER * r[i] for i in self.N), index=5, priority=priority)
-
+            self.model.setObjectiveN(-self.construction_fulfillment, index=0, weight = self.data._construction_revenue)
+            
+            self.model.setObjectiveN(self.machine_transport_distance, index=1, weight = self.data._machine_transport_cost_per_km)
+            self.model.setObjectiveN(self.worker_work_distance, index=2, weight = self.data._worker_travel_cost_per_km)
+            self.model.setObjectiveN(self.machine_usage, index=3, weight = self.data._machine_fixed_cost)
+            self.model.setObjectiveN(self.worker_usage, index=4, weight = self.data._worker_fixed_cost)
+            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, weight = self.data._penalty_cost_non_regular_driver)
 
 
         elif self.objective_strategy == "hierarchical":
 
-            # Hierarchische Methode mit Prioritäten
-            self.model.setObjectiveN(-CONSTRUCTION_REVENUE * gp.quicksum(u[c] for c in self.C), index=0, priority=CONSTRUCTION_FULLFILLMENT_PRIORITY)
-
-            self.model.setObjectiveN(gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]), index=1, priority=MACHINE_TRANSPORT_DISTANCE_PRIORITY)
-
-            self.model.setObjectiveN(gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end])), index=2, priority=WORKER_WORK_DISTANCE_PRIORITY)
-
-            self.model.setObjectiveN(gp.quicksum(MACHINE_FIXED_COST * x[m, self.start, j] for m in self.M for j in self.N_m[m]), index=3, priority=MACHINE_FIXED_COST_PRIORITY)
-
-            self.model.setObjectiveN(gp.quicksum(WORKER_FIXED_COST * y[w, self.start, j] for w in self.W for j in self.N_w[w]), index=4, priority=WORKER_FIXED_COST_PRIORITY)
-
-            self.model.setObjectiveN(gp.quicksum(PENALTY_COST_NON_REGULAR_DRIVER * r[i] for i in self.N), index=5, priority=PENALTY_COST_NON_REGULAR_DRIVER_PRIORITY)
-
+            self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority=6)
+            
+            self.model.setObjectiveN(self.machine_transport_distance, index=1, priority=3)
+            self.model.setObjectiveN(self.worker_work_distance, index=2, priority=3)
+            
+            self.model.setObjectiveN(self.machine_usage, index=3, priority=5)
+            self.model.setObjectiveN(self.worker_usage, index=4, priority=5)
+            
+            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, priority=1)
 
 
         elif self.objective_strategy == "epsilon_constraint":
 
-            # ε-Constraint-Methode
-            # Hauptzielfunktion: Maximierung der Bauauftrags-Erfüllung
-            self.model.setObjective(
-                gp.quicksum(CONSTRUCTION_REVENUE * u[c] for c in self.C),
-                GRB.MAXIMIZE
-            )
+            # Main objective function: Construction fulfillment
+            self.model.setObjective(self.construction_fulfillment,GRB.MAXIMIZE)
 
-            # Nebenbedingungen für sekundäre Ziele mit ε-Schranken
-            epsilon_machine_distance = 1000  # Beispielwert für Schranke
-            epsilon_worker_distance = 500  # Beispielwert für Schranke
+            # ε-Values
+            self.epsilon_machine_use = round(len(self.M) * 0.7)
+            self.epsilon_worker_use = round(len(self.W) * 0.7)
+            
+            self.epsilon_machine_distance = round((len(self.C)/self.epsilon_machine_use) * 500 * 0.7)
+            self.epsilon_worker_distance = round((len(self.N)/self.epsilon_worker_use) * 200 * 0.7)
+            
+            self.epsilon_non_regular_driver_use = round(len(self.N) * 0.2)
 
-            self.model.addConstr(
-                gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]) <= epsilon_machine_distance,
-                "MachineTransportDistanceConstraint"
-            )
-
-            self.model.addConstr(
-                gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end])) <= epsilon_worker_distance,
-                "WorkerWorkDistanceConstraint"
-            )
-
-            # Weitere Ziele können hier in ähnlicher Weise als Constraints hinzugefügt werden
-            epsilon_machine_fixed_cost = 20000
-            epsilon_worker_fixed_cost = 15000
-
-            self.model.addConstr(
-                gp.quicksum(MACHINE_FIXED_COST * x[m, self.start, j] for m in self.M for j in self.N_m[m]) <= epsilon_machine_fixed_cost,
-                "MachineFixedCostConstraint"
-            )
-
-            self.model.addConstr(
-                gp.quicksum(WORKER_FIXED_COST * y[w, self.start, j] for w in self.W for j in self.N_w[w]) <= epsilon_worker_fixed_cost,
-                "WorkerFixedCostConstraint"
-            )
-
-            epsilon_penalty_cost = 2000
-            self.model.addConstr(
-                gp.quicksum(PENALTY_COST_NON_REGULAR_DRIVER * r[i] for i in self.N) <= epsilon_penalty_cost,
-                "PenaltyCostConstraint"
-            )
+            # ε-Constraints
+            self.model.addConstr(self.machine_transport_distance <= self.epsilon_machine_distance,name= "EpsilonMachineDistanceConstraint")
+            self.model.addConstr(self.worker_work_distance <= self.epsilon_worker_distance, name="EpsilonWorkerDistanceConstraint")
+            self.model.addConstr(self.machine_usage <= self.epsilon_machine_use, name="EpsilonMachineUsageConstraint")
+            self.model.addConstr(self.worker_usage <= self.epsilon_worker_use, name="EpsilonWorkerUsageConstraint")
+            self.model.addConstr(self.non_regular_driver_usage <= self.epsilon_non_regular_driver_use, name="EpsilonPenaltyCostConstraint")
 
 
         # ========================
@@ -504,6 +460,53 @@ class FlowFormulation:
     def postprocess_results(self):
         """Extract and display results after model optimization."""
         print("\nPostprocessing results...")
+
+
+        # ========================
+        # 0. Objective Values
+        # ========================
+
+        self.objectives = []
+        objective_names = [
+            "Construction Fulfillment",
+            "Machine Transport Distance",
+            "Worker Work Distance",
+            "Machine Usage",
+            "Worker Usage",
+            "Non-Regular Driver Usage"
+        ]
+
+        if self.objective_strategy in ["weighted", "hierarchical"]:
+            for i, name in enumerate(objective_names):
+                value = self.model.getObjective(index=i).getValue()
+                if value < 0:
+                    value = value * -1
+                self.objectives.append({"Objective": name, "Value": value})
+
+        elif self.objective_strategy == "epsilon_constraint":
+       
+            construction_fulfillment_value = self.model.getObjective().getValue()
+            self.objectives.append({"Objective": "Construction Fulfillment", "Value": construction_fulfillment_value})
+
+            epsilon_constraints = [
+                ("Machine Transport Distance", "EpsilonMachineDistanceConstraint", self.epsilon_machine_distance),
+                ("Worker Work Distance", "EpsilonWorkerDistanceConstraint", self.epsilon_worker_distance),
+                ("Machine Usage", "EpsilonMachineUsageConstraint", self.epsilon_machine_use),
+                ("Worker Usage", "EpsilonWorkerUsageConstraint", self.epsilon_worker_use),
+                ("Non-Regular Driver Usage", "EpsilonPenaltyCostConstraint", self.epsilon_non_regular_driver_use),
+            ]
+
+            for name, constraint_name, epsilon_value in epsilon_constraints:
+                constr = self.model.getConstrByName(constraint_name)
+                if constr is None:
+                    print(f"Warning: Constraint '{constraint_name}' not found in the model.")
+                    actual_value = None
+                else:
+                    slack = constr.getAttr(GRB.Attr.Slack)
+                    actual_value = epsilon_value - slack
+                self.objectives.append({"Objective": name, "Value": actual_value})
+
+
 
         # ========================
         # 1. Machine Flow Results
@@ -804,7 +807,6 @@ class FlowFormulation:
                     solution_data["Maschinenzuweisung"][current_machine.name].append(assignment)
 
         solution_data["RechenzeitInSekunden"] = self.model.Runtime
-        solution_data["Zielfunktionswert"] = self.model.objVal
 
         solution_data["Baustellenanzahl"] = self.sum_total_sites
         solution_data["Baustellenfertig"] = self.sum_finished_sites
@@ -846,17 +848,32 @@ class FlowFormulation:
 
 
         # ========================
-        # 4. Extra File with Variables
+        # 4. Save Objective Values to File
         # ========================
 
-        solution = {}
-        for var in self.model.getVars():
-            #if round(var.X) > 0:
-                solution[var.VarName] = round(var.X)
 
-        output_filename = solution_path / f"Variables_{self.data.instance_filename}"
-        with open(output_filename, "w") as output_file:
-            json.dump(solution, output_file, indent=4)
+        output_data = {"instance": self.data.instance, "computational_time": self.model.Runtime, "strategy": self.objective_strategy, "results": self.objectives}
+
+        output_file = solution_path / f"{self.objective_strategy}_strategy_results_{self.data.instance}.json"
+        with open(output_file, mode="w") as file:
+            json.dump(output_data, file, indent=4)
+
+
+        # ========================
+        # 5. Extra File with Variables
+        # ========================
+
+        on = False
+
+        if on:
+            solution = {}
+            for var in self.model.getVars():
+                #if round(var.X) > 0:
+                    solution[var.VarName] = round(var.X)
+
+            output_filename = solution_path / f"Variables_{self.data.instance_filename}"
+            with open(output_filename, "w") as output_file:
+                json.dump(solution, output_file, indent=4)
 
 
     def execute(self):
