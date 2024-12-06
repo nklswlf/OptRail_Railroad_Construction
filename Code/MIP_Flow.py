@@ -297,7 +297,7 @@ class FlowFormulation:
         # 2. Set Objective Function
         # ========================
 
-        self.objective_strategy = "hierarchical"
+        self.objective_strategy = "weighted"
 
 
         CONSTRUCTION_REVENUE = 1000000
@@ -305,19 +305,30 @@ class FlowFormulation:
         WORKER_FIXED_COST = 10000
         PENALTY_COST_NON_REGULAR_DRIVER = 400
 
-
+        test = True
         
         if self.objective_strategy == "weighted":
+
+            if test:
+
+                    self.model.setObjective(
+                    gp.quicksum(CONSTRUCTION_REVENUE * u[c] for c in self.C),
+                    GRB.MAXIMIZE
+                )
+
+
+
+            else:
             
-            self.model.setObjective(
-                gp.quicksum(CONSTRUCTION_REVENUE * u[c] for c in self.C) -
-                gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]) -
-                gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end])) -
-                gp.quicksum(MACHINE_FIXED_COST * x[m, self.start, j] for m in self.M for j in self.N_m[m]) -
-                gp.quicksum(WORKER_FIXED_COST * y[w, self.start, j] for w in self.W for j in self.N_w[w]) -
-                gp.quicksum(PENALTY_COST_NON_REGULAR_DRIVER * r[i] for i in self.N),
-                GRB.MAXIMIZE
-            )
+                self.model.setObjective(
+                    gp.quicksum(CONSTRUCTION_REVENUE * u[c] for c in self.C) -
+                    gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m]) -
+                    gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end])) -
+                    gp.quicksum(MACHINE_FIXED_COST * x[m, self.start, j] for m in self.M for j in self.N_m[m]) -
+                    gp.quicksum(WORKER_FIXED_COST * y[w, self.start, j] for w in self.W for j in self.N_w[w]) -
+                    gp.quicksum(PENALTY_COST_NON_REGULAR_DRIVER * r[i] for i in self.N),
+                    GRB.MAXIMIZE
+                )
 
         elif self.objective_strategy == "hierarchical":
 
