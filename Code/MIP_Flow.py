@@ -297,7 +297,7 @@ class FlowFormulation:
         # 2. Set Objective Function
         # ========================
 
-        self.objective_strategy = "epsilon_constraint"
+        self.objective_strategy = "single"
 
 
         # Definition of the objective criteria/functions
@@ -309,9 +309,8 @@ class FlowFormulation:
         self.non_regular_driver_usage = gp.quicksum(r[i] for i in self.N)
 
 
-
-        if self.objective_strategy == "weighted":
-
+        if self.objective_strategy == "single":
+            
             self.model.setObjectiveN(-self.construction_fulfillment, index=0, weight = self.data._construction_revenue)
             
             self.model.setObjectiveN(self.machine_transport_distance, index=1, weight = self.data._machine_transport_cost_per_km)
@@ -319,6 +318,27 @@ class FlowFormulation:
             self.model.setObjectiveN(self.machine_usage, index=3, weight = self.data._machine_fixed_cost)
             self.model.setObjectiveN(self.worker_usage, index=4, weight = self.data._worker_fixed_cost)
             self.model.setObjectiveN(self.non_regular_driver_usage, index=5, weight = self.data._penalty_cost_non_regular_driver)
+            
+
+
+        elif self.objective_strategy == "weighted":
+            
+
+            transport_distance_weight = 0.3
+            work_distance_weight = 0.2
+            machine_usage_weight = 0.2
+            worker_usage_weight = 0.2
+            non_regular_driver_usage_weight = self.data.order.order_item_ids
+
+
+            self.model.setObjectiveN(-self.construction_fulfillment, index=0, weight = 1)
+            
+            self.model.setObjectiveN(self.machine_transport_distance, index=1, weight = transport_distance_weight)
+            self.model.setObjectiveN(self.worker_work_distance, index=2, weight = work_distance_weight)
+            self.model.setObjectiveN(self.machine_usage, index=3, weight = machine_usage_weight)
+            self.model.setObjectiveN(self.worker_usage, index=4, weight = worker_usage_weight)
+            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, weight = non_regular_driver_usage_weight)
+
 
 
         elif self.objective_strategy == "hierarchical":
@@ -332,6 +352,8 @@ class FlowFormulation:
             self.model.setObjectiveN(self.worker_usage, index=4, priority=5)
             
             self.model.setObjectiveN(self.non_regular_driver_usage, index=5, priority=1)
+
+
 
 
         elif self.objective_strategy == "epsilon_constraint":
@@ -654,9 +676,9 @@ class FlowFormulation:
             for i in self.N_w[w]:
                 for j in self.N_w[w]:
                     if i != j and self.model.getVarByName(f"y[{w},{i},{j}]").x > 0.5:
-                        self.distance_worker[w] += self.d_wi[w][i]
+                        self.distance_worker[w] += 2 * self.d_wi[w][i]
                 if self.model.getVarByName(f"y[{w},{i},end]").x > 0.5:
-                    self.distance_worker[w] += self.d_wi[w][i]
+                    self.distance_worker[w] += 2 * self.d_wi[w][i]
 
         self.total_distance_worker = sum(self.distance_worker.values())
 
