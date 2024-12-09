@@ -268,6 +268,15 @@ class FlowFormulation:
         print("\nCreating optimization model...")
         self.model = gp.Model("Flow_Formulation")
 
+        
+        #self.model.setParam('NodefileStart', 0)  # Nutze die Festplatte, wenn mehr als 0.5 GB Speicher benötigt werden
+        #self.model.setParam('NodefileDir', '//Volumes/Daten/Gurobi')  # Verzeichnis für temporäre Dateien
+        #self.model.setParam('Threads', 1)  # Reduziere die Anzahl der Threads, um Speicheranforderungen zu minimieren
+        #self.model.setParam('MIPFocus', 1)  # Beispiel für zusätzlichen Parameter
+        #self.model.setParam('TimeLimit', 300)  # Maximale Rechenzeit auf 300 Sekunden begrenzen
+
+
+
         # ========================
         # 1. Create Variables
         # ========================
@@ -297,7 +306,7 @@ class FlowFormulation:
         # 2. Set Objective Function
         # ========================
 
-        self.objective_strategy = "single"
+        self.objective_strategy = "weighted"
 
 
         # Definition of the objective criteria/functions
@@ -323,35 +332,59 @@ class FlowFormulation:
 
         elif self.objective_strategy == "weighted":
             
+            # Predefining elements for the weights
+            len_unique_machine_types = list()
+            
+            for order in self.data.orders:
+                machine_types = []
+                for orderItemID in order.order_item_ids:
+                    orderItemID = int(orderItemID)
+                    orderItem = next((orderItem for orderItem in self.data.order_items if orderItem.id == orderItemID))
 
-            transport_distance_weight = 0.3
-            work_distance_weight = 0.2
-            machine_usage_weight = 0.2
-            worker_usage_weight = 0.2
-            non_regular_driver_usage_weight = self.data.order.order_item_ids
+                    machine_types.append(orderItem.machine_type)
+
+                unique_machine_types = list(set(machine_types))
+                len_unique_machine_types.append(len(unique_machine_types))
+
+            average_order_duration = sum(item.duration for item in self.data.order_items) / len(self.C)
+            average_machine_types_per_site = sum(len_unique_machine_types) / len(self.C)
+            average_transport_distance = sum(item for row in self.data.transport_routes for item in row if item != 0) / sum(1 for row in self.data.transport_routes for item in row if item != 0) 
+            average_order_items_per_site = len(self.N) / len(self.C)
+            target_max_share_of_non_regular_drivers = 0.3
+            average_work_distance = sum(item for row in self.d_wi for item in row if item != 0) / sum(1 for row in self.d_wi for item in row if item != 0)
+            
 
 
+            # Calculating the weights
+            self.non_regular_driver_usage_weight = average_order_items_per_site * target_max_share_of_non_regular_drivers
+            self.transport_distance_weight = average_machine_types_per_site * 2 * average_transport_distance
+            self.work_distance_weight = average_order_items_per_site * 2 * average_work_distance
+            self.machine_usage_weight = average_machine_types_per_site
+            self.worker_usage_weight = (average_order_duration / self.T_Wmax)
+
+
+
+            # Setting the objective function
             self.model.setObjectiveN(-self.construction_fulfillment, index=0, weight = 1)
             
-            self.model.setObjectiveN(self.machine_transport_distance, index=1, weight = transport_distance_weight)
-            self.model.setObjectiveN(self.worker_work_distance, index=2, weight = work_distance_weight)
-            self.model.setObjectiveN(self.machine_usage, index=3, weight = machine_usage_weight)
-            self.model.setObjectiveN(self.worker_usage, index=4, weight = worker_usage_weight)
-            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, weight = non_regular_driver_usage_weight)
-
+            self.model.setObjectiveN(self.machine_transport_distance, index=1, weight = 1/self.transport_distance_weight)
+            self.model.setObjectiveN(self.worker_work_distance, index=2, weight = 1/self.work_distance_weight)
+            self.model.setObjectiveN(self.machine_usage, index=3, weight = 1/self.machine_usage_weight)
+            self.model.setObjectiveN(self.worker_usage, index=4, weight = 1/self.worker_usage_weight)
+            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, weight = 1/self.non_regular_driver_usage_weight)
 
 
         elif self.objective_strategy == "hierarchical":
 
-            self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority=6)
+            self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 20, reltol = 0, abstol = 1)
             
-            self.model.setObjectiveN(self.machine_transport_distance, index=1, priority=3)
-            self.model.setObjectiveN(self.worker_work_distance, index=2, priority=3)
+            self.model.setObjectiveN(self.machine_transport_distance, index=1, priority = 5, reltol = 10, abstol = 0)
+            self.model.setObjectiveN(self.worker_work_distance, index=2, priority = 5, reltol = 10, abstol = 0)
+           
+            self.model.setObjectiveN(self.machine_usage, index=3, priority = 10, reltol = 20, abstol = 0)
+            self.model.setObjectiveN(self.worker_usage, index=4, priority = 10, reltol = 20, abstol = 0)
             
-            self.model.setObjectiveN(self.machine_usage, index=3, priority=5)
-            self.model.setObjectiveN(self.worker_usage, index=4, priority=5)
-            
-            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, priority=1)
+            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, priority = 1, reltol = 0, abstol = 0)
 
 
 
@@ -498,7 +531,7 @@ class FlowFormulation:
             "Non-Regular Driver Usage"
         ]
 
-        if self.objective_strategy in ["weighted", "hierarchical"]:
+        if self.objective_strategy in ["weighted", "hierarchical", "single"]:
             for i, name in enumerate(objective_names):
                 value = self.model.getObjective(index=i).getValue()
                 if value < 0:
