@@ -1,31 +1,31 @@
 {
-    "instance": "a10_o107_m5_an57_ar12",
-    "computational_time": 107.92881608009338,
-    "strategy": "weighted",
+    "instance": "a10_o114_m6_an57_ar11",
+    "computational_time": 750.1189289093018,
+    "strategy": "single",
     "results": [
         {
             "Objective": "Construction Fulfillment",
-            "Value": 9
+            "Value": 9.0
         },
         {
             "Objective": "Machine Transport Distance",
-            "Value": 166.23463154670398
+            "Value": 242.24366550187813
         },
         {
             "Objective": "Worker Work Distance",
-            "Value": 3726.9769598642256
+            "Value": 5103.321933012873
         },
         {
             "Objective": "Machine Usage",
-            "Value": 5
+            "Value": 5.0
         },
         {
             "Objective": "Worker Usage",
-            "Value": 7
+            "Value": 8.0
         },
         {
             "Objective": "Non-Regular Driver Usage",
-            "Value": 20
+            "Value": 30.0
         }
     ]
 }
