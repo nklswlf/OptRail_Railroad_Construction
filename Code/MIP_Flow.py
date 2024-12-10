@@ -306,7 +306,7 @@ class FlowFormulation:
         # 2. Set Objective Function
         # ========================
 
-        self.objective_strategy = "weighted"
+        self.objective_strategy = "hierarchical"
 
 
         # Definition of the objective criteria/functions
@@ -354,35 +354,47 @@ class FlowFormulation:
             average_work_distance = sum(item for row in self.d_wi for item in row if item != 0) / sum(1 for row in self.d_wi for item in row if item != 0)
             
 
+            # Defining relative factors for the weights
+            prio_vector = [0.55864892, 0.14151739, 0.14151739, 0.0635508,  0.0635508,  0.03121471]
 
-            # Calculating the weights
-            self.non_regular_driver_usage_weight = average_order_items_per_site * target_max_share_of_non_regular_drivers
-            self.transport_distance_weight = average_machine_types_per_site * 2 * average_transport_distance
-            self.work_distance_weight = average_order_items_per_site * 2 * average_work_distance
-            self.machine_usage_weight = average_machine_types_per_site
-            self.worker_usage_weight = (average_order_duration / self.T_Wmax)
+            factor_construction_fulfillment = prio_vector[0]
+            factor_transport_distance = prio_vector[1]
+            factor_work_distance = prio_vector[2]
+            factor_machine_usage = prio_vector[3]
+            factor_worker_usage = prio_vector[4]
+            factor_non_regular_driver = prio_vector[5]
+            
+            
+
+
+            # Calculating the absolute weights
+            non_regular_driver_usage_weight = average_order_items_per_site * target_max_share_of_non_regular_drivers
+            transport_distance_weight = average_machine_types_per_site * 2 * average_transport_distance
+            work_distance_weight = average_order_items_per_site * 2 * average_work_distance
+            machine_usage_weight = average_machine_types_per_site
+            worker_usage_weight = (average_order_duration / self.T_Wmax)
 
 
 
             # Setting the objective function
-            self.model.setObjectiveN(-self.construction_fulfillment, index=0, weight = 1)
+            self.model.setObjectiveN(-self.construction_fulfillment, index=0, weight = 1 * factor_construction_fulfillment)
             
-            self.model.setObjectiveN(self.machine_transport_distance, index=1, weight = 1/self.transport_distance_weight)
-            self.model.setObjectiveN(self.worker_work_distance, index=2, weight = 1/self.work_distance_weight)
-            self.model.setObjectiveN(self.machine_usage, index=3, weight = 1/self.machine_usage_weight)
-            self.model.setObjectiveN(self.worker_usage, index=4, weight = 1/self.worker_usage_weight)
-            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, weight = 1/self.non_regular_driver_usage_weight)
+            self.model.setObjectiveN(self.machine_transport_distance, index=1, weight = (1/transport_distance_weight) * factor_transport_distance)
+            self.model.setObjectiveN(self.worker_work_distance, index=2, weight = (1/work_distance_weight) * factor_work_distance)
+            self.model.setObjectiveN(self.machine_usage, index=3, weight = (1/machine_usage_weight) * factor_machine_usage)
+            self.model.setObjectiveN(self.worker_usage, index=4, weight = (1/worker_usage_weight) * factor_worker_usage)
+            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, weight = (1/non_regular_driver_usage_weight) * factor_non_regular_driver)
 
 
         elif self.objective_strategy == "hierarchical":
 
-            self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 20, reltol = 0, abstol = 1)
+            self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 20, reltol = 0, abstol = 0)
             
-            self.model.setObjectiveN(self.machine_transport_distance, index=1, priority = 5, reltol = 10, abstol = 0)
-            self.model.setObjectiveN(self.worker_work_distance, index=2, priority = 5, reltol = 10, abstol = 0)
+            self.model.setObjectiveN(self.machine_transport_distance, index=1, priority = 10, reltol = 0, abstol = 0)
+            self.model.setObjectiveN(self.worker_work_distance, index=2, priority = 10, reltol = 0, abstol = 0)
            
-            self.model.setObjectiveN(self.machine_usage, index=3, priority = 10, reltol = 20, abstol = 0)
-            self.model.setObjectiveN(self.worker_usage, index=4, priority = 10, reltol = 20, abstol = 0)
+            self.model.setObjectiveN(self.machine_usage, index=3, priority = 5, reltol = 0, abstol = 0)
+            self.model.setObjectiveN(self.worker_usage, index=4, priority = 5, reltol = 0, abstol = 0)
             
             self.model.setObjectiveN(self.non_regular_driver_usage, index=5, priority = 1, reltol = 0, abstol = 0)
 
@@ -535,7 +547,9 @@ class FlowFormulation:
             for i, name in enumerate(objective_names):
                 value = self.model.getObjective(index=i).getValue()
                 if value < 0:
-                    value = value * -1
+                    value = value * -1              
+                if name == "Construction Fulfillment" or name == "Non-Regular Driver Usage" or name == "Machine Usage" or name == "Worker Usage":
+                    value = round(value)
                 self.objectives.append({"Objective": name, "Value": value})
 
         elif self.objective_strategy == "epsilon_constraint":
