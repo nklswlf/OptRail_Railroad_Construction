@@ -14,7 +14,7 @@ from pathlib import Path
 #instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
 #instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
 #instance_filename = "Construction_a10_o119_m5_an54_ar13.json"
-#instance_filename = "Construction_a10_o144_m6_an53_ar12.json"
+instance_filename = "Construction_a10_o144_m6_an53_ar12.json"
 
 # 15 Sites
 #instance_filename = "Construction_a15_o191_m8_an74_ar18.json"
@@ -30,8 +30,8 @@ instances = ["Construction_a1_o12_m3_an5_ar3_reduced.json",
              "Construction_a3_o80_m10_an10_ar9_reduced.json",
              "Construction_a5_o96_m10_an10_ar10_reduced.json",
              "Construction_a10_o114_m6_an57_ar11.json",
-             "Construction_a10_o119_m5_an54_ar13.json",
-             "Construction_a10_o144_m6_an53_ar12.json"]
+             "Construction_a15_o191_m8_an74_ar18.json",
+             "Construction_a20_o259_m11_an101_ar26.json"]
              
 
 
@@ -52,7 +52,7 @@ def main():
         if objective_strategy == "pareto":
             number_of_sites = len(data.orders)
             pareto_constructions = range(1,number_of_sites+1)
-            pareto_attribute = "MachineTransportDistance"
+            pareto_attribute = "NonRegularDriverUsage"
             pareto_results = []
             pareto_results.append({"Construction Fulfillment": 0, pareto_attribute: 0})
 
