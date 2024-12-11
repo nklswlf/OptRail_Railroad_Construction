@@ -1,4 +1,126 @@
-from InputData import InputData
+import InputData
+import OutputData
+import MIP_Flow
+import pandas as pd
+from pathlib import Path
+
+
+# Reduced
+#instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
+#instance_filename = "Construction_a3_o80_m10_an10_ar9_reduced.json"
+#instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
+
+# 10 Sites --> "Construction_a10_o118_m6_an53_ar13.json": Instance not duable since one order has no order items
+#instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
+#instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
+#instance_filename = "Construction_a10_o119_m5_an54_ar13.json"
+instance_filename = "Construction_a10_o144_m6_an53_ar12.json"
+
+# 15 Sites
+#instance_filename = "Construction_a15_o191_m8_an74_ar18.json"
+
+# 20 Sites
+#instance_filename = "Construction_a20_o259_m11_an101_ar26.json"
+
+# 50 Sites
+#instance_filename = "Construction_a50_o578_m28_an276_ar66.json"
+
+
+instances = ["Construction_a1_o12_m3_an5_ar3_reduced.json",
+             "Construction_a3_o80_m10_an10_ar9_reduced.json",
+             "Construction_a5_o96_m10_an10_ar10_reduced.json",
+             "Construction_a10_o114_m6_an57_ar11.json",
+             "Construction_a15_o191_m8_an74_ar18.json",
+             "Construction_a20_o259_m11_an101_ar26.json"]
+             
+
+
+
+
+# Options
+objective_strategies = ["weighted", "hierarchical", "single", "pareto"]
+pareto_attributes = ["MachineTransportDistance", "WorkerWorkDistance", "MachineUsage", "WorkerUsage"]#, "NonRegularDriverUsage"]
+
+
+def main():
+
+    for i in instances:
+
+        data = InputData.InputData(i)
+        objective_strategy = "pareto"
+        
+        if objective_strategy == "pareto":
+            number_of_sites = len(data.orders)
+            pareto_constructions = range(1,number_of_sites+1)
+            pareto_attribute = "NonRegularDriverUsage"
+            pareto_results = []
+            pareto_results.append({"Construction Fulfillment": 0, pareto_attribute: 0})
+
+            for pareto_construction in pareto_constructions:
+                
+                optimizer = MIP_Flow.FlowFormulation(data, objective_strategy, pareto_attribute, pareto_construction)
+                MIP_solution, objectives = optimizer.execute()
+
+                if MIP_solution is not None:
+
+                    feasible = MIP_solution.feasibility_check()
+
+                    if not feasible:
+                        raise Exception("Infeasible solution")
+                    
+                    else:
+                        result_row = {}
+                        for obj in objectives:
+                            result_row[obj["Objective"]] = obj["Value"]
+                        pareto_results.append(result_row)
+
+                else:
+                    break
+
+            pareto_results_df = pd.DataFrame(pareto_results)
+
+            print(pareto_results_df)
+
+            pareto_path = Path.cwd().parent / "Data" / "Solution" / data._parent_folder / data.instance / objective_strategy
+            pareto_path.mkdir(parents=True, exist_ok=True)
+
+            pareto_results_df.to_csv(pareto_path / f"{pareto_attribute}_pareto_results.csv", index=False)
+        
+        else:
+            optimizer = MIP_Flow.FlowFormulation(data, objective_strategy)
+            MIP_solution, objectives = optimizer.execute()
+
+            if MIP_solution is not None:
+
+                feasible = MIP_solution.feasibility_check()
+
+                if not feasible:
+                    raise Exception("Infeasible solution")
+                
+                else:
+                    for obj in objectives:
+                        print(obj["Objective"], obj["Value"])
+            else:
+                print("No solution found")
+
+            if feasible:
+                optimizer.save_solution_to_file()
+                #OutputData.GanttDiagramGenerator(data.instance_filename , data._parent_folder, objective_strategy).create_gantt_diagrams()
+            
+
+
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+
 
 def TestInputData():
     instance_filename = "Construction_a20_o276_m12_an101_ar25.json"
@@ -44,7 +166,3 @@ def TestInputData():
     for order in data.orders:
         print(order.order_number)
         print(order.order_item_ids)
-        
-
-if __name__ == "__main__":
-    TestInputData()

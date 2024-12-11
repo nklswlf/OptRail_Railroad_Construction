@@ -1,0 +1,31 @@
+{
+    "instance": "a10_o107_m5_an57_ar12",
+    "computational_time": 107.92881608009338,
+    "strategy": "weighted",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 9
+        },
+        {
+            "Objective": "Machine Transport Distance",
+            "Value": 166.23463154670398
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 3726.9769598642256
+        },
+        {
+            "Objective": "Machine Usage",
+            "Value": 5
+        },
+        {
+            "Objective": "Worker Usage",
+            "Value": 7
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 20
+        }
+    ]
+}

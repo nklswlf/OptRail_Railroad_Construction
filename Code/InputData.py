@@ -13,10 +13,37 @@ class InputData:
 
         :param instance_filename: Name of the JSON file containing the data.
         '''
-        self._data_path, self._parent_folder = self._find_instance_file(instance_filename)
+        self.instance_filename = instance_filename
+        self.instance = instance_filename.split('Construction_')[1].split('.json')[0]
+        self._data_path, self._parent_folder = self._find_instance_file()
         self._load_data()
 
-    def _find_instance_file(self, instance_filename: str) -> tuple[str, str]:
+        # Default values for Occupational Safety
+        self._consecutive_night_shifts = 5 # Max consecutive night shifts
+        self._max_shifts_in_time_period = 10 # Max shifts in a time period
+        self._time_period_for_max_shifts = 14 # Time period for max shifts in days
+        self._max_working_hours = 160 # Max working hours in the full planning horizon
+        self._day_and_night_shift_boundary = 12 # Start before 12 is day shift, after 12 is night shift
+
+        # Default values for Machine and Worker characteristics
+        self._seconds_a_day = 86400  # Number of seconds in a day
+        self._transport_speed_kmh = 70  # Machine transport speed (km/h)
+        self._hours_between_shifts = 9  # Rest period between shifts in hours
+
+
+        # Default values for costs
+        self._construction_revenue = 1000000  # Imaginary revenue for the construction project
+        self._machine_fixed_cost = 9000  # Fixed cost for using a machine in a month / renting price per machine in a month
+        self._worker_fixed_cost = 4800  # Fixed cost for using a worker / salary + costs per worker in a month
+        self._penalty_cost_non_regular_driver = (self._worker_fixed_cost/20) * 0.2  # 48 euro per shift since 20 shifts per month and 20% of the cost
+        self._worker_travel_cost_per_km = 0.5  # Travel cost per km for a worker
+        self._machine_transport_cost_per_km = 1.6  # Transport cost per km for a machine
+
+        
+
+        
+
+    def _find_instance_file(self) -> tuple[str, str]:
         '''
         Recursively search for the instance file in the Data/Instanzen directory
         and store the parent folder where the file is found.
@@ -26,10 +53,10 @@ class InputData:
         :raises FileNotFoundError: If the file is not found in the directory.
         '''
         base_path = Path.cwd().parent / "Data" / "Instanzen"
-        for file_path in base_path.rglob(instance_filename):  # Recursively search for the file
+        for file_path in base_path.rglob(self.instance_filename):  # Recursively search for the file
             return str(file_path.resolve()), file_path.parent.name  # Return file path and parent folder name
 
-        raise FileNotFoundError(f"File '{instance_filename}' not found in directory '{base_path}'.")
+        raise FileNotFoundError(f"File '{self.instance_filename}' not found in directory '{base_path}'.")
 
 
 
@@ -54,7 +81,7 @@ class InputData:
             self._transport_routes = self._convert_square_2d_list(data.get("TransportwegeString", {}))
             self._work_routes = self._convert_rectangular_2d_list(data.get("ArbeitswegeString", {}))
 
-            print(f"Data loaded from '{self._data_path}' in folder '{self._parent_folder}'.")
+            print(f"Data loaded from '{self.instance_filename}' in folder '{self._parent_folder}'.")
 
     def _convert_square_2d_list(self, routes_dict: dict) -> List[List[Optional[float]]]:
         ''' Convert a nested dictionary of routes to a square 2D list (matrix) '''
