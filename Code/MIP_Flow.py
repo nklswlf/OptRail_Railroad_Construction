@@ -11,10 +11,12 @@ from itertools import groupby
 
 class FlowFormulation:
     
-    def __init__(self, data):
+    def __init__(self, data, objective_strategy, paretto_attribute = None, pareto_construction = None):
         self.data = data
         self.model = None
-        #self.objective_strategy = objective_strategy
+        self.objective_strategy = objective_strategy
+        self.pareto_attribut = paretto_attribute
+        self.pareto_construction = pareto_construction
 
         # ========================
         # 1. Sets
@@ -306,8 +308,6 @@ class FlowFormulation:
         # 2. Set Objective Function
         # ========================
 
-        self.objective_strategy = "hierarchical"
-
 
         # Definition of the objective criteria/functions
         self.construction_fulfillment = gp.quicksum(u[c] for c in self.C)
@@ -423,6 +423,25 @@ class FlowFormulation:
             self.model.addConstr(self.non_regular_driver_usage <= self.epsilon_non_regular_driver_use, name="EpsilonPenaltyCostConstraint")
 
 
+        elif self.objective_strategy == "pareto":
+            
+            self.model.addConstr(self.construction_fulfillment == self.pareto_construction, name="ConstructionFulfillmentConstraint")
+            
+            if self.pareto_attribut == "MachineTransportDistance":
+                self.model.setObjectiveN(self.machine_transport_distance, index=0, priority = 2, weight = 1)
+                self.model.setObjectiveN(self.worker_work_distance, index=1, priority = 1 , weight = 1)
+            elif self.pareto_attribut == "WorkerWorkDistance":                
+                self.model.setObjectiveN(self.worker_work_distance, index=0, weight = 1)            
+            elif self.pareto_attribut == "MachineUsage":
+                self.model.setObjectiveN(self.machine_usage, index=0, weight = 1)
+            elif self.pareto_attribut == "WorkerUsage":    
+                self.model.setObjectiveN(self.worker_usage, index=0, weight = 1)
+            elif self.pareto_attribut == "NonRegularDriverUsage":    
+                self.model.setObjectiveN(self.non_regular_driver_usage, index=0, weight = 1)
+
+
+
+
         # ========================
         # 3. Add Constraints
         # ========================
@@ -523,6 +542,12 @@ class FlowFormulation:
 
         print("Time elapsed: {:.2f} seconds".format(self.model.Runtime))
 
+        if self.model.status == GRB.INFEASIBLE:
+            return False
+        
+        return True
+            
+
 
     def postprocess_results(self):
         """Extract and display results after model optimization."""
@@ -551,6 +576,12 @@ class FlowFormulation:
                 if name == "Construction Fulfillment" or name == "Non-Regular Driver Usage" or name == "Machine Usage" or name == "Worker Usage":
                     value = round(value)
                 self.objectives.append({"Objective": name, "Value": value})
+
+        elif self.objective_strategy == "pareto":
+            self.objectives.append({"Objective": "Construction Fulfillment", "Value": self.pareto_construction})
+            self.objectives.append({"Objective": self.pareto_attribut, "Value": self.model.getObjective(index=0).getValue()})
+            
+        
 
         elif self.objective_strategy == "epsilon_constraint":
        
@@ -950,11 +981,16 @@ class FlowFormulation:
         
         self.preprocess_data()
         self.create_optimization_model()
-        self.solve_model()
+        feasible = self.solve_model()
+
+        if not feasible:
+            print("Model is infeasible.")
+            return None, None
+        
         self.postprocess_results()
 
         MIP_solution = Solution(self.route_plan_worker, self.route_plan_machine, self.data)
 
-        return MIP_solution, self.objective_strategy
+        return MIP_solution, self.objectives
 
         
