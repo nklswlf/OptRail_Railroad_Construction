@@ -6,39 +6,81 @@ from pathlib import Path
 
 
 # Reduced
-#instance_filename = "Construction_a1_o12_m3_an5_ar3_reduced.json"
-#instance_filename = "Construction_a3_o80_m10_an10_ar9_reduced.json"
-#instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
+'''
+Construction_a1_o12_m3_an5_ar3_reduced.json
+Construction_a3_o80_m10_an10_ar9_reduced.json
+Construction_a5_o96_m10_an10_ar10_reduced.json
+'''
 
 # 10 Sites --> "Construction_a10_o118_m6_an53_ar13.json": Instance not duable since one order has no order items
-#instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
-#instance_filename = "Construction_a10_o114_m6_an57_ar11.json"
-#instance_filename = "Construction_a10_o119_m5_an54_ar13.json"
-instance_filename = "Construction_a10_o144_m6_an53_ar12.json"
+'''
+Construction_a10_o107_m5_an57_ar12.json
+Construction_a10_o114_m6_an57_ar11.json
+Construction_a10_o119_m5_an54_ar13.json
+Construction_a10_o128_m6_an51_ar13.json
+Construction_a10_o144_m6_an53_ar12.json
+'''
 
 # 15 Sites
-#instance_filename = "Construction_a15_o191_m8_an74_ar18.json"
+'''
+Construction_a15_o170_m9_an80_ar18.json
+Construction_a15_o191_m8_an74_ar18.json
+Construction_a15_o195_m8_an81_ar20.json
+
+'''
 
 # 20 Sites
-#instance_filename = "Construction_a20_o259_m11_an101_ar26.json"
+'''
+Construction_a20_o236_m12_an106_ar24.json
+Construction_a20_o259_m11_an101_ar26.json
+Construction_a20_o268_m11_an118_ar26.json
+'''
+
+# 25 Sites
+'''
+Construction_a25_o306_m13_an127_ar31.json
+Construction_a25_o335_m16_an145_ar31.json
+Construction_a25_o360_m15_an149_ar34.json
+'''
+
+# 30 Sites
+'''
+Construction_a30_o355_m18_an148_ar42.json
+Construction_a30_o397_m17_an150_ar42.json
+Construction_a30_o428_m16_an168_ar43.json
+'''
+
+# 40 Sites
+'''
+Construction_a40_o476_m22_an215_ar51.json
+Construction_a40_o502_m21_an197_ar55.json
+Construction_a40_o551_m25_an221_ar53.json
+'''
 
 # 50 Sites
-#instance_filename = "Construction_a50_o578_m28_an276_ar66.json"
+'''
+Construction_a50_o578_m28_an276_ar66.json
+Construction_a50_o639_m28_an269_ar63.json
+Construction_a50_o668_m29_an248_ar68.json
+'''
 
+
+instances = ["Construction_a10_o107_m5_an57_ar12.json",
+             "Construction_a10_o114_m6_an57_ar11.json",
+             "Construction_a10_o119_m5_an54_ar13.json",
+        
+             "Construction_a15_o170_m9_an80_ar18.json",
+             "Construction_a20_o236_m12_an106_ar24.json",
+             "Construction_a25_o306_m13_an127_ar31.json",
+            ]
 
 instances = ["Construction_a1_o12_m3_an5_ar3_reduced.json",
-             "Construction_a3_o80_m10_an10_ar9_reduced.json",
-             "Construction_a5_o96_m10_an10_ar10_reduced.json",
-             "Construction_a10_o114_m6_an57_ar11.json",
-             "Construction_a15_o191_m8_an74_ar18.json",
-             "Construction_a20_o259_m11_an101_ar26.json"]
-             
-
+             "Construction_a3_o80_m10_an10_ar9_reduced.json"]
 
 
 
 # Options
-objective_strategies = ["weighted", "hierarchical", "single", "pareto"]
+objective_strategies = ["weighted", "hierarchical", "hierarchical_tolerance" , "single", "pareto"]
 pareto_attributes = ["MachineTransportDistance", "WorkerWorkDistance", "MachineUsage", "WorkerUsage"]#, "NonRegularDriverUsage"]
 
 
@@ -47,7 +89,7 @@ def main():
     for i in instances:
 
         data = InputData.InputData(i)
-        objective_strategy = "pareto"
+        objective_strategy = "hierarchical_tolerance"
         
         if objective_strategy == "pareto":
             number_of_sites = len(data.orders)
