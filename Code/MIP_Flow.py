@@ -282,7 +282,7 @@ class FlowFormulation:
         # ========================
         # 1. Create Variables
         # ========================
-        # Machine flow variables
+        # Machine flow variabless
         indices_1 = [(m, i, j) for m in self.M for i in self.N_m[m] for j in self.N_m[m]]  # (m, i, j)
         indices_2 = [(m, self.start, j) for m in self.M for j in self.N_m[m]]  # (m, start, j)
         indices_3 = [(m, i, self.end) for m in self.M for i in self.N_m[m]]  # (m, i, end)
@@ -388,16 +388,60 @@ class FlowFormulation:
 
         elif self.objective_strategy == "hierarchical":
 
-            self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 20, reltol = 0, abstol = 0)
-            
-            self.model.setObjectiveN(self.machine_transport_distance, index=1, priority = 10, reltol = 0, abstol = 0)
-            self.model.setObjectiveN(self.worker_work_distance, index=2, priority = 10, reltol = 0, abstol = 0)
-           
-            self.model.setObjectiveN(self.machine_usage, index=3, priority = 5, reltol = 0, abstol = 0)
-            self.model.setObjectiveN(self.worker_usage, index=4, priority = 5, reltol = 0, abstol = 0)
-            
-            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, priority = 1, reltol = 0, abstol = 0)
+            self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 6, reltol = 0, abstol = 0)
 
+
+            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, priority = 5, reltol = 0, abstol = 0)
+
+            self.model.setObjectiveN(self.worker_work_distance, index=2, priority = 4, reltol = 0, abstol = 0)
+            
+            self.model.setObjectiveN(self.machine_transport_distance, index=1, priority = 3, reltol = 0, abstol = 0)
+
+            self.model.setObjectiveN(self.machine_usage, index=3, priority = 2, reltol = 0, abstol = 0)
+                    
+            self.model.setObjectiveN(self.worker_usage, index=4, priority = 1, reltol = 0, abstol = 0)
+
+
+
+        elif self.objective_strategy == "hierarchical_tolerance":
+
+
+            if self.first_round == True:
+                self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 6, reltol = 0, abstol = 0)
+
+            elif self.first_round == False:
+
+                len_unique_machine_types = list()
+            
+                for order in self.data.orders:
+                    machine_types = []
+                    for orderItemID in order.order_item_ids:
+                        orderItemID = int(orderItemID)
+                        orderItem = next((orderItem for orderItem in self.data.order_items if orderItem.id == orderItemID))
+
+                        machine_types.append(orderItem.machine_type)
+
+                    unique_machine_types = list(set(machine_types))
+                    len_unique_machine_types.append(len(unique_machine_types))
+
+                
+                average_machine_types_per_site = sum(len_unique_machine_types) / len(self.C)
+                average_order_items_per_site = len(self.N) / len(self.C)
+
+
+                self.model.addConstr(self.construction_fulfillment == self.first_round_construction, name="ConstructionFulfillmentConstraint")
+
+                self.model.setObjectiveN(self.non_regular_driver_usage, index=5, priority = 5, reltol = 0, abstol = round(self.first_round_construction * average_order_items_per_site * 0.1))
+
+                self.model.setObjectiveN(self.worker_work_distance, index=2, priority = 4, reltol = 0.1, abstol = 0)
+                
+                self.model.setObjectiveN(self.machine_transport_distance, index=1, priority = 3, reltol = 0.1, abstol = 0)
+            
+                self.model.setObjectiveN(self.machine_usage, index=3, priority = 2, reltol = 0, abstol = round(self.first_round_construction * average_machine_types_per_site * 0.1))
+                            
+                self.model.setObjectiveN(self.worker_usage, index=4, priority = 1, reltol = 0, abstol = 0)
+            
+            
 
 
 
@@ -577,6 +621,20 @@ class FlowFormulation:
                 if name == "Construction Fulfillment" or name == "Non-Regular Driver Usage" or name == "Machine Usage" or name == "Worker Usage":
                     value = round(value)
                 self.objectives.append({"Objective": name, "Value": value})
+
+
+        elif self.objective_strategy == "hierarchical_tolerance":
+            self.objectives.append({"Objective": "Construction Fulfillment", "Value": self.first_round_construction})
+            
+            for i, name in enumerate(objective_names):
+                if i == 0:
+                    continue
+                value = self.model.getObjective(index=i).getValue()         
+                if name == "Non-Regular Driver Usage" or name == "Machine Usage" or name == "Worker Usage":
+                    value = round(value)
+                self.objectives.append({"Objective": name, "Value": value})
+
+
 
         elif self.objective_strategy == "pareto":
             self.objectives.append({"Objective": "Construction Fulfillment", "Value": self.pareto_construction})
@@ -980,9 +1038,18 @@ class FlowFormulation:
     def execute(self):
         """Run the full optimization workflow."""
         
+        self.first_round = True
+
         self.preprocess_data()
         self.create_optimization_model()
         feasible = self.solve_model()
+        self.first_round_construction = round(self.model.getObjective(index=0).getValue() * -1)
+
+        if self.objective_strategy == "hierarchical_tolerance":
+            self.first_round = False
+            self.create_optimization_model()
+            feasible = self.solve_model()
+
 
         if not feasible:
             print("Model is infeasible.")
