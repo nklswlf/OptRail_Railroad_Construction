@@ -1,6 +1,6 @@
 {
     "instance": "a1_o12_m3_an5_ar3_reduced",
-    "computational_time": 0.020042896270751953,
+    "computational_time": 0.02419590950012207,
     "strategy": "hierarchical_tolerance",
     "results": [
         {
@@ -13,7 +13,7 @@
         },
         {
             "Objective": "Worker Work Distance",
-            "Value": 1371.5417280555666
+            "Value": 1293.1338926678472
         },
         {
             "Objective": "Machine Usage",
@@ -25,7 +25,7 @@
         },
         {
             "Objective": "Non-Regular Driver Usage",
-            "Value": 1
+            "Value": 2
         }
     ]
 }
