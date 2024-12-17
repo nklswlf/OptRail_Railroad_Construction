@@ -429,6 +429,7 @@ class FlowFormulation:
             
             if self.pareto_attribut == "MachineTransportDistance":
                 self.model.setObjectiveN(self.machine_transport_distance, index=0, priority = 2, weight = 1)
+                # 2nd step is needed for feasibility but data is not used
                 self.model.setObjectiveN(self.worker_work_distance, index=1, priority = 1 , weight = 1)
             elif self.pareto_attribut == "WorkerWorkDistance":                
                 self.model.setObjectiveN(self.worker_work_distance, index=0, weight = 1)            
