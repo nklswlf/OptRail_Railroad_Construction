@@ -410,15 +410,34 @@ class FlowFormulation:
                 self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 6, reltol = 0, abstol = 0)
 
             elif self.first_round == False:
+
+                len_unique_machine_types = list()
+            
+                for order in self.data.orders:
+                    machine_types = []
+                    for orderItemID in order.order_item_ids:
+                        orderItemID = int(orderItemID)
+                        orderItem = next((orderItem for orderItem in self.data.order_items if orderItem.id == orderItemID))
+
+                        machine_types.append(orderItem.machine_type)
+
+                    unique_machine_types = list(set(machine_types))
+                    len_unique_machine_types.append(len(unique_machine_types))
+
+                
+                average_machine_types_per_site = sum(len_unique_machine_types) / len(self.C)
+                average_order_items_per_site = len(self.N) / len(self.C)
+
+
                 self.model.addConstr(self.construction_fulfillment == self.first_round_construction, name="ConstructionFulfillmentConstraint")
 
-                self.model.setObjectiveN(self.non_regular_driver_usage, index=5, priority = 5, reltol = 0, abstol = 0)
+                self.model.setObjectiveN(self.non_regular_driver_usage, index=5, priority = 5, reltol = 0, abstol = round(self.first_round_construction * average_order_items_per_site * 0.1))
 
-                self.model.setObjectiveN(self.worker_work_distance, index=2, priority = 4, reltol = 0, abstol = 0)
+                self.model.setObjectiveN(self.worker_work_distance, index=2, priority = 4, reltol = 0.1, abstol = 0)
                 
-                self.model.setObjectiveN(self.machine_transport_distance, index=1, priority = 3, reltol = 0, abstol = 0)
+                self.model.setObjectiveN(self.machine_transport_distance, index=1, priority = 3, reltol = 0.1, abstol = 0)
             
-                self.model.setObjectiveN(self.machine_usage, index=3, priority = 2, reltol = 0, abstol = 0)
+                self.model.setObjectiveN(self.machine_usage, index=3, priority = 2, reltol = 0, abstol = round(self.first_round_construction * average_machine_types_per_site * 0.1))
                             
                 self.model.setObjectiveN(self.worker_usage, index=4, priority = 1, reltol = 0, abstol = 0)
             

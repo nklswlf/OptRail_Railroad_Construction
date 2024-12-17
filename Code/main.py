@@ -75,7 +75,8 @@ instances = ["Construction_a10_o107_m5_an57_ar12.json",
             ]
 
 instances = ["Construction_a1_o12_m3_an5_ar3_reduced.json",
-             "Construction_a3_o80_m10_an10_ar9_reduced.json"]
+             "Construction_a3_o80_m10_an10_ar9_reduced.json",
+             "Construction_a5_o96_m10_an10_ar10_reduced.json"]
 
 
 
