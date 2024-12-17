@@ -71,6 +71,7 @@ instances = ["Construction_a15_o170_m9_an80_ar18.json",
              "Construction_a15_o195_m8_an81_ar20.json",
              "Construction_a20_o236_m12_an106_ar24.json"
             ]
+
              
 
 
