@@ -66,7 +66,10 @@ Construction_a50_o668_m29_an248_ar68.json
 '''
 
 
-instances = ["Construction_a20_o259_m11_an101_ar26.json"
+instances = ["Construction_a15_o170_m9_an80_ar18.json",
+             "Construction_a15_o191_m8_an74_ar18.json",
+             "Construction_a15_o195_m8_an81_ar20.json",
+             "Construction_a20_o236_m12_an106_ar24.json"
             ]
              
 
@@ -88,39 +91,41 @@ def main():
         if objective_strategy == "pareto":
             number_of_sites = len(data.orders)
             pareto_constructions = range(1,number_of_sites+1)
-            pareto_attribute = "WorkerWorkDistance"
-            pareto_results = []
-            pareto_results.append({"Construction Fulfillment": 0, pareto_attribute: 0})
+            pareto_attributes = ["MachineUsage", "WorkerUsage"]
 
-            for pareto_construction in pareto_constructions:
-                
-                optimizer = MIP_Flow.FlowFormulation(data, objective_strategy, pareto_attribute, pareto_construction)
-                MIP_solution, objectives = optimizer.execute()
+            for pareto_attribute in pareto_attributes:
+                pareto_results = []
+                pareto_results.append({"Construction Fulfillment": 0, pareto_attribute: 0})
 
-                if MIP_solution is not None:
-
-                    feasible = MIP_solution.feasibility_check()
-
-                    if not feasible:
-                        raise Exception("Infeasible solution")
+                for pareto_construction in pareto_constructions:
                     
+                    optimizer = MIP_Flow.FlowFormulation(data, objective_strategy, pareto_attribute, pareto_construction)
+                    MIP_solution, objectives = optimizer.execute()
+
+                    if MIP_solution is not None:
+
+                        feasible = MIP_solution.feasibility_check()
+
+                        if not feasible:
+                            raise Exception("Infeasible solution")
+                        
+                        else:
+                            result_row = {}
+                            for obj in objectives:
+                                result_row[obj["Objective"]] = obj["Value"]
+                            pareto_results.append(result_row)
+
                     else:
-                        result_row = {}
-                        for obj in objectives:
-                            result_row[obj["Objective"]] = obj["Value"]
-                        pareto_results.append(result_row)
+                        break
 
-                else:
-                    break
+                pareto_results_df = pd.DataFrame(pareto_results)
 
-            pareto_results_df = pd.DataFrame(pareto_results)
+                print(pareto_results_df)
 
-            print(pareto_results_df)
+                pareto_path = Path.cwd().parent / "Data" / "Solution" / data._parent_folder / data.instance / objective_strategy
+                pareto_path.mkdir(parents=True, exist_ok=True)
 
-            pareto_path = Path.cwd().parent / "Data" / "Solution" / data._parent_folder / data.instance / objective_strategy
-            pareto_path.mkdir(parents=True, exist_ok=True)
-
-            pareto_results_df.to_csv(pareto_path / f"{pareto_attribute}_pareto_results.csv", index=False)
+                pareto_results_df.to_csv(pareto_path / f"{pareto_attribute}_pareto_results.csv", index=False)
         
         else:
             optimizer = MIP_Flow.FlowFormulation(data, objective_strategy)
