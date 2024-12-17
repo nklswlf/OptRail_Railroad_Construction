@@ -282,7 +282,7 @@ class FlowFormulation:
         # ========================
         # 1. Create Variables
         # ========================
-        # Machine flow variables
+        # Machine flow variabless
         indices_1 = [(m, i, j) for m in self.M for i in self.N_m[m] for j in self.N_m[m]]  # (m, i, j)
         indices_2 = [(m, self.start, j) for m in self.M for j in self.N_m[m]]  # (m, start, j)
         indices_3 = [(m, i, self.end) for m in self.M for i in self.N_m[m]]  # (m, i, end)
