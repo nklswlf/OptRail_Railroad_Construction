@@ -57,12 +57,52 @@ Construction_a50_o578_m28_an276_ar66.json
 # Options
 objective_strategies = ["weighted", "hierarchical", "hierarchical_tolerance" , "costs", "pareto"]
 pareto_attributes = ["MachineTransportDistance", "WorkerWorkDistance", "MachineUsage", "WorkerUsage", "NonRegularDriverUsage"]
+number_of_objectives = [3, 4, 5, 6]
+
+
+def main():
+    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json"]
+    objective_strategies = ["costs", "weighted", "hierarchical", "hierarchical_tolerance"]
+    number_of_objectives = [3, 4, 5, 6]
+
+    for number_obj in number_of_objectives:
+        for objective_strategy in objective_strategies:
+            for instance in instances:
+                data = InputData.InputData(instance)
+                optimizer = MIP_Flow.FlowFormulation(data, objective_strategy, number_obj)
+                MIP_solution, objectives = optimizer.execute()
+
+                if MIP_solution is not None:
+                    feasible = MIP_solution.feasibility_check()
+
+                    if not feasible:
+                        raise Exception(f"Infeasible solution for instance {instance}")
+                    else:
+                        for obj in objectives:
+                            print(f"{obj['Objective']} = {obj['Value']}")
+                else:
+                    print(f"No solution found for instance {instance}")
+
+                if feasible:
+                    optimizer.save_solution_to_file()
+                    # OutputData.GanttDiagramGenerator(data.instance_filename, data._parent_folder, objective_strategy).create_gantt_diagrams()
+
+
+
+if __name__ == "__main__":
+    #TestInputData()
+    #pareto()
+    main()
+
+
+
+
 
 
 
 
 def pareto():
-    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json", "Construction_a10_o107_m6_an61_ar10.json"]
+    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json"]
     pareto_attributes = ["MachineTransportDistance", "NonRegularDriverUsage"] 
     objective_strategy = "pareto"
 
@@ -101,43 +141,6 @@ def pareto():
             pareto_path.mkdir(parents=True, exist_ok=True)
 
             pareto_results_df.to_csv(pareto_path / f"{pareto_attribute}_pareto_results.csv", index=False)
-
-
-def main():
-    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json"]
-    objective_strategies = ["costs", "weighted", "hierarchical", "hierarchical_tolerance"]
-
-    for objective_strategy in objective_strategies:
-        for instance in instances:
-            data = InputData.InputData(instance)
-            optimizer = MIP_Flow.FlowFormulation(data, objective_strategy)
-            MIP_solution, objectives = optimizer.execute()
-
-            if MIP_solution is not None:
-                feasible = MIP_solution.feasibility_check()
-
-                if not feasible:
-                    raise Exception(f"Infeasible solution for instance {instance}")
-                else:
-                    for obj in objectives:
-                        print(f"{obj['Objective']} = {obj['Value']}")
-            else:
-                print(f"No solution found for instance {instance}")
-
-            if feasible:
-                optimizer.save_solution_to_file()
-                # OutputData.GanttDiagramGenerator(data.instance_filename, data._parent_folder, objective_strategy).create_gantt_diagrams()
-
-
-
-if __name__ == "__main__":
-    #TestInputData()
-    #pareto()
-    main()
-
-
-
-
 
 
 
