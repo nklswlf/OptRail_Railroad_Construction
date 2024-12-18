@@ -318,7 +318,7 @@ class FlowFormulation:
         self.non_regular_driver_usage = gp.quicksum(r[i] for i in self.N)
 
 
-        if self.objective_strategy == "single":
+        if self.objective_strategy == "costs":
             
             self.model.setObjectiveN(-self.construction_fulfillment, index=0, weight = self.data._construction_revenue)
             
@@ -613,7 +613,7 @@ class FlowFormulation:
             "Non-Regular Driver Usage"
         ]
 
-        if self.objective_strategy in ["weighted", "hierarchical", "single"]:
+        if self.objective_strategy in ["weighted", "hierarchical", "costs"]:
             for i, name in enumerate(objective_names):
                 value = self.model.getObjective(index=i).getValue()
                 if value < 0:
