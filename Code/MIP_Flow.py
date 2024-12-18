@@ -267,11 +267,11 @@ class FlowFormulation:
     def create_optimization_model(self):
         """Create and configure the Gurobi optimization model."""
 
-        time_limit = 10
+        self.time_limit = 3600
         thread_limit = 4
 
         if self.first_round == False:
-            time_limit = 10 - self.first_round_time
+            new_time_limit = self.time_limit - self.first_round_time
 
         current_time = time()
         print("\nCreating optimization model...")
@@ -285,7 +285,11 @@ class FlowFormulation:
         #self.model.setParam('TimeLimit', 300)  # Maximale Rechenzeit auf 300 Sekunden begrenzen
         
         self.model.setParam("Threads", thread_limit)
-        self.model.setParam("TimeLimit", time_limit)
+
+        if self.first_round == True:
+            self.model.setParam("TimeLimit", self.time_limit)
+        elif self.first_round == False:
+            self.model.setParam("TimeLimit", new_time_limit)
 
 
 
@@ -1075,9 +1079,8 @@ class FlowFormulation:
         # 4. Save Objective Values to File
         # ========================
 
-        gaps = self.calculate_gap()
-        #gaps = self.model.MIPGap
-        output_data = {"instance": self.data.instance, "computational_time": self.model.Runtime, "gaps":  gaps, "strategy": self.objective_strategy, "results": self.objectives}
+
+        output_data = {"instance": self.data.instance, "computational_time": self.model.Runtime, "strategy": self.objective_strategy, "results": self.objectives}
 
         output_file = solution_path / f"{self.objective_strategy}_strategy_results_{self.data.instance}.json"
         with open(output_file, mode="w") as file:
@@ -1118,7 +1121,7 @@ class FlowFormulation:
         elif reason == "solution_with_gap":           
             output_filename = solution_path / f"Solution_with_gap_{self.data.instance_filename}"
             with open(output_filename, "w") as output_file:
-                output_file.write(f"Solution found within the time limit but with a gap of {self.model.MIPGap}.")
+                output_file.write(f"Solution found within the time limit but with a gap.")
 
 
     def execute(self):
