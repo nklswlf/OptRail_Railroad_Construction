@@ -11,10 +11,11 @@ from itertools import groupby
 
 class FlowFormulation:
     
-    def __init__(self, data, objective_strategy, paretto_attribute = None, pareto_construction = None):
+    def __init__(self, data, objective_strategy, number_of_objectives = None, paretto_attribute = None, pareto_construction = None):
         self.data = data
         self.model = None
         self.objective_strategy = objective_strategy
+        self.number_of_objectives = number_of_objectives
         self.pareto_attribut = paretto_attribute
         self.pareto_construction = pareto_construction
 
@@ -266,6 +267,12 @@ class FlowFormulation:
     def create_optimization_model(self):
         """Create and configure the Gurobi optimization model."""
 
+        time_limit = 10
+        thread_limit = 4
+
+        if self.first_round == False:
+            time_limit = 10 - self.first_round_time
+
         current_time = time()
         print("\nCreating optimization model...")
         self.model = gp.Model("Flow_Formulation")
@@ -276,6 +283,9 @@ class FlowFormulation:
         #self.model.setParam('Threads', 1)  # Reduziere die Anzahl der Threads, um Speicheranforderungen zu minimieren
         #self.model.setParam('MIPFocus', 1)  # Beispiel für zusätzlichen Parameter
         #self.model.setParam('TimeLimit', 300)  # Maximale Rechenzeit auf 300 Sekunden begrenzen
+        
+        self.model.setParam("Threads", thread_limit)
+        self.model.setParam("TimeLimit", time_limit)
 
 
 
@@ -318,15 +328,24 @@ class FlowFormulation:
         self.non_regular_driver_usage = gp.quicksum(r[i] for i in self.N)
 
 
-        if self.objective_strategy == "single":
+        if self.objective_strategy == "costs":
+
+            if self.number_of_objectives >= 3:           
+                self.model.setObjectiveN(-self.construction_fulfillment, index=0, weight = self.data._construction_revenue)
+
+                self.model.setObjectiveN(self.non_regular_driver_usage, index=1, weight = self.data._penalty_cost_non_regular_driver)
+
+                self.model.setObjectiveN(self.worker_work_distance, index=2, weight = self.data._worker_travel_cost_per_km)
+
+            if self.number_of_objectives >= 4:            
+                self.model.setObjectiveN(self.machine_transport_distance, index=3, weight = self.data._machine_transport_cost_per_km)
             
-            self.model.setObjectiveN(-self.construction_fulfillment, index=0, weight = self.data._construction_revenue)
+            if self.number_of_objectives >= 5:
+                self.model.setObjectiveN(self.machine_usage, index=4, weight = self.data._machine_fixed_cost)
             
-            self.model.setObjectiveN(self.machine_transport_distance, index=1, weight = self.data._machine_transport_cost_per_km)
-            self.model.setObjectiveN(self.worker_work_distance, index=2, weight = self.data._worker_travel_cost_per_km)
-            self.model.setObjectiveN(self.machine_usage, index=3, weight = self.data._machine_fixed_cost)
-            self.model.setObjectiveN(self.worker_usage, index=4, weight = self.data._worker_fixed_cost)
-            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, weight = self.data._penalty_cost_non_regular_driver)
+            if self.number_of_objectives == 6:
+                self.model.setObjectiveN(self.worker_usage, index=5, weight = self.data._worker_fixed_cost)
+            
             
 
 
@@ -377,29 +396,42 @@ class FlowFormulation:
 
 
             # Setting the objective function
-            self.model.setObjectiveN(-self.construction_fulfillment, index=0, weight = 1 * factor_construction_fulfillment)
+            if self.number_of_objectives >= 3:
+                self.model.setObjectiveN(-self.construction_fulfillment, index=0, weight = 1 * factor_construction_fulfillment)
+
+                self.model.setObjectiveN(self.non_regular_driver_usage, index=1, weight = (1/non_regular_driver_usage_weight) * factor_non_regular_driver)
+
+                self.model.setObjectiveN(self.worker_work_distance, index=2, weight = (1/work_distance_weight) * factor_work_distance)
             
-            self.model.setObjectiveN(self.machine_transport_distance, index=1, weight = (1/transport_distance_weight) * factor_transport_distance)
-            self.model.setObjectiveN(self.worker_work_distance, index=2, weight = (1/work_distance_weight) * factor_work_distance)
-            self.model.setObjectiveN(self.machine_usage, index=3, weight = (1/machine_usage_weight) * factor_machine_usage)
-            self.model.setObjectiveN(self.worker_usage, index=4, weight = (1/worker_usage_weight) * factor_worker_usage)
-            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, weight = (1/non_regular_driver_usage_weight) * factor_non_regular_driver)
+            if self.number_of_objectives >= 4:
+                self.model.setObjectiveN(self.machine_transport_distance, index=3, weight = (1/transport_distance_weight) * factor_transport_distance)
+            
+            if self.number_of_objectives >= 5:
+                self.model.setObjectiveN(self.machine_usage, index=4, weight = (1/machine_usage_weight) * factor_machine_usage)
+            
+            if self.number_of_objectives == 6:
+                self.model.setObjectiveN(self.worker_usage, index=5, weight = (1/worker_usage_weight) * factor_worker_usage)
+            
+            
 
 
         elif self.objective_strategy == "hierarchical":
 
-            self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 6, reltol = 0, abstol = 0)
+            if self.number_of_objectives >= 3:
+                self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 6, reltol = 0, abstol = 0)
 
+                self.model.setObjectiveN(self.non_regular_driver_usage, index=1, priority = 5, reltol = 0, abstol = 0)
 
-            self.model.setObjectiveN(self.non_regular_driver_usage, index=5, priority = 5, reltol = 0, abstol = 0)
+                self.model.setObjectiveN(self.worker_work_distance, index=2, priority = 4, reltol = 0, abstol = 0)
 
-            self.model.setObjectiveN(self.worker_work_distance, index=2, priority = 4, reltol = 0, abstol = 0)
-            
-            self.model.setObjectiveN(self.machine_transport_distance, index=1, priority = 3, reltol = 0, abstol = 0)
+            if self.number_of_objectives >= 4:           
+                self.model.setObjectiveN(self.machine_transport_distance, index=3, priority = 3, reltol = 0, abstol = 0)
 
-            self.model.setObjectiveN(self.machine_usage, index=3, priority = 2, reltol = 0, abstol = 0)
-                    
-            self.model.setObjectiveN(self.worker_usage, index=4, priority = 1, reltol = 0, abstol = 0)
+            if self.number_of_objectives >= 5:
+                self.model.setObjectiveN(self.machine_usage, index=4, priority = 2, reltol = 0, abstol = 0)
+
+            if self.number_of_objectives == 6:                   
+                self.model.setObjectiveN(self.worker_usage, index=5, priority = 1, reltol = 0, abstol = 0)
 
 
 
@@ -429,19 +461,41 @@ class FlowFormulation:
                 average_order_items_per_site = len(self.N) / len(self.C)
 
 
-                self.model.addConstr(self.construction_fulfillment == self.first_round_construction, name="ConstructionFulfillmentConstraint")
+                if self.number_of_objectives >= 3:
+                        self.model.addConstr(self.construction_fulfillment == self.first_round_construction, name="ConstructionFulfillmentConstraint")
 
-                self.model.setObjectiveN(self.non_regular_driver_usage, index=5, priority = 5, reltol = 0, abstol = round(self.first_round_construction * average_order_items_per_site * 0.1))
+                        self.model.setObjectiveN(self.non_regular_driver_usage, index=1, priority = 5, reltol = 0, abstol = round(self.first_round_construction * average_order_items_per_site * 0.1))
 
-                self.model.setObjectiveN(self.worker_work_distance, index=2, priority = 4, reltol = 0.1, abstol = 0)
+                        self.model.setObjectiveN(self.worker_work_distance, index=2, priority = 4, reltol = 0.1, abstol = 0)
                 
-                self.model.setObjectiveN(self.machine_transport_distance, index=1, priority = 3, reltol = 0.1, abstol = 0)
+                if self.number_of_objectives >= 4:
+                    self.model.setObjectiveN(self.machine_transport_distance, index=3, priority = 3, reltol = 0.1, abstol = 0)
+
+                if self.number_of_objectives >= 5:           
+                    self.model.setObjectiveN(self.machine_usage, index=4, priority = 2, reltol = 0, abstol = round(self.first_round_construction * average_machine_types_per_site * 0.1))
+
+                if self.number_of_objectives == 6:                            
+                    self.model.setObjectiveN(self.worker_usage, index=5, priority = 1, reltol = 0, abstol = 0)
             
-                self.model.setObjectiveN(self.machine_usage, index=3, priority = 2, reltol = 0, abstol = round(self.first_round_construction * average_machine_types_per_site * 0.1))
-                            
-                self.model.setObjectiveN(self.worker_usage, index=4, priority = 1, reltol = 0, abstol = 0)
             
+
+
+        elif self.objective_strategy == "pareto":
             
+            self.model.addConstr(self.construction_fulfillment == self.pareto_construction, name="ConstructionFulfillmentConstraint")
+            
+            if self.pareto_attribut == "MachineTransportDistance":
+                self.model.setObjectiveN(self.machine_transport_distance, index=0, priority = 2, weight = 1)
+                # 2nd step is needed for feasibility but data is not used
+                self.model.setObjectiveN(self.worker_work_distance, index=1, priority = 1 , weight = 1)
+            elif self.pareto_attribut == "WorkerWorkDistance":                
+                self.model.setObjectiveN(self.worker_work_distance, index=0, weight = 1)            
+            elif self.pareto_attribut == "MachineUsage":
+                self.model.setObjectiveN(self.machine_usage, index=0, weight = 1)
+            elif self.pareto_attribut == "WorkerUsage":    
+                self.model.setObjectiveN(self.worker_usage, index=0, weight = 1)
+            elif self.pareto_attribut == "NonRegularDriverUsage":    
+                self.model.setObjectiveN(self.non_regular_driver_usage, index=0, weight = 1)
 
 
 
@@ -465,25 +519,6 @@ class FlowFormulation:
             self.model.addConstr(self.machine_usage <= self.epsilon_machine_use, name="EpsilonMachineUsageConstraint")
             self.model.addConstr(self.worker_usage <= self.epsilon_worker_use, name="EpsilonWorkerUsageConstraint")
             self.model.addConstr(self.non_regular_driver_usage <= self.epsilon_non_regular_driver_use, name="EpsilonPenaltyCostConstraint")
-
-
-        elif self.objective_strategy == "pareto":
-            
-            self.model.addConstr(self.construction_fulfillment == self.pareto_construction, name="ConstructionFulfillmentConstraint")
-            
-            if self.pareto_attribut == "MachineTransportDistance":
-                self.model.setObjectiveN(self.machine_transport_distance, index=0, priority = 2, weight = 1)
-                # 2nd step is needed for feasibility but data is not used
-                self.model.setObjectiveN(self.worker_work_distance, index=1, priority = 1 , weight = 1)
-            elif self.pareto_attribut == "WorkerWorkDistance":                
-                self.model.setObjectiveN(self.worker_work_distance, index=0, weight = 1)            
-            elif self.pareto_attribut == "MachineUsage":
-                self.model.setObjectiveN(self.machine_usage, index=0, weight = 1)
-            elif self.pareto_attribut == "WorkerUsage":    
-                self.model.setObjectiveN(self.worker_usage, index=0, weight = 1)
-            elif self.pareto_attribut == "NonRegularDriverUsage":    
-                self.model.setObjectiveN(self.non_regular_driver_usage, index=0, weight = 1)
-
 
 
 
@@ -587,10 +622,17 @@ class FlowFormulation:
 
         print("Time elapsed: {:.2f} seconds".format(self.model.Runtime))
 
+
         if self.model.status == GRB.INFEASIBLE:
             return False
-        
-        return True
+        elif self.model.status == GRB.OPTIMAL:
+            return True
+        elif self.model.status == GRB.TIME_LIMIT:
+            if self.model.SolCount > 0:
+                return "solution_with_gap"
+            else:
+                return "time_limit_exceeded"
+   
             
 
 
@@ -604,16 +646,39 @@ class FlowFormulation:
         # ========================
 
         self.objectives = []
-        objective_names = [
-            "Construction Fulfillment",
-            "Machine Transport Distance",
-            "Worker Work Distance",
-            "Machine Usage",
-            "Worker Usage",
-            "Non-Regular Driver Usage"
-        ]
+        
+        if self.number_of_objectives == 6:
+            objective_names = [
+                "Construction Fulfillment",
+                "Non-Regular Driver Usage",
+                "Worker Work Distance",
+                "Machine Transport Distance",
+                "Machine Usage",
+                "Worker Usage"               
+            ]
+        elif self.number_of_objectives == 5:
+            objective_names = [
+                "Construction Fulfillment",
+                "Non-Regular Driver Usage",
+                "Worker Work Distance",
+                "Machine Transport Distance",
+                "Machine Usage"
+            ]
+        elif self.number_of_objectives == 4:
+            objective_names = [
+                "Construction Fulfillment",
+                "Non-Regular Driver Usage",
+                "Worker Work Distance",
+                "Machine Transport Distance"
+            ]
+        elif self.number_of_objectives == 3:
+            objective_names = [
+                "Construction Fulfillment",
+                "Non-Regular Driver Usage",
+                "Worker Work Distance"
+            ]
 
-        if self.objective_strategy in ["weighted", "hierarchical", "single"]:
+        if self.objective_strategy in ["weighted", "hierarchical", "costs"]:
             for i, name in enumerate(objective_names):
                 value = self.model.getObjective(index=i).getValue()
                 if value < 0:
@@ -997,7 +1062,7 @@ class FlowFormulation:
         # 3. Save Solution Data to File
         # ========================
         parent_folder = self.data._parent_folder
-        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.data.instance / self.objective_strategy
+        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.data.instance / f"{self.number_of_objectives}_Objectives" /self.objective_strategy
         solution_path.mkdir(parents=True, exist_ok=True)
         output_filename = solution_path / f"Solution_{self.data.instance_filename}"
         with open(output_filename, "w") as output_file:
@@ -1010,8 +1075,9 @@ class FlowFormulation:
         # 4. Save Objective Values to File
         # ========================
 
-
-        output_data = {"instance": self.data.instance, "computational_time": self.model.Runtime, "strategy": self.objective_strategy, "results": self.objectives}
+        gaps = self.calculate_gap()
+        #gaps = self.model.MIPGap
+        output_data = {"instance": self.data.instance, "computational_time": self.model.Runtime, "gaps":  gaps, "strategy": self.objective_strategy, "results": self.objectives}
 
         output_file = solution_path / f"{self.objective_strategy}_strategy_results_{self.data.instance}.json"
         with open(output_file, mode="w") as file:
@@ -1019,7 +1085,7 @@ class FlowFormulation:
 
 
         # ========================
-        # 5. Extra File with Variables
+        # 6. Extra File with Variables
         # ========================
 
         on = False
@@ -1035,6 +1101,26 @@ class FlowFormulation:
                 json.dump(solution, output_file, indent=4)
 
 
+    def time_limit_exceeded(self, reason):
+        # ========================
+        # 1. Save a file that indicates that the time limit was exceeded
+        # ========================
+
+        parent_folder = self.data._parent_folder
+        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.data.instance / f"{self.number_of_objectives}_Objectives" / self.objective_strategy
+        solution_path.mkdir(parents=True, exist_ok=True)
+        
+        if reason == "time_limit_exceeded":
+            output_filename = solution_path / f"No_Solution_{self.data.instance_filename}"
+            with open(output_filename, "w") as output_file:
+                output_file.write(f"No solution found within the time limit of {self.time_limit} seconds.")
+
+        elif reason == "solution_with_gap":           
+            output_filename = solution_path / f"Solution_with_gap_{self.data.instance_filename}"
+            with open(output_filename, "w") as output_file:
+                output_file.write(f"Solution found within the time limit but with a gap of {self.model.MIPGap}.")
+
+
     def execute(self):
         """Run the full optimization workflow."""
         
@@ -1043,9 +1129,22 @@ class FlowFormulation:
         self.preprocess_data()
         self.create_optimization_model()
         feasible = self.solve_model()
-        self.first_round_construction = round(self.model.getObjective(index=0).getValue() * -1)
+
+        if feasible == "time_limit_exceeded":
+            print("Time limit exceeded.")
+            self.time_limit_exceeded()
+            return None, None
+        
+        if feasible == "solution_with_gap":
+            print("Solution found within time limit but with a gap.")
+            self.time_limit_exceeded()
+            return None, None
+
+
 
         if self.objective_strategy == "hierarchical_tolerance":
+            self.first_round_construction = round(self.model.getObjective(index=0).getValue() * -1)
+            self.first_round_time = self.model.Runtime
             self.first_round = False
             self.create_optimization_model()
             feasible = self.solve_model()
