@@ -378,14 +378,15 @@ class FlowFormulation:
             
 
             # Defining relative factors for the weights
-            prio_vector = [0.55864892, 0.14151739, 0.14151739, 0.0635508,  0.0635508,  0.03121471]
+            
+            prio_vector = [0.54437184, 0.1707523,  0.12839376, 0.07315951, 0.04935076, 0.03397183]
 
             factor_construction_fulfillment = prio_vector[0]
-            factor_transport_distance = prio_vector[1]
+            factor_non_regular_driver = prio_vector[1]
             factor_work_distance = prio_vector[2]
-            factor_machine_usage = prio_vector[3]
-            factor_worker_usage = prio_vector[4]
-            factor_non_regular_driver = prio_vector[5]
+            factor_transport_distance = prio_vector[3]           
+            factor_machine_usage = prio_vector[4]
+            factor_worker_usage = prio_vector[5]
             
             
 
