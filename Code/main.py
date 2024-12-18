@@ -83,7 +83,6 @@ def main():
                         #OutputData.GanttDiagramGenerator(data.instance_filename, data._parent_folder, objective_strategy).create_gantt_diagrams()
                 
                 else:
-                    optimizer.time_limit_exceeded()
                     print(f"No solution found for instance {instance}")
 
                     
