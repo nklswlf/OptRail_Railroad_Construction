@@ -267,6 +267,12 @@ class FlowFormulation:
     def create_optimization_model(self):
         """Create and configure the Gurobi optimization model."""
 
+        time_limit = 10
+        thread_limit = 16
+
+        if self.first_round == False:
+            time_limit = 10 - self.first_round_time
+
         current_time = time()
         print("\nCreating optimization model...")
         self.model = gp.Model("Flow_Formulation")
@@ -277,6 +283,9 @@ class FlowFormulation:
         #self.model.setParam('Threads', 1)  # Reduziere die Anzahl der Threads, um Speicheranforderungen zu minimieren
         #self.model.setParam('MIPFocus', 1)  # Beispiel für zusätzlichen Parameter
         #self.model.setParam('TimeLimit', 300)  # Maximale Rechenzeit auf 300 Sekunden begrenzen
+        
+        self.model.setParam("Threads", thread_limit)
+        self.model.setParam("TimeLimit", time_limit)
 
 
 
@@ -613,10 +622,17 @@ class FlowFormulation:
 
         print("Time elapsed: {:.2f} seconds".format(self.model.Runtime))
 
+
         if self.model.status == GRB.INFEASIBLE:
             return False
-        
-        return True
+        elif self.model.status == GRB.OPTIMAL:
+            return True
+        elif self.model.status == GRB.TIME_LIMIT:
+            if self.model.SolCount > 0:
+                return "solution_with_gap"
+            else:
+                return "time_limit_exceeded"
+   
             
 
 
@@ -1060,7 +1076,7 @@ class FlowFormulation:
         # ========================
 
 
-        output_data = {"instance": self.data.instance, "computational_time": self.model.Runtime, "strategy": self.objective_strategy, "results": self.objectives}
+        output_data = {"instance": self.data.instance, "computational_time": self.model.Runtime, "gap": round(self.model.MIGap*100,2)  , "strategy": self.objective_strategy, "results": self.objectives}
 
         output_file = solution_path / f"{self.objective_strategy}_strategy_results_{self.data.instance}.json"
         with open(output_file, mode="w") as file:
@@ -1068,7 +1084,7 @@ class FlowFormulation:
 
 
         # ========================
-        # 5. Extra File with Variables
+        # 6. Extra File with Variables
         # ========================
 
         on = False
@@ -1084,6 +1100,19 @@ class FlowFormulation:
                 json.dump(solution, output_file, indent=4)
 
 
+    def time_limit_exceeded(self):
+        # ========================
+        # 1. Save a file that indicates no solution was found within the time limit
+        # ========================
+
+        parent_folder = self.data._parent_folder
+        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.data.instance / f"{self.number_of_objectives}_Objectives" / self.objective_strategy
+        solution_path.mkdir(parents=True, exist_ok=True)
+        output_filename = solution_path / f"No_Solution_{self.data.instance_filename}"
+        with open(output_filename, "w") as output_file:
+            output_file.write(f"No solution found within the time limit of {self.time_limit} seconds.")
+
+
     def execute(self):
         """Run the full optimization workflow."""
         
@@ -1092,10 +1121,14 @@ class FlowFormulation:
         self.preprocess_data()
         self.create_optimization_model()
         feasible = self.solve_model()
-        
+
+        if feasible == "time_limit_exceeded":
+            return None, None
+
 
         if self.objective_strategy == "hierarchical_tolerance":
             self.first_round_construction = round(self.model.getObjective(index=0).getValue() * -1)
+            self.first_round_time = self.model.Runtime
             self.first_round = False
             self.create_optimization_model()
             feasible = self.solve_model()
