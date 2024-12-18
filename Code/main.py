@@ -74,19 +74,20 @@ def main():
 
                 if MIP_solution is not None:
                     feasible = MIP_solution.feasibility_check()
-
                     if not feasible:
                         raise Exception(f"Infeasible solution for instance {instance}")
                     else:
                         for obj in objectives:
                             print(f"{obj['Objective']} = {obj['Value']}")
+                        optimizer.save_solution_to_file()
+                        #OutputData.GanttDiagramGenerator(data.instance_filename, data._parent_folder, objective_strategy).create_gantt_diagrams()
+                
                 else:
+                    optimizer.time_limit_exceeded()
                     print(f"No solution found for instance {instance}")
 
-                if feasible:
-                    optimizer.save_solution_to_file()
-                    # OutputData.GanttDiagramGenerator(data.instance_filename, data._parent_folder, objective_strategy).create_gantt_diagrams()
-
+                    
+                    
 
 
 if __name__ == "__main__":
