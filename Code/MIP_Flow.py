@@ -1043,9 +1043,10 @@ class FlowFormulation:
         self.preprocess_data()
         self.create_optimization_model()
         feasible = self.solve_model()
-        self.first_round_construction = round(self.model.getObjective(index=0).getValue() * -1)
+        
 
         if self.objective_strategy == "hierarchical_tolerance":
+            self.first_round_construction = round(self.model.getObjective(index=0).getValue() * -1)
             self.first_round = False
             self.create_optimization_model()
             feasible = self.solve_model()
