@@ -268,7 +268,7 @@ class FlowFormulation:
         """Create and configure the Gurobi optimization model."""
 
         time_limit = 10
-        thread_limit = 16
+        thread_limit = 4
 
         if self.first_round == False:
             time_limit = 10 - self.first_round_time
@@ -1075,8 +1075,9 @@ class FlowFormulation:
         # 4. Save Objective Values to File
         # ========================
 
-
-        output_data = {"instance": self.data.instance, "computational_time": self.model.Runtime, "gap": round(self.model.MIGap*100,2)  , "strategy": self.objective_strategy, "results": self.objectives}
+        gaps = self.calculate_gap()
+        #gaps = self.model.MIPGap
+        output_data = {"instance": self.data.instance, "computational_time": self.model.Runtime, "gaps":  gaps, "strategy": self.objective_strategy, "results": self.objectives}
 
         output_file = solution_path / f"{self.objective_strategy}_strategy_results_{self.data.instance}.json"
         with open(output_file, mode="w") as file:
@@ -1100,17 +1101,24 @@ class FlowFormulation:
                 json.dump(solution, output_file, indent=4)
 
 
-    def time_limit_exceeded(self):
+    def time_limit_exceeded(self, reason):
         # ========================
-        # 1. Save a file that indicates no solution was found within the time limit
+        # 1. Save a file that indicates that the time limit was exceeded
         # ========================
 
         parent_folder = self.data._parent_folder
         solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.data.instance / f"{self.number_of_objectives}_Objectives" / self.objective_strategy
         solution_path.mkdir(parents=True, exist_ok=True)
-        output_filename = solution_path / f"No_Solution_{self.data.instance_filename}"
-        with open(output_filename, "w") as output_file:
-            output_file.write(f"No solution found within the time limit of {self.time_limit} seconds.")
+        
+        if reason == "time_limit_exceeded":
+            output_filename = solution_path / f"No_Solution_{self.data.instance_filename}"
+            with open(output_filename, "w") as output_file:
+                output_file.write(f"No solution found within the time limit of {self.time_limit} seconds.")
+
+        elif reason == "solution_with_gap":           
+            output_filename = solution_path / f"Solution_with_gap_{self.data.instance_filename}"
+            with open(output_filename, "w") as output_file:
+                output_file.write(f"Solution found within the time limit but with a gap of {self.model.MIPGap}.")
 
 
     def execute(self):
@@ -1123,7 +1131,15 @@ class FlowFormulation:
         feasible = self.solve_model()
 
         if feasible == "time_limit_exceeded":
+            print("Time limit exceeded.")
+            self.time_limit_exceeded()
             return None, None
+        
+        if feasible == "solution_with_gap":
+            print("Solution found within time limit but with a gap.")
+            self.time_limit_exceeded()
+            return None, None
+
 
 
         if self.objective_strategy == "hierarchical_tolerance":
