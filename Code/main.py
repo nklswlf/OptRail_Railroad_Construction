@@ -107,9 +107,7 @@ Construction_a50_o668_m29_an248_ar68.json
 
 
 
-instances = ["Construction_a1_o12_m3_an5_ar3_reduced.json",
-             "Construction_a3_o80_m10_an10_ar9_reduced.json",
-             "Construction_a5_o96_m10_an10_ar10_reduced.json"]
+instances = ["Construction_a10_o119_m5_an54_ar13.json"]
 
 
 
@@ -128,7 +126,7 @@ def main():
         if objective_strategy == "pareto":
             number_of_sites = len(data.orders)
             pareto_constructions = range(1,number_of_sites+1)
-            pareto_attributes = ["WorkerWorkDistance","MachineUsage", "WorkerUsage"]
+            pareto_attributes = ["NonRegularDriverUsage"]
 
             for pareto_attribute in pareto_attributes:
                 pareto_results = []
