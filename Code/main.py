@@ -92,7 +92,7 @@ def main():
                         for obj in objectives:
                             print(f"{obj['Objective']} = {obj['Value']}")
                         optimizer.save_solution_to_file()
-                        OutputData.GanttDiagramGenerator(data.instance_filename, data._parent_folder, objective_strategy).create_gantt_diagrams()
+                        OutputData.GanttDiagramGenerator(data.instance_filename, data._parent_folder, objective_strategy, number_obj).create_gantt_diagrams()
                 
                 else:
                     print(f"No solution found for instance {instance}")
