@@ -200,7 +200,7 @@ class Solution:
 
 
 class GanttDiagramGenerator:
-    def __init__(self, input_file, parent_folder, optimization_strategy):
+    def __init__(self, input_file, parent_folder, optimization_strategy, number_of_objectives):
         """
         Initialize the GanttDiagramGenerator with input file and parent folder.
         """
@@ -209,13 +209,14 @@ class GanttDiagramGenerator:
         self.instance = input_file.split('Construction_')[1].split('.json')[0]
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
         self.optimization_strategy = optimization_strategy
+        self.number_of_objectives = number_of_objectives
 
         # Paths for input and output files
         self.input_file_path = os.path.join(
             self.script_dir, "..", "Data", "Instanzen", parent_folder, input_file
         )
         self.output_file_path = os.path.join(
-            self.script_dir, "..", "Data", "Solution", parent_folder, self.instance, self.optimization_strategy, f"Solution_{input_file}"
+            self.script_dir, "..", "Data", "Solution", parent_folder, self.instance, f"{self.number_of_objectives}_Objectives" ,self.optimization_strategy, f"Solution_{input_file}"
         )
 
         # Load input and output data
@@ -337,7 +338,7 @@ class GanttDiagramGenerator:
         """
 
         html_file_path = os.path.join(
-            self.script_dir, "..", "Data", "Solution", self.parent_folder, self.instance, self.optimization_strategy ,file_name
+            self.script_dir, "..", "Data", "Solution", self.parent_folder, self.instance, f"{self.number_of_objectives}_Objectives" , self.optimization_strategy,file_name
         )
         os.makedirs(os.path.dirname(html_file_path), exist_ok=True)
         fig.write_html(html_file_path)

@@ -388,7 +388,7 @@ class FlowFormulation:
             # Defining relative factors for the weights
 
             if self.number_of_objectives == 3:
-                prio_vector = [0.73888889, 0.16018519, 0.10092593, 0, 0]
+                prio_vector = [0.73888889, 0.16018519, 0.10092593, 0, 0, 0]
 
             elif self.number_of_objectives == 6:
                 prio_vector = [0.54437184, 0.1707523,  0.12839376, 0.07315951, 0.04935076, 0.03397183]
