@@ -268,7 +268,7 @@ class FlowFormulation:
         """Create and configure the Gurobi optimization model."""
 
         self.time_limit = 3600
-        thread_limit = 4
+        thread_limit = 16
 
         if self.first_round == False:
             new_time_limit = self.time_limit - self.first_round_time
