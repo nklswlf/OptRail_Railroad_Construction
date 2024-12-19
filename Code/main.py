@@ -77,9 +77,9 @@ def main():
     objective_strategies = ["costs", "weighted", "hierarchical", "hierarchical_tolerance"]
     number_of_objectives = [3, 4, 5, 6]
 
-    for number_obj in number_of_objectives:
-        for objective_strategy in objective_strategies:
-            for instance in instances:
+    for instance in instances:
+        for number_obj in number_of_objectives:
+            for objective_strategy in objective_strategies:          
                 data = InputData.InputData(instance)
                 optimizer = MIP_Flow.FlowFormulation(data, objective_strategy, number_obj)
                 MIP_solution, objectives = optimizer.execute()
