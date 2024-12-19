@@ -267,7 +267,7 @@ class FlowFormulation:
     def create_optimization_model(self):
         """Create and configure the Gurobi optimization model."""
 
-        self.time_limit = 3600
+        self.time_limit = 10800
         thread_limit = 16
 
         if self.first_round == False:
@@ -284,12 +284,20 @@ class FlowFormulation:
         #self.model.setParam('MIPFocus', 1)  # Beispiel für zusätzlichen Parameter
         #self.model.setParam('TimeLimit', 300)  # Maximale Rechenzeit auf 300 Sekunden begrenzen
         
+
+        parent_folder = self.data._parent_folder
+        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.data.instance / f"{self.number_of_objectives}_Objectives" / self.objective_strategy
+        solution_path.mkdir(parents=True, exist_ok=True)
+        
+
         self.model.setParam("Threads", thread_limit)
 
         if self.first_round == True:
             self.model.setParam("TimeLimit", self.time_limit)
+            self.model.setParam("LogFile", str(solution_path / f"gurobi_{self.data.instance}_{self.objective_strategy}.log"))
         elif self.first_round == False:
             self.model.setParam("TimeLimit", new_time_limit)
+            self.model.setParam("LogFile", str(solution_path / f"gurobi_{self.data.instance}_{self.objective_strategy}_round_2.log"))
 
 
 
@@ -378,8 +386,14 @@ class FlowFormulation:
             
 
             # Defining relative factors for the weights
+
+            if self.number_of_objectives == 3:
+                prio_vector = [0.73888889, 0.16018519, 0.10092593, 0, 0]
+
+            elif self.number_of_objectives == 6:
+                prio_vector = [0.54437184, 0.1707523,  0.12839376, 0.07315951, 0.04935076, 0.03397183]
             
-            prio_vector = [0.54437184, 0.1707523,  0.12839376, 0.07315951, 0.04935076, 0.03397183]
+            
 
             factor_construction_fulfillment = prio_vector[0]
             factor_non_regular_driver = prio_vector[1]
@@ -387,6 +401,9 @@ class FlowFormulation:
             factor_transport_distance = prio_vector[3]           
             factor_machine_usage = prio_vector[4]
             factor_worker_usage = prio_vector[5]
+
+            
+            
             
             
 
@@ -402,6 +419,8 @@ class FlowFormulation:
 
             # Setting the objective function
             if self.number_of_objectives >= 3:
+
+
                 self.model.setObjectiveN(-self.construction_fulfillment, index=0, weight = 1 * factor_construction_fulfillment)
 
                 self.model.setObjectiveN(self.non_regular_driver_usage, index=1, weight = (1/non_regular_driver_usage_weight) * factor_non_regular_driver)
@@ -1122,7 +1141,7 @@ class FlowFormulation:
         elif reason == "solution_with_gap":           
             output_filename = solution_path / f"Solution_with_gap_{self.data.instance_filename}"
             with open(output_filename, "w") as output_file:
-                output_file.write(f"Solution found within the time limit but with a gap.")
+                output_file.write(f"Solution found within the time limit of {self.time_limit} seconds, but with a gap.")
 
 
     def execute(self):
@@ -1136,13 +1155,12 @@ class FlowFormulation:
 
         if feasible == "time_limit_exceeded":
             print("Time limit exceeded.")
-            self.time_limit_exceeded()
+            self.time_limit_exceeded("time_limit_exceeded")
             return None, None
         
         if feasible == "solution_with_gap":
             print("Solution found within time limit but with a gap.")
-            self.time_limit_exceeded()
-            return None, None
+            self.time_limit_exceeded("solution_with_gap")
 
 
 
