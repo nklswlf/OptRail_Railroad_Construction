@@ -1134,12 +1134,12 @@ class FlowFormulation:
         solution_path.mkdir(parents=True, exist_ok=True)
         
         if reason == "time_limit_exceeded":
-            output_filename = solution_path / f"No_Solution_{self.data.instance_filename}"
+            output_filename = solution_path / f"TIME_{self.data.instance_filename}"
             with open(output_filename, "w") as output_file:
                 output_file.write(f"No solution found within the time limit of {self.time_limit} seconds.")
 
         elif reason == "solution_with_gap":           
-            output_filename = solution_path / f"Solution_with_gap_{self.data.instance_filename}"
+            output_filename = solution_path / f"GAP_{self.data.instance_filename}"
             with open(output_filename, "w") as output_file:
                 output_file.write(f"Solution found within the time limit of {self.time_limit} seconds, but with a gap.")
 
@@ -1153,14 +1153,7 @@ class FlowFormulation:
         self.create_optimization_model()
         feasible = self.solve_model()
 
-        if feasible == "time_limit_exceeded":
-            print("Time limit exceeded.")
-            self.time_limit_exceeded("time_limit_exceeded")
-            return None, None
         
-        if feasible == "solution_with_gap":
-            print("Solution found within time limit but with a gap.")
-            self.time_limit_exceeded("solution_with_gap")
 
 
 
@@ -1170,6 +1163,16 @@ class FlowFormulation:
             self.first_round = False
             self.create_optimization_model()
             feasible = self.solve_model()
+
+
+        if feasible == "time_limit_exceeded":
+            print("Time limit exceeded.")
+            self.time_limit_exceeded("time_limit_exceeded")
+            return None, None
+        
+        if feasible == "solution_with_gap":
+            print("Solution found within time limit but with a gap.")
+            self.time_limit_exceeded("solution_with_gap")
 
 
         if not feasible:
