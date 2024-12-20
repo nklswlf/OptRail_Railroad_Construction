@@ -1,0 +1,31 @@
+{
+    "instance": "a10_o114_m6_an57_ar11",
+    "computational_time": 936.4240000247955,
+    "strategy": "costs",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 9
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 28
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 5031.092250749341
+        },
+        {
+            "Objective": "Machine Transport Distance",
+            "Value": 266.32685465946275
+        },
+        {
+            "Objective": "Machine Usage",
+            "Value": 5
+        },
+        {
+            "Objective": "Worker Usage",
+            "Value": 8
+        }
+    ]
+}
