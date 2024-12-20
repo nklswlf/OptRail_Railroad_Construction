@@ -1,0 +1,19 @@
+{
+    "instance": "a3_o80_m10_an10_ar9_reduced",
+    "computational_time": 19.480000019073486,
+    "strategy": "weighted",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 3
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 38
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 3844.7269497129855
+        }
+    ]
+}

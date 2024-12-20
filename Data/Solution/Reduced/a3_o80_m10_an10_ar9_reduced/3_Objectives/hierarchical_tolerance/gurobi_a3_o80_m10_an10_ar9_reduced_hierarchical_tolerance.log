@@ -1,0 +1,67 @@
+
+Gurobi 11.0.0 (win64) logging started Thu Dec 19 17:39:04 2024
+
+Set parameter LogFile to value "C:\Users\Administrator\Desktop\OptRail_Railroad_Construction\Data\Solution\Reduced\a3_o80_m10_an10_ar9_reduced\3_Objectives\hierarchical_tolerance\gurobi_a3_o80_m10_an10_ar9_reduced_hierarchical_tolerance.log"
+Gurobi Optimizer version 11.0.0 build v11.0.0rc2 (win64 - Windows Server 2022.0 (20348.2))
+
+CPU model: AMD EPYC 7513 32-Core Processor, instruction set [SSE2|AVX|AVX2]
+Thread count: 18 physical cores, 18 logical processors, using up to 16 threads
+
+Optimize a model with 1625 rows, 72262 columns and 549291 nonzeros
+Model fingerprint: 0x560b80b2
+Variable types: 0 continuous, 72262 integer (72262 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+
+---------------------------------------------------------------------------
+Multi-objectives: starting optimization with 1 objectives ... 
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+
+Multi-objectives: optimize objective 1 () ...
+---------------------------------------------------------------------------
+
+Optimize a model with 1625 rows, 72262 columns and 549291 nonzeros
+Model fingerprint: 0x0fdf3f72
+Variable types: 0 continuous, 72262 integer (72262 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+Found heuristic solution: objective 0.0000000
+Presolve removed 309 rows and 37450 columns
+Presolve time: 0.58s
+Presolved: 1316 rows, 34812 columns, 401193 nonzeros
+Variable types: 0 continuous, 34812 integer (34812 binary)
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing primal log only...
+
+Concurrent spin time: 0.02s
+
+Solved with dual simplex
+
+Use crossover to convert LP symmetric solution to basic solution...
+
+Root relaxation: objective -3.000000e+00, 1895 iterations, 0.23 seconds (0.32 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+*    0     0               0      -3.0000000   -3.00000  0.00%     -    1s
+
+Explored 1 nodes (16110 simplex iterations) in 1.73 seconds (2.95 work units)
+Thread count was 16 (of 18 available processors)
+
+Solution count 2: -3 0 
+No other solutions better than -3
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective -3.000000000000e+00, best bound -3.000000000000e+00, gap 0.0000%
+
+---------------------------------------------------------------------------
+Multi-objectives: solved in 1.75 seconds (2.95 work units), solution count 2
+
