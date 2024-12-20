@@ -1,0 +1,73 @@
+
+Gurobi 11.0.0 (win64) logging started Thu Dec 19 17:37:43 2024
+
+Set parameter LogFile to value "C:\Users\Administrator\Desktop\OptRail_Railroad_Construction\Data\Solution\Reduced\a3_o80_m10_an10_ar9_reduced\3_Objectives\costs\gurobi_a3_o80_m10_an10_ar9_reduced_costs.log"
+Gurobi Optimizer version 11.0.0 build v11.0.0rc2 (win64 - Windows Server 2022.0 (20348.2))
+
+CPU model: AMD EPYC 7513 32-Core Processor, instruction set [SSE2|AVX|AVX2]
+Thread count: 18 physical cores, 18 logical processors, using up to 16 threads
+
+Optimize a model with 1625 rows, 72262 columns and 549291 nonzeros
+Model fingerprint: 0xe73627b5
+Variable types: 0 continuous, 72262 integer (72262 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [1e+00, 2e+02]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+
+---------------------------------------------------------------------------
+Multi-objectives: starting optimization with 3 objectives (1 combined) ...
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+
+Multi-objectives: optimize objective 1 (weighted) ...
+---------------------------------------------------------------------------
+
+Optimize a model with 1625 rows, 72262 columns and 549291 nonzeros
+Model fingerprint: 0x1bbf9bda
+Variable types: 0 continuous, 72262 integer (72262 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [8e+00, 1e+06]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+Found heuristic solution: objective 0.0000000
+Presolve removed 148 rows and 37351 columns
+Presolve time: 0.53s
+Presolved: 1477 rows, 34911 columns, 416347 nonzeros
+Variable types: 0 continuous, 34911 integer (34911 binary)
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing primal log only...
+
+Concurrent spin time: 0.63s (can be avoided by choosing Method=3)
+
+Solved with dual simplex
+
+Root relaxation: objective -2.997049e+06, 7475 iterations, 1.83 seconds (2.34 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 -2997049.0    0  285    0.00000 -2997049.0      -     -    3s
+H    0     0                    -999688.0273 -2997049.0   200%     -    3s
+     0     0 -2996504.3    0  342 -999688.03 -2996504.3   200%     -    5s
+H    0     0                    -999706.7294 -2996375.2   200%     -    7s
+H    0     0                    -2996173.545 -2996375.2  0.01%     -    7s
+     0     0 -2996375.2    0  398 -2996173.5 -2996375.2  0.01%     -    7s
+
+Cutting planes:
+  MIR: 34
+  Zero half: 58
+
+Explored 1 nodes (27351 simplex iterations) in 7.68 seconds (11.01 work units)
+Thread count was 16 (of 18 available processors)
+
+Solution count 4: -2.99617e+06 -999707 -999688 0 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective -2.996173544881e+06, best bound -2.996375232285e+06, gap 0.0067%
+
+---------------------------------------------------------------------------
+Multi-objectives: solved in 7.70 seconds (11.01 work units), solution count 4
+
