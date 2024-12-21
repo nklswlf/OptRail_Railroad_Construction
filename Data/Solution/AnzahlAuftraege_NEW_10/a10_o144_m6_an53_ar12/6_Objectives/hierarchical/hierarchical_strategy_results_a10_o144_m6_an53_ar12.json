@@ -1,0 +1,31 @@
+{
+    "instance": "a10_o144_m6_an53_ar12",
+    "computational_time": 10801.595999956131,
+    "strategy": "hierarchical",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 6
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 1
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 4448.350377149226
+        },
+        {
+            "Objective": "Machine Transport Distance",
+            "Value": 373.1693018175777
+        },
+        {
+            "Objective": "Machine Usage",
+            "Value": 6
+        },
+        {
+            "Objective": "Worker Usage",
+            "Value": 7
+        }
+    ]
+}
