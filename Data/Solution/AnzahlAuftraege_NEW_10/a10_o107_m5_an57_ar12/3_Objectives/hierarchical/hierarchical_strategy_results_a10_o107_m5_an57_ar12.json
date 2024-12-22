@@ -1,0 +1,19 @@
+{
+    "instance": "a10_o107_m5_an57_ar12",
+    "computational_time": 889.2069997787476,
+    "strategy": "hierarchical",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 9
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 2
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 5018.159641532578
+        }
+    ]
+}

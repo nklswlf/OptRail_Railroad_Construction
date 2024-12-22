@@ -1,0 +1,77 @@
+
+Gurobi 11.0.0 (win64) logging started Thu Dec 19 23:02:13 2024
+
+Set parameter LogFile to value "C:\Users\Administrator\Desktop\OptRail_Railroad_Construction\Data\Solution\AnzahlAuftraege_NEW_10\a10_o107_m5_an57_ar12\3_Objectives\hierarchical_tolerance\gurobi_a10_o107_m5_an57_ar12_hierarchical_tolerance.log"
+Gurobi Optimizer version 11.0.0 build v11.0.0rc2 (win64 - Windows Server 2022.0 (20348.2))
+
+CPU model: AMD EPYC 7513 32-Core Processor, instruction set [SSE2|AVX|AVX2]
+Thread count: 18 physical cores, 18 logical processors, using up to 16 threads
+
+Optimize a model with 2603 rows, 130587 columns and 642052 nonzeros
+Model fingerprint: 0x53fe7fee
+Variable types: 0 continuous, 130587 integer (130587 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+
+---------------------------------------------------------------------------
+Multi-objectives: starting optimization with 1 objectives ... 
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+
+Multi-objectives: optimize objective 1 () ...
+---------------------------------------------------------------------------
+
+Optimize a model with 2603 rows, 130587 columns and 642052 nonzeros
+Model fingerprint: 0xd07a193b
+Variable types: 0 continuous, 130587 integer (130587 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+Found heuristic solution: objective 0.0000000
+Presolve removed 875 rows and 68140 columns
+Presolve time: 0.93s
+Presolved: 1728 rows, 62447 columns, 490672 nonzeros
+Variable types: 0 continuous, 62447 integer (62443 binary)
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing primal log only...
+
+Concurrent spin time: 0.00s
+
+Solved with primal simplex
+
+Use crossover to convert LP symmetric solution to basic solution...
+
+Root relaxation: objective -9.500000e+00, 7504 iterations, 0.58 seconds (0.76 work units)
+Total elapsed time = 5.71s (DegenMoves)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   -9.50000    0  227    0.00000   -9.50000      -     -    6s
+H    0     0                      -5.0000000   -9.50000  90.0%     -    6s
+H    0     0                      -6.0000000   -9.50000  58.3%     -    7s
+     0     0   -9.50000    0  526   -6.00000   -9.50000  58.3%     -    9s
+H    0     0                      -9.0000000   -9.00000  0.00%     -   15s
+     0     0   -9.00000    0  177   -9.00000   -9.00000  0.00%     -   15s
+
+Cutting planes:
+  MIR: 2
+  Zero half: 65
+
+Explored 1 nodes (103810 simplex iterations) in 15.99 seconds (19.62 work units)
+Thread count was 16 (of 18 available processors)
+
+Solution count 4: -9 -6 -5 0 
+No other solutions better than -9
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective -9.000000000000e+00, best bound -9.000000000000e+00, gap 0.0000%
+
+---------------------------------------------------------------------------
+Multi-objectives: solved in 16.04 seconds (19.62 work units), solution count 4
+

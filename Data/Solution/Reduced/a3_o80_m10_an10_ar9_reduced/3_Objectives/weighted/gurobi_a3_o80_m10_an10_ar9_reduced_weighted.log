@@ -1,0 +1,88 @@
+
+Gurobi 11.0.0 (win64) logging started Thu Dec 19 17:37:54 2024
+
+Set parameter LogFile to value "C:\Users\Administrator\Desktop\OptRail_Railroad_Construction\Data\Solution\Reduced\a3_o80_m10_an10_ar9_reduced\3_Objectives\weighted\gurobi_a3_o80_m10_an10_ar9_reduced_weighted.log"
+Gurobi Optimizer version 11.0.0 build v11.0.0rc2 (win64 - Windows Server 2022.0 (20348.2))
+
+CPU model: AMD EPYC 7513 32-Core Processor, instruction set [SSE2|AVX|AVX2]
+Thread count: 18 physical cores, 18 logical processors, using up to 16 threads
+
+Optimize a model with 1625 rows, 72262 columns and 549291 nonzeros
+Model fingerprint: 0xfc8fca21
+Variable types: 0 continuous, 72262 integer (72262 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [1e+00, 2e+02]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+
+---------------------------------------------------------------------------
+Multi-objectives: starting optimization with 3 objectives (1 combined) ...
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+
+Multi-objectives: optimize objective 1 (weighted) ...
+---------------------------------------------------------------------------
+
+Optimize a model with 1625 rows, 72262 columns and 549291 nonzeros
+Model fingerprint: 0x7ae0df19
+Variable types: 0 continuous, 72262 integer (72262 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [7e-04, 7e-01]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+Found heuristic solution: objective 0.0000000
+Presolve removed 148 rows and 37351 columns
+Presolve time: 0.56s
+Presolved: 1477 rows, 34911 columns, 416347 nonzeros
+Variable types: 0 continuous, 34911 integer (34911 binary)
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing primal log only...
+
+Concurrent spin time: 0.60s (can be avoided by choosing Method=3)
+
+Solved with dual simplex
+
+Root relaxation: objective -1.608235e+00, 8162 iterations, 1.71 seconds (1.99 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   -1.60824    0  417    0.00000   -1.60824      -     -    3s
+H    0     0                      -0.7136011   -1.60824   125%     -    3s
+     0     0   -1.53592    0  491   -0.71360   -1.53592   115%     -    5s
+H    0     0                      -1.2319828   -1.53592  24.7%     -    7s
+H    0     0                      -1.2362504   -1.53592  24.2%     -    7s
+     0     0   -1.46805    0  413   -1.23625   -1.46805  18.8%     -    8s
+     0     0   -1.46749    0  426   -1.23625   -1.46749  18.7%     -    8s
+     0     0   -1.33368    0  347   -1.23625   -1.33368  7.88%     -    9s
+     0     0   -1.33368    0  345   -1.23625   -1.33368  7.88%     -    9s
+     0     0   -1.32318    0  345   -1.23625   -1.32318  7.03%     -   10s
+H    0     0                      -1.2376349   -1.32318  6.91%     -   10s
+     0     0   -1.32318    0  337   -1.23763   -1.32318  6.91%     -   10s
+     0     0   -1.31324    0  416   -1.23763   -1.31324  6.11%     -   10s
+     0     0   -1.31314    0  261   -1.23763   -1.31314  6.10%     -   11s
+H    0     0                      -1.2826827   -1.31314  2.37%     -   13s
+     0     2   -1.31314    0  261   -1.28268   -1.31314  2.37%     -   14s
+     1     2     cutoff    1        -1.28268   -1.31314  2.37%  8043   15s
+H  166   163                      -1.2895933   -1.29003  0.03%   277   19s
+H  173   163                      -1.2900276   -1.29003  0.00%   272   19s
+
+Cutting planes:
+  MIR: 57
+  Zero half: 35
+  RLT: 1
+
+Explored 181 nodes (88823 simplex iterations) in 19.41 seconds (34.32 work units)
+Thread count was 16 (of 18 available processors)
+
+Solution count 8: -1.29003 -1.28959 -1.28268 ... 0
+No other solutions better than -1.29003
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective -1.290027613635e+00, best bound -1.290027613635e+00, gap 0.0000%
+
+---------------------------------------------------------------------------
+Multi-objectives: solved in 19.48 seconds (34.32 work units), solution count 8
+
