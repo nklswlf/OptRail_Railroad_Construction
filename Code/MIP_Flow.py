@@ -1153,11 +1153,15 @@ class FlowFormulation:
         self.create_optimization_model()
         feasible = self.solve_model()
 
-        
-
-
+    
 
         if self.objective_strategy == "hierarchical_tolerance":
+            
+            if feasible == "time_limit_exceeded":
+                print("Time limit exceeded.")
+                self.time_limit_exceeded("time_limit_exceeded")
+                return None, None
+
             self.first_round_construction = round(self.model.getObjective(index=0).getValue() * -1)
             self.first_round_time = self.model.Runtime
             self.first_round = False
