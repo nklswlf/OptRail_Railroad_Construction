@@ -184,3 +184,28 @@ H   93    96                    -1.49920e+07 -1.499e+07  0.01% 22848 1767s
    405   867 -1.499e+07   25 1921 -1.499e+07 -1.499e+07  0.01% 10432 2948s
    866  1586 -1.499e+07   50 1878 -1.499e+07 -1.499e+07  0.01%  7045 4530s
   1585  2416 -1.499e+07   73 2027 -1.499e+07 -1.499e+07  0.01%  7734 6595s
+  2420  2960 -1.499e+07  104 1945 -1.499e+07 -1.499e+07  0.01%  6728 9376s
+H 2783  2960                    -1.49921e+07 -1.499e+07  0.01%  6290 9377s
+  3066  4130 -1.499e+07  121 1798 -1.499e+07 -1.499e+07  0.01%  6053 10800s
+
+Cutting planes:
+  Cover: 9
+  Clique: 47
+  MIR: 61
+  StrongCG: 1
+  GUB cover: 6
+  Zero half: 128
+  RLT: 1
+
+Explored 4374 nodes (23452714 simplex iterations) in 10801.51 seconds (21098.37 work units)
+Thread count was 16 (of 18 available processors)
+
+Solution count 10: -1.49921e+07 -1.4992e+07 -1.49917e+07 ... -1.29956e+07
+
+Time limit reached
+Best objective -1.499209471712e+07, best bound -1.499379487780e+07, gap 0.0113%
+
+---------------------------------------------------------------------------
+Multi-objectives: stopped in 10803.10 seconds (21098.37 work units), solution count 10
+Time Limit reached
+
