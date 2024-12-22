@@ -1,0 +1,40 @@
+
+Gurobi 11.0.0 (win64) logging started Sun Dec 22 12:24:36 2024
+
+Set parameter LogFile to value "C:\Users\Administrator\Desktop\OptRail_Railroad_Construction\Data\Solution\AnzahlAuftraege_NEW_20\a20_o236_m12_an106_ar24\3_Objectives\costs\gurobi_a20_o236_m12_an106_ar24_costs.log"
+Gurobi Optimizer version 11.0.0 build v11.0.0rc2 (win64 - Windows Server 2022.0 (20348.2))
+
+CPU model: AMD EPYC 7513 32-Core Processor, instruction set [SSE2|AVX|AVX2]
+Thread count: 18 physical cores, 18 logical processors, using up to 16 threads
+
+Optimize a model with 10080 rows, 1295900 columns and 6236021 nonzeros
+Model fingerprint: 0x966c4c7b
+Variable types: 0 continuous, 1295900 integer (1295900 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [1e+00, 2e+02]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+
+---------------------------------------------------------------------------
+Multi-objectives: starting optimization with 3 objectives (1 combined) ...
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+
+Multi-objectives: optimize objective 1 (weighted) ...
+---------------------------------------------------------------------------
+
+Optimize a model with 10080 rows, 1295900 columns and 6236021 nonzeros
+Model fingerprint: 0x1b2b8ba1
+Variable types: 0 continuous, 1295900 integer (1295900 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [5e+00, 1e+06]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+Found heuristic solution: objective 0.0000000
+Presolve removed 412 rows and 675401 columns (presolve time = 5s) ...
+Presolve added 1082 rows and 0 columns
+Presolve removed 0 rows and 673907 columns
+Presolve time: 8.89s
+Presolved: 11162 rows, 621993 columns, 5911720 nonzeros
