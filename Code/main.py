@@ -61,19 +61,23 @@ number_of_objectives = [3, 4, 5, 6]
 
 
 def main():
-    instances = [
-                "Construction_a20_o236_m12_an106_ar24.json",
+    instances = ["Construction_a15_o170_m9_an80_ar18.json",
                 "Construction_a25_o306_m13_an127_ar31.json",
                 "Construction_a30_o355_m18_an148_ar42.json",
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
     
     objective_strategies = ["costs", "weighted", "hierarchical", "hierarchical_tolerance"]
-    number_of_objectives = [3, 6]
+    number_of_objectives = [6, 3]
 
-    for instance in instances:
-        for number_obj in number_of_objectives:
-            for objective_strategy in objective_strategies:          
+    for number_obj in number_of_objectives:
+        for instance in instances:
+            if number_obj == 3 and instance == "Construction_a15_o170_m9_an80_ar18.json":
+                continue
+            for objective_strategy in objective_strategies:  
+                if number_obj == 3 and instance == "Construction_a25_o306_m13_an127_ar31.json":
+                    if objective_strategy == "weighted" or objective_strategy == "costs":
+                        continue
                 data = InputData.InputData(instance)
                 optimizer = MIP_Flow.FlowFormulation(data, objective_strategy, number_obj)
                 MIP_solution, objectives = optimizer.execute()
