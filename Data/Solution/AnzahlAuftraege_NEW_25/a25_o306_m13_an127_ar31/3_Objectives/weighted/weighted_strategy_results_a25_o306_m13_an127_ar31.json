@@ -1,0 +1,19 @@
+{
+    "instance": "a25_o306_m13_an127_ar31",
+    "computational_time": 10800.957999944687,
+    "strategy": "weighted",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 20
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 13
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 9571.722867236414
+        }
+    ]
+}

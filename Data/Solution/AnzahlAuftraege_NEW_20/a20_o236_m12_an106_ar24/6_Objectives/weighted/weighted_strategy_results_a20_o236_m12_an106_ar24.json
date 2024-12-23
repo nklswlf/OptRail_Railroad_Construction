@@ -1,0 +1,31 @@
+{
+    "instance": "a20_o236_m12_an106_ar24",
+    "computational_time": 10800.760999917984,
+    "strategy": "weighted",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 14
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 9
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 7354.778003593927
+        },
+        {
+            "Objective": "Machine Transport Distance",
+            "Value": 529.4507405770484
+        },
+        {
+            "Objective": "Machine Usage",
+            "Value": 6
+        },
+        {
+            "Objective": "Worker Usage",
+            "Value": 11
+        }
+    ]
+}
