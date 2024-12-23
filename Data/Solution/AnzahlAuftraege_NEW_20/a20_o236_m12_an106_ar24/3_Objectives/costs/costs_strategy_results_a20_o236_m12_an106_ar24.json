@@ -1,0 +1,19 @@
+{
+    "instance": "a20_o236_m12_an106_ar24",
+    "computational_time": 10801.748000144958,
+    "strategy": "costs",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 17
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 66
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 7911.697825374403
+        }
+    ]
+}
