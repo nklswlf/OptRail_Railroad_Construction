@@ -1,0 +1,31 @@
+{
+    "instance": "a25_o306_m13_an127_ar31",
+    "computational_time": 10802.058000087738,
+    "strategy": "costs",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 18
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 47
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 6767.047469430427
+        },
+        {
+            "Objective": "Machine Transport Distance",
+            "Value": 478.7819037732318
+        },
+        {
+            "Objective": "Machine Usage",
+            "Value": 7
+        },
+        {
+            "Objective": "Worker Usage",
+            "Value": 14
+        }
+    ]
+}
