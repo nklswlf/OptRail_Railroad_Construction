@@ -74,10 +74,23 @@ def main():
         for instance in instances:
             if number_obj == 3 and instance == "Construction_a15_o170_m9_an80_ar18.json":
                 continue
+            if number_obj == 6 and instance == "Construction_a15_o170_m9_an80_ar18.json":
+                continue
+            if number_obj == 6 and instance == "Construction_a25_o306_m13_an127_ar31.json":
+                continue
+            if number_obj == 6 and instance == "Construction_a30_o355_m18_an148_ar42.json":
+                continue
+            if number_obj == 6 and instance == "Construction_a40_o476_m22_an215_ar51.json":
+                continue
+
             for objective_strategy in objective_strategies:  
                 if number_obj == 3 and instance == "Construction_a25_o306_m13_an127_ar31.json":
                     if objective_strategy == "weighted" or objective_strategy == "costs":
                         continue
+                if number_obj == 6 and instance == "Construction_a40_o476_m22_an215_ar51.json":
+                    if objective_strategy == "costs":
+                        continue
+
                 data = InputData.InputData(instance)
                 optimizer = MIP_Flow.FlowFormulation(data, objective_strategy, number_obj)
                 MIP_solution, objectives = optimizer.execute()
@@ -90,7 +103,7 @@ def main():
                         for obj in objectives:
                             print(f"{obj['Objective']} = {obj['Value']}")
                         optimizer.save_solution_to_file()
-                        OutputData.GanttDiagramGenerator(data.instance_filename, data._parent_folder, objective_strategy, number_obj).create_gantt_diagrams()
+                       #OutputData.GanttDiagramGenerator(data.instance_filename, data._parent_folder, objective_strategy, number_obj).create_gantt_diagrams()
                 
                 else:
                     print(f"No solution found for instance {instance}")
