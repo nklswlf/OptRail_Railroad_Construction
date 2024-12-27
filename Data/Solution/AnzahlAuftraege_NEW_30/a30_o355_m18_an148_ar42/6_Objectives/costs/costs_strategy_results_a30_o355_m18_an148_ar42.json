@@ -1,0 +1,31 @@
+{
+    "instance": "a30_o355_m18_an148_ar42",
+    "computational_time": 10801.479000091553,
+    "strategy": "costs",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 20
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 37
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 9960.438313632214
+        },
+        {
+            "Objective": "Machine Transport Distance",
+            "Value": 1048.3883313159452
+        },
+        {
+            "Objective": "Machine Usage",
+            "Value": 6
+        },
+        {
+            "Objective": "Worker Usage",
+            "Value": 13
+        }
+    ]
+}

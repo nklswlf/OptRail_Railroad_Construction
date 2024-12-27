@@ -1,0 +1,31 @@
+{
+    "instance": "a15_o170_m9_an80_ar18",
+    "computational_time": 10810.271999835968,
+    "strategy": "costs",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 15
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 64
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 13249.875169900039
+        },
+        {
+            "Objective": "Machine Transport Distance",
+            "Value": 426.4803541426789
+        },
+        {
+            "Objective": "Machine Usage",
+            "Value": 8
+        },
+        {
+            "Objective": "Worker Usage",
+            "Value": 14
+        }
+    ]
+}
