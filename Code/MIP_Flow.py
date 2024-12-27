@@ -1161,6 +1161,13 @@ class FlowFormulation:
                 print("Time limit exceeded.")
                 self.time_limit_exceeded("time_limit_exceeded")
                 return None, None
+            
+            if feasible == "solution_with_gap":
+                print("Solution found within time limit but with a gap.")
+                self.time_limit_exceeded("solution_with_gap")
+
+                return None, None
+
 
             self.first_round_construction = round(self.model.getObjective(index=0).getValue() * -1)
             self.first_round_time = self.model.Runtime
