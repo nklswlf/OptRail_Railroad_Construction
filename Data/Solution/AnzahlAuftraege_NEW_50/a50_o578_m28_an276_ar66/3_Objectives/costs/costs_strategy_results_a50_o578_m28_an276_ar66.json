@@ -1,0 +1,19 @@
+{
+    "instance": "a50_o578_m28_an276_ar66",
+    "computational_time": 10808.308000087738,
+    "strategy": "costs",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 0
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 0
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 0.0
+        }
+    ]
+}
