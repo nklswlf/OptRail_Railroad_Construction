@@ -54,42 +54,30 @@ Construction_a50_o578_m28_an276_ar66.json
 
 
 
-# Options
-objective_strategies = ["weighted", "hierarchical", "hierarchical_tolerance" , "costs", "pareto"]
-pareto_attributes = ["MachineTransportDistance", "WorkerWorkDistance", "MachineUsage", "WorkerUsage", "NonRegularDriverUsage"]
-number_of_objectives = [3, 4, 5, 6]
-
 
 def main():
-    instances = ["Construction_a15_o170_m9_an80_ar18.json",
+    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
+                "Construction_a5_o96_m10_an10_ar10_reduced.json",
+                "Construction_a10_o107_m5_an57_ar12.json",
+                "Construction_a10_o114_m6_an57_ar11.json",
+                "Construction_a10_o128_m6_an51_ar13.json",
+                "Construction_a10_o144_m6_an53_ar12.json",
+                "Construction_a15_o170_m9_an80_ar18.json",
+                "Construction_a20_o236_m12_an106_ar24.json",
                 "Construction_a25_o306_m13_an127_ar31.json",
                 "Construction_a30_o355_m18_an148_ar42.json",
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
     
     objective_strategies = ["costs", "weighted", "hierarchical", "hierarchical_tolerance"]
-    number_of_objectives = [6, 3]
+    number_of_objectives = [6, 3, 4, 5]
+    
+    
+
 
     for number_obj in number_of_objectives:
         for instance in instances:
-            if number_obj == 3 and instance == "Construction_a15_o170_m9_an80_ar18.json":
-                continue
-            if number_obj == 6 and instance == "Construction_a15_o170_m9_an80_ar18.json":
-                continue
-            if number_obj == 6 and instance == "Construction_a25_o306_m13_an127_ar31.json":
-                continue
-            if number_obj == 6 and instance == "Construction_a30_o355_m18_an148_ar42.json":
-                continue
-            if number_obj == 6 and instance == "Construction_a40_o476_m22_an215_ar51.json":
-                continue
-
-            for objective_strategy in objective_strategies:  
-                if number_obj == 3 and instance == "Construction_a25_o306_m13_an127_ar31.json":
-                    if objective_strategy == "weighted" or objective_strategy == "costs":
-                        continue
-                if number_obj == 6 and instance == "Construction_a40_o476_m22_an215_ar51.json":
-                    if objective_strategy == "costs":
-                        continue
+            for objective_strategy in objective_strategies:
 
                 data = InputData.InputData(instance)
                 optimizer = MIP_Flow.FlowFormulation(data, objective_strategy, number_obj)
@@ -126,7 +114,7 @@ if __name__ == "__main__":
 
 def pareto():
     instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json"]
-    pareto_attributes = ["MachineTransportDistance", "NonRegularDriverUsage"] 
+    pareto_attributes = ["MachineTransportDistance", "WorkerWorkDistance", "MachineUsage", "WorkerUsage", "NonRegularDriverUsage"]
     objective_strategy = "pareto"
 
     for instance in instances:
