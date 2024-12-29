@@ -1,0 +1,19 @@
+{
+    "instance": "a30_o355_m18_an148_ar42",
+    "computational_time": 10816.123000144958,
+    "strategy": "hierarchical",
+    "results": [
+        {
+            "Objective": "Construction Fulfillment",
+            "Value": 23
+        },
+        {
+            "Objective": "Non-Regular Driver Usage",
+            "Value": 355
+        },
+        {
+            "Objective": "Worker Work Distance",
+            "Value": 19682.72640413869
+        }
+    ]
+}
