@@ -70,7 +70,7 @@ def main():
                 "Construction_a50_o578_m28_an276_ar66.json"]
     
     objective_strategies = ["costs", "weighted", "hierarchical", "hierarchical_tolerance"]
-    number_of_objectives = [3, 3, 4, 5]
+    number_of_objectives = [6, 3, 4, 5]
     
     
 
