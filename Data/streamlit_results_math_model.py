@@ -12,9 +12,22 @@ st.title("Gantt-Diagramm Visualisierung mit Instanzverwaltung")
 instance_folder = "./Instanzen"
 os.makedirs(instance_folder, exist_ok=True)  # Ordner erstellen, falls nicht vorhanden
 
-# Datei-Upload der Solution-Datei - streng nach Namenskonvention
-uploaded_solution = st.file_uploader("Lade die Solution-Datei hoch (JSON, z. B. Solution_Construction_a10_o107_m5_an57_ar12.json)", type=["json"])
+# File upload for the Solution file
+uploaded_solution = st.file_uploader(
+    "Upload the Solution file (JSON, e.g., Solution_Construction_a10_o107_m5_an57_ar12.json)", 
+    type=["json"], 
+    key="solution_uploader"
+)
 
+# Check if a file has been uploaded
+if uploaded_solution:
+    # Check if the uploaded file name is valid
+    if uploaded_solution.name.startswith("Solution_Construction"):
+        st.success("Solution file uploaded successfully!")
+        solution_data = json.load(uploaded_solution)
+    else:
+        st.error("Invalid file name. Please upload a Solution file that starts with 'Solution_Construction'.")
+        solution_data = None
 
 
 def find_instance_file(instance_folder, instance_name):
@@ -27,9 +40,10 @@ def find_instance_file(instance_folder, instance_name):
     return None
 
 
-if uploaded_solution is not None:
+
+
+if uploaded_solution is not None and solution_data is not None:
     solution_name = uploaded_solution.name
-    solution_data = json.load(uploaded_solution)
 
     # Instanzdateiname ableiten
     instance_name = solution_name.replace("Solution_", "")
@@ -167,14 +181,14 @@ if uploaded_solution is not None:
         fertige_baustellen = solution_data["Baustellenfertig"]
         baustellen_prozent = (fertige_baustellen / max_baustellen) * 100
 
-        # Erreichte Order Items (%)
+        # Erreichte Bestellpositionen (%)
         max_order_items = solution_data["OrderItemsanzahl"]
         fertige_order_items = solution_data["OrderItemsfertig"]
         order_items_prozent = (fertige_order_items / max_order_items) * 100
 
-        # Order Items welche von nicht regulären Arbeitern bearbeitet wurden
+        # Bestellpositionen welche von nicht regulären Arbeitern bearbeitet wurden
         non_regular_driver = solution_data["NichtregulaereFahrer"]
-        non_regular_driver_prozent = (non_regular_driver / max_order_items) * 100
+        non_regular_driver_prozent = (non_regular_driver / fertige_order_items) * 100
 
         # Anteil genutzter Maschinen
         maschinen_gesamt = solution_data["MaschinenanzahlGesamt"]
@@ -228,16 +242,51 @@ if uploaded_solution is not None:
         st.write(f"**Rechenzeit:** {rechenzeit_minuten:.1f} Minuten")
         st.write("")
         st.write(f"**Erreichte Baustellen:** {fertige_baustellen} von {max_baustellen} ➡️ {baustellen_prozent:.1f}%")
-        st.write(f"**Erreichte Order Items:** {fertige_order_items} von {max_order_items} ➡️ {order_items_prozent:.1f}%")
+        st.write(f"**Erreichte Bestellpositionen:** {fertige_order_items} von {max_order_items} ➡️ {order_items_prozent:.1f}%")
         st.dataframe(df_baustellen)
+
+
+        # Sort the DataFrame by 'Bestellpositionen'
+        df_baustellen_sorted = df_baustellen.reset_index().sort_values(by="Bestellpositionen", ascending=True)
+
+        # Add a new column for a generic X-axis label (e.g., "Site 1", "Site 2")
+        df_baustellen_sorted['Baustelle_Index'] = range(1, len(df_baustellen_sorted) + 1)
+
+        # Define colors for the status
+        farben = {
+            "✅": "green",
+            "❌": "red"
+        }
+
+        # Create the bar chart
+        fig = px.bar(
+            df_baustellen_sorted,
+            x="Baustelle_Index",
+            y="Bestellpositionen",
+            color="Status",
+            title="Baustellen-Bestellpositionen",
+            color_discrete_map=farben,
+            hover_data={"Baustelle": True, "Baustelle_Index": False}
+        )
+
+        # Update X-axis to hide labels
+        fig.update_layout(
+            xaxis_title="",
+            xaxis_showticklabels=False
+        )
+
+        # Display the chart in Streamlit
+        st.plotly_chart(fig)
+
+
         st.write("")
-        st.write(f"**Anzahl Stammfahrerverletzungen:** {non_regular_driver} von {max_order_items} ➡️ {non_regular_driver_prozent:.1f}%")
+        st.write(f"**Anzahl Stammfahrerverletzungen:** {non_regular_driver} von {fertige_order_items} ➡️ {non_regular_driver_prozent:.1f}%")
         st.write("")
         st.write(f"**Gesamttransportdistanz:** {transportdistanz_gesamt:.1f} km")
         st.write(f"**Gesamtarbeitsweg:** {arbeitswege:.1f} km")        
         st.write("")
-        st.write(f"**Anteil genutzter Maschinen:** {maschinen_genutzt} von {maschinen_gesamt} ➡️ {maschinen_prozent:.1f}%")
-        st.write(f"**Anteil genutzter Arbeiter:** {arbeiter_genutzt} von {arbeiter_gesamt} ➡️ {arbeiter_prozent:.1f}%")        
+        st.write(f"**Anteil eingeplanter Maschinen:** {maschinen_genutzt} von {maschinen_gesamt} ➡️ {maschinen_prozent:.1f}%")
+        st.write(f"**Anteil eingeplanter Arbeiter:** {arbeiter_genutzt} von {arbeiter_gesamt} ➡️ {arbeiter_prozent:.1f}%")        
         st.write("")
 
         # Arbeitszeiten-Tabelle anzeigen
@@ -246,6 +295,31 @@ if uploaded_solution is not None:
         df_arbeitszeiten['Auslastung'] = ((df_arbeitszeiten['Gesamtstunden'] / 160) * 100).round(1).astype(str) + '%'
         st.write("**Arbeitszeit pro Arbeiter:**")
         st.dataframe(df_arbeitszeiten)
-        st.write(f"➡️ **Nicht genutzte Arbeiter:** {', '.join(not_used_worker)}")
+        st.write(f"➡️ **Nicht genutzte Arbeiter:** {len(not_used_worker)} **IDs:** {', '.join(not_used_worker)}")
+
+        # Histogramm erstellen
+        fig = px.histogram(
+            df_arbeitszeiten,
+            x='Gesamtstunden',
+            nbins=8,
+            title="Auslastungsverteilung der Arbeitszeiten",
+            labels={'Gesamtstunden': 'Arbeitsstunden'},
+            histnorm='percent',  # Prozentuale Darstellung auf der Y-Achse
+            range_x=[0, 160],
+            color_discrete_sequence=['#636EFA']
+        )
+
+        # Tooltip anpassen: Label ändern und Werte runden
+        fig.update_traces(
+            hovertemplate="<b>Arbeitsstunden:</b> %{x}<br><b>Anteil Arbeiter:</b> %{y:.1f}%<extra></extra>"
+        )
 
         
+        # Y-Achsen-Label hinzufügen
+        fig.update_layout(
+            yaxis_title='Anteil der eingesetzten Arbeiter (%)',
+            bargap=0.1
+        )
+
+        # Diagramm in Streamlit anzeigen
+        st.plotly_chart(fig)
