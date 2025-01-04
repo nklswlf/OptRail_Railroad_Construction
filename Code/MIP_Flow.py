@@ -286,7 +286,7 @@ class FlowFormulation:
         
 
         parent_folder = self.data._parent_folder
-        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.data.instance / f"{self.number_of_objectives}_Objectives" / self.objective_strategy
+        solution_path = Path.cwd().parent / "Data" / "Solution_math_model" / parent_folder / self.data.instance / f"{self.number_of_objectives}_Objectives" / self.objective_strategy
         solution_path.mkdir(parents=True, exist_ok=True)
         
 
@@ -1086,7 +1086,7 @@ class FlowFormulation:
         # 3. Save Solution Data to File
         # ========================
         parent_folder = self.data._parent_folder
-        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.data.instance / f"{self.number_of_objectives}_Objectives" /self.objective_strategy
+        solution_path = Path.cwd().parent / "Data" / "Solution_math_model" / parent_folder / self.data.instance / f"{self.number_of_objectives}_Objectives" /self.objective_strategy
         solution_path.mkdir(parents=True, exist_ok=True)
         output_filename = solution_path / f"Solution_{self.data.instance_filename}"
         with open(output_filename, "w") as output_file:
@@ -1130,7 +1130,7 @@ class FlowFormulation:
         # ========================
 
         parent_folder = self.data._parent_folder
-        solution_path = Path.cwd().parent / "Data" / "Solution" / parent_folder / self.data.instance / f"{self.number_of_objectives}_Objectives" / self.objective_strategy
+        solution_path = Path.cwd().parent / "Data" / "Solution_math_model" / parent_folder / self.data.instance / f"{self.number_of_objectives}_Objectives" / self.objective_strategy
         solution_path.mkdir(parents=True, exist_ok=True)
         
         if reason == "time_limit_exceeded":
