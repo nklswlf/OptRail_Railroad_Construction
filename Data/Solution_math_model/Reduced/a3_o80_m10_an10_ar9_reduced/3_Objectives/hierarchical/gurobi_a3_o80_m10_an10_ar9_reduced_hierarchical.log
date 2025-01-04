@@ -208,3 +208,167 @@ Best objective 3.844726949713e+03, best bound 3.844726949713e+03, gap 0.0000%
 ---------------------------------------------------------------------------
 Multi-objectives: solved in 44.71 seconds (61.92 work units), solution count 10
 
+
+Gurobi 10.0.3 (mac64[arm]) logging started Sat Jan  4 15:46:57 2025
+
+Set parameter LogFile to value "/Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Data/Solution_math_model/Reduced/a3_o80_m10_an10_ar9_reduced/3_Objectives/hierarchical/gurobi_a3_o80_m10_an10_ar9_reduced_hierarchical.log"
+Gurobi Optimizer version 10.0.3 build v10.0.3rc0 (mac64[arm])
+
+CPU model: Apple M1 Pro
+Thread count: 8 physical cores, 8 logical processors, using up to 16 threads
+
+Warning: Thread count (16) is larger than processor count (8)
+         Reduce the value of the Threads parameter to improve performance
+
+
+Optimize a model with 1625 rows, 72262 columns and 549291 nonzeros
+Model fingerprint: 0xb2f82ab7
+Variable types: 0 continuous, 72262 integer (72262 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [1e+00, 2e+02]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+
+---------------------------------------------------------------------------
+Multi-objectives: starting optimization with 3 objectives ... 
+---------------------------------------------------------------------------
+
+Multi-objectives: applying initial presolve ...
+---------------------------------------------------------------------------
+
+Presolve removed 147 rows and 1 columns
+Presolve time: 0.29s
+Presolved: 1478 rows and 72261 columns
+---------------------------------------------------------------------------
+
+Multi-objectives: optimize objective 1 () ...
+---------------------------------------------------------------------------
+
+Found heuristic solution: objective 0.0000000
+Presolve removed 162 rows and 37449 columns
+Presolve time: 0.33s
+Presolved: 1316 rows, 34812 columns, 401193 nonzeros
+Variable types: 0 continuous, 34812 integer (34812 binary)
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing first log only...
+
+Concurrent spin time: 0.00s
+
+Solved with dual simplex
+
+Use crossover to convert LP symmetric solution to basic solution...
+
+Root relaxation: objective -3.000000e+00, 1936 iterations, 0.14 seconds (0.32 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   -3.00000    0   20    0.00000   -3.00000      -     -    1s
+H    0     0                      -3.0000000   -3.00000  0.00%     -    1s
+     0     0   -3.00000    0   20   -3.00000   -3.00000  0.00%     -    1s
+
+Explored 1 nodes (16740 simplex iterations) in 1.16 seconds (3.88 work units)
+Thread count was 16 (of 8 available processors)
+
+Solution count 2: -3 0 
+No other solutions better than -3
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective -3.000000000000e+00, best bound -3.000000000000e+00, gap 0.0000%
+---------------------------------------------------------------------------
+
+Multi-objectives: optimize objective 2 () ...
+---------------------------------------------------------------------------
+
+
+Loaded user MIP start with objective 80
+
+Presolve removed 2 rows and 37371 columns
+Presolve time: 0.29s
+Presolved: 1477 rows, 34890 columns, 416166 nonzeros
+Variable types: 0 continuous, 34890 integer (34890 binary)
+Found heuristic solution: objective 62.0000000
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing first log only...
+
+
+Solved with primal simplex
+
+Use crossover to convert LP symmetric solution to basic solution...
+
+Root relaxation: objective 2.100000e+01, 3648 iterations, 0.14 seconds (0.29 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   21.00000    0  181   62.00000   21.00000  66.1%     -    3s
+H    0     0                      58.0000000   21.00000  63.8%     -    3s
+H    0     0                      53.0000000   21.00000  60.4%     -    3s
+     0     0   21.00000    0  612   53.00000   21.00000  60.4%     -    4s
+H    0     0                      49.0000000   21.00000  57.1%     -    9s
+H    0     0                      40.0000000   21.00000  47.5%     -    9s
+     0     0   33.25000    0   46   40.00000   33.25000  16.9%     -   13s
+     0     0   36.00000    0   57   40.00000   36.00000  10.0%     -   14s
+     0     0   37.50000    0   54   40.00000   37.50000  6.25%     -   14s
+H    0     0                      38.0000000   37.50000  1.32%     -   14s
+     0     0   37.50000    0   54   38.00000   37.50000  1.32%     -   14s
+
+Cutting planes:
+  MIR: 45
+  Zero half: 39
+
+Explored 1 nodes (63444 simplex iterations) in 14.62 seconds (29.69 work units)
+Thread count was 16 (of 8 available processors)
+
+Solution count 7: 38 40 49 ... 80
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 3.800000000000e+01, best bound 3.800000000000e+01, gap 0.0000%
+---------------------------------------------------------------------------
+
+Multi-objectives: optimize objective 3 () ...
+---------------------------------------------------------------------------
+
+
+Loaded user MIP start with objective 7711.45
+
+Presolve removed 2 rows and 37353 columns
+Presolve time: 0.29s
+Presolved: 1478 rows, 34908 columns, 416264 nonzeros
+Variable types: 0 continuous, 34908 integer (34908 binary)
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing first log only...
+
+
+Root simplex log...
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    3.9378053e+02   2.330000e+02   3.865196e+10     15s
+    1267    2.9524702e+03   5.715467e+01   3.030534e+10     15s
+
+Solved with dual simplex
+
+Root relaxation: objective 3.337839e+03, 3746 iterations, 0.35 seconds (0.81 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 3337.83919    0  275 7711.44780 3337.83919  56.7%     -   15s
+H    0     0                    7111.0549274 3337.83919  53.1%     -   15s
+H    0     0                    7000.4162570 3337.83919  52.3%     -   15s
+     0     0 3397.21392    0  467 7000.41626 3397.21392  51.5%     -   16s
+H    0     0                    6976.9473522 3397.21392  51.3%     -   18s
+     0     0 3601.15155    0  381 6976.94735 3601.15155  48.4%     -   19s
+H    0     0                    6721.1460973 3601.15155  46.4%     -   19s
+     0     0 3601.15155    0  381 6721.14610 3601.15155  46.4%     -   19s
+     0     0 3686.41678    0  437 6721.14610 3686.41678  45.2%     -   19s
+     0     0 3686.41678    0  452 6721.14610 3686.41678  45.2%     -   19s
+     0     0 3686.41678    0  448 6721.14610 3686.41678  45.2%     -   19s
+H    0     0                    6589.8260384 3686.41678  44.1%     -   20s
+     0     0 3686.41678    0  120 6589.82604 3686.41678  44.1%     -   20s
+     0     0 3686.41678    0  119 6589.82604 3686.41678  44.1%     -   21s
+H    0     0                    6481.9748843 3686.41678  43.1%     -   21s
+     0     2 3687.58670    0  119 6481.97488 3687.58670  43.1%     -   22s
+    31    48 3731.18714    5  425 6481.97488 3707.83570  42.8%   448   27s
+H   32    48                    4132.6896972 3707.83570  10.3%   434   27s

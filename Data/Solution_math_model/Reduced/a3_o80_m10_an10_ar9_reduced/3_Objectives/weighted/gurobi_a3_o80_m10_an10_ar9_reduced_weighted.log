@@ -86,3 +86,89 @@ Best objective -1.290027613635e+00, best bound -1.290027613635e+00, gap 0.0000%
 ---------------------------------------------------------------------------
 Multi-objectives: solved in 19.48 seconds (34.32 work units), solution count 8
 
+
+Gurobi 10.0.3 (mac64[arm]) logging started Sat Jan  4 15:46:42 2025
+
+Set parameter LogFile to value "/Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Data/Solution_math_model/Reduced/a3_o80_m10_an10_ar9_reduced/3_Objectives/weighted/gurobi_a3_o80_m10_an10_ar9_reduced_weighted.log"
+Gurobi Optimizer version 10.0.3 build v10.0.3rc0 (mac64[arm])
+
+CPU model: Apple M1 Pro
+Thread count: 8 physical cores, 8 logical processors, using up to 16 threads
+
+Warning: Thread count (16) is larger than processor count (8)
+         Reduce the value of the Threads parameter to improve performance
+
+
+Optimize a model with 1625 rows, 72262 columns and 549291 nonzeros
+Model fingerprint: 0xfc8fca21
+Variable types: 0 continuous, 72262 integer (72262 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [1e+00, 2e+02]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+
+---------------------------------------------------------------------------
+Multi-objectives: starting optimization with 3 objectives (1 combined) ...
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+
+Multi-objectives: optimize objective 1 (weighted) ...
+---------------------------------------------------------------------------
+
+Optimize a model with 1625 rows, 72262 columns and 549291 nonzeros
+Model fingerprint: 0x7ae0df19
+Variable types: 0 continuous, 72262 integer (72262 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [7e-04, 7e-01]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+Found heuristic solution: objective 0.0000000
+Presolve removed 148 rows and 37351 columns
+Presolve time: 0.39s
+Presolved: 1477 rows, 34911 columns, 416347 nonzeros
+Variable types: 0 continuous, 34911 integer (34911 binary)
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing first log only...
+
+Concurrent spin time: 0.00s
+
+Solved with dual simplex
+
+Root relaxation: objective -1.608235e+00, 8798 iterations, 0.87 seconds (2.02 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   -1.60824    0  401    0.00000   -1.60824      -     -    1s
+H    0     0                      -0.7136011   -1.60824   125%     -    2s
+     0     0   -1.54164    0  444   -0.71360   -1.54164   116%     -    3s
+H    0     0                      -1.2302606   -1.54164  25.3%     -    4s
+     0     0   -1.46825    0  354   -1.23026   -1.46825  19.3%     -    4s
+     0     0   -1.46825    0  377   -1.23026   -1.46825  19.3%     -    4s
+     0     0   -1.30108    0  509   -1.23026   -1.30108  5.76%     -    5s
+     0     0   -1.29023    0  495   -1.23026   -1.29023  4.87%     -    5s
+     0     0   -1.29023    0  298   -1.23026   -1.29023  4.87%     -    6s
+H    0     0                      -1.2323405   -1.29023  4.70%     -    8s
+H    0     2                      -1.2357696   -1.29023  4.41%     -    8s
+     0     2   -1.29023    0  298   -1.23577   -1.29023  4.41%     -    8s
+    17    32   -1.29003    5  293   -1.23577   -1.29003  4.39%   546   10s
+H   33    48                      -1.2900276   -1.29003  0.00%   542   13s
+
+Cutting planes:
+  MIR: 43
+  Zero half: 45
+
+Explored 49 nodes (63842 simplex iterations) in 13.64 seconds (27.87 work units)
+Thread count was 16 (of 8 available processors)
+
+Solution count 6: -1.29003 -1.23577 -1.23234 ... 0
+No other solutions better than -1.29003
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective -1.290027613635e+00, best bound -1.290027613635e+00, gap 0.0000%
+
+---------------------------------------------------------------------------
+Multi-objectives: solved in 13.66 seconds (27.87 work units), solution count 6
+
