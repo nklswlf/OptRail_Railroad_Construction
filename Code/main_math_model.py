@@ -148,7 +148,7 @@ def pareto():
             print(f"Pareto-Ergebnisse für Instanz {instance} und Attribut {pareto_attribute}:")
             print(pareto_results_df)
 
-            pareto_path = Path.cwd().parent / "Data" / "Solution" / data._parent_folder / data.instance / objective_strategy
+            pareto_path = Path.cwd().parent / "Data" / "Solution_math_model" / data._parent_folder / data.instance / objective_strategy
             pareto_path.mkdir(parents=True, exist_ok=True)
 
             pareto_results_df.to_csv(pareto_path / f"{pareto_attribute}_pareto_results.csv", index=False)
