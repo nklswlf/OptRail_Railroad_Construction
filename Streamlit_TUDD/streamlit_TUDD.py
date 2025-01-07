@@ -295,7 +295,9 @@ if uploaded_solution is not None and solution_data is not None:
         df_arbeitszeiten['Auslastung'] = ((df_arbeitszeiten['Gesamtstunden'] / 160) * 100).round(1).astype(str) + '%'
         st.write("**Arbeitszeit pro Arbeiter:**")
         st.dataframe(df_arbeitszeiten)
-        st.write(f"➡️ **Nicht genutzte Arbeiter:** {len(not_used_worker)} **IDs:** {', '.join(not_used_worker)}")
+        
+        st.write(f"➡️ **Anzahl nicht eingesetzter Arbeiter:** {len(not_used_worker)}")
+        st.write(f"➡️ **IDs nicht eingesetzter Arbeiter:** {', '.join(not_used_worker)}")
 
         # Histogramm erstellen
         fig = px.histogram(
