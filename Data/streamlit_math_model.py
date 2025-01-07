@@ -6,7 +6,7 @@ import os
 import datetime as dt
 
 # Titel der App
-st.title("Gantt-Diagramm Visualisierung mit Instanzverwaltung")
+st.title("Auswertung Bahnbau (MIP)")
 
 # Basisordner für Instanzdateien
 instance_folder = "./Instanzen"
@@ -79,7 +79,8 @@ if uploaded_solution is not None and solution_data is not None:
                 'Arbeiter': worker,
                 'Start': shift['Start'],
                 'Ende': shift['Ende'],
-                'Shift_Type': 'Early Shift' if pd.to_datetime(shift['Start']).hour < 14 else 'Late Shift'
+                'Schichttyp': 'Frühschicht' if pd.to_datetime(shift['Start']).hour < 14 else 'Spätschicht',
+                'Baustelle': shift['Auftragsnummer']
             }
             for worker, shifts in worker_assignments.items() for shift in shifts
         ]
@@ -92,15 +93,41 @@ if uploaded_solution is not None and solution_data is not None:
             ordered=True
         )
 
+        # Anzahl verschiedener Baustellen pro Arbeiter zählen und als dictionary speichern
+        arbeiter_anzahl_baustellen_dict = (
+            df_worker.groupby('Arbeiter')['Baustelle']
+            .nunique()
+            .to_dict()
+        )
+
+        # Präfix 'Arbeiter_' entfernen und Zahlen als Keys verwenden
+        arbeiter_anzahl_baustellen_dict = {str(worker.split('_')[1]): sites for worker, sites in arbeiter_anzahl_baustellen_dict.items()}   
+
+
+
+        # Anzahl der Schichten pro Arbeiter und Schichttyp zählen und direkt in ein Dictionary umwandeln
+        arbeiter_schicht_dict = (
+            df_worker.groupby(['Arbeiter', 'Schichttyp'])
+            .size()
+            .unstack(fill_value=0)
+            .rename_axis(None, axis=1)
+            .to_dict(orient='index')
+        )
+
+        # Präfix 'Arbeiter_' entfernen und Zahlen als Keys verwenden
+        arbeiter_schicht_dict = {str(worker.split('_')[1]): shifts for worker, shifts in arbeiter_schicht_dict.items()}
+
+
         # Gantt-Diagramm für Arbeiter erstellen
         fig_worker = px.timeline(
             df_worker,
             x_start="Start",
             x_end="Ende",
             y="Arbeiter",
-            color="Shift_Type",
+            color="Schichttyp",
             title="Arbeiterzuweisungen (Schichten)",
-            color_discrete_map={"Early Shift": "lightblue", "Late Shift": "lightcoral"}
+            color_discrete_map={"Frühschicht": "lightblue", "Spätschicht": "lightcoral"},
+
         )
 
         # Wochenenden hervorheben
@@ -119,6 +146,9 @@ if uploaded_solution is not None and solution_data is not None:
                 )
             current_date += dt.timedelta(days=1)
 
+
+        
+
         # Diagramm anzeigen
         st.plotly_chart(fig_worker)
 
@@ -131,11 +161,27 @@ if uploaded_solution is not None and solution_data is not None:
                 'Maschine': machine,
                 'Start': usage['Start'],
                 'Ende': usage['Ende'],
-                'Baustelle': usage['Auftragsnummer']
+                'Baustelle': usage['Auftragsnummer'],
+                'Dauer': usage['Dauer']
             }
             for machine, usages in machine_assignments.items() for usage in usages
         ]
         df_machine = pd.DataFrame(machine_rows)
+
+        # Stunden in Nutzung
+        stunden_in_nutzung_dict = (
+            df_machine.groupby('Maschine')['Dauer']
+            .sum()
+            .to_dict()
+        )
+        
+        tage_in_nutzung_dict = {k: v / 24 for k, v in stunden_in_nutzung_dict.items()}
+
+        maschinen_anzahl_baustellen_dict = (
+            df_machine.groupby('Maschine')['Baustelle']
+            .nunique()
+            .to_dict()
+        )
 
         # Baustellen sortieren
         unique_sites = sorted(df_machine['Baustelle'].unique(), key=lambda x: int(x))
@@ -171,7 +217,6 @@ if uploaded_solution is not None and solution_data is not None:
         st.plotly_chart(fig_machine)
 
         # --- Statistische Kennzahlen ---
-        st.subheader("Auswertung")
 
         # Rechenzeit in Minuten
         rechenzeit_minuten = solution_data["RechenzeitInSekunden"] / 60
@@ -203,13 +248,26 @@ if uploaded_solution is not None and solution_data is not None:
         # Gesamttransportdistanz der Maschinen
         transportdistanz_gesamt = solution_data["TransportdistanzGesamt"]
 
+        # Nicht genutzte Maschinen
+        nicht_genutzte_maschinen = list()
+        for machine in solution_data["MaschinenGenutztDetails"]:
+            if not solution_data["MaschinenGenutztDetails"][machine]:
+                nicht_genutzte_maschinen.append(machine)
+
+
         # Arbeitswege der Arbeiter
         arbeitswege = solution_data["ArbeitswegGesamt"]
+        arbeitsweg = solution_data["Arbeitsweg"]
 
         # Arbeitszeiten
         arbeitszeiten = solution_data["Arbeitszeit"]
         not_used_worker = [key for key, value in arbeitszeiten.items() if value == 0]
         arbeitszeiten = {key: value for key, value in arbeitszeiten.items() if value != 0}
+
+        # Tage in Nutzung (Maschinen)
+        stunden_in_nutzung = solution_data["Maschinenzuweisung"]
+
+
 
 
         # --- Tabelle: Anzahl der Bestellpositionen pro Baustelle mit dezenter farblicher Markierung ---
@@ -237,12 +295,11 @@ if uploaded_solution is not None and solution_data is not None:
         df_baustellen = df_baustellen.set_index("Baustelle")
 
 
-
-        # Anzeige der statistischen Kennzahlen
-        st.write(f"**Rechenzeit:** {rechenzeit_minuten:.1f} Minuten")
         st.write("")
+        st.write("#### Baustellen und Bestellpositionen")
         st.write(f"**Erreichte Baustellen:** {fertige_baustellen} von {max_baustellen} ➡️ {baustellen_prozent:.1f}%")
         st.write(f"**Erreichte Bestellpositionen:** {fertige_order_items} von {max_order_items} ➡️ {order_items_prozent:.1f}%")
+        st.write(f"**Anzahl Stammfahrerverletzungen:** {non_regular_driver} von {fertige_order_items} ➡️ {non_regular_driver_prozent:.1f}%")
         st.dataframe(df_baustellen)
 
 
@@ -278,24 +335,40 @@ if uploaded_solution is not None and solution_data is not None:
         # Display the chart in Streamlit
         st.plotly_chart(fig)
 
+        st.write("")
+        st.write("#### Maschinen")
+        st.write(f"**Anteil eingeplanter Maschinen:** {maschinen_genutzt} von {maschinen_gesamt} ➡️ {maschinen_prozent:.1f}%")
+        st.write(f"**Gesamttransportdistanz:** {transportdistanz_gesamt:.1f} km")
+        df_maschinenzeiten = pd.DataFrame.from_dict(stunden_in_nutzung_dict, orient='index', columns=['Gesamtstunden'])
+        df_maschinenzeiten.index.name = 'Maschine_ID'
+        df_maschinenzeiten['Auslastung'] = ((df_maschinenzeiten['Gesamtstunden'] / ((24-2)*31) * 100).round(1).astype(str) + '%')
+        df_maschinenzeiten['Tage in Nutzung'] = [round(tage_in_nutzung_dict.get(k, 0), 0) for k in df_maschinenzeiten.index]
+        df_maschinenzeiten['Baustellen'] = [maschinen_anzahl_baustellen_dict.get(k, 0) for k in df_maschinenzeiten.index]
+        df_maschinenzeiten['Transportdistanz'] = df_maschinenzeiten.index.map(lambda machine: round(solution_data["Transportdistanz"].get(machine, 0), 1))
+        st.dataframe(df_maschinenzeiten)
+        st.write(f"➡️ **Anzahl nicht eingesetzter Maschinen:** {len(nicht_genutzte_maschinen)}")
+        st.write(f"➡️ **IDs nicht eingesetzter Maschinen:** {', '.join(nicht_genutzte_maschinen)}")
+
+
+
+
 
         st.write("")
-        st.write(f"**Anzahl Stammfahrerverletzungen:** {non_regular_driver} von {fertige_order_items} ➡️ {non_regular_driver_prozent:.1f}%")
-        st.write("")
-        st.write(f"**Gesamttransportdistanz:** {transportdistanz_gesamt:.1f} km")
-        st.write(f"**Gesamtarbeitsweg:** {arbeitswege:.1f} km")        
-        st.write("")
-        st.write(f"**Anteil eingeplanter Maschinen:** {maschinen_genutzt} von {maschinen_gesamt} ➡️ {maschinen_prozent:.1f}%")
-        st.write(f"**Anteil eingeplanter Arbeiter:** {arbeiter_genutzt} von {arbeiter_gesamt} ➡️ {arbeiter_prozent:.1f}%")        
-        st.write("")
+        st.write("#### Arbeiter")
+        st.write(f"**Anteil eingeplanter Arbeiter:** {arbeiter_genutzt} von {arbeiter_gesamt} ➡️ {arbeiter_prozent:.1f}%") 
+        st.write(f"**Gesamtarbeitsweg:** {arbeitswege:.1f} km")   
 
         # Arbeitszeiten-Tabelle anzeigen
         df_arbeitszeiten = pd.DataFrame.from_dict(arbeitszeiten, orient='index', columns=['Gesamtstunden'])
         df_arbeitszeiten.index.name = 'Arbeiter_ID'
         df_arbeitszeiten['Auslastung'] = ((df_arbeitszeiten['Gesamtstunden'] / 160) * 100).round(1).astype(str) + '%'
-        st.write("**Arbeitszeit pro Arbeiter:**")
+        df_arbeitszeiten['Frühschichten'] = [arbeiter_schicht_dict.get(k, {}).get('Frühschicht', 0) for k in df_arbeitszeiten.index]
+        df_arbeitszeiten['Spätschichten'] = [arbeiter_schicht_dict.get(k, {}).get('Spätschicht', 0) for k in df_arbeitszeiten.index]
+        df_arbeitszeiten['Baustellen'] = [arbeiter_anzahl_baustellen_dict.get(k, 0) for k in df_arbeitszeiten.index]
+        df_arbeitszeiten['Arbeitsweg'] = df_arbeitszeiten.index.map(lambda worker: round(solution_data["Arbeitsweg"].get(worker, 0), 1))
         st.dataframe(df_arbeitszeiten)
-        st.write(f"➡️ **Nicht genutzte Arbeiter:** {len(not_used_worker)} **IDs:** {', '.join(not_used_worker)}")
+        st.write(f"➡️ **Anzahl nicht eingesetzter Arbeiter:** {len(not_used_worker)}")
+        st.write(f"➡️ **IDs nicht eingesetzter Arbeiter:** {', '.join(not_used_worker)}")
 
         # Histogramm erstellen
         fig = px.histogram(
@@ -313,6 +386,8 @@ if uploaded_solution is not None and solution_data is not None:
         fig.update_traces(
             hovertemplate="<b>Arbeitsstunden:</b> %{x}<br><b>Anteil Arbeiter:</b> %{y:.1f}%<extra></extra>"
         )
+        # vertikale rote dashen Linie hinzufügen bis zu maximalen y-Wert
+        fig.add_vline(x=140, line_dash="dash", line_color="red")
 
         
         # Y-Achsen-Label hinzufügen
@@ -323,3 +398,8 @@ if uploaded_solution is not None and solution_data is not None:
 
         # Diagramm in Streamlit anzeigen
         st.plotly_chart(fig)
+
+
+        st.write("#### Weitere Informationen")
+        # Anzeige der statistischen Kennzahlen
+        st.write(f"**Rechenzeit:** {rechenzeit_minuten:.1f} Minuten")
