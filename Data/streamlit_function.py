@@ -56,17 +56,11 @@ def streamlit(key, uploaded_solution, solution_data):
         """
         Sucht rekursiv nach einer Instanzdatei in allen Unterordnern.
         """
-        # Debugging: Aktuelles Arbeitsverzeichnis und Ordnerinhalt anzeigen
-        st.write(f"Aktuelles Arbeitsverzeichnis: {os.getcwd()}")
-        st.write(f"Inhalt des aktuellen Verzeichnisses: {os.listdir(os.getcwd())}")
-
-        # Absoluter Pfad zum Ordner
+        # Absoluten Pfad zum Instanzordner erstellen
         instance_folder_path = os.path.join(os.getcwd(), instance_folder)
 
-        if os.path.exists(instance_folder_path):
-            st.write(f"Ordner '{instance_folder}' gefunden.")
-        else:
-            st.error(f"Ordner '{instance_folder}' nicht gefunden.")
+        # Debugging
+        print(f"Pfad zum Ordner: {instance_folder_path}")
 
         # Rekursiv nach der Datei suchen
         for root, _, files in os.walk(instance_folder_path):
@@ -75,7 +69,6 @@ def streamlit(key, uploaded_solution, solution_data):
 
         # Falls die Datei nicht gefunden wird
         return None
-
 
 
 
