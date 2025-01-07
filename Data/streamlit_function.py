@@ -73,13 +73,6 @@ def streamlit(key, uploaded_solution, solution_data):
 
         return None
 
-    # Testaufruf
-    file_path = find_instance_file("Instanzen", "deine_datei.json")
-    if file_path:
-        st.success(f"Datei gefunden: {file_path}")
-    else:
-        st.error("Datei nicht gefunden!")
-
 
     if uploaded_solution is not None and solution_data is not None:
         solution_name = uploaded_solution.name
