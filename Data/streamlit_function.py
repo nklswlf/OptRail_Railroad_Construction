@@ -49,14 +49,24 @@ def streamlit(key, uploaded_solution, solution_data):
     results = dict()
 
 
-    
+
+
     def find_instance_file(instance_folder, instance_name):
         """
         Sucht rekursiv nach einer Instanzdatei in allen Unterordnern.
         """
-        for root, _, files in os.walk(instance_folder):
+        # Aktuelles Arbeitsverzeichnis abrufen
+        current_dir = os.getcwd()
+
+        # Absoluten Pfad zum Instanzordner erstellen
+        instance_folder_path = os.path.join(current_dir, instance_folder)
+
+        # Rekursiv nach der Datei suchen
+        for root, _, files in os.walk(instance_folder_path):
             if instance_name in files:
                 return os.path.join(root, instance_name)
+
+        # Falls die Datei nicht gefunden wird
         return None
 
 
