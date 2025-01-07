@@ -49,6 +49,19 @@ def streamlit(key, uploaded_solution, solution_data):
     results = dict()
 
 
+    def list_files(startpath):
+        for root, dirs, files in os.walk(startpath):
+            st.write(f"📁 Verzeichnis: {root}")
+            for file in files:
+                st.write(f"  📄 Datei: {file}")
+
+    # Aktuelles Arbeitsverzeichnis prüfen
+    current_dir = os.getcwd()
+    st.write(f"🔍 Aktuelles Arbeitsverzeichnis: {current_dir}")
+
+    # Verzeichnisbaum anzeigen
+    list_files(current_dir)
+
 
 
     def find_instance_file(instance_folder, instance_name):
