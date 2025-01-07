@@ -44,47 +44,32 @@ def streamlit(key, uploaded_solution, solution_data):
 
     # Basisordner für Instanzdateien
     instance_folder = "./Instanzen"
-    os.makedirs(instance_folder, exist_ok=True)  # Ordner erstellen, falls nicht vorhanden
 
-    results = dict()
+    # Sicherstellen, dass der Ordner existiert
+    instance_folder_path = os.path.join(os.getcwd(), instance_folder)
+    st.write(f"📂 Absoluter Pfad zum Instanzordner: {instance_folder_path}")
 
-
-    def list_files(startpath):
-        for root, dirs, files in os.walk(startpath):
-            st.write(f"📁 Verzeichnis: {root}")
-            for file in files:
-                st.write(f"  📄 Datei: {file}")
-
-    # Aktuelles Arbeitsverzeichnis prüfen
-    current_dir = os.getcwd()
-    st.write(f"🔍 Aktuelles Arbeitsverzeichnis: {current_dir}")
-
-    # Verzeichnisbaum anzeigen
-    list_files(current_dir)
-
-
-
+    # Funktion zum Finden der Instanzdatei
     def find_instance_file(instance_folder, instance_name):
         """
         Sucht rekursiv nach einer Instanzdatei in allen Unterordnern.
         """
-        # Absoluten Pfad zum Instanzordner erstellen
-        instance_folder_path = os.path.join(os.getcwd(), instance_folder)
-
-        if not os.path.exists(instance_folder_path):
-            st.error(f"Der Ordner '{instance_folder_path}' wurde nicht gefunden.")
+        if not os.path.exists(instance_folder):
+            st.error(f"❌ Der Ordner '{instance_folder}' wurde nicht gefunden.")
             return None
 
-        # Rekursiv nach der Datei suchen
-        for root, _, files in os.walk(instance_folder_path):
-            st.write(f"Durchsuche: {root}")
-            st.write(f"Gefundene Dateien: {files}")
-
+        # Rekursive Suche nach der Datei
+        for root, _, files in os.walk(instance_folder):
+            st.write(f"🔎 Durchsuche: {root}")
+            st.write(f"📄 Gefundene Dateien: {files}")
             if instance_name in files:
                 return os.path.join(root, instance_name)
 
-        # Falls die Datei nicht gefunden wird
+        st.warning(f"❌ Die Datei '{instance_name}' wurde nicht gefunden.")
         return None
+    
+    results = dict()
+
 
 
     if uploaded_solution is not None and solution_data is not None:
