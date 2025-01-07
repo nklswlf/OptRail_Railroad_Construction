@@ -51,25 +51,34 @@ def streamlit(key, uploaded_solution, solution_data):
 
 
 
-
     def find_instance_file(instance_folder, instance_name):
         """
         Sucht rekursiv nach einer Instanzdatei in allen Unterordnern.
         """
-        # Absoluten Pfad zum Instanzordner erstellen
         instance_folder_path = os.path.join(os.getcwd(), instance_folder)
 
-        # Debugging
-        print(f"Pfad zum Ordner: {instance_folder_path}")
+        if os.path.exists(instance_folder_path):
+            st.write(f"Ordner '{instance_folder}' gefunden.")
+        else:
+            st.error(f"Ordner '{instance_folder}' nicht gefunden.")
+            return None
 
-        # Rekursiv nach der Datei suchen
-        for root, _, files in os.walk(instance_folder_path):
+        # Inhalt des Ordners prüfen
+        for root, dirs, files in os.walk(instance_folder_path):
+            st.write(f"Durchsuche: {root}")
+            st.write("Gefundene Dateien:", files)
+
             if instance_name in files:
                 return os.path.join(root, instance_name)
 
-        # Falls die Datei nicht gefunden wird
         return None
 
+    # Testaufruf
+    file_path = find_instance_file("Instanzen", "deine_datei.json")
+    if file_path:
+        st.success(f"Datei gefunden: {file_path}")
+    else:
+        st.error("Datei nicht gefunden!")
 
 
     if uploaded_solution is not None and solution_data is not None:
