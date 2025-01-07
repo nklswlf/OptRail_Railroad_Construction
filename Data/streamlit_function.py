@@ -42,12 +42,9 @@ def upload_solution(key, instance = None):
 
 def streamlit(key, uploaded_solution, solution_data):
 
-    # Basisordner für Instanzdateien
-    instance_folder = "./Instanzen"
-
-    # Sicherstellen, dass der Ordner existiert
-    instance_folder_path = os.path.join(os.getcwd(), instance_folder)
-    st.write(f"📂 Absoluter Pfad zum Instanzordner: {instance_folder_path}")
+    # Basisordner relativ zum Skript
+    instance_folder = os.path.join(os.path.dirname(__file__), "Instanzen")
+    st.write(f"📂 Absoluter Pfad zum Instanzordner: {instance_folder}")
 
     # Funktion zum Finden der Instanzdatei
     def find_instance_file(instance_folder, instance_name):
