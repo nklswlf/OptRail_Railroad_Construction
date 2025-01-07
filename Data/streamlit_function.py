@@ -44,7 +44,6 @@ def streamlit(key, uploaded_solution, solution_data):
 
     # Basisordner relativ zum Skript
     instance_folder = os.path.join(os.path.dirname(__file__), "Instanzen")
-    st.write(f"📂 Absoluter Pfad zum Instanzordner: {instance_folder}")
 
     # Funktion zum Finden der Instanzdatei
     def find_instance_file(instance_folder, instance_name):
@@ -57,8 +56,6 @@ def streamlit(key, uploaded_solution, solution_data):
 
         # Rekursive Suche nach der Datei
         for root, _, files in os.walk(instance_folder):
-            st.write(f"🔎 Durchsuche: {root}")
-            st.write(f"📄 Gefundene Dateien: {files}")
             if instance_name in files:
                 return os.path.join(root, instance_name)
 
