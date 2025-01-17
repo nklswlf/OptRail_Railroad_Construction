@@ -40,6 +40,14 @@ class InputData:
         self._machine_transport_cost_per_km = 1.6  # Transport cost per km for a machine
 
         
+    def create_priority_list(self, order_items: List['OrderItem']) -> List['OrderItem']:
+        ''' Create a priority list of OrderItems based on different criteria '''
+        # Sort by order number
+        
+
+        self._priority_list_order = list(order for order in order_items)
+
+
 
         
 

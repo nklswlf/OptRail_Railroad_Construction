@@ -193,8 +193,33 @@ class Solution:
 
         print("\nFeasibility check completed. Solution is feasible.")
         return True
+
+
+       
+
+class SolutionPool:
+    ''' Class for creating lits objects containing solution objects'''
+
+    def __init__(self):
+        ''' Create an empty list for the solutions'''
+        self.Solutions = []
         
 
+    def AddSolution(self, newSolution:Solution) -> None:
+        ''' Add a new solution to the solution pool'''
+        self.Solutions.append(newSolution)
+
+    def GetHighestProfitSolution(self) -> Solution:
+        ''' Sort all the solutions in regard to their makespan and return the solution with the lowest makespan'''
+        self.Solutions.sort(key=lambda solution: (solution.TotalProfit, solution.WaitingTime), reverse=True) # sort solutions according to Profit and waiting time
+
+        return self.Solutions[0]
+    
+    def GetHighestWaitingTimeSolution(self) -> Solution:
+        ''' Sort all the solutions in regard to their makespan and return the solution with the lowest makespan'''
+        self.Solutions.sort(key=lambda solution: (solution.WaitingTime), reverse=True) # sort solutions according to Profit and waiting time
+
+        return self.Solutions[0]
 
 
 
