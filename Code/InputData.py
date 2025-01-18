@@ -18,6 +18,8 @@ class InputData:
         self._data_path, self._parent_folder = self._find_instance_file()
         self._load_data()
 
+        self.create_priorities()
+
         # Default values for Occupational Safety
         self._consecutive_night_shifts = 5 # Max consecutive night shifts
         self._max_shifts_in_time_period = 10 # Max shifts in a time period
@@ -40,13 +42,62 @@ class InputData:
         self._machine_transport_cost_per_km = 1.6  # Transport cost per km for a machine
 
         
-    def create_priority_list(self, order_items: List['OrderItem']) -> List['OrderItem']:
-        ''' Create a priority list of OrderItems based on different criteria '''
-        # Sort by order number
+    def create_priorities(self):
+        ''' Create a priority position for each order based on the number of order items '''
+
+        # First parameter: order_item_count
+        sorted_orders = sorted(self.orders, key=lambda order: len(order.order_item_ids))
+        current_rank = 1
+        last_item_count = None 
+        for i, order in enumerate(sorted_orders):
+            item_count = len(order.order_item_ids)
+            if item_count != last_item_count:
+                current_rank = i + 1 
+                last_item_count = item_count
+            order._priority = {"order_item_count": current_rank}
+
+        
+        # Second parameter: machine_type_count
+        sorted_orders = sorted(self.orders, key=lambda order: len(set([item.machine_type for item in self.order_items if item.order_number == order.order_number])))
+        current_rank = 1
+        last_machine_type_count = None
+        for i, order in enumerate(sorted_orders):
+            machine_type_count = len(set([item.machine_type for item in self.order_items if item.order_number == order.order_number]))
+            if machine_type_count != last_machine_type_count:
+                current_rank = i + 1 
+                last_machine_type_count = machine_type_count
+            order._priority["machine_type_count"] = current_rank
+
+
+
+        # Third parameter: regular_driver_count
+        machine_types = dict()
+        possible_regular_drivers = dict()
+        for order in self.orders:
+            if order.order_number not in machine_types:
+                machine_types[order.order_number] = set()
+            if order.order_number not in possible_regular_drivers:
+                possible_regular_drivers[order.order_number] = set()
+
+            machine_types[order.order_number].update(item.machine_type for order_item in order.order_item_ids for item in self.order_items if item.id == order_item)
+
+            for machine_type in machine_types[order.order_number]:
+                possible_regular_drivers[order.order_number].update(self.machines[machine_type].default_drivers)
+
+
+        print(possible_regular_drivers)
+
         
 
-        self._priority_list_order = list(order for order in order_items)
 
+
+
+
+
+        # Debug-Ausgabe
+        print("Order Priorities:")
+        for order in self.orders:
+            print(f"Order Number: {order.order_number}, Priority: {order.priority}")
 
 
         
@@ -168,8 +219,11 @@ class Order:
         self._site_number = int(json_data.get("Baustellennummer", 0))
         self._start_time = datetime.fromisoformat(json_data.get("Start", "1970-01-01T00:00:00"))
         self._end_time = datetime.fromisoformat(json_data.get("Ende", "1970-01-01T00:00:00"))
-        self._order_item_ids = json_data.get("BestellpositionenStrings", [])
+        self._order_item_ids = [int(item) for item in json_data.get("BestellpositionenStrings", [])]
         self._location = json_data.get("Standort", {"Item1": 0.0, "Item2": 0.0})
+        self._priority = {}
+        self._machine_priority = {}
+        self._worker_priority = {}
 
     @property
     def order_number(self) -> str:
@@ -196,6 +250,19 @@ class Order:
         latitude = self._location.get("Item1", 0.0)
         longitude = self._location.get("Item2", 0.0)
         return (latitude, longitude)
+    
+    @property
+    def priority(self) -> dict[str, int]:
+        return self._priority
+    
+    @property
+    def machine_priority(self) -> dict[int, int]:
+        return self._machine_priority
+    
+    @property
+    def worker_priority(self) -> dict[int, int]:
+        return self._worker_priority
+    
 
     def __str__(self):
         return (f"Order(Order Number: {self._order_number}, Site Number: {self._site_number}, "
@@ -321,7 +388,7 @@ class Machine:
         self._year_of_manufacture = int(json_data.get("Baujahr", 0))
         self._name = str(json_data.get("Name", ""))
         self._type = int(json_data.get("Typ", 0))
-        self._default_drivers = json_data.get("StammfahrerStrings", [])
+        self._default_drivers = [int(driver) for driver in json_data.get("StammfahrerStrings", [])]
 
     @property
     def id(self) -> int:
