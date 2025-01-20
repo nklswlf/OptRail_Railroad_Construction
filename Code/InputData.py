@@ -16,9 +16,7 @@ class InputData:
         self.instance_filename = instance_filename
         self.instance = instance_filename.split('Construction_')[1].split('.json')[0]
         self._data_path, self._parent_folder = self._find_instance_file()
-        self._load_data()
-
-        self.create_priorities()
+        
 
         # Default values for Occupational Safety
         self._consecutive_night_shifts = 5 # Max consecutive night shifts
@@ -32,7 +30,6 @@ class InputData:
         self._transport_speed_kmh = 70  # Machine transport speed (km/h)
         self._hours_between_shifts = 9  # Rest period between shifts in hours
 
-
         # Default values for costs
         self._construction_revenue = 1000000  # Imaginary revenue for the construction project
         self._machine_fixed_cost = 9000  # Fixed cost for using a machine in a month / renting price per machine in a month
@@ -41,156 +38,221 @@ class InputData:
         self._worker_travel_cost_per_km = 0.5  # Travel cost per km for a worker
         self._machine_transport_cost_per_km = 1.6  # Transport cost per km for a machine
 
-        
-    def create_priorities(self):
-        ''' Create a priority position for each order based on the number of order items '''
 
-        # First parameter: order_item_count --> Less order items are better
-        sorted_orders = sorted(self.orders, key=lambda order: len(order.order_item_ids))
-        current_rank = 1
-        last_item_count = None 
-        for i, order in enumerate(sorted_orders):
-            item_count = len(order.order_item_ids)
-            if item_count != last_item_count:
-                current_rank = i + 1 
-                last_item_count = item_count
-            order._priority = {"order_item_count": current_rank}
+        self._load_data()
+
+        self.create_priorities_orders()
+
+        # Dynamic dictionary for planned shifts for greedy algorithm
+        self.planned_shifts = dict()
+        for order in self.orders:
+            self.planned_shifts[order] = list()
+
 
         
-        # Second parameter: machine_type_count --> Less machine types are better
-        sorted_orders = sorted(self.orders, key=lambda order: len(set([item.machine_type for item in self.order_items if item.order_number == order.order_number])))
-        current_rank = 1
-        last_machine_type_count = None
-        for i, order in enumerate(sorted_orders):
-            machine_type_count = len(set([item.machine_type for item in self.order_items if item.order_number == order.order_number]))
-            if machine_type_count != last_machine_type_count:
-                current_rank = i + 1 
-                last_machine_type_count = machine_type_count
-            order._priority["machine_type_count"] = current_rank
+    def create_priorities_orders(self):
+        """
+        Generate priorities for all orders based on multiple criteria.
 
+        This function calculates ranks for different parameters (e.g., order items, machine types)
+        and combines them into an overall priority score.
+        """
+        # 1. Calculate rank for order_item_count (fewer items are better)
+        self.calculate_rank(
+            self.orders, 
+            lambda order: len(order.order_item_ids), 
+            "order_item_count"
+        )
 
+        # 2. Calculate rank for machine_type_count (fewer machine types are better)
+        self.calculate_rank(
+            self.orders, 
+            lambda order: len(set(
+                item.machine_type for item in self.order_items if item.order_number == order.order_number
+            )), 
+            "machine_type_count"
+        )
 
-        # Third parameter: regular_driver_count --> More (possible) regular drivers are better
-        machine_types = dict()
-        possible_regular_drivers = dict()
+        # 3. Calculate rank for regular_driver_count (more regular drivers are better)
+        machine_types = {
+            order.order_number: set(
+                item.machine_type for item in self.order_items if item.order_number == order.order_number
+            )
+            for order in self.orders
+        }
+        possible_regular_drivers = {
+            order.order_number: {
+                driver for machine in self.machines
+                if machine.type in machine_types[order.order_number]
+                for driver in machine.default_drivers
+            }
+            for order in self.orders
+        }
+        self.calculate_rank(
+            self.orders, 
+            lambda order: len(possible_regular_drivers[order.order_number]), 
+            "regular_driver_count", 
+            reverse=True
+        )
+
+        # 4. Calculate rank for worker_distance (shorter distances are better)
+        worker_distances = {
+            order.order_number: sum(
+                self.work_routes[worker.personal_number][order.site_number]
+                for worker in self.workers
+            ) / len(self.workers)
+            for order in self.orders
+        }
+        self.calculate_rank(
+            self.orders, 
+            lambda order: worker_distances[order.order_number], 
+            "worker_distance"
+        )
+
+        # 5. Calculate rank for transport_distance (shorter distances are better)
+        transport_distances = {
+            order.order_number: sum(
+                self.transport_routes[order.site_number][site]
+                for site in range(len(self.transport_routes))
+            ) / len(self.transport_routes)
+            for order in self.orders
+        }
+        self.calculate_rank(
+            self.orders, 
+            lambda order: transport_distances[order.order_number], 
+            "transport_distance"
+        )
+
+        # 6. Calculate rank for worker_qualification_count (fewer qualifications are better)
+        worker_qualifications = {
+            order.order_number: set(
+                qualification for item in self.order_items
+                if item.order_number == order.order_number
+                for qualification in item.worker_qualifications
+            )
+            for order in self.orders
+        }
+        self.calculate_rank(
+            self.orders, 
+            lambda order: len(worker_qualifications[order.order_number]), 
+            "worker_qualification_count"
+        )
+
+        # 7. Calculate the overall priority score
         for order in self.orders:
-            if order.order_number not in machine_types:
-                machine_types[order.order_number] = set()
-            if order.order_number not in possible_regular_drivers:
-                possible_regular_drivers[order.order_number] = set()
+            order._priority["overall"] = sum(order._priority.values())
+        self.calculate_rank(
+            self.orders, 
+            lambda order: order._priority["overall"], 
+            "overall"
+        )
 
-            machine_types[order.order_number].update(item.machine_type for order_item in order.order_item_ids for item in self.order_items if item.id == order_item)
-
-            for machines in self.machines:
-                default_drivers = machines.default_drivers
-                if machines.type in machine_types[order.order_number]:
-                    possible_regular_drivers[order.order_number].update(default_drivers)
-
-
-            # Check if necessary to add all drivers as possible regular drivers if there are no regular drivers !!!
-
-        sorted_orders = sorted(self.orders, key = lambda order: len(possible_regular_drivers[order.order_number]), reverse=True)
-        current_rank = 1
-        last_driver_count = None
-        for i, order in enumerate(sorted_orders):
-            driver_count = len(possible_regular_drivers[order.order_number])
-            if driver_count != last_driver_count:
-                current_rank = i + 1
-                last_driver_count = driver_count
-            order._priority["regular_driver_count"] = current_rank
-
-
-        # Fourth parameter: worker_distance --> Less distance to workers home is better 
-        worker_distances = dict()
+        # 8. Add overall priority score to each order_item in the order
         for order in self.orders:
-            if order.order_number not in worker_distances:
-                worker_distances[order.order_number] = 0
-            for worker in self.workers:
-                worker_distances[order.order_number] += self.work_routes[worker.personal_number][order.site_number]
-
-            worker_distances[order.order_number] /= len(self.workers)
-
-        sorted_orders = sorted(self.orders, key = lambda order: worker_distances[order.order_number])
-        current_rank = 1
-        last_distance = None
-        for i, order in enumerate(sorted_orders):
-            distance = worker_distances[order.order_number]
-            if distance != last_distance:
-                current_rank = i + 1
-                last_distance = distance
-            order._priority["worker_distance"] = current_rank
-
-        
-        # Fifth parameter: transport_distance --> Less distance for machine transport is better
-        transport_distances = dict()
-        for order in self.orders:
-            if order.order_number not in transport_distances:
-                transport_distances[order.order_number] = 0
-            for site in range(0, len(self.transport_routes)):
-                transport_distances[order.order_number] += self.transport_routes[order.site_number][site]
-
-            transport_distances[order.order_number] /= len(self.transport_routes)
-
-        sorted_orders = sorted(self.orders, key = lambda order: transport_distances[order.order_number])
-        current_rank = 1
-        last_distance = None
-        for i, order in enumerate(sorted_orders):
-            distance = transport_distances[order.order_number]
-            if distance != last_distance:
-                current_rank = i + 1
-                last_distance = distance
-            order._priority["transport_distance"] = current_rank
-
-        
- 
-        # Sixth parameter: worker_qualification_count --> Less worker qualifications are better
-
-        worker_qualifications = dict()
-        for order in self.orders:
-            if order.order_number not in worker_qualifications:
-                worker_qualifications[order.order_number] = set()
             for item in self.order_items:
                 if item.order_number == order.order_number:
-                    worker_qualifications[order.order_number].update(item.worker_qualifications)
-
-        sorted_orders = sorted(self.orders, key = lambda order: len(worker_qualifications[order.order_number]))
-        current_rank = 1
-        last_qualification_count = None
-        for i, order in enumerate(sorted_orders):
-            qualification_count = len(worker_qualifications[order.order_number])
-            if qualification_count != last_qualification_count:
-                current_rank = i + 1
-                last_qualification_count = qualification_count
-            order._priority["worker_qualification_count"] = current_rank
-
-
-        print(f"Worker Qualifications: {worker_qualifications}")
-
-
-        # Create an overall priority score and create a ranking based on the scores
-        for order in self.orders:
-            order._priority["overall"] = sum(order.priority.values())
-        
-        print(f"Order Priorities Overall: {[order.priority['overall'] for order in self.orders]}")
-        sorted_orders = sorted(self.orders, key = lambda order: order.priority["overall"])
-        current_rank = 1
-        last_score = None
-        for i, order in enumerate(sorted_orders):
-            score = order.priority["overall"]
-            if score != last_score:
-                current_rank = i + 1
-                last_score = score
-            order._priority["overall"] = current_rank
-
-        
+                    item._priority = order._priority["overall"]
 
 
 
+        #for order in self.orders:
+        #    self.create_priorities_machines(order)
 
+        '''
         # Debug-Ausgabe
         print("Order Priorities:")
         for order in self.orders:
             print(f"Order Number: {order.order_number}, Priority: {order.priority}")
+        
+        
+        for order in self.orders:
+            print(f"Order Number: {order.order_number}, Machine Priority: {order.machine_priority}")
+        '''
+
+        
+
+
+
+    def create_priorities_machines(self, order):
+        """
+        Calculate the priority for each machine for every order.
+        """
+
+        # 1. Berechne die Anzahl der Order Items, die jede Maschine verarbeiten kann
+        machine_order_items = {
+            machine.id: sum(
+                1 for item in self.order_items
+                if item.order_number == order.order_number and item.machine_type == machine.type
+            )
+            for machine in self.machines
+        }
+
+        # Entferne Maschinen mit einer Summe von 0
+        machine_order_items = {machine_id: count for machine_id, count in machine_order_items.items() if count > 0}
+
+        print(f"Order Number: {order.order_number}")
+        print(f"Filtered Machine Order Items: {machine_order_items}")
+
+        # 2. Sortiere nur die Maschinen, die in machine_order_items vorhanden sind
+        sorted_machines = sorted(
+            (machine for machine in self.machines if machine.id in machine_order_items),
+            key=lambda machine: machine_order_items[machine.id],
+            reverse=True
+        )
+
+        # 3. Berechne die Prioritäten für Maschinen
+        current_rank = 1
+        last_value = None
+        machine_order_items_priority = {}
+        for i, machine in enumerate(sorted_machines):
+            value = machine_order_items[machine.id]
+            if value != last_value:
+                current_rank = i + 1
+                last_value = value
+            machine_order_items_priority[machine.id] = current_rank
+
+        print(f"Machine Priority: {machine_order_items_priority}")
+
+
+
+
+        # rank for machine_order_items (more items are better) and add it to the dictionary self._machine_priority
+        # dont use the function calculate_rank, because we need machines not orders
+        #sorted_machines = sorted(self.machines, key=lambda machine: machine_order_items[machine.id], reverse=True)
+        #current_rank = 1
+        #last_value = None
+        # add to the dictionary self._machine_priority
+        #for i, machine in enumerate(sorted_machines):
+        #    value = machine_order_items[machine.id]
+        #    if value != last_value:
+        #        current_rank = i + 1
+        #        last_value = value
+        #    order._machine_priority[machine.id] = current_rank
+
+
+
+
+
+    def calculate_rank(self, orders, key_func, rank_name, reverse=False):
+        """
+        Calculate the rank for orders based on a key function.
+
+        Parameters:
+            orders (list): List of order objects.
+            key_func (function): Function to determine the key value for ranking.
+            rank_name (str): The name of the rank attribute to store (e.g., 'order_item_count').
+            reverse (bool): Whether to sort in descending order (default: False).
+        """
+        sorted_orders = sorted(orders, key=key_func, reverse=reverse)
+        current_rank = 1
+        last_value = None
+
+        for i, order in enumerate(sorted_orders):
+            value = key_func(order)
+            if value != last_value:
+                current_rank = i + 1
+                last_value = value
+            order._priority[rank_name] = current_rank
 
 
         
@@ -222,18 +284,53 @@ class InputData:
             self._end_date = datetime.fromisoformat(data.get("Ende", "1970-01-01T00:00:00"))
             self._contains_durations = data.get("EnthaeltDauern", False)
 
-            # Load each data category
+            # Load each data category part 1
             self._orders = [Order(order) for order in data.get("Auftraege", [])]
             self._order_items = [OrderItem(item) for item in data.get("Bestellpositionen", [])]
             self._attachments = [Attachment(attachment) for attachment in data.get("Anbaugeraete", [])]
             self._workers = [Worker(worker) for worker in data.get("Arbeiter", [])]
             self._machines = [Machine(machine) for machine in data.get("Maschinen", [])]
-            
+
             # Convert ArbeitswegeString and TransportwegeString to 2D lists
             self._transport_routes = self._convert_square_2d_list(data.get("TransportwegeString", {}))
             self._work_routes = self._convert_rectangular_2d_list(data.get("ArbeitswegeString", {}))
+            # Convert distance matrix from order to order item
+            self._transport_routes_order_item = self._convert_from_order_to_order_item(self._transport_routes, "transport")
+            self._work_routes_order_item = self._convert_from_order_to_order_item(self._work_routes, "work")
 
+            # Add data to workers and machines (predessors, successors, possible order items)
+            for machine in self.machines:
+                machine.add_data(self)
+            for worker in self.workers:
+                worker.add_data(self)
+
+            
+
+            
             print(f"Data loaded from '{self.instance_filename}' in folder '{self._parent_folder}'.")
+
+    def _convert_from_order_to_order_item(self, routes_matrix, route_type):
+        
+        final_routes_matrix = []
+
+        if route_type == "transport":
+            for order_item_1 in self.order_items:
+                row = []
+                for order_item_2 in self.order_items:
+                    distance = routes_matrix[order_item_1.order_number][order_item_2.order_number]
+                    row.append(distance)
+                final_routes_matrix.append(row)
+
+        elif route_type == "work":
+            for worker in self.workers:
+                row = []
+                for order_item in self.order_items:
+                    distance = routes_matrix[worker.personal_number][order_item.order_number]
+                    row.append(distance)
+                final_routes_matrix.append(row)
+
+        return final_routes_matrix
+
 
     def _convert_square_2d_list(self, routes_dict: dict) -> List[List[Optional[float]]]:
         ''' Convert a nested dictionary of routes to a square 2D list (matrix) '''
@@ -304,11 +401,22 @@ class InputData:
     def work_routes(self) -> List[List[Optional[float]]]:
         ''' Returns the work routes matrix '''
         return self._work_routes
+    
+    @property
+    def transport_routes_order_item(self) -> List[List[Optional[float]]]:
+        ''' Returns the transport routes matrix '''
+        return self._transport_routes_order_item
+    
+    @property
+    def work_routes_order_item(self) -> List[List[Optional[float]]]:
+        ''' Returns the work routes matrix '''
+        return self._work_routes_order_item
+    
 
 
 class Order:
     def __init__(self, json_data):
-        self._order_number = json_data.get("Auftragsnummer", "")
+        self._order_number = int(json_data.get("Auftragsnummer", ""))
         self._site_number = int(json_data.get("Baustellennummer", 0))
         self._start_time = datetime.fromisoformat(json_data.get("Start", "1970-01-01T00:00:00"))
         self._end_time = datetime.fromisoformat(json_data.get("Ende", "1970-01-01T00:00:00"))
@@ -317,6 +425,7 @@ class Order:
         self._priority = {}
         self._machine_priority = {}
         self._worker_priority = {}
+        self.dynamic_percentage = 0
 
     @property
     def order_number(self) -> str:
@@ -369,12 +478,13 @@ class OrderItem:
         self._start_time = datetime.fromisoformat(json_data.get("Start", "1970-01-01T00:00:00"))
         self._end_time = datetime.fromisoformat(json_data.get("Ende", "1970-01-01T00:00:00"))
         self._duration = int(json_data.get("Dauer", 0))
-        self._order_number = str(json_data.get("Auftragsnummer", ""))
+        self._order_number = int(json_data.get("Auftragsnummer", ""))
         self._machine_type = int(json_data.get("MaschinenTyp", 0))
         self._equipment_types = json_data.get("AnbaugeraeteTypen", [])
         self._worker_qualifications = json_data.get("ArbeiterQualifikationen", [])
         self._assigned_machine = json_data.get("zugewieseneMaschine", None)
         self._type = int(json_data.get("Typ", 0))
+        self._priority = 0
 
     @property
     def id(self) -> int:
@@ -415,6 +525,13 @@ class OrderItem:
     @property
     def type(self) -> int:
         return self._type
+    
+    @property
+    def priority(self) -> int:
+        return self._priority
+
+    
+    
 
     def __str__(self):
         return (f"OrderItem(ID: {self._id}, Start: {self._start_time}, End: {self._end_time}, "
@@ -451,6 +568,45 @@ class Worker:
         self._name = str(json_data.get("Name", ""))
         self._qualifications = json_data.get("Qualifikationen", [])
         self._residence = json_data.get("Wohnort", {"Item1": 0.0, "Item2": 0.0})
+        self._possible_order_items = []
+        self._predecessors = dict()
+        self._successors = dict()
+        self.work_hours = 0
+
+
+
+    def add_data(self, input_data: InputData):
+        # Add possible order items for the worker
+        for order_item in input_data.order_items:
+            if not order_item.worker_qualifications: # If no qualifications are required
+                self._possible_order_items.append(order_item)
+            elif set(order_item.worker_qualifications).issubset(self.qualifications): # If worker has all required qualifications
+                self._possible_order_items.append(order_item)
+
+        # Add predecessors and successors for the worker
+        for order_item_1 in self._possible_order_items:
+            self._predecessors[order_item_1] = []
+            self._successors[order_item_1] = []
+
+            for order_item_2 in self._possible_order_items:
+                if order_item_1 != order_item_2:
+
+                    start_time_order_item_1 = order_item_1.start_time - input_data.start_date
+                    start_time_order_item_1 = start_time_order_item_1.total_seconds() / input_data._seconds_a_day
+                    end_time_order_item_1 = order_item_1.end_time - input_data.start_date
+                    end_time_order_item_1 = end_time_order_item_1.total_seconds() / input_data._seconds_a_day
+                    start_time_order_item_2 = order_item_2.start_time - input_data.start_date
+                    start_time_order_item_2 = start_time_order_item_2.total_seconds() / input_data._seconds_a_day
+                    end_time_order_item_2 = order_item_2.end_time - input_data.start_date
+                    end_time_order_item_2 = end_time_order_item_2.total_seconds() / input_data._seconds_a_day
+
+                    break_time = input_data._hours_between_shifts / 24
+
+                    if start_time_order_item_1 >= end_time_order_item_2 + break_time:
+                        self._predecessors[order_item_1].append(order_item_2)
+                    
+                    if start_time_order_item_2 >= end_time_order_item_1 + break_time:
+                        self._successors[order_item_1].append(order_item_2)
 
     @property
     def personal_number(self) -> int:
@@ -469,6 +625,19 @@ class Worker:
         latitude = self._residence.get("Item1", 0.0)
         longitude = self._residence.get("Item2", 0.0)
         return (latitude, longitude)
+    
+    @property
+    def possible_order_items(self) -> List[int]:
+        return self._possible_order_items
+    
+    @property
+    def predecessors(self) -> dict[int, List[int]]:
+        return self._predecessors
+    
+    @property
+    def successors(self) -> dict[int, List[int]]:
+        return self._successors
+    
 
     def __str__(self):
         return (f"Worker(Personal Number: {self._personal_number}, Name: {self._name}, "
@@ -482,6 +651,43 @@ class Machine:
         self._name = str(json_data.get("Name", ""))
         self._type = int(json_data.get("Typ", 0))
         self._default_drivers = [int(driver) for driver in json_data.get("StammfahrerStrings", [])]
+        self._possible_order_items = []
+        self._predecessors = dict()
+        self._successors = dict()
+
+    def add_data(self, input_data: InputData):
+        # Add possible order items for the machine
+        for order_item in input_data.order_items:
+            if order_item.machine_type == self.type:
+                self._possible_order_items.append(order_item)
+
+        # Add predecessors and successors for the machine
+        for order_item_1 in self._possible_order_items:
+            self._predecessors[order_item_1] = []
+            self._successors[order_item_1] = []
+
+            for order_item_2 in self._possible_order_items:
+                if order_item_1 != order_item_2:
+
+                    start_time_order_item_1 = order_item_1.start_time - input_data.start_date
+                    start_time_order_item_1 = start_time_order_item_1.total_seconds() / input_data._seconds_a_day
+                    end_time_order_item_1 = order_item_1.end_time - input_data.start_date
+                    end_time_order_item_1 = end_time_order_item_1.total_seconds() / input_data._seconds_a_day
+                    start_time_order_item_2 = order_item_2.start_time - input_data.start_date
+                    start_time_order_item_2 = start_time_order_item_2.total_seconds() / input_data._seconds_a_day
+                    end_time_order_item_2 = order_item_2.end_time - input_data.start_date
+                    end_time_order_item_2 = end_time_order_item_2.total_seconds() / input_data._seconds_a_day
+
+                    transport_distance = input_data._transport_routes_order_item[order_item_1.id][order_item_2.id]
+                    transport_time = transport_distance / input_data._transport_speed_kmh
+
+                    if start_time_order_item_1 >= end_time_order_item_2 + transport_time:
+                        self._predecessors[order_item_1].append(order_item_2)
+
+                    if start_time_order_item_2 >= end_time_order_item_1 + transport_time:
+                        self._successors[order_item_1].append(order_item_2)
+
+
 
     @property
     def id(self) -> int:
@@ -502,6 +708,19 @@ class Machine:
     @property
     def default_drivers(self) -> List[str]:
         return self._default_drivers
+    
+    @property
+    def possible_order_items(self) -> List[int]:
+        return self._possible_order_items
+    
+    @property
+    def predecessors(self) -> dict[int, List[int]]:
+        return self._predecessors
+    
+    @property
+    def successors(self) -> dict[int, List[int]]:
+        return self._successors
+    
 
     def __str__(self):
         return (f"Machine(ID: {self._id}, Name: {self._name}, Type: {self._type}, "
