@@ -1,5 +1,6 @@
 from InputData import *
 import OutputData
+from ConstructiveHeuristic import *
 import pandas as pd
 from pathlib import Path
 
@@ -51,11 +52,7 @@ Construction_a40_o476_m22_an215_ar51.json
 Construction_a50_o578_m28_an276_ar66.json
 '''
 
-
-
-
-def main():
-    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
+instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a5_o96_m10_an10_ar10_reduced.json",
                 "Construction_a10_o107_m5_an57_ar12.json",
                 "Construction_a10_o114_m6_an57_ar11.json",
@@ -67,7 +64,19 @@ def main():
                 "Construction_a30_o355_m18_an148_ar42.json",
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
+
+
+
+def main():
+
+    instance_filename = "Construction_a25_o306_m13_an127_ar31.json"
+    data = InputData(instance_filename)
     
+    construct = ConstructiveHeuristics(solutionPool=None, evaluationLogic=None)
+
+    construct.Run(data)
+
+
                     
                     
 
@@ -79,6 +88,19 @@ def TestInputData():
 
     # Anzeigen der Instanz-Metadaten
     print("\nInstance Name:", data.instance)
+
+    # Anzeigen der Vorgänger-Nachfolger-Beziehungen
+    print("\Worker-Predecessors-Successors:")
+    for worker in data.workers:
+        print(worker.personal_number, worker.predecessors)
+        print(worker.personal_number, worker.successors)
+
+    print("\nMachine-Predecessors-Successors:")
+    for machine in data.machines:
+        print(machine.id, machine.predecessors)
+        print(machine.id, machine.successors)
+
+
 
     '''
     # Anzeigen der geladenen Daten mit strukturierten Ausgaben
@@ -121,5 +143,5 @@ def TestInputData():
 
     
 if __name__ == "__main__":
-    TestInputData()
+    #TestInputData()
     main()
