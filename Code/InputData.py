@@ -45,7 +45,7 @@ class InputData:
     def create_priorities(self):
         ''' Create a priority position for each order based on the number of order items '''
 
-        # First parameter: order_item_count
+        # First parameter: order_item_count --> Less order items are better
         sorted_orders = sorted(self.orders, key=lambda order: len(order.order_item_ids))
         current_rank = 1
         last_item_count = None 
@@ -57,7 +57,7 @@ class InputData:
             order._priority = {"order_item_count": current_rank}
 
         
-        # Second parameter: machine_type_count
+        # Second parameter: machine_type_count --> Less machine types are better
         sorted_orders = sorted(self.orders, key=lambda order: len(set([item.machine_type for item in self.order_items if item.order_number == order.order_number])))
         current_rank = 1
         last_machine_type_count = None
@@ -70,7 +70,7 @@ class InputData:
 
 
 
-        # Third parameter: regular_driver_count
+        # Third parameter: regular_driver_count --> More (possible) regular drivers are better
         machine_types = dict()
         possible_regular_drivers = dict()
         for order in self.orders:
@@ -81,15 +81,108 @@ class InputData:
 
             machine_types[order.order_number].update(item.machine_type for order_item in order.order_item_ids for item in self.order_items if item.id == order_item)
 
-            for machine_type in machine_types[order.order_number]:
-                possible_regular_drivers[order.order_number].update(self.machines[machine_type].default_drivers)
+            for machines in self.machines:
+                default_drivers = machines.default_drivers
+                if machines.type in machine_types[order.order_number]:
+                    possible_regular_drivers[order.order_number].update(default_drivers)
 
 
-        print(possible_regular_drivers)
+            # Check if necessary to add all drivers as possible regular drivers if there are no regular drivers !!!
+
+        sorted_orders = sorted(self.orders, key = lambda order: len(possible_regular_drivers[order.order_number]), reverse=True)
+        current_rank = 1
+        last_driver_count = None
+        for i, order in enumerate(sorted_orders):
+            driver_count = len(possible_regular_drivers[order.order_number])
+            if driver_count != last_driver_count:
+                current_rank = i + 1
+                last_driver_count = driver_count
+            order._priority["regular_driver_count"] = current_rank
+
+
+        # Fourth parameter: worker_distance --> Less distance to workers home is better 
+        worker_distances = dict()
+        for order in self.orders:
+            if order.order_number not in worker_distances:
+                worker_distances[order.order_number] = 0
+            for worker in self.workers:
+                worker_distances[order.order_number] += self.work_routes[worker.personal_number][order.site_number]
+
+            worker_distances[order.order_number] /= len(self.workers)
+
+        sorted_orders = sorted(self.orders, key = lambda order: worker_distances[order.order_number])
+        current_rank = 1
+        last_distance = None
+        for i, order in enumerate(sorted_orders):
+            distance = worker_distances[order.order_number]
+            if distance != last_distance:
+                current_rank = i + 1
+                last_distance = distance
+            order._priority["worker_distance"] = current_rank
 
         
+        # Fifth parameter: transport_distance --> Less distance for machine transport is better
+        transport_distances = dict()
+        for order in self.orders:
+            if order.order_number not in transport_distances:
+                transport_distances[order.order_number] = 0
+            for site in range(0, len(self.transport_routes)):
+                transport_distances[order.order_number] += self.transport_routes[order.site_number][site]
+
+            transport_distances[order.order_number] /= len(self.transport_routes)
+
+        sorted_orders = sorted(self.orders, key = lambda order: transport_distances[order.order_number])
+        current_rank = 1
+        last_distance = None
+        for i, order in enumerate(sorted_orders):
+            distance = transport_distances[order.order_number]
+            if distance != last_distance:
+                current_rank = i + 1
+                last_distance = distance
+            order._priority["transport_distance"] = current_rank
+
+        
+ 
+        # Sixth parameter: worker_qualification_count --> Less worker qualifications are better
+
+        worker_qualifications = dict()
+        for order in self.orders:
+            if order.order_number not in worker_qualifications:
+                worker_qualifications[order.order_number] = set()
+            for item in self.order_items:
+                if item.order_number == order.order_number:
+                    worker_qualifications[order.order_number].update(item.worker_qualifications)
+
+        sorted_orders = sorted(self.orders, key = lambda order: len(worker_qualifications[order.order_number]))
+        current_rank = 1
+        last_qualification_count = None
+        for i, order in enumerate(sorted_orders):
+            qualification_count = len(worker_qualifications[order.order_number])
+            if qualification_count != last_qualification_count:
+                current_rank = i + 1
+                last_qualification_count = qualification_count
+            order._priority["worker_qualification_count"] = current_rank
 
 
+        print(f"Worker Qualifications: {worker_qualifications}")
+
+
+        # Create an overall priority score and create a ranking based on the scores
+        for order in self.orders:
+            order._priority["overall"] = sum(order.priority.values())
+        
+        print(f"Order Priorities Overall: {[order.priority['overall'] for order in self.orders]}")
+        sorted_orders = sorted(self.orders, key = lambda order: order.priority["overall"])
+        current_rank = 1
+        last_score = None
+        for i, order in enumerate(sorted_orders):
+            score = order.priority["overall"]
+            if score != last_score:
+                current_rank = i + 1
+                last_score = score
+            order._priority["overall"] = current_rank
+
+        
 
 
 
