@@ -44,9 +44,11 @@ class InputData:
         self.create_priorities_orders()
 
         # Dynamic dictionary for planned shifts for greedy algorithm
-        self.planned_shifts = dict()
+        self.planned_shifts_worker = dict()
+        self.planned_shifts_machine = dict()
         for order in self.orders:
-            self.planned_shifts[order] = list()
+            self.planned_shifts_worker[order] = list()
+            self.planned_shifts_machine[order] = list()
 
 
         
