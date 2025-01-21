@@ -104,33 +104,44 @@ class ConstructiveHeuristics:
                     best_machine = max(machine_attractiveness, key=machine_attractiveness.get)
 
                     if len(route_plan_machine[best_machine.id]) == 0:
+
                         route_plan_machine[best_machine.id].append(best_order_item.id)
                         machine_planned[best_machine] += 1
                         task_assigned = True
                         inputdata.planned_shifts_machine[best_order].append(best_order_item)
+
                     elif len(route_plan_machine[best_machine.id]) > 0:
                         index = 0
-                        current_order_item = next((order_item for order_item in inputdata.order_items if order_item.id == route_plan_machine[best_machine.id][index]))
-                        
-                        # Check first if best_order_item is a predecessor of the first order item in the route plan
-                        if best_order_item in best_machine._predecessors[current_order_item]:
-                            route_plan_machine[best_machine.id].insert(0, best_order_item.id)
-                            machine_planned[best_machine] += 1
-                            task_assigned = True
-                            inputdata.planned_shifts_machine[best_order].append(best_order_item)
 
-                        # Check if best_order_item is a successor of one of the order items in the route plan
+                        #print(f"Best order item: {best_order_item.id}")
+                        
                         while not task_assigned:
                             current_order_item = next((order_item for order_item in inputdata.order_items if order_item.id == route_plan_machine[best_machine.id][index]))
-                            if best_order_item in best_machine._successors[current_order_item]:
-                                route_plan_machine[best_machine.id].insert(index+5, best_order_item.id)
+                            if best_order_item in best_machine._predecessors[current_order_item]:
+                                route_plan_machine[best_machine.id].insert(index, best_order_item.id)
                                 machine_planned[best_machine] += 1
                                 task_assigned = True
                                 inputdata.planned_shifts_machine[best_order].append(best_order_item)
+                            
                             index += 1
+
+                            if index == len(route_plan_machine[best_machine.id]):
+                                if best_order_item in best_machine._successors[current_order_item]:
+                                    route_plan_machine[best_machine.id].append(best_order_item.id)
+                                    machine_planned[best_machine] += 1
+                                    task_assigned = True
+                                    inputdata.planned_shifts_machine[best_order].append(best_order_item)
+                                else:
+                                    break
+
+                
                         
 
+                # gibt mir alle successor von best_order_item
+                print([order_item.id for order_item in best_machine._predecessors[best_order_item]])
+                print([order_item.id for order_item in best_machine._successors[best_order_item]])
 
+                print(f"Route plan for machine {best_machine.id}: {route_plan_machine[best_machine.id]}")
 
                 # Update data
                 inputdata.planned_shifts_worker[best_order].append(best_order_item)

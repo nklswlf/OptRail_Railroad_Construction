@@ -41,6 +41,36 @@ class InputData:
 
         self._load_data()
 
+        # Easy predecessor and successor access for workers and machines
+        '''
+        # Print Predecessor and Successor for for machine 1 and order item 46 as actual ids
+        print("Predecessor and Successor for machine 1 and order item 46")
+        print([predecessor.id for predecessor in self.machines[1].predecessors[self.order_items[46]]])
+        print([successor.id for successor in self.machines[1].successors[self.order_items[46]]])
+
+
+        # Alle möglichen Order Items für Maschine 1
+        print("Alle möglichen Order Items für Maschine 1 und Auftrag 2")
+        print([order_item.id for order_item in self.machines[1].possible_order_items[self.orders[2]]])
+        # Distanz zwischen order item 46 und order item 17
+        print("Distanz zwischen order item 46 und order item 17")
+        print(self._transport_routes_order_item[46][17])
+        # Zeit in Stunden zwischen order item 46 und order item 17
+        print("Zeit in Stunden zwischen order item 46 und order item 17")
+        print(self._transport_routes_order_item[46][17] / self._transport_speed_kmh)
+        # Endzeit von order item 46
+        print("Endzeit von order item 46")
+        print(self.order_items[46].end_time)
+        # Startzeit von order item 17
+        print("Startzeit von order item 17")
+        print(self.order_items[17].start_time)
+        # Zeitdifferenz in Stunden zwischen order item 46 und order item 17
+        print("Zeitdifferenz in Stunden zwischen order item 46 und order item 17")
+        print((self.order_items[17].start_time - self.order_items[46].end_time).total_seconds() / 3600)
+        '''
+
+
+
         self.create_priorities_orders()
 
         # Dynamic dictionary for planned shifts for greedy algorithm
@@ -691,6 +721,7 @@ class Machine:
                     # Transportzeit berechnen
                     transport_distance = input_data._transport_routes_order_item[order_item_1.id][order_item_2.id]
                     transport_time = transport_distance / input_data._transport_speed_kmh
+                    transport_time = transport_time / 24
 
                     # Vorgänger hinzufügen
                     if start_time_order_item_1 >= end_time_order_item_2 + transport_time:
