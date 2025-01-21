@@ -601,27 +601,28 @@ class Worker:
                         self._possible_order_items[order].append(order_item)
 
         # Add predecessors and successors for each order item
-        for order, order_items in self._possible_order_items.items():
-            for order_item_1 in order_items:
-                self._predecessors[order_item_1] = []
-                self._successors[order_item_1] = []
+        for order_item in input_data.order_items:
+            self._predecessors[order_item] = []
+            self._successors[order_item] = []
 
-                for order_item_2 in order_items:
-                    if order_item_1 != order_item_2:
-                        # Zeitdifferenzen berechnen
-                        start_time_order_item_1 = (order_item_1.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                        end_time_order_item_1 = (order_item_1.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                        start_time_order_item_2 = (order_item_2.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                        end_time_order_item_2 = (order_item_2.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+        all_order_items = [item for order_items in self._possible_order_items.values() for item in order_items]
+        for order_item_1 in all_order_items:
+            for order_item_2 in all_order_items:
+                if order_item_1 != order_item_2:
+                    # Zeitdifferenzen berechnen
+                    start_time_order_item_1 = (order_item_1.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+                    end_time_order_item_1 = (order_item_1.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+                    start_time_order_item_2 = (order_item_2.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+                    end_time_order_item_2 = (order_item_2.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
 
-                        break_time = input_data._hours_between_shifts / 24
+                    break_time = input_data._hours_between_shifts / 24
 
-                        # Vorgänger und Nachfolger bestimmen
-                        if start_time_order_item_1 >= end_time_order_item_2 + break_time:
-                            self._predecessors[order_item_1].append(order_item_2)
+                    # Vorgänger und Nachfolger bestimmen
+                    if start_time_order_item_1 >= end_time_order_item_2 + break_time:
+                        self._predecessors[order_item_1].append(order_item_2)
 
-                        if start_time_order_item_2 >= end_time_order_item_1 + break_time:
-                            self._successors[order_item_1].append(order_item_2)
+                    if start_time_order_item_2 >= end_time_order_item_1 + break_time:
+                        self._successors[order_item_1].append(order_item_2)
 
     @property
     def personal_number(self) -> int:
