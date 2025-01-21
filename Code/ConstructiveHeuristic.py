@@ -68,7 +68,7 @@ class ConstructiveHeuristics:
             # Initialize attractiveness for each possible order item
             for order, order_items in greedy_order_items.items():
                 for order_item in order_items:
-                    if order_item in worker._possible_order_items:
+                    if any(order_item in value_list for value_list in worker._possible_order_items.values()):
                         if order_item not in inputdata.planned_shifts_worker[order]:
                             time_difference = inputdata.start_date - order_item.start_time
                             time_difference = time_difference.total_seconds() / inputdata._seconds_a_day
