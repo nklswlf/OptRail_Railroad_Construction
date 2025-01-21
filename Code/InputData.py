@@ -305,8 +305,14 @@ class InputData:
                 machine.add_data(self)
             for worker in self.workers:
                 worker.add_data(self)
-                print(f"Worker {worker.personal_number} - Total items in list:", len(worker._possible_order_items))
+                #print(f"Worker {worker.personal_number} - Total items in list:", len(worker._possible_order_items))
+                # Listen-Ansatz: Gesamtanzahl aller Elemente
+                successor_list = [item for sublist in worker._successors.values() for item in sublist]
+                predecessor_list = [item for sublist in worker._predecessors.values() for item in sublist]
 
+                print("\nList Totals:")
+                print(f"Total Successors (List): {len(successor_list)}")
+                print(f"Total Predecessors (List): {len(predecessor_list)}")
             
 
             
