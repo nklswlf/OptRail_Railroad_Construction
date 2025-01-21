@@ -112,8 +112,6 @@ class ConstructiveHeuristics:
 
                     elif len(route_plan_machine[best_machine.id]) > 0:
                         index = 0
-
-                        #print(f"Best order item: {best_order_item.id}")
                         
                         while not task_assigned:
                             current_order_item = next((order_item for order_item in inputdata.order_items if order_item.id == route_plan_machine[best_machine.id][index]))
@@ -135,11 +133,6 @@ class ConstructiveHeuristics:
                                     break
 
                 
-                        
-
-                # gibt mir alle successor von best_order_item
-                print([order_item.id for order_item in best_machine._predecessors[best_order_item]])
-                print([order_item.id for order_item in best_machine._successors[best_order_item]])
 
                 print(f"Route plan for machine {best_machine.id}: {route_plan_machine[best_machine.id]}")
 
