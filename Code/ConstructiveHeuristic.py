@@ -114,10 +114,11 @@ class ConstructiveHeuristics:
             print(f"Route plan for worker {worker.personal_number}: {route_plan_worker[worker.personal_number]}")
             print(f"Work hours for worker {worker.personal_number}: {worker.work_hours}")
 
+
         # Perecentag dynamic percentage of order items
-        print("Dynamic percentage of order items")
-        for order in greedy_order_items.keys():
-            print(f"Order {order.order_number} has dynamic percentage {order.dynamic_percentage}")
+        #print("Dynamic percentage of order items")
+        #for order in greedy_order_items.keys():
+        #    print(f"Order {order.order_number} has dynamic percentage {order.dynamic_percentage}")
 
 
 
