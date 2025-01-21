@@ -307,12 +307,15 @@ class InputData:
                 worker.add_data(self)
                 #print(f"Worker {worker.personal_number} - Total items in list:", len(worker._possible_order_items))
                 # Listen-Ansatz: Gesamtanzahl aller Elemente
-                successor_list = [item for sublist in worker._successors.values() for item in sublist]
-                predecessor_list = [item for sublist in worker._predecessors.values() for item in sublist]
+                successors = list()
+                predecessors = list()
+                print(f"\nDictionary Worker {worker.personal_number}")
+                for key in worker._successors.keys():
+                    successors.append(f"{key.id} : {[item.id for item in worker._successors[key]]}")
+                    predecessors.append(f"{key.id} : {[item.id for item in worker._predecessors[key]]}")
 
-                print(f"\nList Totals for Worker {worker.personal_number}:")
-                print(f"Total Successors (List): {len(successor_list)}")
-                print(f"Total Predecessors (List): {len(predecessor_list)}")
+                print(f"\nSuccessors: {successors}")
+                print(f"\nPredecessors: {predecessors}")
             
 
             
