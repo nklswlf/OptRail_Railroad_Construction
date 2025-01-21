@@ -305,18 +305,6 @@ class InputData:
                 machine.add_data(self)
             for worker in self.workers:
                 worker.add_data(self)
-                #print(f"Worker {worker.personal_number} - Total items in dictionary:", sum(len(items) for items in worker._possible_order_items.values()))
-                #for key, value_list in worker._possible_order_items.items():
-                #    print(f"Order {key.order_number}: {[value.id for value in value_list]}")
-                successors = list()
-                predecessors = list()
-                print(f"\nDictionary Worker {worker.personal_number}")
-                for key in worker._successors.keys():
-                    successors.append(f"{key.id} : {[item.id for item in worker._successors[key]]}")
-                    predecessors.append(f"{key.id} : {[item.id for item in worker._predecessors[key]]}")
-
-                print(f"\nSuccessors: {successors}")
-                print(f"\nPredecessors: {predecessors}")
 
 
             
@@ -667,41 +655,52 @@ class Machine:
         self._name = str(json_data.get("Name", ""))
         self._type = int(json_data.get("Typ", 0))
         self._default_drivers = [int(driver) for driver in json_data.get("StammfahrerStrings", [])]
-        self._possible_order_items = []
+        self._possible_order_items = dict()  # Als Dictionary mit `order` als Key
         self._predecessors = dict()
         self._successors = dict()
 
     def add_data(self, input_data: InputData):
-        # Add possible order items for the machine
+        # Initialisiere `_possible_order_items` als Dictionary
+        for order in input_data.orders:
+            self._possible_order_items[order] = []
+
+        # Füge mögliche Order Items basierend auf `machine_type` hinzu
         for order_item in input_data.order_items:
             if order_item.machine_type == self.type:
-                self._possible_order_items.append(order_item)
+                for order in input_data.orders:
+                    if order_item.order_number == order.order_number:
+                        self._possible_order_items[order].append(order_item)
 
-        # Add predecessors and successors for the machine
-        for order_item_1 in self._possible_order_items:
-            self._predecessors[order_item_1] = []
-            self._successors[order_item_1] = []
+        # Erstelle Predecessors und Successors für alle Order Items
+        all_order_items = [item for items in self._possible_order_items.values() for item in items]
 
-            for order_item_2 in self._possible_order_items:
+        for order_item_1 in all_order_items:
+            if order_item_1 not in self._predecessors:
+                self._predecessors[order_item_1] = []
+            if order_item_1 not in self._successors:
+                self._successors[order_item_1] = []
+
+            for order_item_2 in all_order_items:
                 if order_item_1 != order_item_2:
+                    # Zeitdifferenzen berechnen
+                    start_time_order_item_1 = (order_item_1.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+                    end_time_order_item_1 = (order_item_1.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+                    start_time_order_item_2 = (order_item_2.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+                    end_time_order_item_2 = (order_item_2.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
 
-                    start_time_order_item_1 = order_item_1.start_time - input_data.start_date
-                    start_time_order_item_1 = start_time_order_item_1.total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_1 = order_item_1.end_time - input_data.start_date
-                    end_time_order_item_1 = end_time_order_item_1.total_seconds() / input_data._seconds_a_day
-                    start_time_order_item_2 = order_item_2.start_time - input_data.start_date
-                    start_time_order_item_2 = start_time_order_item_2.total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_2 = order_item_2.end_time - input_data.start_date
-                    end_time_order_item_2 = end_time_order_item_2.total_seconds() / input_data._seconds_a_day
-
+                    # Transportzeit berechnen
                     transport_distance = input_data._transport_routes_order_item[order_item_1.id][order_item_2.id]
                     transport_time = transport_distance / input_data._transport_speed_kmh
 
+                    # Vorgänger hinzufügen
                     if start_time_order_item_1 >= end_time_order_item_2 + transport_time:
-                        self._predecessors[order_item_1].append(order_item_2)
+                        if order_item_2 not in self._predecessors[order_item_1]:
+                            self._predecessors[order_item_1].append(order_item_2)
 
+                    # Nachfolger hinzufügen
                     if start_time_order_item_2 >= end_time_order_item_1 + transport_time:
-                        self._successors[order_item_1].append(order_item_2)
+                        if order_item_2 not in self._successors[order_item_1]:
+                            self._successors[order_item_1].append(order_item_2)
 
 
 
@@ -726,7 +725,7 @@ class Machine:
         return self._default_drivers
     
     @property
-    def possible_order_items(self) -> List[int]:
+    def possible_order_items(self) -> dict[int, List[int]]:
         return self._possible_order_items
     
     @property
