@@ -306,7 +306,15 @@ class InputData:
             for worker in self.workers:
                 worker.add_data(self)
                 print(f"Worker {worker.personal_number} - Total items in dictionary:", sum(len(items) for items in worker._possible_order_items.values()))
-            
+                for key, value_list in worker._possible_order_items.items():
+                    print(f"Order {key.order_number}: {[value.id for value in value_list]}")
+                print("Successors (Dictionary):")
+                for key, value in worker._successors.items():
+                    print(f"Order Item {key.id} has {len(value)} successors.")
+
+                print("Predecessors (Dictionary):")
+                for key, value in worker._predecessors.items():
+                    print(f"Order Item {key.id} has {len(value)} predecessors.")
 
             
             print(f"Data loaded from '{self.instance_filename}' in folder '{self._parent_folder}'.")
