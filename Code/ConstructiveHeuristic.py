@@ -116,9 +116,9 @@ class ConstructiveHeuristics:
 
 
         # Perecentag dynamic percentage of order items
-        #print("Dynamic percentage of order items")
-        #for order in greedy_order_items.keys():
-        #    print(f"Order {order.order_number} has dynamic percentage {order.dynamic_percentage}")
+        print("Dynamic percentage of order items")
+        for order in greedy_order_items.keys():
+            print(f"Order {order.order_number} has dynamic percentage {order.dynamic_percentage}")
 
 
 
