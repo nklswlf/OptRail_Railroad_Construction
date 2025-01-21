@@ -305,6 +305,7 @@ class InputData:
                 machine.add_data(self)
             for worker in self.workers:
                 worker.add_data(self)
+                print(f"Worker {worker.personal_number} - Total items in list:", len(worker._possible_order_items))
 
             
 
