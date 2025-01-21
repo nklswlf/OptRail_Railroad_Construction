@@ -310,7 +310,7 @@ class InputData:
                 successor_list = [item for sublist in worker._successors.values() for item in sublist]
                 predecessor_list = [item for sublist in worker._predecessors.values() for item in sublist]
 
-                print("\nList Totals:")
+                print(f"\nList Totals for Worker {worker.personal_number}:")
                 print(f"Total Successors (List): {len(successor_list)}")
                 print(f"Total Predecessors (List): {len(predecessor_list)}")
             
