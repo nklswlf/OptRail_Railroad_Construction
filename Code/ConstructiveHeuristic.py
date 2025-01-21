@@ -59,6 +59,7 @@ class ConstructiveHeuristics:
         machine_planned = dict()
         for machine in inputdata.machines:
             machine_planned[machine] = 0
+            route_plan_machine[machine.id] = list()
             
 
         for worker in inputdata.workers:
@@ -84,14 +85,50 @@ class ConstructiveHeuristics:
                 if best_order_item.duration + worker.work_hours > inputdata._max_working_hours:
                     break
                 
-                '''
+
                 # Assign machine to order item according to machine attractiveness
                 machine_attractiveness = dict()
                 for machine in inputdata.machines:
-                    if best_order_item in machine._possible_order_items:
+                    if best_order_item in machine._possible_order_items[best_order]:
+                        
+                        if worker.personal_number in machine._default_drivers:
+                            default_driver_value = 10
+                        else:
+                            default_driver_value = 0
+
                         possible_order_items_best_order = [order_item for order_item in inputdata.order_items if order_item.order_number == best_order_item.order_number]
-                        machine_attractiveness[machine] = machine_planned[machine] + len(machine._default_drivers) + len(possible_order_items_best_order)
-                '''
+                        machine_attractiveness[machine] = machine_planned[machine] + len(machine._default_drivers) + len(possible_order_items_best_order) + default_driver_value
+                
+                task_assigned = False
+                while not task_assigned:
+                    best_machine = max(machine_attractiveness, key=machine_attractiveness.get)
+
+                    if len(route_plan_machine[best_machine.id]) == 0:
+                        route_plan_machine[best_machine.id].append(best_order_item.id)
+                        machine_planned[best_machine] += 1
+                        task_assigned = True
+                        inputdata.planned_shifts_machine[best_order].append(best_order_item)
+                    elif len(route_plan_machine[best_machine.id]) > 0:
+                        index = 0
+                        current_order_item = next((order_item for order_item in inputdata.order_items if order_item.id == route_plan_machine[best_machine.id][index]))
+                        
+                        # Check first if best_order_item is a predecessor of the first order item in the route plan
+                        if best_order_item in best_machine._predecessors[current_order_item]:
+                            route_plan_machine[best_machine.id].insert(0, best_order_item.id)
+                            machine_planned[best_machine] += 1
+                            task_assigned = True
+                            inputdata.planned_shifts_machine[best_order].append(best_order_item)
+
+                        # Check if best_order_item is a successor of one of the order items in the route plan
+                        while not task_assigned:
+                            current_order_item = next((order_item for order_item in inputdata.order_items if order_item.id == route_plan_machine[best_machine.id][index]))
+                            if best_order_item in best_machine._successors[current_order_item]:
+                                route_plan_machine[best_machine.id].insert(index+5, best_order_item.id)
+                                machine_planned[best_machine] += 1
+                                task_assigned = True
+                                inputdata.planned_shifts_machine[best_order].append(best_order_item)
+                            index += 1
+                        
 
 
 
@@ -119,6 +156,17 @@ class ConstructiveHeuristics:
         print("Dynamic percentage of order items")
         for order in greedy_order_items.keys():
             print(f"Order {order.order_number} has dynamic percentage {order.dynamic_percentage}")
+
+
+        for machine in inputdata.machines:
+            print(f"Route plan for machine {machine.id}: {route_plan_machine[machine.id]}")
+        
+        for order in inputdata.orders:
+            order.dynamic_percentage = len(inputdata.planned_shifts_machine[order]) / len(greedy_order_items[order])
+            print(f"Order {order.order_number} has dynamic percentage {order.dynamic_percentage}")
+
+
+        Solution(route_plan_worker, route_plan_machine, inputdata).feasibility_check() 
 
 
 

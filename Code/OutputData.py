@@ -34,7 +34,8 @@ class Solution:
         for machine_name, route in self.route_plan_machine.items():
             print(f"\nChecking route for machine {machine_name}...")
 
-            machine_object = next((m for m in self.data.machines if m.name == machine_name), None)
+            #machine_object = next((m for m in self.data.machines if m.name == machine_name), None) --> changed to id since in MIP machine name was used
+            machine_object = next((m for m in self.data.machines if m.id == machine_name), None)
             
             order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
 
