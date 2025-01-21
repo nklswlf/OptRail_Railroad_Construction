@@ -305,7 +305,7 @@ class InputData:
                 machine.add_data(self)
             for worker in self.workers:
                 worker.add_data(self)
-
+                print(f"Worker {worker.personal_number} - Total items in dictionary:", sum(len(items) for items in worker._possible_order_items.values()))
             
 
             
@@ -570,45 +570,47 @@ class Worker:
         self._name = str(json_data.get("Name", ""))
         self._qualifications = json_data.get("Qualifikationen", [])
         self._residence = json_data.get("Wohnort", {"Item1": 0.0, "Item2": 0.0})
-        self._possible_order_items = []
+        self._possible_order_items = dict()  # Jetzt als Dictionary
         self._predecessors = dict()
         self._successors = dict()
         self.work_hours = 0
 
-
-
     def add_data(self, input_data: InputData):
-        # Add possible order items for the worker
+        # Initialisiere _possible_order_items als leeres Dictionary
+        for order in input_data.orders:
+            self._possible_order_items[order] = []
+
+        # Füge Order Items hinzu, basierend auf Qualifikationen
         for order_item in input_data.order_items:
-            if not order_item.worker_qualifications: # If no qualifications are required
-                self._possible_order_items.append(order_item)
-            elif set(order_item.worker_qualifications).issubset(self.qualifications): # If worker has all required qualifications
-                self._possible_order_items.append(order_item)
+            # Prüfen, zu welchem Auftrag das Order Item gehört
+            for order in input_data.orders:
+                if order_item.order_number == order.order_number:
+                    # Überprüfe Qualifikationen
+                    if not order_item.worker_qualifications or set(order_item.worker_qualifications).issubset(self._qualifications):
+                        self._possible_order_items[order].append(order_item)
 
-        # Add predecessors and successors for the worker
-        for order_item_1 in self._possible_order_items:
-            self._predecessors[order_item_1] = []
-            self._successors[order_item_1] = []
+        # Add predecessors and successors for each order item
+        for order, order_items in self._possible_order_items.items():
+            for order_item_1 in order_items:
+                self._predecessors[order_item_1] = []
+                self._successors[order_item_1] = []
 
-            for order_item_2 in self._possible_order_items:
-                if order_item_1 != order_item_2:
+                for order_item_2 in order_items:
+                    if order_item_1 != order_item_2:
+                        # Zeitdifferenzen berechnen
+                        start_time_order_item_1 = (order_item_1.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+                        end_time_order_item_1 = (order_item_1.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+                        start_time_order_item_2 = (order_item_2.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+                        end_time_order_item_2 = (order_item_2.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
 
-                    start_time_order_item_1 = order_item_1.start_time - input_data.start_date
-                    start_time_order_item_1 = start_time_order_item_1.total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_1 = order_item_1.end_time - input_data.start_date
-                    end_time_order_item_1 = end_time_order_item_1.total_seconds() / input_data._seconds_a_day
-                    start_time_order_item_2 = order_item_2.start_time - input_data.start_date
-                    start_time_order_item_2 = start_time_order_item_2.total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_2 = order_item_2.end_time - input_data.start_date
-                    end_time_order_item_2 = end_time_order_item_2.total_seconds() / input_data._seconds_a_day
+                        break_time = input_data._hours_between_shifts / 24
 
-                    break_time = input_data._hours_between_shifts / 24
+                        # Vorgänger und Nachfolger bestimmen
+                        if start_time_order_item_1 >= end_time_order_item_2 + break_time:
+                            self._predecessors[order_item_1].append(order_item_2)
 
-                    if start_time_order_item_1 >= end_time_order_item_2 + break_time:
-                        self._predecessors[order_item_1].append(order_item_2)
-                    
-                    if start_time_order_item_2 >= end_time_order_item_1 + break_time:
-                        self._successors[order_item_1].append(order_item_2)
+                        if start_time_order_item_2 >= end_time_order_item_1 + break_time:
+                            self._successors[order_item_1].append(order_item_2)
 
     @property
     def personal_number(self) -> int:
@@ -629,7 +631,7 @@ class Worker:
         return (latitude, longitude)
     
     @property
-    def possible_order_items(self) -> List[int]:
+    def possible_order_items(self) -> dict[int, List[int]]:
         return self._possible_order_items
     
     @property
