@@ -68,7 +68,7 @@ class ConstructiveHeuristics:
             # Initialize attractiveness for each possible order item
             for order, order_items in greedy_order_items.items():
                 for order_item in order_items:
-                    if order_item in worker._possible_order_items:
+                    if any(order_item in value_list for value_list in worker._possible_order_items.values()):
                         if order_item not in inputdata.planned_shifts_worker[order]:
                             time_difference = inputdata.start_date - order_item.start_time
                             time_difference = time_difference.total_seconds() / inputdata._seconds_a_day
@@ -110,9 +110,10 @@ class ConstructiveHeuristics:
                                 time_difference = best_order_item.end_time - order_item.start_time
                                 time_difference = time_difference.total_seconds() / inputdata._seconds_a_day
                                 attractiveness[order_item] = (1/order.priority["overall"]) + order.dynamic_percentage + (time_difference/2)
-                
-            #print(f"Route plan for worker {worker.personal_number}: {route_plan_worker[worker.personal_number]}")
-            #print(f"Work hours for worker {worker.personal_number}: {worker.work_hours}")
+            
+            print(f"Route plan for worker {worker.personal_number}: {route_plan_worker[worker.personal_number]}")
+            print(f"Work hours for worker {worker.personal_number}: {worker.work_hours}")
+
 
         # Perecentag dynamic percentage of order items
         #print("Dynamic percentage of order items")
