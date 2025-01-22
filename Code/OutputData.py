@@ -15,19 +15,103 @@ class Solution:
         self.number_sites = - 1
         self.route_plan_worker = route_plan_worker
         self.route_plan_machine = route_plan_machine
+        
+        self.finished_orders = []
+        self.semifinished_orders = []
+        self.not_started_orders = []
+        self.share_finished_orders = -1
+        self.categorizing_orders()
+
+
 
     def __str__(self) -> str:
         ''' Define the string representation of the solution'''
         return f"Route Plan Worker: {self.route_plan_worker}\nRoute Plan Machine: {self.route_plan_machine}\n"
+    
 
+    def repair_solution(self):
+        ''' Repair the solution by deleting all order items of semi-finished orders from the route plans'''
+        ## OR
+        ''' Repair the solution with heuristic or mathamatical optimization by reassigning the order items of semi-finished orders to the route plans'''
+
+        ## TO DO: Implement the repair solution method
+        pass
+
+
+    def categorizing_orders(self):
+        ''' Categorize the orders into finished, semi-finished and not started orders'''
+        print("\nCategorizing orders...")
+
+        all_planned_order_item_ids = [order_item_id for route in self.route_plan_worker.values() for order_item_id in route]
+
+        for order in self.data.orders:
+            self.finished_orders.append(order)
+            self.not_started_orders.append(order)
+
+        for order in self.data.orders:
+            for order_item_id in order.order_item_ids:
+                if order_item_id not in all_planned_order_item_ids:
+                    self.finished_orders.remove(order)
+                    break
+
+        for order in self.data.orders:
+            for order_item_id in order.order_item_ids:
+                if order_item_id in all_planned_order_item_ids:
+                    self.not_started_orders.remove(order)
+                    break
+
+        self.semifinished_orders = [order for order in self.data.orders if order not in self.finished_orders and order not in self.not_started_orders]
+
+        self.share_finished_orders = len(self.finished_orders) / len(self.data.orders) * 100
+
+        print("\nCategorized orders:")
+        print(f"Share of finished orders: {self.share_finished_orders:.2f}%")
+        print(f"Finished orders: {[order.order_number for order in self.finished_orders]}")
+        print(f"Semi-finished orders: {[order.order_number for order in self.semifinished_orders]}")
+        print(f"Not started orders: {[order.order_number for order in self.not_started_orders]}")
 
 
     def feasibility_check(self):
         ''' Check the feasibility of the solution'''
-        print("Checking the feasibility of the solution...")
+        print("\nChecking the feasibility of the solution...")
+
 
         # ========================
-        # 1. Machine Route Feasibility
+        # 1. Order Item Feasibility
+        # ========================
+        print("\nChecking if the assigned order items are present in both route plans...")
+
+        # Check if all order items in machine route are present in worker route
+        for machine_route_order_items in self.route_plan_machine.values():
+            for order_item in machine_route_order_items:
+                if not any(order_item in worker_route_order_items for worker_route_order_items in self.route_plan_worker.values()):
+                    print(f"Order item {order_item} is not present in the worker route.")
+                    return False
+                else:
+                    #print(f"Order item {order_item} is present in the worker route.")
+                    pass
+
+        # Check if all order items in worker route are present in machine route
+        for worker_route_order_items in self.route_plan_worker.values():
+            for order_item in worker_route_order_items:
+                if not any(order_item in machine_route_order_items for machine_route_order_items in self.route_plan_machine.values()):
+                    print(f"Order item {order_item} is not present in the machine route.")
+                    return False
+                else:
+                    #print(f"Order item {order_item} is present in the machine route.")
+                    pass
+
+        print("The assigned order items are present in both route plans.")
+
+
+        # Check if all order items of an order are present
+        #print("\nChecking if all order items of an order are present in the route plans...")
+        
+
+
+
+        # ========================
+        # 2. Machine Route Feasibility
         # ========================
 
 
@@ -76,7 +160,7 @@ class Solution:
 
         
         # ========================
-        # 2. Worker Route Feasibility
+        # 3. Worker Route Feasibility
         # ========================
             
         for worker_id, route in self.route_plan_worker.items():
