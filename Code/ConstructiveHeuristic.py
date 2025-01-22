@@ -42,11 +42,13 @@ class ConstructiveHeuristics:
         '''
 
 
+        ##### I could change worker route plan logic to a similar pre and successor logic as for machines !
+
 
         # Add % of sites to greedy_sites for initial solution
         percentage = 1 # 100% of sites
         total_order_amount = len(inputdata.orders)
-        greedy_sites_amount = int(total_order_amount * 1)
+        greedy_sites_amount = int(total_order_amount * percentage)
         greedy_order_items = dict()
         for order in inputdata.orders:
             if order._priority["overall"] <= greedy_sites_amount:
@@ -66,6 +68,10 @@ class ConstructiveHeuristics:
             attractiveness = dict()
             route_plan_worker[worker.personal_number] = list()
 
+            current_consecutive_night_shifts = 0
+            current_shifts_in_time_period = list()
+
+
             # Initialize attractiveness for each possible order item
             for order, order_items in greedy_order_items.items():
                 for order_item in order_items:
@@ -81,15 +87,33 @@ class ConstructiveHeuristics:
             # Add order items to route plan for each worker
             while worker.work_hours <= inputdata._max_working_hours and len(attractiveness) > 0:
                 
+                # Break to next worker if there is no suitable order item fo the current worker
                 if index == len(sorted_attractiveness):
                     break
 
                 best_order_item = sorted_attractiveness[index]
                 best_order = [order for order in inputdata.orders if order.order_number == best_order_item.order_number][0]
                 
-                # Break if worker is overworked
+                # Break to next worker if worker is overworked
                 if best_order_item.duration + worker.work_hours > inputdata._max_working_hours:
                     break
+
+                # Continue to next order item if worker has too many consecutive night shifts
+                if best_order_item.night:
+                    if current_consecutive_night_shifts + 1 > inputdata._max_consecutive_night_shifts:
+                        index += 1
+                        continue
+                
+                # Continue to next order item if worker has too many shifts in time period
+                if len(current_shifts_in_time_period) > 0:
+                    difference_in_days = best_order_item.start_time.day - current_shifts_in_time_period[0].start_time.day
+                    if difference_in_days < inputdata._time_period_for_max_shifts:
+                        if len(current_shifts_in_time_period) + 1 > inputdata._max_shifts_in_time_period:
+                            index += 1
+                            continue
+
+                
+                
                 
 
                 # Assign machine to order item according to machine attractiveness
@@ -161,6 +185,21 @@ class ConstructiveHeuristics:
                     #print(f"Route plan for machine {best_machine.id}: {route_plan_machine[best_machine.id]}")
 
                     # Update data
+                    current_shifts_in_time_period.append(best_order_item)
+
+                    print(f"Lenght of current shifts in time period: {len(current_shifts_in_time_period)}")
+
+                    for i in range(len(current_shifts_in_time_period)):
+                        if current_shifts_in_time_period[i].start_time.day + inputdata._time_period_for_max_shifts < best_order_item.start_time.day:
+                            current_shifts_in_time_period.pop(i)
+                    
+
+
+                    if best_order_item.night:
+                        current_consecutive_night_shifts += 1
+                    elif best_order_item.day:
+                        current_consecutive_night_shifts = 0
+
                     inputdata.planned_shifts_worker[best_order].append(best_order_item)
                     best_order.dynamic_percentage = len(inputdata.planned_shifts_worker[best_order]) / len(greedy_order_items[best_order])
 
@@ -177,6 +216,9 @@ class ConstructiveHeuristics:
                                     attractiveness[order_item] = (1/order.priority["overall"]) + order.dynamic_percentage + (time_difference/2)
                                     sorted_attractiveness = sorted(attractiveness, key=attractiveness.get, reverse=True)
                                     index = 0
+
+                    print(f"Route plan for worker {worker.personal_number}: {route_plan_worker[worker.personal_number]}")
+                    print(f"Work hours for worker {worker.personal_number}: {worker.work_hours}")
 
 
         for worker in inputdata.workers:        

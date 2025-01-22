@@ -69,7 +69,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
 
 def main():
 
-    instance_filename = "Construction_a25_o306_m13_an127_ar31.json"
+    instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
     data = InputData(instance_filename)
     
     construct = ConstructiveHeuristics(solutionPool= None, evaluationLogic= None)
