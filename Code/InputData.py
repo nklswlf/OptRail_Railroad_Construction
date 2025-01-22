@@ -19,7 +19,7 @@ class InputData:
         
 
         # Default values for Occupational Safety
-        self._consecutive_night_shifts = 5 # Max consecutive night shifts
+        self._max_consecutive_night_shifts = 5 # Max consecutive night shifts
         self._max_shifts_in_time_period = 10 # Max shifts in a time period
         self._time_period_for_max_shifts = 14 # Time period for max shifts in days
         self._max_working_hours = 160 # Max working hours in the full planning horizon
@@ -180,10 +180,10 @@ class InputData:
         )
 
         # 8. Add overall priority score to each order_item in the order
-        for order in self.orders:
-            for item in self.order_items:
-                if item.order_number == order.order_number:
-                    item._priority = order._priority["overall"]
+        #for order in self.orders:
+        #    for item in self.order_items:
+        #        if item.order_number == order.order_number:
+        #            item._priority = order._priority["overall"]
 
 
 
@@ -335,6 +335,10 @@ class InputData:
                 machine.add_data(self)
             for worker in self.workers:
                 worker.add_data(self)
+            
+            # Add data to order items (day or night shift)
+            for order_item in self.order_items:
+                order_item.day_or_night(self)
 
 
             
@@ -515,7 +519,23 @@ class OrderItem:
         self._worker_qualifications = json_data.get("ArbeiterQualifikationen", [])
         self._assigned_machine = json_data.get("zugewieseneMaschine", None)
         self._type = int(json_data.get("Typ", 0))
-        self._priority = 0
+    
+
+
+
+
+    def day_or_night(self, input_data: InputData):
+        if self._start_time.hour < input_data._day_and_night_shift_boundary:
+            self.day = True
+            self.night = False
+        else:
+            self.night = True
+            self.day = False
+
+        
+
+
+
 
     @property
     def id(self) -> int:
@@ -557,9 +577,9 @@ class OrderItem:
     def type(self) -> int:
         return self._type
     
-    @property
-    def priority(self) -> int:
-        return self._priority
+    #@property
+    #def priority(self) -> int:
+    #    return self._priority
 
     
     

@@ -228,8 +228,8 @@ class Solution:
                         else:
                             break
 
-                    if night_shifts > self.data._consecutive_night_shifts:
-                        print(f"Worker {worker_id} has more than {self.data._consecutive_night_shifts} consecutive night shifts ({night_shifts}).")
+                    if night_shifts > self.data._max_consecutive_night_shifts:
+                        print(f"Worker {worker_id} has more than {self.data._max_consecutive_night_shifts} consecutive night shifts ({night_shifts}).")
                         return False
                     else:
                         #print(f"Worker {worker_id} is within the allowed night shift limit for this period.")
