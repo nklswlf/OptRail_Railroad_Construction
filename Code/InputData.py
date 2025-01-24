@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from typing import List, Tuple, Optional
-from datetime import datetime
+from datetime import datetime,timedelta
 
 
 class InputData:
@@ -21,7 +21,7 @@ class InputData:
         # Default values for Occupational Safety
         self._max_consecutive_night_shifts = 5 # Max consecutive night shifts
         self._max_shifts_in_time_period = 10 # Max shifts in a time period
-        self._time_period_for_max_shifts = 14 # Time period for max shifts in days
+        self._time_period_for_max_shifts = timedelta(days=14) # Time period for max shifts in days
         self._max_working_hours = 160 # Max working hours in the full planning horizon
         self._day_and_night_shift_boundary = 12 # Start before 12 is day shift, after 12 is night shift
 
@@ -526,11 +526,11 @@ class OrderItem:
 
     def day_or_night(self, input_data: InputData):
         if self._start_time.hour < input_data._day_and_night_shift_boundary:
-            self.day = True
-            self.night = False
+            self.day_shift = True
+            self.night_shift = False
         else:
-            self.night = True
-            self.day = False
+            self.night_shift = True
+            self.day_shift = False
 
         
 
