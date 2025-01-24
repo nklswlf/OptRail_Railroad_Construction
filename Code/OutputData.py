@@ -100,6 +100,27 @@ class Solution:
                 else:
                     #print(f"Order item {order_item} is present in the machine route.")
                     pass
+        
+        # Check that no order item is assigned to more than one worker
+        for worker_id, route in self.route_plan_worker.items():
+            for order_item in route:
+                if sum(order_item in worker_route for worker_route in self.route_plan_worker.values()) > 1:
+                    print(f"Order item {order_item} is assigned to more than one worker.")
+                    return False
+                else:
+                    #print(f"Order item {order_item} is assigned to only one worker.")
+                    pass
+
+        # Check that no order item is assigned to more than one machine
+        for machine_id, route in self.route_plan_machine.items():
+            for order_item in route:
+                if sum(order_item in machine_route for machine_route in self.route_plan_machine.values()) > 1:
+                    print(f"Order item {order_item} is assigned to more than one machine.")
+                    return False
+                else:
+                    #print(f"Order item {order_item} is assigned to only one machine.")
+                    pass
+
 
         print("The assigned order items are present in both route plans.")
 
