@@ -242,7 +242,7 @@ class Solution:
             # Check if the worker does not work more than 10 shifts in 14 days
             for i, order_item_i in enumerate(order_item_objects):
                 window_start = order_item_i.start_time.date()
-                window_end = window_start + timedelta(days=self.data._time_period_for_max_shifts)
+                window_end = window_start + self.data._time_period_for_max_shifts
                 shift_count = 0
 
                 for order_item_j in order_item_objects:

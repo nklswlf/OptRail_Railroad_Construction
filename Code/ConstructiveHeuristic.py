@@ -99,21 +99,17 @@ class ConstructiveHeuristics:
                     break
 
                 # Continue to next order item if worker has too many consecutive night shifts
-                if best_order_item.night:
+                if best_order_item.night_shift:
                     if current_consecutive_night_shifts + 1 > inputdata._max_consecutive_night_shifts:
                         index += 1
                         continue
                 
                 # Continue to next order item if worker has too many shifts in time period
-                if len(current_shifts_in_time_period) > 0:
-                    difference_in_days = best_order_item.start_time.day - current_shifts_in_time_period[0].start_time.day
-                    if difference_in_days < inputdata._time_period_for_max_shifts:
-                        if len(current_shifts_in_time_period) + 1 > inputdata._max_shifts_in_time_period:
-                            index += 1
-                            continue
+                if len(current_shifts_in_time_period) == inputdata._max_shifts_in_time_period:
+                    if best_order_item.start_time - current_shifts_in_time_period[0].start_time <= inputdata._time_period_for_max_shifts:
+                        index += 1
+                        continue
 
-                
-                
                 
 
                 # Assign machine to order item according to machine attractiveness
@@ -182,22 +178,19 @@ class ConstructiveHeuristics:
 
                 
                 if task_assigned:                       
-                    #print(f"Route plan for machine {best_machine.id}: {route_plan_machine[best_machine.id]}")
-
                     # Update data
-                    current_shifts_in_time_period.append(best_order_item)
-
-                    print(f"Lenght of current shifts in time period: {len(current_shifts_in_time_period)}")
-
-                    for i in range(len(current_shifts_in_time_period)):
-                        if current_shifts_in_time_period[i].start_time.day + inputdata._time_period_for_max_shifts < best_order_item.start_time.day:
+                    print(f"Lenght of current shifts in time period for worker{worker.personal_number}: {len(current_shifts_in_time_period)}")
+                    for i in range(len(current_shifts_in_time_period) - 1, -1, -1):
+                        if best_order_item.start_time - current_shifts_in_time_period[i].start_time > inputdata._time_period_for_max_shifts:
                             current_shifts_in_time_period.pop(i)
                     
+                    current_shifts_in_time_period.append(best_order_item)
+                    print(f"Lenght of current shifts in time period: {len(current_shifts_in_time_period)}")
+                    
 
-
-                    if best_order_item.night:
+                    if best_order_item.night_shift:
                         current_consecutive_night_shifts += 1
-                    elif best_order_item.day:
+                    elif best_order_item.day_shift:
                         current_consecutive_night_shifts = 0
 
                     inputdata.planned_shifts_worker[best_order].append(best_order_item)
@@ -217,8 +210,7 @@ class ConstructiveHeuristics:
                                     sorted_attractiveness = sorted(attractiveness, key=attractiveness.get, reverse=True)
                                     index = 0
 
-                    print(f"Route plan for worker {worker.personal_number}: {route_plan_worker[worker.personal_number]}")
-                    print(f"Work hours for worker {worker.personal_number}: {worker.work_hours}")
+                    
 
 
         for worker in inputdata.workers:        
