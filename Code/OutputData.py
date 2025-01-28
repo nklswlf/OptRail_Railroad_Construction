@@ -64,15 +64,16 @@ class Solution:
             "Number_of_finished_orders": self.number_of_finished_orders,
             "Number_of_semifinished_orders": len(self.semifinished_orders),
             "Number_of_not_started_orders": len(self.not_started_orders),
-            "Sum_dynamic_precentage": sum([order.dynamic_percentage for order in self.finished_orders]),
             "Number_of_finished_order_items": self.number_of_finished_order_items,
             "Driver_violation": self.driver_violation,
             "Commute_distance": round(self.total_commute_distance, 2),
             "Transport_distance": round(self.total_transport_distance, 2),
             "Number_of_workers": self.number_of_workers,
             "Number_of_machines": self.number_of_machines,
+            "Sum_dynamic_precentage": round(sum([order.dynamic_percentage for order in self.data.orders]),4),
+            "Dynamic_percentage": [round(order.dynamic_percentage,4) for order in self.data.orders],
             "Worker_route_plan": self.route_plan_worker,
-            "Machine_route_plan": self.route_plan_machine,
+            "Machine_route_plan": self.route_plan_machine
         }
 
         print(self.data._parent_folder)

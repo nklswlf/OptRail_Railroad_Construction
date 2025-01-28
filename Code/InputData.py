@@ -201,67 +201,6 @@ class InputData:
             print(f"Order Number: {order.order_number}, Machine Priority: {order.machine_priority}")
         '''
 
-        
-
-
-
-    def create_priorities_machines(self, order):
-        """
-        Calculate the priority for each machine for every order.
-        """
-
-        # 1. Berechne die Anzahl der Order Items, die jede Maschine verarbeiten kann
-        machine_order_items = {
-            machine.id: sum(
-                1 for item in self.order_items
-                if item.order_number == order.order_number and item.machine_type == machine.type
-            )
-            for machine in self.machines
-        }
-
-        # Entferne Maschinen mit einer Summe von 0
-        machine_order_items = {machine_id: count for machine_id, count in machine_order_items.items() if count > 0}
-
-        print(f"Order Number: {order.order_number}")
-        print(f"Filtered Machine Order Items: {machine_order_items}")
-
-        # 2. Sortiere nur die Maschinen, die in machine_order_items vorhanden sind
-        sorted_machines = sorted(
-            (machine for machine in self.machines if machine.id in machine_order_items),
-            key=lambda machine: machine_order_items[machine.id],
-            reverse=True
-        )
-
-        # 3. Berechne die Prioritäten für Maschinen
-        current_rank = 1
-        last_value = None
-        machine_order_items_priority = {}
-        for i, machine in enumerate(sorted_machines):
-            value = machine_order_items[machine.id]
-            if value != last_value:
-                current_rank = i + 1
-                last_value = value
-            machine_order_items_priority[machine.id] = current_rank
-
-        print(f"Machine Priority: {machine_order_items_priority}")
-
-
-
-
-        # rank for machine_order_items (more items are better) and add it to the dictionary self._machine_priority
-        # dont use the function calculate_rank, because we need machines not orders
-        #sorted_machines = sorted(self.machines, key=lambda machine: machine_order_items[machine.id], reverse=True)
-        #current_rank = 1
-        #last_value = None
-        # add to the dictionary self._machine_priority
-        #for i, machine in enumerate(sorted_machines):
-        #    value = machine_order_items[machine.id]
-        #    if value != last_value:
-        #        current_rank = i + 1
-        #        last_value = value
-        #    order._machine_priority[machine.id] = current_rank
-
-
 
 
 
