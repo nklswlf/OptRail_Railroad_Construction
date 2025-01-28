@@ -6,262 +6,129 @@ from OutputData import Solution
 class EvaluationLogic:
     ''' Evalution Objects to calculate objectives of the given solutions'''
 
-    def __init__(self, inputData:InputData):
+    def __init__(self, data:InputData):
         ''' Initialize by addinbg data'''
-        self._data = inputData      
+        self.data = data      
 
 
-    def evaluateSolution(self, currentSolution:Solution) -> None:
-        ''' Calculates the profit of the given solution'''
+    def evaluate(self, solution:Solution):
         
-        sum_profit = 0
-        sum_tasks = 0
+        self.categorizing_orders(solution)
+        self.calculate_finished_order_items(solution)
+        self.calculate_commute_distance(solution)
+        self.calculate_transport_distance(solution)
+        self.calculate_driver_violation(solution)
+        self.calculate_machine_worker_count_and_utilization_time(solution)
 
-        all_Tasks = self._data.allTasks
 
-        for day in range(self._data.days):
-            for cohort in range(self._data.cohort_no):
-                sum_tasks += len(currentSolution.RoutePlan[day][cohort])
-                for task_no in currentSolution.RoutePlan[day][cohort]:
-                    sum_profit += all_Tasks[task_no].profit
 
-        currentSolution.setTotalProfit(sum_profit) 
-        currentSolution.setTotalTasks(sum_tasks)
+    def categorizing_orders(self, solution:Solution):
+        ''' Categorize the orders into finished, semi-finished and not started orders'''
+        print("\nCategorizing orders...")
 
-        self.calculateWaitingTime(currentSolution)
+        all_planned_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
 
-    def calculateWaitingTime(self, currentSolution: Solution) -> None:
-        """Calculates the waiting time of the given solution"""
+        for order in self.data.orders:
+            solution.finished_orders.append(order)
+            solution.not_started_orders.append(order)
+
+        for order in self.data.orders:
+            for order_item_id in order.order_item_ids:
+                if order_item_id not in all_planned_order_item_ids:
+                    solution.finished_orders.remove(order)
+                    break
+
+        for order in self.data.orders:
+            for order_item_id in order.order_item_ids:
+                if order_item_id in all_planned_order_item_ids:
+                    solution.not_started_orders.remove(order)
+                    break
+
+        solution.semifinished_orders = [order for order in self.data.orders if order not in solution.finished_orders and order not in solution.not_started_orders]
+
+        solution.share_finished_orders = len(solution.finished_orders) / len(self.data.orders) * 100
+
+        solution.number_of_finished_orders = len(solution.finished_orders)
+
+
+
+    def calculate_finished_order_items(self, solution:Solution):
+        ''' Calculate the number of finished order items'''
+        print("\nCalculating finished order items...")
+
+        for worker_id, route in solution.route_plan_worker.items():
+            for i in range(len(route)):
+                solution.number_of_finished_order_items += 1
+
+        checker = 0
+        for machine_id, route in solution.route_plan_machine.items():
+            for i in range(len(route)):
+                checker += 1
+
+        if checker == solution.number_of_finished_order_items:
+            pass
+        else:
+            raise Exception("Number of finished order items is not equal to the number of finished order items of the machines")
+
+
+
+
+    def calculate_commute_distance(self, solution:Solution):
+        ''' Calculate the total commute distance of the workers'''
+        print("\nCalculating commute distance...")
+
+        for worker_id, route in solution.route_plan_worker.items():
+            solution.commute_distance_per_worker[worker_id] = 0
+            for i in range(len(route)):
+                solution.commute_distance_per_worker[worker_id] += 2 * self.data.work_routes_order_item[worker_id][route[i]]
         
-        # Cache commonly accessed attributes
-        max_route_duration = self._data.maxRouteDuration
-        distances = self._data.distances
-        all_tasks = self._data.allTasks
-        route_plan = currentSolution.RoutePlan
-        waiting_times = currentSolution.WaitingTimes
 
-        # Loop through days and cohorts
-        for day in range(self._data.days):
-            for cohort in range(self._data.cohort_no):
-                route_time = max_route_duration
-                previous_task = 0
-                current_route = route_plan[day][cohort]  # Cache the route for the cohort
-
-                # Loop through tasks in the current route
-                for task_i in current_route:
-                    route_time -= distances[previous_task][task_i]  # Subtract travel time
-                    route_time -= all_tasks[task_i].service_time  # Subtract service time
-                    previous_task = task_i
-
-                # Subtract return distance to the start point
-                route_time -= distances[previous_task][0]
-                
-                # Store the result in the waiting times matrix
-                waiting_times[day, cohort] = route_time
-
-        # Sum all waiting times using NumPy for efficiency
-        total_waiting_time = numpy.sum(waiting_times)
-        
-        # Set the waiting time in the solution
-        currentSolution.setWaitingTime(total_waiting_time)
-
-    def WaitingTimeOneRoute(self, RouteDayCohort: list[int]) -> int:
-        """Calculates the Waiting Time for one route."""
-
-        # Cache commonly used attributes
-        max_route_duration = self._data.maxRouteDuration
-        distances = self._data.distances
-        all_tasks = self._data.allTasks
-
-        # Initialize route time and previous task
-        route_time = max_route_duration
-        previous_task = 0
-
-        # Loop through each task in the route
-        for task_i in RouteDayCohort:
-            # Subtract travel time and service time in one step
-            route_time -= distances[previous_task][task_i] + all_tasks[task_i].service_time
-            previous_task = task_i
-
-        # Subtract return distance to the start (task 0)
-        route_time -= distances[previous_task][0]
-
-        return route_time
-
-    def WaitingTimeDifferenceOneRoute(self, move) -> int:
-        ''' Calculates the Difference of the Waiting Time for old and new Two Edge Exchange Route'''
-
-        difference = move.OldWaitingTime - self.WaitingTimeOneRoute(move.RouteDayCohort)
-
-        return difference
-
-    def CalculateDistanceSubtractionTwoEdge(self, move, successor_list, precessor_list):
-        """Calculates the distance subtraction for two edges"""
-
-        # Cache distances and tasks for efficiency
-        distances = self._data.distances
-        taskA = move.TaskA
-        taskB = move.TaskB
-
-        # Precompute the old distances
-        distance_old = distances[precessor_list[0]][taskA] + distances[taskB][successor_list[1]]
-
-        # Precompute the new distances after the swap
-        distance_new = distances[taskA][successor_list[1]] + distances[precessor_list[0]][taskB]
-
-        # Calculate the total distance difference
-        difference = distance_new - distance_old
-
-        return difference
+        solution.total_commute_distance = sum(solution.commute_distance_per_worker.values())
 
     
-    def CalculateDistanceSubtraction(self, move, successor_list, precessor_list):
-        """Calculates the distance subtraction of the given lists"""
+    def calculate_transport_distance(self, solution:Solution):
+        ''' Calculate the total transport distance of the machines'''
+        print("\nCalculating transport distance...")
 
-        # Cache distances for efficiency
-        distances = self._data.distances
-        taskA = move.TaskA
-        taskB = move.TaskB
+        for machine_id, route in solution.route_plan_machine.items():
+            solution.transport_distance_per_machine[machine_id] = 0
+            for i in range(len(route) - 1):
+                solution.transport_distance_per_machine[machine_id] += self.data.transport_routes_order_item[route[i]][route[i + 1]]
 
-        # Precompute the old distances
-        distance_old_a = distances[precessor_list[0]][taskA] + distances[taskA][successor_list[0]]
-        distance_old_b = distances[precessor_list[1]][taskB] + distances[taskB][successor_list[1]]
+        solution.total_transport_distance = sum(solution.transport_distance_per_machine.values())
 
-        # Precompute the new distances after the swap
-        distance_new_a = distances[precessor_list[1]][taskA] + distances[taskA][successor_list[1]]
-        distance_new_b = distances[precessor_list[0]][taskB] + distances[taskB][successor_list[0]]
 
-        # Calculate the total distance difference
-        difference = (distance_new_a + distance_new_b) - (distance_old_a + distance_old_b)
+    def calculate_driver_violation(self, solution:Solution):
+        ''' Calculate the total driver violation time of the workers'''
+        print("\nCalculating driver violation...")
 
-        return difference
+        for worker_id, route in solution.route_plan_worker.items():
+            for i in range(len(route)):
+                involved_machine_id = next((machine_id for machine_id in solution.route_plan_machine.keys() if route[i] in solution.route_plan_machine[machine_id]), None)
+                involved_machine = next((machine for machine in self.data.machines if machine.id == involved_machine_id), None)
+                if worker_id not in involved_machine.default_drivers:
+                    solution.driver_violation += 1
 
-  
-    def get_predecessors_and_successors(self, route: list[int], indexes: list[int]):
-        """Helper function to get predecessors and successors for swap moves."""
-        
-        n = len(route)
-        
-        # Preallocate lists to avoid repeated appends
-        precessors = [0] * len(indexes)
-        successors = [0] * len(indexes)
-
-        for i, index in enumerate(indexes):
-            if index == 0:
-                precessors[i] = 0
-                successors[i] = route[index + 1] # Ensure the route has more than 1 task
-            elif index == n - 1:
-                precessors[i] = route[index - 1]
-                successors[i] = 0
-            else:
-                precessors[i] = route[index - 1]
-                successors[i] = route[index + 1]
-
-        return precessors, successors
 
     
-        
-    def get_predecessor_and_succesor(self, route:list[int], index:int):
-        ''' Calculates the precessor and successor for one Index'''
+    def calculate_machine_worker_count_and_utilization_time(self, solution:Solution):
+        ''' Calculate the number of workers and machines'''
+        print("\nCalculating machine and worker count...")
 
-        # Determine predecessor and successor
-        if len(route) > 1:
-            if index == 0:
-                return 0, route[1]
-            elif index == len(route) - 1:
-                return route[index - 1], 0
-            else:
-                return route[index - 1], route[index + 1]
-        else: 
-            return 0,0
+        for machine_id, route in solution.route_plan_machine.items():
+            solution.machine_utilization_time[machine_id] = 0
+            if len(route) > 0:
+                solution.number_of_machines += 1
+            for order_item_id in route:
+                solution.machine_utilization_time[machine_id] += self.data.order_items[order_item_id].duration
+
+
+        for worker_id, route in solution.route_plan_worker.items():
+            solution.worker_work_time[worker_id] = 0
+            if len(route) > 0:
+                solution.number_of_workers += 1
+            for order_item_id in route:
+                solution.worker_work_time[worker_id] += self.data.order_items[order_item_id].duration
 
     
-
-    def CalculateSwapIntraRouteDelta(self, move): 
-        '''Calculates the delta of the given swap move'''
-
-        # Retrieve the route for the given day and cohort
-        precessors, successors = self.get_predecessors_and_successors(route=move.RouteDayCohort, indexes=[move.indexA, move.indexB])
-
-        # Calculate the delta using the distance subtraction method
-        delta = self.CalculateDistanceSubtraction(move, successors, precessors)
-
-        return delta
     
-    def CalculateSwapInterRouteDelta(self, move): 
-        '''Calculates the delta of the given swap move'''
-
-        predA, succA = self.get_predecessor_and_succesor(move.RouteDayCohortA, move.indexA)
-        predB, succB = self.get_predecessor_and_succesor(move.RouteDayCohortB, move.indexB)
-
-
-        # Calculate the delta using the distance subtraction method
-        delta = self.CalculateDistanceSubtraction(move, [succA, succB], [predA, predB])
-        #print("Delta: ",delta)
-
-        return delta
-
-
-    def CalculateTwoEdgeExchangeDelta(self, move):
-        '''Calculates the delta of the given two edge exchange move'''
-
-        # Retrieve the route for the given day and cohort
-        precessors, successors = self.get_predecessors_and_successors(route=move.RouteDayCohort, indexes=[move.indexA, move.indexB])
-
-        # Calculate the delta using the distance subtraction method
-        delta = self.CalculateDistanceSubtractionTwoEdge(move, successors, precessors)
-
-        return delta
-    
-    def CalculateReplaceDelta(self, move):
-        """Calculates the delta of the Replace Delta action"""
-
-        # Cache commonly used data
-        distances = self._data.distances
-        all_tasks = self._data.allTasks
-        task_in_route = move.TaskInRoute
-        unused_task = move.UnusedTask
-
-        # Get predecessor and successor for the current task in the route
-        precessor, successor = self.get_predecessor_and_succesor(move.RouteDayCohort, move.indexInRoute)
-
-        # Calculate the old distances for the task being replaced
-        distance_old = distances[precessor][task_in_route] + distances[task_in_route][successor]
-
-        # Calculate the new distances for the task being inserted (unused task)
-        distance_new = distances[precessor][unused_task] + distances[unused_task][successor]
-
-        # Get service times for the old and new tasks
-        service_time_old = all_tasks[task_in_route].service_time
-        service_time_new = all_tasks[unused_task].service_time
-
-        # Calculate the delta
-        delta = (distance_new + service_time_new) - (distance_old + service_time_old)
-
-        return delta
-
-
-    def CalculateInsertExtraTime(self, move):
-        """Calculates the delta of the given insert move"""
-
-        # Cache data access to minimize repeated lookups
-        distances = self._data.distances
-        all_tasks = self._data.allTasks
-        task = move.Task
-
-        # Retrieve predecessor and successor once
-        precessor, successor = self.get_predecessor_and_succesor(move.RouteDayCohort, move.Index)
-
-        # Calculate old distance
-        distance_old = distances[precessor][successor]
-
-        # Calculate new distance after insertion of 'task'
-        distance_new = distances[precessor][task] + distances[task][successor]
-
-        # Fetch the service time for the task being inserted
-        service_time = all_tasks[task].service_time
-
-        # Calculate the extra time
-        extra_time = distance_new + service_time - distance_old
-
-        return extra_time
