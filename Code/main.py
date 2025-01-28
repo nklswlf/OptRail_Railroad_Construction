@@ -94,7 +94,7 @@ def main():
 
 
 def TestInputData():
-    instance_filename = "Construction_a50_o578_m28_an276_ar66.json"
+    instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
 
     # Erstellen einer InputData-Instanz
     data = InputData(instance_filename)
@@ -102,6 +102,10 @@ def TestInputData():
     # Anzeigen der Instanz-Metadaten
     print("\nInstance Name:", data.instance)
 
+
+
+
+    '''
     # Anzeigen der Vorgänger-Nachfolger-Beziehungen
     print("\Worker-Predecessors-Successors:")
     for worker in data.workers:
@@ -114,8 +118,6 @@ def TestInputData():
         print(machine.id, machine.successors)
 
 
-
-    '''
     # Anzeigen der geladenen Daten mit strukturierten Ausgaben
     print("\nOrders:")
     for order in data.orders:
@@ -156,5 +158,5 @@ def TestInputData():
 
     
 if __name__ == "__main__":
-    #TestInputData()
-    main()
+    TestInputData()
+    #main()

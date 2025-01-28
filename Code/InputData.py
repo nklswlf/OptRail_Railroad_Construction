@@ -16,8 +16,25 @@ class InputData:
         self.instance_filename = instance_filename
         self.instance = instance_filename.split('Construction_')[1].split('.json')[0]
         self._data_path, self._parent_folder = self._find_instance_file()
-        
 
+        # AHP weights for the different criteria
+        self._ahp_weights = {"order_item_count": 0.5,
+                            "regular_driver_count": 0.2,
+                            "worker_distance": 0.1,
+                            "transport_distance": 0.1,
+                            "machine_type_count": 0.05,
+                            "worker_qualification_count": 0.05
+                            }
+        
+        self.wzischenzeit = {"order_item_count": 0.54437184,
+                            "regular_driver_count": 0.1707523,
+                            "worker_distance": 0.12839376,
+                            "transport_distance": 0.07315951,
+                            "machine_type_count": 0.04935076,
+                            "worker_qualification_count": 0.03397183
+                            }
+    
+        
         # Default values for Occupational Safety
         self._max_consecutive_night_shifts = 5 # Max consecutive night shifts
         self._max_shifts_in_time_period = 10 # Max shifts in a time period
@@ -87,7 +104,7 @@ class InputData:
         Generate priorities for all orders based on multiple criteria.
 
         This function calculates ranks for different parameters (e.g., order items, machine types)
-        and combines them into an overall priority score.
+        and combines them into an overall priority score with Borda Count (BC) and Analytic Hierarchy Process (AHP).
         """
         # 1. Calculate rank for order_item_count (fewer items are better)
         self.calculate_rank(
@@ -170,36 +187,48 @@ class InputData:
             "worker_qualification_count"
         )
 
-        # 7. Calculate the overall priority score
+        # Print current priorities for each order and the ahp weights
+        print("Order priorities calculated with different criteria:")
         for order in self.orders:
-            order._priority["overall"] = sum(order._priority.values())
+            print(f"Order {order.order_number}: {order._priority}")
+        print(f"AHP weights: {self._ahp_weights}")
+        
+
+        # 7. Calculate overall Rank with Borda Count
+        self.calculate_borda_count_ahp()
+        
+
+
+
+    def calculate_borda_count_ahp(self):
+        """
+        Calculate the overall priority rank using Borda Count combined with Analytic Hierarchy Process (AHP).
+        """
+
+        borda_count_ahp = {
+            order.order_number: sum(
+                (len(self.orders) - rank)
+                * self._ahp_weights[rank_name]
+                for rank_name, rank in order._priority.items()
+            )
+            for order in self.orders
+        }
+
+        print("Borda Count and AHP weights:")
+        for order in self.orders:
+            print(f"Order {order.order_number}: {borda_count_ahp[order.order_number]:.2f}")
+
         self.calculate_rank(
             self.orders, 
-            lambda order: order._priority["overall"], 
-            "overall"
+            lambda order: borda_count_ahp[order.order_number], 
+            "borda_count_ahp", 
+            reverse=True
         )
-
-        # 8. Add overall priority score to each order_item in the order
-        #for order in self.orders:
-        #    for item in self.order_items:
-        #        if item.order_number == order.order_number:
-        #            item._priority = order._priority["overall"]
-
-
-
-        #for order in self.orders:
-        #    self.create_priorities_machines(order)
-
-        '''
-        # Debug-Ausgabe
-        print("Order Priorities:")
-        for order in self.orders:
-            print(f"Order Number: {order.order_number}, Priority: {order.priority}")
         
-        
+        print("Order priorities calculated with Borda Count and AHP:")
         for order in self.orders:
-            print(f"Order Number: {order.order_number}, Machine Priority: {order.machine_priority}")
-        '''
+            print(f"Order {order.order_number}: {order._priority['borda_count_ahp']:.2f}")
+
 
 
 
@@ -397,8 +426,6 @@ class Order:
         self._order_item_ids = [int(item) for item in json_data.get("BestellpositionenStrings", [])]
         self._location = json_data.get("Standort", {"Item1": 0.0, "Item2": 0.0})
         self._priority = {}
-        self._machine_priority = {}
-        self._worker_priority = {}
         self.dynamic_percentage = 0
 
     @property
@@ -431,13 +458,6 @@ class Order:
     def priority(self) -> dict[str, int]:
         return self._priority
     
-    @property
-    def machine_priority(self) -> dict[int, int]:
-        return self._machine_priority
-    
-    @property
-    def worker_priority(self) -> dict[int, int]:
-        return self._worker_priority
     
 
     def __str__(self):
