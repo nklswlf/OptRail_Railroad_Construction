@@ -16,7 +16,9 @@ class ConstructiveHeuristics:
     def Run(self, inputdata:InputData):
         ''' Run the constructive heuristic on the input data'''
 
-        self.Greedy(inputdata)
+        start_solution = self.Greedy(inputdata)
+
+        return start_solution
     
 
     def Greedy(self, inputdata:InputData):
@@ -279,7 +281,14 @@ class ConstructiveHeuristics:
 
 
         # Check feasibility of the solution
-        Solution(route_plan_worker, route_plan_machine, inputdata).feasibility_check()
+        start_solution = Solution(route_plan_worker, route_plan_machine, inputdata)
+        
+        feasible = start_solution.feasibility_check()
+
+        if feasible:
+            return start_solution
+        else:
+            raise Exception("Solution is not feasible")
 
 
 

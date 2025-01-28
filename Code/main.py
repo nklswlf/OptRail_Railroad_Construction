@@ -3,6 +3,7 @@ import OutputData
 from ConstructiveHeuristic import *
 import pandas as pd
 from pathlib import Path
+from EvaluationLogic import *
 
 
 
@@ -74,7 +75,15 @@ def main():
     
     construct = ConstructiveHeuristics(solutionPool= None, evaluationLogic= None)
 
-    construct.Run(data)
+    solution = construct.Run(data)
+
+    evaluation = EvaluationLogic(data)
+
+    evaluation.evaluate(solution)
+
+    print(solution)
+
+    solution.create_output_file_greedy()
 
 
 
