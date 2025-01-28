@@ -72,10 +72,14 @@ def main():
 
     instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
     data = InputData(instance_filename)
+    evaluationLogic = EvaluationLogic(data)
     
-    construct = ConstructiveHeuristics(solutionPool= None, evaluationLogic= None)
+    construct = ConstructiveHeuristics(solutionPool= None, evaluationLogic = evaluationLogic)
 
-    solution = construct.Run(data)
+    machine_attractiveness_technique="None"
+    order_item_attractiveness_technique="order_priority_importance"
+
+    solution = construct.Run(data, order_item_attractiveness_technique, machine_attractiveness_technique)
 
     evaluation = EvaluationLogic(data)
 
@@ -83,7 +87,7 @@ def main():
 
     print(solution)
 
-    solution.create_output_file_greedy()
+    solution.create_output_file_greedy(order_item_attractiveness_technique, machine_attractiveness_technique)
 
 
 

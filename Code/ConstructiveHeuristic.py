@@ -13,15 +13,18 @@ class ConstructiveHeuristics:
         self._SolutionPool = solutionPool
 
 
-    def Run(self, inputdata:InputData):
+    def Run(self, input_data:InputData, order_item_attractiveness_technique, machine_attractiveness_technique):
         ''' Run the constructive heuristic on the input data'''
 
-        start_solution = self.Greedy(inputdata)
+        self.data = input_data
+        self.order_item_attractiveness_technique = order_item_attractiveness_technique
+        self.machine_attractiveness_technique = machine_attractiveness_technique
+        start_solution = self.Greedy()
 
         return start_solution
     
 
-    def Greedy(self, inputdata:InputData):
+    def Greedy(self):
         
         print("Greedy")
 
@@ -46,11 +49,11 @@ class ConstructiveHeuristics:
 
 
         # Create Order and Order Item dictionary
-        total_order_amount = len(inputdata.orders)
+        total_order_amount = len(self.data.orders)
         greedy_order_items = dict()
-        for order in inputdata.orders:
+        for order in self.data.orders:
             if order._priority["overall"] <= total_order_amount:
-                greedy_order_items[order] = [order_item for order_item in inputdata.order_items if order_item.order_number == order.order_number]
+                greedy_order_items[order] = [order_item for order_item in self.data.order_items if order_item.order_number == order.order_number]
 
         # Initialize route plan for workers and machines
         route_plan_worker = dict()
@@ -58,12 +61,12 @@ class ConstructiveHeuristics:
 
         # All machines are available at the start - machine planned needed for machine attractiveness
         machine_planned = dict()
-        for machine in inputdata.machines:
+        for machine in self.data.machines:
             machine_planned[machine] = 0
             route_plan_machine[machine.id] = list()
             
         # Fill route plan worker by worker in sequenced time order
-        for worker in inputdata.workers:
+        for worker in self.data.workers:
             
             # Initialize variables for each worker
             attractiveness = dict()
@@ -75,16 +78,15 @@ class ConstructiveHeuristics:
             for order, order_items in greedy_order_items.items():
                 for order_item in order_items:
                         if any(order_item in value_list for value_list in worker._possible_order_items.values()):
-                            if order_item not in inputdata.planned_shifts_worker[order]:
-                                time_difference = order_item.start_time - inputdata.start_date
-                                time_difference = time_difference.total_seconds() / inputdata._seconds_a_day
+                            if order_item not in self.data.planned_shifts_worker[order]:
+                                time_difference = order_item.start_time - self.data.start_date
+                                time_difference = time_difference.total_seconds() / self.data._seconds_a_day
                                 # Attractiveness function can be tuned
-                                attractiveness[order_item] = (1/order.priority["overall"]) + order.dynamic_percentage - (time_difference / 2)
+                                attractiveness[order_item] = {"order_priority": order.priority["overall"], "dynamic_percentage": order.dynamic_percentage, "time_difference": time_difference}
 
-            # Sort order items by attractiveness
-            sorted_attractiveness = sorted(attractiveness, key=attractiveness.get, reverse=True)
+            # Activate Attractiveness function
+            sorted_attractiveness = self.order_item_attractiveness_function(attractiveness)
 
-            # Roulette wheel shaking of sorted order items if randomness is True
             
 
             # Index needed to iterate through sorted order items if a specific order item is not suitable
@@ -92,7 +94,7 @@ class ConstructiveHeuristics:
             
 
             # Add order items to route plan for each worker until worker is overworked or no suitable order item is left
-            while worker.work_hours <= inputdata._max_working_hours and len(attractiveness) > 0:
+            while worker.work_hours <= self.data._max_working_hours and len(attractiveness) > 0:
                 
                 # Break to next worker if there is no suitable order item fo the current worker
                 if index == len(sorted_attractiveness):
@@ -101,25 +103,25 @@ class ConstructiveHeuristics:
                 
                 # Select the best order item for the worker --> Could be changed to roulette wheel selection
                 best_order_item = sorted_attractiveness[index]
-                best_order = [order for order in inputdata.orders if order.order_number == best_order_item.order_number][0]
+                best_order = [order for order in self.data.orders if order.order_number == best_order_item.order_number][0]
                 
 
 
                 # Continue to next order item if worker is overworked
-                if best_order_item.duration + worker.work_hours > inputdata._max_working_hours:
+                if best_order_item.duration + worker.work_hours > self.data._max_working_hours:
                     index += 1
                     continue
                 
 
                 # Continue to next order item if worker has too many consecutive night shifts
                 if best_order_item.night_shift:
-                    if current_consecutive_night_shifts + 1 > inputdata._max_consecutive_night_shifts:
+                    if current_consecutive_night_shifts + 1 > self.data._max_consecutive_night_shifts:
                         index += 1
                         continue
                 
                 # Continue to next order item if worker has too many shifts in time period
-                if len(current_shifts_in_time_period) == inputdata._max_shifts_in_time_period:
-                    if best_order_item.start_time - current_shifts_in_time_period[0].start_time <= inputdata._time_period_for_max_shifts:
+                if len(current_shifts_in_time_period) == self.data._max_shifts_in_time_period:
+                    if best_order_item.start_time - current_shifts_in_time_period[0].start_time <= self.data._time_period_for_max_shifts:
                         index += 1
                         continue
 
@@ -127,7 +129,7 @@ class ConstructiveHeuristics:
 
                 # Assign machine to order item according to machine attractiveness
                 machine_attractiveness = dict()
-                for machine in inputdata.machines:
+                for machine in self.data.machines:
                     if best_order_item in machine._possible_order_items[best_order]:
                         
                         # Default driver value for machine attractiveness --> Highers chances to select a machine with the worker as default driver
@@ -137,7 +139,7 @@ class ConstructiveHeuristics:
                             default_driver_value = 0
                         
                         # Calculate machine attractiveness for this order item for all potential machines
-                        possible_order_items_best_order = [order_item for order_item in inputdata.order_items if order_item.order_number == best_order_item.order_number]
+                        possible_order_items_best_order = [order_item for order_item in self.data.order_items if order_item.order_number == best_order_item.order_number]
                         machine_attractiveness[machine] = machine_planned[machine] + len(machine._default_drivers) + len(possible_order_items_best_order) + default_driver_value
                 
 
@@ -164,7 +166,7 @@ class ConstructiveHeuristics:
                         route_plan_machine[best_machine.id].append(best_order_item.id)
                         machine_planned[best_machine] += 1
                         task_assigned = True
-                        inputdata.planned_shifts_machine[best_order].append(best_order_item)
+                        self.data.planned_shifts_machine[best_order].append(best_order_item)
 
                     # If the machine has planned order items, assign the order item to the machine according to the order item's predecessors and successors
                     elif len(route_plan_machine[best_machine.id]) > 0:
@@ -172,7 +174,7 @@ class ConstructiveHeuristics:
                         
                         # Check predecerssor and successor of the order item
                         while not task_assigned:
-                            current_order_item = next((order_item for order_item in inputdata.order_items if order_item.id == route_plan_machine[best_machine.id][order_item_index]))
+                            current_order_item = next((order_item for order_item in self.data.order_items if order_item.id == route_plan_machine[best_machine.id][order_item_index]))
                             
                             # If the best order item is not a successor or predecessor of the current order item it can not be assigned to the machine
                             # Continue to next machine in machine_attractiveness
@@ -185,7 +187,7 @@ class ConstructiveHeuristics:
                                 route_plan_machine[best_machine.id].insert(order_item_index, best_order_item.id)
                                 machine_planned[best_machine] += 1
                                 task_assigned = True
-                                inputdata.planned_shifts_machine[best_order].append(best_order_item)
+                                self.data.planned_shifts_machine[best_order].append(best_order_item)
                             
                             # Check next order item in route plan of the machine for predecessors and successors
                             order_item_index += 1
@@ -197,7 +199,7 @@ class ConstructiveHeuristics:
                                     route_plan_machine[best_machine.id].append(best_order_item.id)
                                     machine_planned[best_machine] += 1
                                     task_assigned = True
-                                    inputdata.planned_shifts_machine[best_order].append(best_order_item)
+                                    self.data.planned_shifts_machine[best_order].append(best_order_item)
                                 # If the current order item is not a predecessor of the best order item, continue to next machine in machine_attractiveness
                                 else:
                                     machine_index += 1
@@ -209,7 +211,7 @@ class ConstructiveHeuristics:
 
                     # Update current shifts in time period for controlling the maximum shifts in a time period
                     for i in range(len(current_shifts_in_time_period) - 1, -1, -1):
-                        if best_order_item.start_time - current_shifts_in_time_period[i].start_time > inputdata._time_period_for_max_shifts:
+                        if best_order_item.start_time - current_shifts_in_time_period[i].start_time > self.data._time_period_for_max_shifts:
                             current_shifts_in_time_period.pop(i)
                     
                     current_shifts_in_time_period.append(best_order_item)
@@ -221,8 +223,8 @@ class ConstructiveHeuristics:
                         current_consecutive_night_shifts = 0
 
                     # Update planned shifts for the worker and dynamic percentage of the order
-                    inputdata.planned_shifts_worker[best_order].append(best_order_item)
-                    best_order.dynamic_percentage = len(inputdata.planned_shifts_worker[best_order]) / len(greedy_order_items[best_order])
+                    self.data.planned_shifts_worker[best_order].append(best_order_item)
+                    best_order.dynamic_percentage = len(self.data.planned_shifts_worker[best_order]) / len(greedy_order_items[best_order])
 
                     # Include the order item in the route plan of the worker
                     route_plan_worker[worker.personal_number].append(best_order_item.id)
@@ -234,54 +236,32 @@ class ConstructiveHeuristics:
                     attractiveness = dict()
                     for order, order_items in greedy_order_items.items():
                         for order_item in order_items:
-                            if order_item not in inputdata.planned_shifts_worker[order]:
+                            if order_item not in self.data.planned_shifts_worker[order]:
                                 if order_item in worker._successors[best_order_item]:
                                     time_difference = order_item.start_time - best_order_item.end_time
-                                    time_difference = time_difference.total_seconds() / inputdata._seconds_a_day
-                                    print(f"Time difference: {time_difference}")
-                                    # Attractiveness function can be tuned
-                                    attractiveness[order_item] = (1/order.priority["overall"]) + order.dynamic_percentage - (time_difference / 2)
-                    
-                    # Sort order items by attractiveness for the next iteration
-                    sorted_attractiveness = sorted(attractiveness, key=attractiveness.get, reverse=True)
+                                    time_difference = time_difference.total_seconds() / self.data._seconds_a_day
+                                    attractiveness[order_item] = {"order_priority": order.priority["overall"], "dynamic_percentage": order.dynamic_percentage, "time_difference": time_difference}
 
-                    # Roulette wheel shaking of sorted order items if randomness is True
-                    
+                    # Activate Attractiveness function
+                    sorted_attractiveness = self.order_item_attractiveness_function(attractiveness)
 
                     # Reset index for the next iteration
                     index = 0
 
                     
 
-
-        # Print results
-        for worker in inputdata.workers:        
-            print(f"Route plan for worker {worker.personal_number}: {route_plan_worker[worker.personal_number]}")
-            print(f"Work hours for worker {worker.personal_number}: {worker.work_hours}")
-
-
-        for machine in inputdata.machines:
-            print(f"Route plan for machine {machine.id}: {route_plan_machine[machine.id]}")
-        
-        sum_of_dynamic_percentage = 0
-        for order in inputdata.orders:
-            order.dynamic_percentage = len(inputdata.planned_shifts_machine[order]) / len(greedy_order_items[order])
-            sum_of_dynamic_percentage += order.dynamic_percentage
-            print(f"Order {order.order_number} has dynamic percentage {order.dynamic_percentage}")
-        print(f"Sum of dynamic percentage: {sum_of_dynamic_percentage}")
-
         # Caluclate sum of planned shifts in comparison to all order items
         sum_of_planned_shifts = 0
-        for order in inputdata.orders:
-            sum_of_planned_shifts += len(inputdata.planned_shifts_worker[order])
+        for order in self.data.orders:
+            sum_of_planned_shifts += len(self.data.planned_shifts_worker[order])
         sum_of_order_items = 0
-        for order in inputdata.orders:
+        for order in self.data.orders:
             sum_of_order_items += len(greedy_order_items[order])
         
 
 
         # Check feasibility of the solution
-        start_solution = Solution(route_plan_worker, route_plan_machine, inputdata)
+        start_solution = Solution(route_plan_worker, route_plan_machine, self.data)
         
         feasible = start_solution.feasibility_check()
 
@@ -292,31 +272,56 @@ class ConstructiveHeuristics:
 
 
 
-    def roulette_shuffle(self,input_dict):
-        """
-        Creates a new shuffled dictionary based on a roulette-wheel approach, 
-        preserving relative probabilities even for float weights.
-        
-        Args:
-            input_dict (dict): A dictionary where keys are 'order_item' (objects) 
-                            and values are 'attractiveness' (weights as floats).
-        
-        Returns:
-            dict: A newly shuffled dictionary where order is influenced by the attractiveness values.
-        """
-        # Extract keys (items) and their associated weights (attractiveness values)
-        items = list(input_dict.keys())
-        weights = list(input_dict.values())
-        
-        # Scale weights to integers while preserving proportionality
-        scale_factor = 1000  # Use a large enough scale to preserve relative differences
-        scaled_weights = [round(weight * scale_factor) for weight in weights]
-        
+    def order_item_attractiveness_function(self, attractiveness):
+        ''' Attractiveness function for order items'''
 
-        # Create a new shuffled list using the roulette-wheel approach
-        shuffled_items = random.sample(items, len(items), counts=scaled_weights)
-        
-        # Create a new dictionary based on the shuffled order
-        shuffled_dict = {item: input_dict[item] for item in shuffled_items}
-        
-        return shuffled_dict
+        if self.order_item_attractiveness_technique == "balanced_greedy":
+            for order_item, attributes in attractiveness.items():
+                attractiveness[order_item] = (1/attributes["order_priority"]) + attributes["dynamic_percentage"] + (1/attributes["time_difference"])
+
+            sorted_attractiveness = sorted(attractiveness, key=attractiveness.get, reverse=True)
+
+
+        elif self.order_item_attractiveness_technique == "time_difference_importance":
+            for order_item, attributes in attractiveness.items():
+                attractiveness[order_item]["value"] = (1/attributes["order_priority"]) + attributes["dynamic_percentage"]
+
+            sorted_attractiveness = sorted(attractiveness, key=lambda x: (attractiveness[x]["time_difference"], -attractiveness[x]["value"]))
+
+
+        elif self.order_item_attractiveness_technique == "dynamic_percentage_importance":
+            for order_item, attributes in attractiveness.items():
+                attractiveness[order_item]["value"] = (1/attributes["order_priority"]) + (1/attributes["time_difference"])
+
+            sorted_attractiveness = sorted(attractiveness, key=lambda x: (attractiveness[x]["dynamic_percentage"], -attractiveness[x]["value"]))
+
+
+        elif self.order_item_attractiveness_technique == "order_priority_importance":
+            for order_item, attributes in attractiveness.items():
+                attractiveness[order_item]["value"] = attributes["dynamic_percentage"] + (1/attributes["time_difference"])
+
+            sorted_attractiveness = sorted(attractiveness, key=lambda x: (attractiveness[x]["order_priority"], -attractiveness[x]["value"]))
+
+
+        return sorted_attractiveness
+    
+
+
+    def machine_attractiveness_function(self, attractiveness):
+        ''' Attractiveness function for machines'''
+
+        if self.machine_attractiveness_technique == "balanced_greedy":
+            for machine, value in attractiveness.items():
+                attractiveness[machine] = value
+
+            sorted_attractiveness = sorted(attractiveness, key=attractiveness.get, reverse=True)
+
+
+        elif self.machine_attractiveness_technique == "default_driver_importance":
+            for machine, value in attractiveness.items():
+                attractiveness[machine] = value
+
+            sorted_attractiveness = sorted(attractiveness, key=lambda x: (attractiveness[x], -len(x._default_drivers)))
+
+
+        return sorted_attractiveness
