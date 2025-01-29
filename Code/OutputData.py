@@ -42,7 +42,7 @@ class Solution:
                 f"Commute distance: {round(self.total_commute_distance, 2)}\n"
                 f"Transport distance: {round(self.total_transport_distance, 2)}\n"
                 f"Number of workers: {self.number_of_workers}\n"
-                f"Number of machines: {self.number_of_machines}\n")
+                f"Number of machines: {self.number_of_machines}")
     
 
     def repair_solution(self):
@@ -76,8 +76,6 @@ class Solution:
             "Machine_route_plan": self.route_plan_machine
         }
 
-        print(self.data._parent_folder)
-        print(self.data._data_path)
 
         print("\nCreating output file...")
 
@@ -86,7 +84,7 @@ class Solution:
 
         # Build the output file path
         output_file_path = os.path.join(
-            base_directory, "Data", "Solution", "Greedy",  self.data._parent_folder, f"Greedy_Solution_{order_item_attractiveness_technique}_{machine_attractiveness_technique}_{self.data.instance}.json"
+            base_directory, "Data", "Solution", "Greedy_Testing",  self.data._parent_folder, f"OI_{order_item_attractiveness_technique}_M_{machine_attractiveness_technique}_{self.data.instance}.json"
         )
 
         # Ensure the directory exists
