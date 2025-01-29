@@ -67,17 +67,38 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
+machine_attractiveness_techniques = ["balanced_greedy",
+                                     "posible_order_items_best_order_importance",
+                                     "machine_planned_importance",
+                                     "worker_default_driver_importance",
+                                     "possible_default_drivers_importance"]
+
+order_item_attractiveness_techniques = ["balanced_greedy",
+                                        "order_priority_importance",
+                                        "dynamic_percentage_importance",
+                                        "time_difference_importance"]
+
+                                     
 
 def main():
+    for instance in instances:
+        for machine_attractiveness_technique in machine_attractiveness_techniques:
+            for order_item_attractiveness_technique in order_item_attractiveness_techniques:
+                print("Instance: ", instance)
+                print("Machine Attractiveness Technique: ", machine_attractiveness_technique)
+                print("Order Item Attractiveness Technique: ", order_item_attractiveness_technique)
+                print("\n")
+                single_run(instance, order_item_attractiveness_technique, machine_attractiveness_technique)
+                print("\n")
 
-    instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
+
+
+def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", order_item_attractiveness_technique="balanced_greedy", machine_attractiveness_technique="balanced_greedy"):
+
     data = InputData(instance_filename)
     evaluationLogic = EvaluationLogic(data)
     
     construct = ConstructiveHeuristics(solutionPool= None, evaluationLogic = evaluationLogic)
-
-    machine_attractiveness_technique="None"
-    order_item_attractiveness_technique="order_priority_importance"
 
     solution = construct.Run(data, order_item_attractiveness_technique, machine_attractiveness_technique)
 
@@ -94,7 +115,7 @@ def main():
 
 
 def TestInputData():
-    instance_filename = "Construction_a5_o96_m10_an10_ar10_reduced.json"
+    instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
 
     # Erstellen einer InputData-Instanz
     data = InputData(instance_filename)
@@ -158,5 +179,5 @@ def TestInputData():
 
     
 if __name__ == "__main__":
-    TestInputData()
-    #main()
+    #TestInputData()
+    main()

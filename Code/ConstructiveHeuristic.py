@@ -49,11 +49,9 @@ class ConstructiveHeuristics:
 
 
         # Create Order and Order Item dictionary
-        total_order_amount = len(self.data.orders)
         greedy_order_items = dict()
         for order in self.data.orders:
-            if order._priority["overall"] <= total_order_amount:
-                greedy_order_items[order] = [order_item for order_item in self.data.order_items if order_item.order_number == order.order_number]
+            greedy_order_items[order] = [order_item for order_item in self.data.order_items if order_item.order_number == order.order_number]
 
         # Initialize route plan for workers and machines
         route_plan_worker = dict()
@@ -62,7 +60,7 @@ class ConstructiveHeuristics:
         # All machines are available at the start - machine planned needed for machine attractiveness
         machine_planned = dict()
         for machine in self.data.machines:
-            machine_planned[machine] = 0
+            machine_planned[machine] = False
             route_plan_machine[machine.id] = list()
             
         # Fill route plan worker by worker in sequenced time order
@@ -82,10 +80,13 @@ class ConstructiveHeuristics:
                                 time_difference = order_item.start_time - self.data.start_date
                                 time_difference = time_difference.total_seconds() / self.data._seconds_a_day
                                 # Attractiveness function can be tuned
-                                attractiveness[order_item] = {"order_priority": order.priority["overall"], "dynamic_percentage": order.dynamic_percentage, "time_difference": time_difference}
+                                attractiveness[order_item] = {"order_priority": order.priority["borda_count_ahp"], "dynamic_percentage": order.dynamic_percentage, "time_difference": time_difference}
 
-            # Activate Attractiveness function
-            sorted_attractiveness = self.order_item_attractiveness_function(attractiveness)
+            # Activate Attractiveness function and break to continue with next worker if no suitable order item is left
+            if len(attractiveness) > 0:
+                sorted_attractiveness = self.order_item_attractiveness_function(attractiveness)
+            else:
+                continue
 
             
 
@@ -134,17 +135,21 @@ class ConstructiveHeuristics:
                         
                         # Default driver value for machine attractiveness --> Highers chances to select a machine with the worker as default driver
                         if worker.personal_number in machine._default_drivers:
-                            default_driver_value = 10
+                            default_driver = True
                         else:
-                            default_driver_value = 0
+                            default_driver = False
                         
                         # Calculate machine attractiveness for this order item for all potential machines
-                        possible_order_items_best_order = [order_item for order_item in self.data.order_items if order_item.order_number == best_order_item.order_number]
-                        machine_attractiveness[machine] = machine_planned[machine] + len(machine._default_drivers) + len(possible_order_items_best_order) + default_driver_value
+                        possible_order_items_best_order = [order_item for order_item in self.data.order_items if order_item in machine._possible_order_items[best_order] and order_item not in self.data.planned_shifts_machine[best_order]]
+                        machine_attractiveness[machine] = {"machine_planned": machine_planned[machine],
+                                                           "worker_default_driver": default_driver,
+                                                           "possible_default_drivers": len(machine._default_drivers),
+                                                           "posible_order_items_best_order": len(possible_order_items_best_order)}
+                        
                 
 
                 # Sort machines by attractiveness
-                sorted_machines = sorted(machine_attractiveness, key=machine_attractiveness.get, reverse=True)
+                sorted_machine_attractiveness = self.machine_attractiveness_function(machine_attractiveness)
 
                 # Index needed to iterate through sorted machines if a specific machine is not suitable
                 machine_index = 0
@@ -154,17 +159,17 @@ class ConstructiveHeuristics:
                 while not task_assigned:
                     
                     # Break to next order item if there is no suitable machine for the current order item
-                    if machine_index == len(sorted_machines):
+                    if machine_index == len(sorted_machine_attractiveness):
                         index += 1
                         break
                     
                     # Select the best machine for the order item --> Could be changed to roulette wheel selection
-                    best_machine = sorted_machines[machine_index]
+                    best_machine = sorted_machine_attractiveness[machine_index]
 
                     # If the machine has no planned order items yet, assign the order item to the machine
                     if len(route_plan_machine[best_machine.id]) == 0:
                         route_plan_machine[best_machine.id].append(best_order_item.id)
-                        machine_planned[best_machine] += 1
+                        machine_planned[best_machine] = True
                         task_assigned = True
                         self.data.planned_shifts_machine[best_order].append(best_order_item)
 
@@ -185,7 +190,6 @@ class ConstructiveHeuristics:
                             # If the current order item is a successor of the best order item, assign the best order item to the machine before the current order item
                             if current_order_item in best_machine._successors[best_order_item]:
                                 route_plan_machine[best_machine.id].insert(order_item_index, best_order_item.id)
-                                machine_planned[best_machine] += 1
                                 task_assigned = True
                                 self.data.planned_shifts_machine[best_order].append(best_order_item)
                             
@@ -197,7 +201,6 @@ class ConstructiveHeuristics:
                                 # If the current order item is a predecessor of the best order item, assign the best order item to the machine after the current order item (in the end of the route plan)
                                 if current_order_item in best_machine._predecessors[best_order_item]:
                                     route_plan_machine[best_machine.id].append(best_order_item.id)
-                                    machine_planned[best_machine] += 1
                                     task_assigned = True
                                     self.data.planned_shifts_machine[best_order].append(best_order_item)
                                 # If the current order item is not a predecessor of the best order item, continue to next machine in machine_attractiveness
@@ -240,10 +243,13 @@ class ConstructiveHeuristics:
                                 if order_item in worker._successors[best_order_item]:
                                     time_difference = order_item.start_time - best_order_item.end_time
                                     time_difference = time_difference.total_seconds() / self.data._seconds_a_day
-                                    attractiveness[order_item] = {"order_priority": order.priority["overall"], "dynamic_percentage": order.dynamic_percentage, "time_difference": time_difference}
+                                    attractiveness[order_item] = {"order_priority": order.priority["borda_count_ahp"], "dynamic_percentage": order.dynamic_percentage, "time_difference": time_difference}
 
-                    # Activate Attractiveness function
-                    sorted_attractiveness = self.order_item_attractiveness_function(attractiveness)
+                    # Activate Attractiveness function and break to next worker if no suitable order item is left
+                    if len(attractiveness) > 0:
+                        sorted_attractiveness = self.order_item_attractiveness_function(attractiveness)
+                    else:
+                        break
 
                     # Reset index for the next iteration
                     index = 0
@@ -266,6 +272,7 @@ class ConstructiveHeuristics:
         feasible = start_solution.feasibility_check()
 
         if feasible:
+            print("Solution is feasible")
             return start_solution
         else:
             raise Exception("Solution is not feasible")
@@ -275,6 +282,67 @@ class ConstructiveHeuristics:
     def order_item_attractiveness_function(self, attractiveness):
         ''' Attractiveness function for order items'''
 
+        print("Order Item Attractiveness")
+        print(attractiveness)
+
+
+        min_order_priority = min(attributes["order_priority"] for attributes in attractiveness.values())
+        max_order_priority = max(attributes["order_priority"] for attributes in attractiveness.values())
+
+        min_time_difference = min(attributes["time_difference"] for attributes in attractiveness.values())
+        max_time_difference = max(attributes["time_difference"] for attributes in attractiveness.values())
+
+        if self.order_item_attractiveness_technique == "balanced_greedy":
+            for order_item, attributes in attractiveness.items():
+                order_priority_value = (max_order_priority - attributes["order_priority"]) / (max_order_priority - min_order_priority + 1e-6)
+                dynamic_percentage_value = attributes["dynamic_percentage"]
+                time_difference_value = (max_time_difference - attributes["time_difference"]) / (max_time_difference - min_time_difference + 1e-6)
+
+                attractiveness[order_item] = order_priority_value + dynamic_percentage_value + time_difference_value
+
+            sorted_attractiveness = sorted(attractiveness, key=attractiveness.get, reverse=True)
+
+        
+        elif self.order_item_attractiveness_technique == "order_priority_importance":
+            for order_item, attributes in attractiveness.items():
+                order_priority_value = (max_order_priority - attributes["order_priority"]) / (max_order_priority - min_order_priority + 1e-6)
+                dynamic_percentage_value = attributes["dynamic_percentage"]
+                time_difference_value = (max_time_difference - attributes["time_difference"]) / (max_time_difference - min_time_difference + 1e-6)
+
+                attractiveness[order_item] = {"order_priority": order_priority_value, "value": dynamic_percentage_value + time_difference_value}
+
+            sorted_attractiveness = sorted(attractiveness.keys(), key=lambda x: (attractiveness[x]["order_priority"], attractiveness[x]["value"]), reverse=True)
+
+
+        elif self.order_item_attractiveness_technique == "dynamic_percentage_importance":
+            for order_item, attributes in attractiveness.items():
+                order_priority_value = (max_order_priority - attributes["order_priority"]) / (max_order_priority - min_order_priority + 1e-6)
+                dynamic_percentage_value = attributes["dynamic_percentage"]
+                time_difference_value = (max_time_difference - attributes["time_difference"]) / (max_time_difference - min_time_difference + 1e-6)
+
+                attractiveness[order_item] = {"dynamic_percentage": dynamic_percentage_value, "value": order_priority_value + time_difference_value}
+
+            sorted_attractiveness = sorted(attractiveness.keys(), key=lambda x: (attractiveness[x]["dynamic_percentage"], attractiveness[x]["value"]), reverse=True)
+
+
+        elif self.order_item_attractiveness_technique == "time_difference_importance":
+            for order_item, attributes in attractiveness.items():
+                order_priority_value = (max_order_priority - attributes["order_priority"]) / (max_order_priority - min_order_priority + 1e-6)
+                dynamic_percentage_value = attributes["dynamic_percentage"]
+                time_difference_value = (max_time_difference - attributes["time_difference"]) / (max_time_difference - min_time_difference + 1e-6)
+
+                attractiveness[order_item] = {"time_difference": time_difference_value, "value": order_priority_value + dynamic_percentage_value}
+
+            sorted_attractiveness = sorted(attractiveness.keys(), key=lambda x: (attractiveness[x]["time_difference"], attractiveness[x]["value"]), reverse=True)
+
+        
+
+        return sorted_attractiveness
+
+
+
+        # Non scaled version
+        '''
         if self.order_item_attractiveness_technique == "balanced_greedy":
             for order_item, attributes in attractiveness.items():
                 attractiveness[order_item] = (1/attributes["order_priority"]) + attributes["dynamic_percentage"] + (1/attributes["time_difference"])
@@ -293,7 +361,7 @@ class ConstructiveHeuristics:
             for order_item, attributes in attractiveness.items():
                 attractiveness[order_item]["value"] = (1/attributes["order_priority"]) + (1/attributes["time_difference"])
 
-            sorted_attractiveness = sorted(attractiveness, key=lambda x: (attractiveness[x]["dynamic_percentage"], -attractiveness[x]["value"]))
+            sorted_attractiveness = sorted(attractiveness, key=lambda x: (-attractiveness[x]["dynamic_percentage"], -attractiveness[x]["value"]))
 
 
         elif self.order_item_attractiveness_technique == "order_priority_importance":
@@ -301,27 +369,123 @@ class ConstructiveHeuristics:
                 attractiveness[order_item]["value"] = attributes["dynamic_percentage"] + (1/attributes["time_difference"])
 
             sorted_attractiveness = sorted(attractiveness, key=lambda x: (attractiveness[x]["order_priority"], -attractiveness[x]["value"]))
-
-
+        
+            
         return sorted_attractiveness
-    
+        '''
+
+        
+
+        
 
 
     def machine_attractiveness_function(self, attractiveness):
         ''' Attractiveness function for machines'''
 
+        
+
+        min_drivers = min(attributes["possible_default_drivers"] for attributes in attractiveness.values())
+        max_drivers = max(attributes["possible_default_drivers"] for attributes in attractiveness.values())
+
+        min_order_items = min(attributes["posible_order_items_best_order"] for attributes in attractiveness.values())
+        max_order_items = max(attributes["posible_order_items_best_order"] for attributes in attractiveness.values())
+
+
         if self.machine_attractiveness_technique == "balanced_greedy":
-            for machine, value in attractiveness.items():
-                attractiveness[machine] = value
+            for machine, attributes in attractiveness.items():
+                machine_planned_value = 1 if attributes["machine_planned"] else 0
+                default_driver_value = 1 if attributes["worker_default_driver"] else 0
+
+                possible_default_drivers_value = ((attributes["possible_default_drivers"] - min_drivers) / (max_drivers - min_drivers + 1e-6))
+                possible_order_items_value = ((attributes["posible_order_items_best_order"] - min_order_items) / (max_order_items - min_order_items + 1e-6))
+
+                attractiveness[machine] = (machine_planned_value + default_driver_value + possible_default_drivers_value + possible_order_items_value)
 
             sorted_attractiveness = sorted(attractiveness, key=attractiveness.get, reverse=True)
 
 
-        elif self.machine_attractiveness_technique == "default_driver_importance":
-            for machine, value in attractiveness.items():
-                attractiveness[machine] = value
+        elif self.machine_attractiveness_technique == "machine_planned_importance":
+            for machine, attributes in attractiveness.items():
+                machine_planned_value = 1 if attributes["machine_planned"] else 0
+                default_driver_value = 1 if attributes["worker_default_driver"] else 0
 
-            sorted_attractiveness = sorted(attractiveness, key=lambda x: (attractiveness[x], -len(x._default_drivers)))
+                possible_default_drivers_value = ((attributes["possible_default_drivers"] - min_drivers) / (max_drivers - min_drivers + 1e-6))
+                possible_order_items_value = ((attributes["posible_order_items_best_order"] - min_order_items) / (max_order_items - min_order_items + 1e-6))
 
+                attractiveness[machine] = {"machine_planned": machine_planned_value, "value": default_driver_value + possible_default_drivers_value + possible_order_items_value}
+
+            sorted_attractiveness = sorted(attractiveness.keys(), key=lambda x: (attractiveness[x]["machine_planned"], attractiveness[x]["value"]), reverse=True)
+
+        
+        elif self.machine_attractiveness_technique == "worker_default_driver_importance":
+            for machine, attributes in attractiveness.items():
+                machine_planned_value = 1 if attributes["machine_planned"] else 0
+                default_driver_value = 1 if attributes["worker_default_driver"] else 0
+
+                possible_default_drivers_value = ((attributes["possible_default_drivers"] - min_drivers) / (max_drivers - min_drivers + 1e-6))
+                possible_order_items_value = ((attributes["posible_order_items_best_order"] - min_order_items) / (max_order_items - min_order_items + 1e-6))
+
+                attractiveness[machine] = {"worker_default_driver": default_driver_value, "value": machine_planned_value + possible_default_drivers_value + possible_order_items_value}
+
+            sorted_attractiveness = sorted(attractiveness.keys(), key=lambda x: (attractiveness[x]["worker_default_driver"], attractiveness[x]["value"]), reverse=True)
+
+        
+        elif self.machine_attractiveness_technique == "possible_default_drivers_importance":
+            for machine, attributes in attractiveness.items():
+                machine_planned_value = 1 if attributes["machine_planned"] else 0
+                default_driver_value = 1 if attributes["worker_default_driver"] else 0
+
+                possible_default_drivers_value = ((attributes["possible_default_drivers"] - min_drivers) / (max_drivers - min_drivers + 1e-6))
+                possible_order_items_value = ((attributes["posible_order_items_best_order"] - min_order_items) / (max_order_items - min_order_items + 1e-6))
+
+                attractiveness[machine] = {"possible_default_drivers": possible_default_drivers_value, "value": machine_planned_value + default_driver_value + possible_order_items_value}
+
+            sorted_attractiveness = sorted(attractiveness.keys(), key=lambda x: (attractiveness[x]["possible_default_drivers"], attractiveness[x]["value"]), reverse=True)
+
+
+
+
+        elif self.machine_attractiveness_technique == "posible_order_items_best_order_importance":
+            for machine, attributes in attractiveness.items():
+                machine_planned_value = 1 if attributes["machine_planned"] else 0
+                default_driver_value = 1 if attributes["worker_default_driver"] else 0
+
+                possible_default_drivers_value = ((attributes["possible_default_drivers"] - min_drivers) / (max_drivers - min_drivers + 1e-6))
+                possible_order_items_value = ((attributes["posible_order_items_best_order"] - min_order_items) / (max_order_items - min_order_items + 1e-6))
+
+                attractiveness[machine] = {"posible_order_items_best_order": possible_order_items_value, "value": machine_planned_value + default_driver_value + possible_default_drivers_value}
+
+            sorted_attractiveness = sorted(attractiveness.keys(), key=lambda x: (attractiveness[x]["posible_order_items_best_order"], attractiveness[x]["value"]), reverse=True)
+
+        
+        return sorted_attractiveness
+
+
+        # Non scaled version
+        '''
+        if self.machine_attractiveness_technique == "balanced_greedy":
+            for machine, attributes in attractiveness.items():
+                machine_planned_value = 1 if attributes["machine_planned"] else 0
+                default_driver_value = 1 if attributes["worker_default_driver"] else 0
+
+                attractiveness[machine] = (machine_planned_value + default_driver_value - (1/(attributes["possible_default_drivers"] + 0.001)) - (1/attributes["posible_order_items_best_order"] + 0.001))
+
+            sorted_attractiveness = sorted(attractiveness, key=attractiveness.get, reverse=True)
+
+
+        elif self.machine_attractiveness_technique == "machine_planned_importance":
+            for machine, attributes in attractiveness.items():
+                machine_planned_value = 1 if attributes["machine_planned"] else 0
+                default_driver_value = 1 if attributes["worker_default_driver"] else 0
+
+                attractiveness[machine]["value"] = (default_driver_value) - (1/(attributes["possible_default_drivers"] + 0.001)) - (1/attributes["posible_order_items_best_order"] + 0.001)
+
+            sorted_attractiveness = sorted(attractiveness, key=lambda x: (attractiveness[x]["machine_planned"], -attractiveness[x]["value"]))
 
         return sorted_attractiveness
+        '''
+
+
+
+
+        

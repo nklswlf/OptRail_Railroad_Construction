@@ -18,15 +18,7 @@ class InputData:
         self._data_path, self._parent_folder = self._find_instance_file()
 
         # AHP weights for the different criteria
-        self._ahp_weights = {"order_item_count": 0.5,
-                            "regular_driver_count": 0.2,
-                            "worker_distance": 0.1,
-                            "transport_distance": 0.1,
-                            "machine_type_count": 0.05,
-                            "worker_qualification_count": 0.05
-                            }
-        
-        self.wzischenzeit = {"order_item_count": 0.54437184,
+        self._ahp_weights = {"order_item_count": 0.54437184,
                             "regular_driver_count": 0.1707523,
                             "worker_distance": 0.12839376,
                             "transport_distance": 0.07315951,
@@ -113,16 +105,8 @@ class InputData:
             "order_item_count"
         )
 
-        # 2. Calculate rank for machine_type_count (fewer machine types are better)
-        self.calculate_rank(
-            self.orders, 
-            lambda order: len(set(
-                item.machine_type for item in self.order_items if item.order_number == order.order_number
-            )), 
-            "machine_type_count"
-        )
 
-        # 3. Calculate rank for regular_driver_count (more regular drivers are better)
+        # 2. Calculate rank for regular_driver_count (more regular drivers are better)
         machine_types = {
             order.order_number: set(
                 item.machine_type for item in self.order_items if item.order_number == order.order_number
@@ -144,7 +128,7 @@ class InputData:
             reverse=True
         )
 
-        # 4. Calculate rank for worker_distance (shorter distances are better)
+        # 3. Calculate rank for worker_distance (shorter distances are better)
         worker_distances = {
             order.order_number: sum(
                 self.work_routes[worker.personal_number][order.site_number]
@@ -158,7 +142,7 @@ class InputData:
             "worker_distance"
         )
 
-        # 5. Calculate rank for transport_distance (shorter distances are better)
+        # 4. Calculate rank for transport_distance (shorter distances are better)
         transport_distances = {
             order.order_number: sum(
                 self.transport_routes[order.site_number][site]
@@ -171,6 +155,16 @@ class InputData:
             lambda order: transport_distances[order.order_number], 
             "transport_distance"
         )
+
+        # 5. Calculate rank for machine_type_count (fewer machine types are better)
+        self.calculate_rank(
+            self.orders, 
+            lambda order: len(set(
+                item.machine_type for item in self.order_items if item.order_number == order.order_number
+            )), 
+            "machine_type_count"
+        )
+    
 
         # 6. Calculate rank for worker_qualification_count (fewer qualifications are better)
         worker_qualifications = {
@@ -188,10 +182,10 @@ class InputData:
         )
 
         # Print current priorities for each order and the ahp weights
-        print("Order priorities calculated with different criteria:")
-        for order in self.orders:
-            print(f"Order {order.order_number}: {order._priority}")
-        print(f"AHP weights: {self._ahp_weights}")
+        #print("Order priorities calculated with different criteria:")
+        #for order in self.orders:
+        #    print(f"Order {order.order_number}: {order._priority}")
+        #print(f"AHP weights: {self._ahp_weights}")
         
 
         # 7. Calculate overall Rank with Borda Count
@@ -200,34 +194,58 @@ class InputData:
 
 
 
-    def calculate_borda_count_ahp(self):
+    def calculate_borda_count_ahp(self, ahp=True):
         """
         Calculate the overall priority rank using Borda Count combined with Analytic Hierarchy Process (AHP).
         """
+        if ahp:
+            borda_count_ahp = {
+                order.order_number: sum(
+                    (len(self.orders) - rank + 1)
+                    * self._ahp_weights[rank_name]
+                    for rank_name, rank in order._priority.items()
+                )
+                for order in self.orders
+            }
 
-        borda_count_ahp = {
-            order.order_number: sum(
-                (len(self.orders) - rank)
-                * self._ahp_weights[rank_name]
-                for rank_name, rank in order._priority.items()
+            #print("Borda Count and AHP weights:")
+            #for order in self.orders:
+            #    print(f"Order {order.order_number}: {borda_count_ahp[order.order_number]:.2f}")
+
+            self.calculate_rank(
+                self.orders, 
+                lambda order: borda_count_ahp[order.order_number], 
+                "borda_count_ahp", 
+                reverse=True
             )
-            for order in self.orders
-        }
+            
+            #print("Order priorities calculated with Borda Count and AHP:")
+            #for order in self.orders:
+            #    print(f"Order {order.order_number}: {order._priority['borda_count_ahp']:.2f}")
 
-        print("Borda Count and AHP weights:")
-        for order in self.orders:
-            print(f"Order {order.order_number}: {borda_count_ahp[order.order_number]:.2f}")
+        elif not ahp:
+            borda_count = {
+                order.order_number: sum(
+                    (len(self.orders) - rank + 1)
+                    for rank_name, rank in order._priority.items()
+                )
+                for order in self.orders
+            }
 
-        self.calculate_rank(
-            self.orders, 
-            lambda order: borda_count_ahp[order.order_number], 
-            "borda_count_ahp", 
-            reverse=True
-        )
-        
-        print("Order priorities calculated with Borda Count and AHP:")
-        for order in self.orders:
-            print(f"Order {order.order_number}: {order._priority['borda_count_ahp']:.2f}")
+            #print("Borda Count without AHP weights:")
+            #for order in self.orders:
+            #    print(f"Order {order.order_number}: {borda_count[order.order_number]}")
+
+            self.calculate_rank(
+                self.orders, 
+                lambda order: borda_count[order.order_number], 
+                "borda_count", 
+                reverse=True
+            )
+            
+            #print("Order priorities calculated with Borda Count:")
+            #for order in self.orders:
+            #    print(f"Order {order.order_number}: {order._priority['borda_count']:.2f}")
 
 
 
