@@ -149,7 +149,11 @@ class ConstructiveHeuristics:
                 
 
                 # Sort machines by attractiveness
-                sorted_machine_attractiveness = self.machine_attractiveness_function(machine_attractiveness)
+                if len(machine_attractiveness) > 0:
+                    sorted_machine_attractiveness = self.machine_attractiveness_function(machine_attractiveness)
+                else:
+                    index += 1
+                    continue
 
                 # Index needed to iterate through sorted machines if a specific machine is not suitable
                 machine_index = 0

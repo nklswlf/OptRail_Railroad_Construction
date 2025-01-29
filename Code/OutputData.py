@@ -84,7 +84,7 @@ class Solution:
 
         # Build the output file path
         output_file_path = os.path.join(
-            base_directory, "Data", "Solution", "Greedy_Testing",  self.data._parent_folder, f"OI_{order_item_attractiveness_technique}_M_{machine_attractiveness_technique}_{self.data.instance}.json"
+            base_directory, "Data", "Solution", "Greedy_Testing",  self.data._parent_folder, self.data.instance , f"OI_{order_item_attractiveness_technique}_M_{machine_attractiveness_technique}_{self.data.instance}.json"
         )
 
         # Ensure the directory exists
