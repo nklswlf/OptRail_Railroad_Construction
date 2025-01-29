@@ -282,9 +282,6 @@ class ConstructiveHeuristics:
     def order_item_attractiveness_function(self, attractiveness):
         ''' Attractiveness function for order items'''
 
-        print("Order Item Attractiveness")
-        print(attractiveness)
-
 
         min_order_priority = min(attributes["order_priority"] for attributes in attractiveness.values())
         max_order_priority = max(attributes["order_priority"] for attributes in attractiveness.values())
