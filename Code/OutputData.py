@@ -22,6 +22,11 @@ class Solution:
         self.number_of_finished_orders = -0
         self.number_of_finished_order_items = -0
 
+        self.used_machines = []
+        self.used_workers = []
+        self.unused_machines = []
+        self.unused_workers = []
+
         self.transport_distance_per_machine = {}
         self.total_transport_distance = -0
         self.commute_distance_per_worker = {}
@@ -37,6 +42,8 @@ class Solution:
     def __str__(self) -> str:
         ''' Define the string representation of the solution'''
         return (f"Number of finished orders: {self.number_of_finished_orders}\n"
+                f"Number of semi-finished orders: {len(self.semifinished_orders)}\n"
+                f"Number of not started orders: {len(self.not_started_orders)}\n"
                 f"Number of finished order items: {self.number_of_finished_order_items}\n"
                 f"Driver violation: {self.driver_violation}\n"
                 f"Commute distance: {round(self.total_commute_distance, 2)}\n"

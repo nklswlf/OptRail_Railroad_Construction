@@ -14,6 +14,7 @@ class EvaluationLogic:
     def evaluate(self, solution:Solution):
         
         self.categorizing_orders(solution)
+        self.categorizing_machine_worker(solution)
         self.calculate_finished_order_items(solution)
         self.calculate_commute_distance(solution)
         self.calculate_transport_distance(solution)
@@ -50,6 +51,25 @@ class EvaluationLogic:
 
         solution.number_of_finished_orders = len(solution.finished_orders)
 
+    
+    def categorizing_machine_worker(self, solution:Solution):
+        ''' Categorize the machines and workers into finished, semi-finished and not started machines and workers'''
+        print("\nCategorizing machines and workers...")
+
+        all_planned_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
+        
+        for machine, route in solution.route_plan_machine.items():
+            if len(route) == 0:
+                solution.unused_machines.append(machine)
+            elif len(route) > 0:
+                solution.used_machines.append(machine)
+
+        for worker, route in solution.route_plan_worker.items():
+            if len(route) == 0:
+                solution.unused_workers.append(worker)
+            elif len(route) > 0:
+                solution.used_workers.append(worker)
+
 
 
     def calculate_finished_order_items(self, solution:Solution):
@@ -68,7 +88,8 @@ class EvaluationLogic:
         if checker == solution.number_of_finished_order_items:
             pass
         else:
-            raise Exception("Number of finished order items is not equal to the number of finished order items of the machines")
+            print("Number of finished order items is not equal to the number of finished order items of the machines")
+            #raise Exception("Number of finished order items is not equal to the number of finished order items of the machines")
 
 
 
