@@ -113,7 +113,7 @@ def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", or
 
     print(solution)
 
-    solution.create_output_file_greedy(time_for_data_loading, time_for_construction ,order_item_attractiveness_technique, machine_attractiveness_technique)
+    #solution.create_output_file_greedy(time_for_data_loading, time_for_construction ,order_item_attractiveness_technique, machine_attractiveness_technique)
 
 
 
@@ -185,4 +185,5 @@ def TestInputData():
     
 if __name__ == "__main__":
     #TestInputData()
-    main()
+    single_run()
+    #main()
