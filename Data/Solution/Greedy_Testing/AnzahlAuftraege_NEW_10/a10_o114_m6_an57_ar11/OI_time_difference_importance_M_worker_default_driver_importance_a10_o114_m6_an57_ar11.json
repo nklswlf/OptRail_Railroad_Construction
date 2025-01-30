@@ -1,4 +1,7 @@
 {
+    "Instance": "a10_o114_m6_an57_ar11",
+    "Time_for_data_loading": 0.20749592781066895,
+    "Time_for_construction": 0.03204488754272461,
     "Order_item_attractiveness_technique": "time_difference_importance",
     "Machine_attractiveness_technique": "worker_default_driver_importance",
     "Number_of_finished_orders": 7,

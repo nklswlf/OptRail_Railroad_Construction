@@ -1,4 +1,7 @@
 {
+    "Instance": "a50_o578_m28_an276_ar66",
+    "Time_for_data_loading": 36.085516691207886,
+    "Time_for_construction": 2.3935658931732178,
     "Order_item_attractiveness_technique": "balanced_greedy",
     "Machine_attractiveness_technique": "posible_order_items_best_order_importance",
     "Number_of_finished_orders": 38,

@@ -54,11 +54,14 @@ class Solution:
         pass
 
 
-    def create_output_file_greedy(self, order_item_attractiveness_technique:str, machine_attractiveness_technique:str):
+    def create_output_file_greedy(self, time_for_data_loading, time_for_construction ,order_item_attractiveness_technique:str, machine_attractiveness_technique:str):
         ''' Create the output file for the greedy solution for comparing different strategies'''
 
         # Create a dictionary for the solution
         solution = {
+            "Instance": self.data.instance,
+            "Time_for_data_loading": time_for_data_loading,
+            "Time_for_construction": time_for_construction,
             "Order_item_attractiveness_technique": order_item_attractiveness_technique,
             "Machine_attractiveness_technique": machine_attractiveness_technique,
             "Number_of_finished_orders": self.number_of_finished_orders,

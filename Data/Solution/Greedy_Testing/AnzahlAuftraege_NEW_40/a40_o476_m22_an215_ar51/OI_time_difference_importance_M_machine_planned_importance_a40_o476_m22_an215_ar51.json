@@ -1,4 +1,7 @@
 {
+    "Instance": "a40_o476_m22_an215_ar51",
+    "Time_for_data_loading": 16.24647879600525,
+    "Time_for_construction": 2.5296409130096436,
     "Order_item_attractiveness_technique": "time_difference_importance",
     "Machine_attractiveness_technique": "machine_planned_importance",
     "Number_of_finished_orders": 35,
