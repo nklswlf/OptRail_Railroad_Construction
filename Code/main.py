@@ -4,6 +4,7 @@ from ConstructiveHeuristic import *
 import pandas as pd
 from pathlib import Path
 from EvaluationLogic import *
+from time import time
 
 
 
@@ -95,20 +96,24 @@ def main():
 
 def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", order_item_attractiveness_technique="balanced_greedy", machine_attractiveness_technique="balanced_greedy"):
 
+    time_start = time()
     data = InputData(instance_filename)
+    time_end = time()
+    time_for_data_loading = time_end - time_start
+
     evaluationLogic = EvaluationLogic(data)
     
+    time_start = time()
     construct = ConstructiveHeuristics(solutionPool= None, evaluationLogic = evaluationLogic)
-
     solution = construct.Run(data, order_item_attractiveness_technique, machine_attractiveness_technique)
+    time_end = time()
+    time_for_construction = time_end - time_start
 
-    evaluation = EvaluationLogic(data)
-
-    evaluation.evaluate(solution)
+    evaluationLogic.evaluate(solution)
 
     print(solution)
 
-    solution.create_output_file_greedy(order_item_attractiveness_technique, machine_attractiveness_technique)
+    solution.create_output_file_greedy(time_for_data_loading, time_for_construction ,order_item_attractiveness_technique, machine_attractiveness_technique)
 
 
 

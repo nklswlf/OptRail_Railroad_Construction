@@ -1,4 +1,7 @@
 {
+    "Instance": "a15_o170_m9_an80_ar18",
+    "Time_for_data_loading": 0.7515120506286621,
+    "Time_for_construction": 0.07070684432983398,
     "Order_item_attractiveness_technique": "balanced_greedy",
     "Machine_attractiveness_technique": "balanced_greedy",
     "Number_of_finished_orders": 12,

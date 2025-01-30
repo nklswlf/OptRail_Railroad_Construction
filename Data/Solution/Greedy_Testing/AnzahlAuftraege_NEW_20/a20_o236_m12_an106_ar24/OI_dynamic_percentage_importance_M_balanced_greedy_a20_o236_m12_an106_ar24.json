@@ -1,4 +1,7 @@
 {
+    "Instance": "a20_o236_m12_an106_ar24",
+    "Time_for_data_loading": 1.927004098892212,
+    "Time_for_construction": 0.06630778312683105,
     "Order_item_attractiveness_technique": "dynamic_percentage_importance",
     "Machine_attractiveness_technique": "balanced_greedy",
     "Number_of_finished_orders": 11,

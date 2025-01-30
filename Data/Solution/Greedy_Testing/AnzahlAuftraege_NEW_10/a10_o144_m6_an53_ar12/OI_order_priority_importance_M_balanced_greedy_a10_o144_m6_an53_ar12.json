@@ -1,4 +1,7 @@
 {
+    "Instance": "a10_o144_m6_an53_ar12",
+    "Time_for_data_loading": 0.3369410037994385,
+    "Time_for_construction": 0.0335230827331543,
     "Order_item_attractiveness_technique": "order_priority_importance",
     "Machine_attractiveness_technique": "balanced_greedy",
     "Number_of_finished_orders": 6,

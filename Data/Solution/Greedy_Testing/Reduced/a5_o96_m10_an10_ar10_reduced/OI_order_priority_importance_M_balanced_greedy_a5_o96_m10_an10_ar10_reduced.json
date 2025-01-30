@@ -1,4 +1,7 @@
 {
+    "Instance": "a5_o96_m10_an10_ar10_reduced",
+    "Time_for_data_loading": 0.11121106147766113,
+    "Time_for_construction": 0.02207183837890625,
     "Order_item_attractiveness_technique": "order_priority_importance",
     "Machine_attractiveness_technique": "balanced_greedy",
     "Number_of_finished_orders": 5,

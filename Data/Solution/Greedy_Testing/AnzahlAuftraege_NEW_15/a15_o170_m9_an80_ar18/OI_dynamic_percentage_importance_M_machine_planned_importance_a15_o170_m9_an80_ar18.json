@@ -1,4 +1,7 @@
 {
+    "Instance": "a15_o170_m9_an80_ar18",
+    "Time_for_data_loading": 0.7317907810211182,
+    "Time_for_construction": 0.06594705581665039,
     "Order_item_attractiveness_technique": "dynamic_percentage_importance",
     "Machine_attractiveness_technique": "machine_planned_importance",
     "Number_of_finished_orders": 11,

@@ -7,7 +7,7 @@ class EvaluationLogic:
     ''' Evalution Objects to calculate objectives of the given solutions'''
 
     def __init__(self, data:InputData):
-        ''' Initialize by addinbg data'''
+        ''' Initialize by adding data'''
         self.data = data      
 
 

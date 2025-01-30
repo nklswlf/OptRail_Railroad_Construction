@@ -1,4 +1,7 @@
 {
+    "Instance": "a30_o355_m18_an148_ar42",
+    "Time_for_data_loading": 7.855149030685425,
+    "Time_for_construction": 0.7307589054107666,
     "Order_item_attractiveness_technique": "dynamic_percentage_importance",
     "Machine_attractiveness_technique": "posible_order_items_best_order_importance",
     "Number_of_finished_orders": 19,

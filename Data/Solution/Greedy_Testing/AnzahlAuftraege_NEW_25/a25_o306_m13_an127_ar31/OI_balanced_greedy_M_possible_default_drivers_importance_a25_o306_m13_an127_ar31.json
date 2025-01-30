@@ -1,4 +1,7 @@
 {
+    "Instance": "a25_o306_m13_an127_ar31",
+    "Time_for_data_loading": 3.9765701293945312,
+    "Time_for_construction": 0.4390888214111328,
     "Order_item_attractiveness_technique": "balanced_greedy",
     "Machine_attractiveness_technique": "possible_default_drivers_importance",
     "Number_of_finished_orders": 19,
