@@ -81,6 +81,7 @@ class InputData:
 
 
         self.create_priorities_orders()
+        self.connect_order_item_to_order()
 
         # Dynamic dictionary for planned shifts for greedy algorithm
         self.planned_shifts_worker = dict()
@@ -88,6 +89,15 @@ class InputData:
         for order in self.orders:
             self.planned_shifts_worker[order] = list()
             self.planned_shifts_machine[order] = list()
+
+
+    
+    def connect_order_item_to_order(self):
+        '''
+        Connect each order item to its corresponding order.
+        '''
+        for order in self.orders:
+            order.order_items = [order_item for order_item in self.order_items if order_item.order_number == order.order_number]
 
 
         
@@ -445,6 +455,10 @@ class Order:
         self._location = json_data.get("Standort", {"Item1": 0.0, "Item2": 0.0})
         self._priority = {}
         self.dynamic_percentage = 0
+
+
+
+
 
     @property
     def order_number(self) -> str:
