@@ -1,13 +1,13 @@
 from Neighborhood import *
 import math
 from copy import deepcopy
-import numpy
+import numpy as np
 import time
 
 class ImprovementAlgorithm:
     """ Base class for several types of improvement algorithms. """ 
 
-    def __init__(self, inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Swap']):
+    def __init__(self, inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Insert_Site']):
         self.InputData = inputData
 
         self.EvaluationLogic = {}
@@ -31,8 +31,8 @@ class ImprovementAlgorithm:
         
         ### NEEDS TO BE ADJUSTED FOR ORIENTEERING PROBLEMLocalSearch
 
-        if neighborhoodType == 'SwapIntraRoute':
-            return SwapIntraRouteNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
+        if neighborhoodType == 'Insert_Site':
+            return InsertSiteNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
         elif neighborhoodType == 'SwapInterRoute':
             return SwapInterRouteNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
         elif neighborhoodType == 'TwoEdgeExchange':
@@ -68,21 +68,28 @@ class ImprovementAlgorithm:
 class RepairAlgorithm(ImprovementAlgorithm):
     """ Repair algorithm to fix incomplete solutions. """
     
-    def __init__(self, inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Swap']):
+    def __init__(self, inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Insert_Site']):
         super().__init__(inputData, neighborhoodEvaluationStrategy, neighborhoodTypes)
 
     def Run(self, solution:Solution) -> Solution:
         ''' Run local search with given solutions and iterate through all given neighborhood types'''
 
-        #self.InitializeNeighborhoods()
+        self.InitializeNeighborhoods()
 
         self.GetOrderItemsToRearrange(solution)
         print("Order and Order Items to rearrange: ", self.orders_to_rearrange)
 
         destroyed_solution = self.Destroy(solution)
 
+        for neighborhoodType in self.NeighborhoodTypes:
+            print(f'\nRunning neighborhood {neighborhoodType}')
+            neighborhood = self.Neighborhoods[neighborhoodType]
+
+            repaired_solution = neighborhood.LocalSearch(self.NeighborhoodEvaluationStrategy, solution)
+            print(f'Best solution: {repaired_solution}')
+
         
-        return destroyed_solution
+        return repaired_solution
     
 
     def GetOrderItemsToRearrange(self, solution:Solution) -> list[int]:
