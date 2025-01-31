@@ -3,39 +3,29 @@ from OutputData import *
 import itertools        
 from EvaluationLogic import EvaluationLogic
 import concurrent.futures  # For parallelism
+from copy import deepcopy
+from itertools import chain
 
-# Dummy class to have one class where all Moves are inheriting --> Potential to implement more funtionalities here! 
-class BaseMove: 
-    ''' Base Move Class, that all specific Move classes can inherit from! '''
+
+class BaseMove:
 
     def __init__(self):
         self.Delta = None
-        self.RouteDayCohort = None
-        self.Day = None
-        self.Cohort = None
 
-    def setDelta(self,delta:int) -> None: 
-        ''' Set the Delta of the Move'''
-        self.Delta = delta
-
-    def setExtraTime(self,extraTime:int) -> None: 
-        ''' Set the ExtraTime of the Move'''
-        self.ExtraTime = extraTime
 
 class BaseNeighborhood:
-    ''' Framework for generally needed neighborhood functionalities'''
 
-    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng = None):
-        self.InputData = inputData
-        self.RoutePlan = None
-        self.EvaluationLogic = evaluationLogic
-        self.SolutionPool = solutionPool
-        self.RNG = rng
+    def __init__(self, data: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng=None):
+        self.data = data
+        self.routePlan = None
+        self.evaluationLogic = evaluationLogic
+        self.solutionPool = solutionPool
+        self.rng = rng
 
         # Create empty lists for discovering different moves
-        self.Moves = []
-        self.MoveSolutions = []
-        self.Type = 'None'
+        self.moves = []
+        self.moveSolutions = []
+        self.type = 'None'
 
     def DiscoverMoves(self) -> None:
         ''' Find all possible moves for particular neighborhood and permutation
@@ -70,141 +60,19 @@ class BaseNeighborhood:
     def MakeBestMove(self) -> BaseMove:
         ''' Returns the best move found from the list Move Solutions'''
         raise Exception('MakeBestMove() is not implemented for the abstract BaseNeighborhood class.')
-
-    def Update(self, new_routeplan) -> None:
+    
+    def Update(self) -> None:
         ''' Updates the actual permutation and deletes all saved Moves and Move Solutions'''
         self.Moves.clear()
         self.MoveSolutions.clear()
-        self.RoutePlan = new_routeplan
 
-    def LocalSearch(self, neighborhoodEvaluationStrategy: str, solution: Solution) -> None:
-        ''' Tries to find a better solution from the start solution by searching the neighborhod'''
-        raise Exception('LocalSearch() is not implemented for the abstract BaseNeighborhood class.')
-    
-    def MakeOneMove(self, move: BaseMove) -> Solution:
-        ''' Returns the solution of a single move'''
-        raise Exception('MakeOneMove() is not implemented for the abstract BaseNeighborhood class.')
-
-    def constructCompleteRoute(self, move:BaseMove, solution=None) -> dict: 
-        ''' Constructs the comlete Route from the Move and the BaseMove'''
-
-        adapted_Route_Plan = solution.RoutePlan if solution else self.RoutePlan
-
-        adapted_Route_Plan[move.Day][move.Cohort] = move.RouteDayCohort
-
-        return adapted_Route_Plan
-    
-    def SingleRouteFeasibilityCheck(self, route: list[int]) -> bool:
-        """
-        Checks the feasibility of a single route considering service times, travel distances, and main task constraints.
-
-        Parameters:
-        -----------
-        route : list[int]
-            A list of task IDs representing the sequence of tasks in the route. Task IDs greater than 1000 are considered main tasks.
-        
-        inputData : InputData
-            An object containing necessary input data such as distances, task details, and constraints.
-
-        Returns:
-        --------
-        bool
-            Returns True if the route is feasible, otherwise returns False.
-        """
-
-        feasible = True
-        serviceDuration = 0
-        previousTask = 0  # Start at depot
-        mainTasks = [task for task in route if task > 1000]  # Identify all main tasks in the route
-        
-        #Cache
-        distances = self.InputData.distances
-        allTasks = self.InputData.allTasks
-        maxRouteDuration = self.InputData.maxRouteDuration
-
-        if mainTasks:
-            mainIndices = [i for i, task in enumerate(route) if task in mainTasks]  # Find the indices of all main tasks
-            previousTask = 0  # Reset to depot at the start
-            current_index = 0
-            for mainIndex in mainIndices:
-                tasksBeforeMain = route[:(mainIndex - current_index)]  # Get all tasks before the current main task
-                mainTask = route[(mainIndex - current_index)]
-                tasksAfterMain = route[(mainIndex - current_index)+1:]  # Get all tasks after the current main task
-
-                # Process tasks before the main task
-                for task in tasksBeforeMain:
-                    serviceDuration += distances[previousTask][task] + allTasks[task].service_time
-                    previousTask = task
-
-                serviceDuration += distances[previousTask][mainTask]  # Add travel time to main task
-
-                # Check if the main task can be started at the earliest start time
-                if serviceDuration > allTasks[mainTask].start_time:
-                    return False
-
-                # Reset the service duration to the main task's start time and process the main task
-                serviceDuration = allTasks[mainTask].start_time + allTasks[mainTask].service_time
-                previousTask = mainTask
-
-                # Process tasks after the main task
-                route = tasksAfterMain
-                current_index += (mainIndex + 1) 
-
-            # Process remaining tasks after the last main task
-            for task in route:
-                serviceDuration += distances[previousTask][task] + allTasks[task].service_time
-                previousTask = task
-
-            serviceDuration += distances[previousTask][0]  # Add travel time to depot
-
-            if serviceDuration > maxRouteDuration:
-                return False
-
-        else:  # Route consists of optional tasks only
-            for task in route:
-                serviceDuration += distances[previousTask][task] + allTasks[task].service_time
-                previousTask = task
-
-            serviceDuration += distances[previousTask][0]  # Add travel time to depot
-            
-            if serviceDuration > maxRouteDuration:
-                return  False
-
-        return feasible
-
-        
-    def SingleMove(self, solution: Solution, maxAttempts) -> Solution:
-        ''' Overwritten to avoid comparisons of strings'''
-        
-        MAX_ATTEMPTS = maxAttempts  # Maximum attempts limit
-        feasible = False
-        attempt = 0
-        move = None  # Placeholder for the move
-
-        while not feasible and attempt < MAX_ATTEMPTS:
-            move = self.MakeOneMove(solution)
-            feasible = self.SingleRouteFeasibilityCheck(move.RouteDayCohort)
-            attempt += 1
-
-        # If a feasible move is found, evaluate and return it
-        if feasible:
-            self.EvaluateMove(move)
-        
-        else: 
-            move = None
-
-
-        return move
-    
-#_______________________________________________________________________________________________________________________
-
-class ProfitNeighborhood(BaseNeighborhood):
+class SiteNeighborhood(BaseNeighborhood):
 
     def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
         super().__init__(inputData, evaluationLogic, solutionPool, rng)
 
     def EvaluateMove(self, move: BaseMove) -> None:
-        raise Exception('EvaluateMove() is not implemented for the abstract ProfitNeighborhood class.')
+        raise Exception('EvaluateMove() is not implemented for the abstract SiteNeighborhood class.')
 
     def MakeBestMove(self) -> BaseMove:
         
@@ -236,17 +104,17 @@ class ProfitNeighborhood(BaseNeighborhood):
         ### Return None, if no feasible moves found! 
         return None 
 
+
     def LocalSearch(self, neighborhoodEvaluationStrategy:str, solution:Solution) -> None:
         ''' Tries to find a better solution from the start solution by searching the neighborhod'''
 
         hasSolutionImproved = True
-        bestNeighborhoodSolution = Solution(solution.RoutePlan, self.InputData)
-        self.EvaluationLogic.evaluateSolution(bestNeighborhoodSolution)
+        bestNeighborhoodSolution = deepcopy(solution)
 
         while hasSolutionImproved:
             
             # Sets Algorithm back!
-            self.Update(bestNeighborhoodSolution.RoutePlan) 
+            self.Update() 
             self.DiscoverMoves(bestNeighborhoodSolution)
             self.EvaluateMoves(neighborhoodEvaluationStrategy)
 
@@ -266,75 +134,157 @@ class ProfitNeighborhood(BaseNeighborhood):
                 hasSolutionImproved = False
 
         return bestNeighborhoodSolution
-
-class DeltaNeighborhood(BaseNeighborhood):
-    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
-        super().__init__(inputData, evaluationLogic, solutionPool, rng)
-
-    def EvaluateMove(self, move: BaseMove) -> None:
-        raise Exception('EvaluateMove() is not implemented for the abstract DeltaNeighborhood class.')
-
-    def MakeBestMove(self) -> BaseMove:
-        ''' Finds one best Move'''
-        self.MoveSolutions.sort(key=lambda move: move.Delta)
-
- 
-        for move_solution in self.MoveSolutions:
-
-            if self.SingleRouteFeasibilityCheck(move_solution.RouteDayCohort): 
-                return move_solution
-                    
-        return None
-            
     
-    def EvaluateMovesFirstImprovement(self) -> None:
-        """ Evaluate all moves until the first one is found that improves the best solution found so far. """
 
-        for move in self.Moves:
+class InsertSiteMove(BaseMove):
+    """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
 
-            self.EvaluateMove(move)
+    def __init__(self):
 
-            if move.Delta < 0:
-                
-                if self.SingleRouteFeasibilityCheck(move.RouteDayCohort):
-                    
-                    self.MoveSolutions.append(move)
-                    # abort neighborhood evaluation because an improvement has been found
-                    return None
+        pass
+
+
+class InsertSiteNeighborhood(SiteNeighborhood):
+    """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
+
+    def __init__(self, inputData:InputData, evaluationLogic:EvaluationLogic, solutionPool:SolutionPool, rng):
+        super().__init__(inputData,  evaluationLogic, solutionPool, rng)
+
+        self.Type = 'Insert_Site'
+
+
+    def DiscoverMoves(self, solution:Solution):
+        """ Generate all $n choose 2$ moves and shuffle them """
+
+        not_used_sites = solution.semifinished_orders + solution.not_started_orders
+
+
+
+
+
+
+
         
-        return None
-    
 
-    def LocalSearch(self, neighborhoodEvaluationStrategy: str, solution: Solution) -> Solution:
 
-        hasSolutionImproved = True
+    def EvaluateMove(self, move:InsertSiteMove) -> None:
+        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
 
-        bestNeighborhoodSolution = Solution(solution.RoutePlan, self.InputData)
-        self.EvaluationLogic.evaluateSolution(bestNeighborhoodSolution)
+        #Update the Delta of the Move
+        move.setDelta(self.EvaluationLogic.CalculateSwapIntraRouteDelta(move))
 
-        while hasSolutionImproved:
-            
-            self.Update(bestNeighborhoodSolution.RoutePlan)
-            self.DiscoverMoves()
-            self.EvaluateMoves(neighborhoodEvaluationStrategy)
 
-            bestNeighborhoodMove = self.MakeBestMove()
 
-            if bestNeighborhoodMove is not None and bestNeighborhoodMove.Delta < 0:
-              
-                completeRoute = self.constructCompleteRoute(bestNeighborhoodMove)
-                bestNeighborhoodSolution = Solution(completeRoute, self.InputData)
-                self.EvaluationLogic.evaluateSolution(bestNeighborhoodSolution)
-            
-                self.SolutionPool.AddSolution(bestNeighborhoodSolution)
-            else:
-                
-                hasSolutionImproved = False
+class InsertShiftMove(BaseMove):
+    """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
 
-        return bestNeighborhoodSolution
-    
-    
-#_______________________________________________________________________________________________________________________
+    def __init__(self, machine_route, worker_route, machine_route_index, worker_route_index, order_item_id):
+
+
+        self.MachineRoute = machine_route
+        self.WorkerRoute = worker_route
+        self.MachineRouteIndex = machine_route_index
+        self.WorkerRouteIndex = worker_route_index
+        self.OrderItemID = order_item_id
+
+        
+
+        self.MachineRoute.insert(self.MachineRouteIndex, self.OrderItemID)
+        self.WorkerRoute.insert(self.WorkerRouteIndex, self.OrderItemID)
+
+        
+
+
+
+
+class InsertShiftNeighborhood(SiteNeighborhood): # Not clear which neighborhood to inherit from
+    """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
+
+    def __init__(self, inputData:InputData, evaluationLogic:EvaluationLogic, solutionPool:SolutionPool, rng):
+        super().__init__(inputData,  evaluationLogic, solutionPool, rng)
+
+        self.Type = 'Insert_Site'
+
+
+    def DiscoverMoves(self, solution:Solution):
+        """ Generate all $n choose 2$ moves and shuffle them """
+
+        
+        not_used_shifts = list(chain(solution.not_started_orders.order_items, solution.semifinished_orders.order_items))
+
+
+
+        for order_item in not_used_shifts:
+
+            for machine_id, machine_route in solution.route_plan_machine.items():
+                machine = solution.data.machines[machine_id]
+                # Continue to next machine if order_item cannot be processed by current machine
+                if order_item not in machine.possible_order_items:
+                    continue
+
+                for order_item_id_machine in machine_route:
+                    order_item_machine = solution.data.order_items[order_item_id_machine]
+                    # Break to next machine if order_item is not a predecessor or successor of current order_item_machine
+                    if order_item not in machine.predecessors[order_item_machine] and order_item not in machine.successors[order_item_machine]:
+                        break
+
+                    for worker_id, worker_route in solution.route_plan_worker.items():
+                        worker = solution.data.workers[worker_id]
+                        # Continue to next worker if order_item cannot be processed by current worker
+                        if order_item not in worker.possible_order_items:
+                            continue
+
+
+                        for order_item_id_worker in worker_route:
+                            order_item_worker = solution.data.order_items[order_item_id_worker]
+                            # Break to next worker if order_item is not a predecessor or successor of current order_item_worker
+                            if order_item not in worker.predecessors[order_item_worker] and order_item not in worker.successors[order_item_worker]:
+                                break
+                            
+                            
+                            # Checks to append move
+                            if order_item in machine.predecessors[order_item_machine] and order_item in worker.predecessors[order_item_worker]:
+                                self.Moves.append(InsertShiftMove(machine_route, worker_route, machine_route.index(order_item_id_machine), worker_route.index(order_item_id_worker), order_item.id))
+                                # Possible to implement: Once a move like this is possible then this order item cannot be inserted at other postion in same machine or worker route
+                            
+                            elif order_item in machine.predecessors[order_item_machine]:
+                                if machine_route.index(order_item_id_machine) + 1 == len(machine_route):
+                                    if order_item in worker.successors[order_item_worker]:
+                                        self.Moves.append(InsertShiftMove(machine_route, worker_route, machine_route.index(order_item_id_machine), worker_route.index(order_item_id_worker) + 1, order_item.id))
+                                
+                            elif order_item in worker.predecessors[order_item_worker]:
+                                if machine_route.index(order_item_id_machine) + 1 == len(machine_route):
+                                    if order_item in machine.successors[order_item_machine]:
+                                        self.Moves.append(InsertShiftMove(machine_route, worker_route, machine_route.index(order_item_id_machine) + 1, worker_route.index(order_item_id_worker), order_item.id))
+                                
+
+
+                                                   
+
+
+                    
+
+                    
+        
+
+
+
+
+
+        
+
+
+    def EvaluateMove(self, move:InsertSiteMove) -> None:
+        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
+
+        #Update the Delta of the Move
+        move.setDelta(self.EvaluationLogic.CalculateSwapIntraRouteDelta(move))
+
+
+
+
+"_____________________________________________________________________________________________________________________________________"
+
 
 class SwapIntraRouteMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
