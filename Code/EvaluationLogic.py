@@ -113,7 +113,7 @@ class EvaluationLogic:
 
         for order_item in self.data.order_items:
             if order_item.id not in all_planned_order_item_ids:
-                solution.not_started_order_items.append(order_item)
+                solution.not_started_order_item_ids.append(order_item.id)
         
 
         for order in self.data.orders:
