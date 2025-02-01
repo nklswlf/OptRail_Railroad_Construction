@@ -147,8 +147,8 @@ class InsertShiftMove(BaseMove):
     def __init__(self, machine_id, worker_id, machine_route, worker_route, machine_route_index, worker_route_index, order_item_id):
 
 
-        self.MachineRoute = machine_route
-        self.WorkerRoute = worker_route
+        self.MachineRoute = list(machine_route)
+        self.WorkerRoute = list(worker_route)
 
         self.MachineRouteIndex = machine_route_index
         self.WorkerRouteIndex = worker_route_index
@@ -162,6 +162,12 @@ class InsertShiftMove(BaseMove):
 
         self.MachineRoute.insert(self.MachineRouteIndex, self.OrderItemID)
         self.WorkerRoute.insert(self.WorkerRouteIndex, self.OrderItemID)
+
+        print(f"Machine ID: {self.MachineID}")
+        print(f"Machine Route: {self.MachineRoute}")
+        print(f"Worker ID: {self.WorkerID}")
+        print(f"Worker Route: {self.WorkerRoute}")
+    
 
         
 
@@ -202,7 +208,7 @@ class InsertShiftNeighborhood(InsertNeighborhood):
 
                 # If (possible) machine is not included in current solution, order item can be inserted at first position
                 if len(machine_route) == 0:
-                    order_item_position_machine_route[machine_id] = [0, machine_route]
+                    order_item_position_machine_route[machine_id] = [0, list(machine_route)]
                     continue
                 else:
                     # Find the position of the order_item in the machine route
@@ -213,13 +219,13 @@ class InsertShiftNeighborhood(InsertNeighborhood):
 
                         # If order_item is a predecessor of order_item_machine, it can be inserted before order_item_id_machine
                         if order_item_id in machine.predecessor_ids[order_item_id_machine]:
-                            order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine), machine_route]
+                            order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine), list(machine_route)]
                             break
                         
                         # If order_item is a successor of the last order_item in the machine route, it can be inserted at the end of the machine route
                         if len(machine_route) == machine_route.index(order_item_id_machine) + 1:
                             if order_item_id in machine.successor_ids[order_item_id_machine]:
-                                order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine) + 1, machine_route]
+                                order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine) + 1, list(machine_route)]
                                 break
                                 
 
@@ -233,7 +239,7 @@ class InsertShiftNeighborhood(InsertNeighborhood):
 
                 # If (possible) worker is not included in current solution, order item can be inserted at first position
                 if len(worker_route) == 0:
-                    order_item_position_worker_route[worker_id] = [0, worker_route]
+                    order_item_position_worker_route[worker_id] = [0, list(worker_route)]
                     continue
                 else:
                     # Find the position of the order_item in the worker route
@@ -244,18 +250,18 @@ class InsertShiftNeighborhood(InsertNeighborhood):
 
                         # If order_item is a predecessor of order_item_worker, it can be inserted before order_item_id_worker
                         if order_item_id in worker.predecessor_ids[order_item_id_worker]:
-                            order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker), worker_route]
+                            order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker), list(worker_route)]
                             break
                         
                         # If order_item is a successor of the last order_item in the worker route, it can be inserted at the end of the worker route
                         if len(worker_route) == worker_route.index(order_item_id_worker) + 1:
                             if order_item_id in worker.successor_ids[order_item_id_worker]:
-                                order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker) + 1, worker_route]
+                                order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker) + 1, list(worker_route)]
                                 break
 
             
 
-                
+            
 
             
 
@@ -267,6 +273,7 @@ class InsertShiftNeighborhood(InsertNeighborhood):
 
             print(f"Order Item Position Machine Route: {order_item_position_machine_route}")
             print(f"Order Item Position Worker Route: {order_item_position_worker_route}")
+            
 
                     
                     
