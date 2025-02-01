@@ -19,7 +19,7 @@ class Solution:
         self.semifinished_orders = []
         self.not_started_orders = []
 
-        self.not_started_order_items = []
+        self.not_started_order_item_ids = []
 
         self.share_finished_orders = -0
         self.number_of_finished_orders = -0

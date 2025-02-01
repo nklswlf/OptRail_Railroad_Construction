@@ -611,14 +611,18 @@ class Worker:
         self._qualifications = json_data.get("Qualifikationen", [])
         self._residence = json_data.get("Wohnort", {"Item1": 0.0, "Item2": 0.0})
         self._possible_order_items = dict()  # Jetzt als Dictionary
+        self._possible_order_item_ids = dict()  # Jetzt als Dictionary
         self._predecessors = dict()
+        self._predecessor_ids = dict()
         self._successors = dict()
+        self._successor_ids = dict()
         self.work_hours = 0
 
     def add_data(self, input_data: InputData):
         # Initialisiere _possible_order_items als leeres Dictionary
         for order in input_data.orders:
             self._possible_order_items[order] = []
+            self._possible_order_item_ids[order.order_number] = []
 
         # Füge Order Items hinzu, basierend auf Qualifikationen
         for order_item in input_data.order_items:
@@ -628,14 +632,19 @@ class Worker:
                     # Überprüfe Qualifikationen
                     if not order_item.worker_qualifications or set(order_item.worker_qualifications).issubset(self._qualifications):
                         self._possible_order_items[order].append(order_item)
+                        self._possible_order_item_ids[order.order_number].append(order_item.id)
 
-        # Add predecessors and successors for each order item
-        for order_item in input_data.order_items:
-            self._predecessors[order_item] = []
-            self._successors[order_item] = []
 
         all_order_items = [item for order_items in self._possible_order_items.values() for item in order_items]
         for order_item_1 in all_order_items:
+
+            if order_item_1 not in self._predecessors:
+                self._predecessors[order_item_1] = []
+                self._predecessor_ids[order_item_1.id] = []
+            if order_item_1 not in self._successors:
+                self._successors[order_item_1] = []
+                self._successor_ids[order_item_1.id] = []
+
             for order_item_2 in all_order_items:
                 if order_item_1 != order_item_2:
                     # Zeitdifferenzen berechnen
@@ -649,9 +658,11 @@ class Worker:
                     # Vorgänger und Nachfolger bestimmen
                     if start_time_order_item_1 >= end_time_order_item_2 + break_time:
                         self._predecessors[order_item_1].append(order_item_2)
+                        self._predecessor_ids[order_item_1.id].append(order_item_2.id)
 
                     if start_time_order_item_2 >= end_time_order_item_1 + break_time:
                         self._successors[order_item_1].append(order_item_2)
+                        self._successor_ids[order_item_1.id].append(order_item_2.id)
 
     @property
     def personal_number(self) -> int:
@@ -676,12 +687,26 @@ class Worker:
         return self._possible_order_items
     
     @property
+    def possible_order_item_ids(self) -> dict[int, List[int]]:
+        return self._possible_order_item_ids
+    
+    @property
     def predecessors(self) -> dict[int, List[int]]:
         return self._predecessors
+    
     
     @property
     def successors(self) -> dict[int, List[int]]:
         return self._successors
+    
+    @property
+    def predecessor_ids(self) -> dict[int, List[int]]:
+        return self._predecessor_ids
+    
+    @property
+    def successor_ids(self) -> dict[int, List[int]]:
+        return self._successor_ids
+    
     
 
     def __str__(self):
@@ -697,13 +722,17 @@ class Machine:
         self._type = int(json_data.get("Typ", 0))
         self._default_drivers = [int(driver) for driver in json_data.get("StammfahrerStrings", [])]
         self._possible_order_items = dict()  # Als Dictionary mit `order` als Key
+        self._possible_order_item_ids = dict()  # Als Dictionary mit `order` als Key
         self._predecessors = dict()
+        self._predecessor_ids = dict()
         self._successors = dict()
+        self._successor_ids = dict()
 
     def add_data(self, input_data: InputData):
         # Initialisiere `_possible_order_items` als Dictionary
         for order in input_data.orders:
             self._possible_order_items[order] = []
+            self._possible_order_item_ids[order.order_number] = []
 
         # Füge mögliche Order Items basierend auf `machine_type` hinzu
         for order_item in input_data.order_items:
@@ -711,6 +740,7 @@ class Machine:
                 for order in input_data.orders:
                     if order_item.order_number == order.order_number:
                         self._possible_order_items[order].append(order_item)
+                        self._possible_order_item_ids[order.order_number].append(order_item.id)
 
         # Erstelle Predecessors und Successors für alle Order Items
         all_order_items = [item for items in self._possible_order_items.values() for item in items]
@@ -718,8 +748,10 @@ class Machine:
         for order_item_1 in all_order_items:
             if order_item_1 not in self._predecessors:
                 self._predecessors[order_item_1] = []
+                self._predecessor_ids[order_item_1.id] = []
             if order_item_1 not in self._successors:
                 self._successors[order_item_1] = []
+                self._successor_ids[order_item_1.id] = []
 
             for order_item_2 in all_order_items:
                 if order_item_1 != order_item_2:
@@ -738,11 +770,13 @@ class Machine:
                     if start_time_order_item_1 >= end_time_order_item_2 + transport_time:
                         if order_item_2 not in self._predecessors[order_item_1]:
                             self._predecessors[order_item_1].append(order_item_2)
+                            self._predecessor_ids[order_item_1.id].append(order_item_2.id)
 
                     # Nachfolger hinzufügen
                     if start_time_order_item_2 >= end_time_order_item_1 + transport_time:
                         if order_item_2 not in self._successors[order_item_1]:
                             self._successors[order_item_1].append(order_item_2)
+                            self._successor_ids[order_item_1.id].append(order_item_2.id)
 
 
 
@@ -771,12 +805,24 @@ class Machine:
         return self._possible_order_items
     
     @property
+    def possible_order_item_ids(self) -> dict[int, List[int]]:
+        return self._possible_order_item_ids
+    
+    @property
     def predecessors(self) -> dict[int, List[int]]:
         return self._predecessors
     
     @property
     def successors(self) -> dict[int, List[int]]:
         return self._successors
+    
+    @property
+    def predecessor_ids(self) -> dict[int, List[int]]:
+        return self._predecessor_ids
+    
+    @property
+    def successor_ids(self) -> dict[int, List[int]]:
+        return self._successor_ids
     
 
     def __str__(self):

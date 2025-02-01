@@ -180,85 +180,93 @@ class InsertShiftNeighborhood(InsertNeighborhood):
         """ Generate all $n choose 2$ moves and shuffle them """
 
         if not_used_shifts is None:
-            not_used_shifts = solution.not_started_order_items
+            unused_order_item_ids = solution.not_started_order_item_ids
 
         print(f"Machine Route: {solution.route_plan_machine}")
-        print(f"Worker Route: {solution.route_plan_worker}")
 
-
-        for order_item in not_used_shifts:
+        print(f"Unused Order Item IDs: {unused_order_item_ids}")
+        
+        for order_item_id in unused_order_item_ids:
+            print(f"\nOrder Item ID: {order_item_id}")
             # Dictionary to store information about the position of the order_item in machine routes
             order_item_position_machine_route = dict()
             order_item_position_worker_route = dict()
 
             for machine_id, machine_route in solution.route_plan_machine.items():
                 machine = solution.data.machines[machine_id]
-                
+
                 # Continue to next machine if order_item cannot be processed by current machine
-                #if order_item not in machine.possible_order_items:
-                #    continue
-                
+                machine_possible_order_item_ids = [order_item_ids for orders in machine.possible_order_item_ids.values() for order_item_ids in orders]
+                if order_item_id not in machine_possible_order_item_ids:
+                    continue
+
                 # If (possible) machine is not included in current solution, order item can be inserted at first position
                 if len(machine_route) == 0:
                     order_item_position_machine_route[machine_id] = [0, machine_route]
                     continue
-                
-                # Find the position of the order_item in the machine route
-                for order_item_id_machine in machine_route:
-                    order_item_machine = solution.data.order_items[order_item_id_machine]
-                    # Break to next machine if order_item is not a predecessor or successor of current order_item_machine
-                    if order_item not in machine.predecessors[order_item_machine] and order_item not in machine.successors[order_item_machine]:
-                        break
-
-                    # If order_item is a predecessor of order_item_machine, it can be inserted before order_item_id_machine
-                    if order_item in machine.predecessors[order_item_machine]:
-                        order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine), machine_route]
-                        break
-                    
-                    # If order_item is a successor of the last order_item in the machine route, it can be inserted at the end of the machine route
-                    if len(machine_route) == machine_route.index(order_item_id_machine) + 1:
-                        if order_item in machine.successors[order_item_machine]:
-                            order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine) + 1, machine_route]
+                else:
+                    # Find the position of the order_item in the machine route
+                    for order_item_id_machine in machine_route:
+                        # Break to next machine if order_item is not a predecessor or successor of current order_item_machine
+                        if order_item_id not in machine.predecessor_ids[order_item_id_machine] and order_item_id not in machine.successor_ids[order_item_id_machine]:
                             break
+
+                        # If order_item is a predecessor of order_item_machine, it can be inserted before order_item_id_machine
+                        if order_item_id in machine.predecessor_ids[order_item_id_machine]:
+                            order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine), machine_route]
+                            break
+                        
+                        # If order_item is a successor of the last order_item in the machine route, it can be inserted at the end of the machine route
+                        if len(machine_route) == machine_route.index(order_item_id_machine) + 1:
+                            if order_item_id in machine.successor_ids[order_item_id_machine]:
+                                order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine) + 1, machine_route]
+                                break
+                                
 
             for worker_id, worker_route in solution.route_plan_worker.items():
                 worker = solution.data.workers[worker_id]
-                
+
                 # Continue to next worker if order_item cannot be processed by current worker
-                #if order_item not in worker.possible_order_items:
-                #    continue
-                
+                worker_possible_order_item_ids = [order_item_ids for orders in worker.possible_order_item_ids.values() for order_item_ids in orders]
+                if order_item_id not in worker_possible_order_item_ids:
+                    continue
+
                 # If (possible) worker is not included in current solution, order item can be inserted at first position
                 if len(worker_route) == 0:
                     order_item_position_worker_route[worker_id] = [0, worker_route]
                     continue
-                
-                # Find the position of the order_item in the worker route
-                for order_item_id_worker in worker_route:
-                    order_item_worker = solution.data.order_items[order_item_id_worker]
-                    # Break to next worker if order_item is not a predecessor or successor of current order_item_worker
-                    if order_item not in worker.predecessors[order_item_worker] and order_item not in worker.successors[order_item_worker]:
-                        break
-
-                    # If order_item is a predecessor of order_item_worker, it can be inserted before order_item_id_worker
-                    if order_item in worker.predecessors[order_item_worker]:
-                        order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker), worker_route]
-                        break
-                    
-                    # If order_item is a successor of the last order_item in the worker route, it can be inserted at the end of the worker route
-                    if len(worker_route) == worker_route.index(order_item_id_worker) + 1:
-                        if order_item in worker.successors[order_item_worker]:
-                            order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker) + 1, worker_route]
+                else:
+                    # Find the position of the order_item in the worker route
+                    for order_item_id_worker in worker_route:
+                        # Break to next worker if order_item is not a predecessor or successor of current order_item_worker
+                        if order_item_id not in worker.predecessor_ids[order_item_id_worker] and order_item_id not in worker.successor_ids[order_item_id_worker]:
                             break
 
+                        # If order_item is a predecessor of order_item_worker, it can be inserted before order_item_id_worker
+                        if order_item_id in worker.predecessor_ids[order_item_id_worker]:
+                            order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker), worker_route]
+                            break
+                        
+                        # If order_item is a successor of the last order_item in the worker route, it can be inserted at the end of the worker route
+                        if len(worker_route) == worker_route.index(order_item_id_worker) + 1:
+                            if order_item_id in worker.successor_ids[order_item_id_worker]:
+                                order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker) + 1, worker_route]
+                                break
+
+            
+
+                
+
+            
 
 
             for machine_id, machine_route_and_index in order_item_position_machine_route.items():
                 for worker_id, worker_route_and_index in order_item_position_worker_route.items():
-                    self.Moves.append(InsertShiftMove(machine_id, worker_id, machine_route_and_index[1], worker_route_and_index[1], machine_route_and_index[0], worker_route_and_index[0], order_item.id))
+                    self.Moves.append(InsertShiftMove(machine_id, worker_id, machine_route_and_index[1], worker_route_and_index[1], machine_route_and_index[0], worker_route_and_index[0], order_item_id))
 
-            print(order_item_position_machine_route)
-            print(order_item_position_worker_route)
+
+            print(f"Order Item Position Machine Route: {order_item_position_machine_route}")
+            print(f"Order Item Position Worker Route: {order_item_position_worker_route}")
 
                     
                     
