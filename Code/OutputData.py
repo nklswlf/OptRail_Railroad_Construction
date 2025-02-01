@@ -18,6 +18,9 @@ class Solution:
         self.finished_orders = []
         self.semifinished_orders = []
         self.not_started_orders = []
+
+        self.not_started_order_items = []
+
         self.share_finished_orders = -0
         self.number_of_finished_orders = -0
         self.number_of_finished_order_items = -0
@@ -37,6 +40,8 @@ class Solution:
         self.worker_work_time = {}
         self.machine_utilization_time = {}
 
+        self.dynamic_percentage_order = {}
+
 
 
     def __str__(self) -> str:
@@ -44,6 +49,7 @@ class Solution:
         return (f"Number of finished orders: {self.number_of_finished_orders}\n"
                 f"Number of semi-finished orders: {len(self.semifinished_orders)}\n"
                 f"Number of not started orders: {len(self.not_started_orders)}\n"
+                f"Dynamic percentage: {self.dynamic_percentage_order}\n"
                 f"Number of finished order items: {self.number_of_finished_order_items}\n"
                 f"Driver violation: {self.driver_violation}\n"
                 f"Commute distance: {round(self.total_commute_distance, 2)}\n"
@@ -289,17 +295,12 @@ class SolutionPool:
         ''' Add a new solution to the solution pool'''
         self.Solutions.append(newSolution)
 
-    def GetHighestProfitSolution(self) -> Solution:
-        ''' Sort all the solutions in regard to their makespan and return the solution with the lowest makespan'''
-        self.Solutions.sort(key=lambda solution: (solution.TotalProfit, solution.WaitingTime), reverse=True) # sort solutions according to Profit and waiting time
-
-        return self.Solutions[0]
     
-    def GetHighestWaitingTimeSolution(self) -> Solution:
-        ''' Sort all the solutions in regard to their makespan and return the solution with the lowest makespan'''
-        self.Solutions.sort(key=lambda solution: (solution.WaitingTime), reverse=True) # sort solutions according to Profit and waiting time
-
-        return self.Solutions[0]
+    
+    def GetBestSolution(self) -> Solution:
+        ''' Get the best solution from the solution pool'''
+        # Solution with the most finished order items
+        return max(self.Solutions, key=lambda solution: solution.number_of_finished_order_items)
 
 
 
