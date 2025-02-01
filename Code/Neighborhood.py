@@ -12,6 +12,11 @@ class BaseMove:
     def __init__(self):
         self.Delta = None
 
+    def setDelta(self,delta:float) -> None: 
+        ''' Set the Delta of the Move'''
+        self.Delta = delta
+
+
 
 class BaseNeighborhood:
 
@@ -23,8 +28,8 @@ class BaseNeighborhood:
         self.rng = rng
 
         # Create empty lists for discovering different moves
-        self.moves = []
-        self.moveSolutions = []
+        self.Moves = []
+        self.MoveSolutions = []
         self.type = 'None'
 
     def DiscoverMoves(self) -> None:
@@ -66,13 +71,13 @@ class BaseNeighborhood:
         self.Moves.clear()
         self.MoveSolutions.clear()
 
-class SiteNeighborhood(BaseNeighborhood):
+class InsertNeighborhood(BaseNeighborhood):
 
     def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
         super().__init__(inputData, evaluationLogic, solutionPool, rng)
 
     def EvaluateMove(self, move: BaseMove) -> None:
-        raise Exception('EvaluateMove() is not implemented for the abstract SiteNeighborhood class.')
+        raise Exception('EvaluateMove() is not implemented for the abstract InsertNeighborhood class.')
 
     def MakeBestMove(self) -> BaseMove:
         
@@ -80,9 +85,8 @@ class SiteNeighborhood(BaseNeighborhood):
         self.sort_move_solutions()
         
         for move_solution in self.MoveSolutions:
-
-            if self.SingleRouteFeasibilityCheck(move_solution.RouteDayCohort): 
-                return move_solution
+            # Feasibility check to implement
+            return move_solution
                     
         return None
 
@@ -123,9 +127,9 @@ class SiteNeighborhood(BaseNeighborhood):
 
             if bestNeighborhoodMove is not None:
 
-                completeRoute = self.constructCompleteRoute(bestNeighborhoodMove)
-                bestNeighborhoodSolution = Solution(completeRoute, self.InputData)
-                self.EvaluationLogic.evaluateSolution(bestNeighborhoodSolution)
+                worker_route, machine_route = self.constructCompleteRoute(bestNeighborhoodMove)
+                bestNeighborhoodSolution = Solution(worker_route, machine_route, self.InputData)
+                self.EvaluationLogic.evaluate(bestNeighborhoodSolution)
 
                 self.SolutionPool.AddSolution(bestNeighborhoodSolution)
 
@@ -136,56 +140,23 @@ class SiteNeighborhood(BaseNeighborhood):
         return bestNeighborhoodSolution
     
 
-class InsertSiteMove(BaseMove):
-    """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
-
-    def __init__(self):
-
-        pass
-
-
-class InsertSiteNeighborhood(SiteNeighborhood):
-    """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
-
-    def __init__(self, inputData:InputData, evaluationLogic:EvaluationLogic, solutionPool:SolutionPool, rng):
-        super().__init__(inputData,  evaluationLogic, solutionPool, rng)
-
-        self.Type = 'Insert_Site'
-
-
-    def DiscoverMoves(self, solution:Solution):
-        """ Generate all $n choose 2$ moves and shuffle them """
-
-        not_used_sites = solution.semifinished_orders + solution.not_started_orders
-
-
-
-
-
-
-
-        
-
-
-    def EvaluateMove(self, move:InsertSiteMove) -> None:
-        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
-
-        #Update the Delta of the Move
-        move.setDelta(self.EvaluationLogic.CalculateSwapIntraRouteDelta(move))
-
-
 
 class InsertShiftMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
 
-    def __init__(self, machine_route, worker_route, machine_route_index, worker_route_index, order_item_id):
+    def __init__(self, machine_id, worker_id, machine_route, worker_route, machine_route_index, worker_route_index, order_item_id):
 
 
         self.MachineRoute = machine_route
         self.WorkerRoute = worker_route
+
         self.MachineRouteIndex = machine_route_index
         self.WorkerRouteIndex = worker_route_index
+
         self.OrderItemID = order_item_id
+        
+        self.MachineID = machine_id
+        self.WorkerID = worker_id
 
         
 
@@ -196,24 +167,107 @@ class InsertShiftMove(BaseMove):
 
 
 
-
-class InsertShiftNeighborhood(SiteNeighborhood): # Not clear which neighborhood to inherit from
+class InsertShiftNeighborhood(InsertNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
 
     def __init__(self, inputData:InputData, evaluationLogic:EvaluationLogic, solutionPool:SolutionPool, rng):
         super().__init__(inputData,  evaluationLogic, solutionPool, rng)
 
-        self.Type = 'Insert_Site'
+        self.Type = 'Insert_Shift'
 
 
-    def DiscoverMoves(self, solution:Solution):
+    def DiscoverMoves(self, solution:Solution, not_used_shifts = None):
         """ Generate all $n choose 2$ moves and shuffle them """
 
-        
-        not_used_shifts = list(chain(solution.not_started_orders.order_items, solution.semifinished_orders.order_items))
+        if not_used_shifts is None:
+            not_used_shifts = solution.not_started_order_items
+
+        print(f"Machine Route: {solution.route_plan_machine}")
+        print(f"Worker Route: {solution.route_plan_worker}")
+
+
+        for order_item in not_used_shifts:
+            # Dictionary to store information about the position of the order_item in machine routes
+            order_item_position_machine_route = dict()
+            order_item_position_worker_route = dict()
+
+            for machine_id, machine_route in solution.route_plan_machine.items():
+                machine = solution.data.machines[machine_id]
+                
+                # Continue to next machine if order_item cannot be processed by current machine
+                #if order_item not in machine.possible_order_items:
+                #    continue
+                
+                # If (possible) machine is not included in current solution, order item can be inserted at first position
+                if len(machine_route) == 0:
+                    order_item_position_machine_route[machine_id] = [0, machine_route]
+                    continue
+                
+                # Find the position of the order_item in the machine route
+                for order_item_id_machine in machine_route:
+                    order_item_machine = solution.data.order_items[order_item_id_machine]
+                    # Break to next machine if order_item is not a predecessor or successor of current order_item_machine
+                    if order_item not in machine.predecessors[order_item_machine] and order_item not in machine.successors[order_item_machine]:
+                        break
+
+                    # If order_item is a predecessor of order_item_machine, it can be inserted before order_item_id_machine
+                    if order_item in machine.predecessors[order_item_machine]:
+                        order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine), machine_route]
+                        break
+                    
+                    # If order_item is a successor of the last order_item in the machine route, it can be inserted at the end of the machine route
+                    if len(machine_route) == machine_route.index(order_item_id_machine) + 1:
+                        if order_item in machine.successors[order_item_machine]:
+                            order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine) + 1, machine_route]
+                            break
+
+            for worker_id, worker_route in solution.route_plan_worker.items():
+                worker = solution.data.workers[worker_id]
+                
+                # Continue to next worker if order_item cannot be processed by current worker
+                #if order_item not in worker.possible_order_items:
+                #    continue
+                
+                # If (possible) worker is not included in current solution, order item can be inserted at first position
+                if len(worker_route) == 0:
+                    order_item_position_worker_route[worker_id] = [0, worker_route]
+                    continue
+                
+                # Find the position of the order_item in the worker route
+                for order_item_id_worker in worker_route:
+                    order_item_worker = solution.data.order_items[order_item_id_worker]
+                    # Break to next worker if order_item is not a predecessor or successor of current order_item_worker
+                    if order_item not in worker.predecessors[order_item_worker] and order_item not in worker.successors[order_item_worker]:
+                        break
+
+                    # If order_item is a predecessor of order_item_worker, it can be inserted before order_item_id_worker
+                    if order_item in worker.predecessors[order_item_worker]:
+                        order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker), worker_route]
+                        break
+                    
+                    # If order_item is a successor of the last order_item in the worker route, it can be inserted at the end of the worker route
+                    if len(worker_route) == worker_route.index(order_item_id_worker) + 1:
+                        if order_item in worker.successors[order_item_worker]:
+                            order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker) + 1, worker_route]
+                            break
 
 
 
+            for machine_id, machine_route_and_index in order_item_position_machine_route.items():
+                for worker_id, worker_route_and_index in order_item_position_worker_route.items():
+                    self.Moves.append(InsertShiftMove(machine_id, worker_id, machine_route_and_index[1], worker_route_and_index[1], machine_route_and_index[0], worker_route_and_index[0], order_item.id))
+
+            print(order_item_position_machine_route)
+            print(order_item_position_worker_route)
+
+                    
+                    
+
+
+
+
+
+        '''
         for order_item in not_used_shifts:
 
             for machine_id, machine_route in solution.route_plan_machine.items():
@@ -221,7 +275,11 @@ class InsertShiftNeighborhood(SiteNeighborhood): # Not clear which neighborhood 
                 # Continue to next machine if order_item cannot be processed by current machine
                 if order_item not in machine.possible_order_items:
                     continue
-
+                
+                # Continue to next machine if machine is not included in current solution
+                if len(machine_route) == 0:
+                    continue
+                
                 for order_item_id_machine in machine_route:
                     order_item_machine = solution.data.order_items[order_item_id_machine]
                     # Break to next machine if order_item is not a predecessor or successor of current order_item_machine
@@ -234,6 +292,10 @@ class InsertShiftNeighborhood(SiteNeighborhood): # Not clear which neighborhood 
                         if order_item not in worker.possible_order_items:
                             continue
 
+                        # Continue to next worker if worker is not included in current solution
+                        if len(worker_route) == 0:
+                            continue
+
 
                         for order_item_id_worker in worker_route:
                             order_item_worker = solution.data.order_items[order_item_id_worker]
@@ -242,36 +304,68 @@ class InsertShiftNeighborhood(SiteNeighborhood): # Not clear which neighborhood 
                                 break
                             
                             
-                            # Checks to append move
+                            # First possibility: Insert order_item before order_item_id_machine in machine_route and before order_item_id_worker in worker_route
                             if order_item in machine.predecessors[order_item_machine] and order_item in worker.predecessors[order_item_worker]:
-                                self.Moves.append(InsertShiftMove(machine_route, worker_route, machine_route.index(order_item_id_machine), worker_route.index(order_item_id_worker), order_item.id))
-                                # Possible to implement: Once a move like this is possible then this order item cannot be inserted at other postion in same machine or worker route
+                                self.Moves.append(InsertShiftMove(machine_id, worker_id, machine_route, worker_route, machine_route.index(order_item_id_machine), worker_route.index(order_item_id_worker), order_item.id))
                             
+                            # Second possibility: Insert order_item in last position of machine_route and before order_item_id_worker in worker_route
                             elif order_item in machine.predecessors[order_item_machine]:
                                 if machine_route.index(order_item_id_machine) + 1 == len(machine_route):
                                     if order_item in worker.successors[order_item_worker]:
-                                        self.Moves.append(InsertShiftMove(machine_route, worker_route, machine_route.index(order_item_id_machine), worker_route.index(order_item_id_worker) + 1, order_item.id))
+                                        self.Moves.append(InsertShiftMove(machine_id, worker_id, machine_route, worker_route, machine_route.index(order_item_id_machine), worker_route.index(order_item_id_worker) + 1, order_item.id))
                                 
+                            # Third possibility: Insert order_item before order_item_id_machine in machine_route and in last position of worker_route
                             elif order_item in worker.predecessors[order_item_worker]:
                                 if machine_route.index(order_item_id_machine) + 1 == len(machine_route):
                                     if order_item in machine.successors[order_item_machine]:
-                                        self.Moves.append(InsertShiftMove(machine_route, worker_route, machine_route.index(order_item_id_machine) + 1, worker_route.index(order_item_id_worker), order_item.id))
+                                        self.Moves.append(InsertShiftMove(machine_id, worker_id, machine_route, worker_route, machine_route.index(order_item_id_machine) + 1, worker_route.index(order_item_id_worker), order_item.id))
                                 
+                            # Fourth possibility: Insert order_item in last position of machine_route and in last position of worker_route
+                            elif machine_route.index(order_item_id_machine) + 1 == len(machine_route) and worker_route.index(order_item_id_worker) + 1 == len(worker_route):
+                                self.Moves.append(InsertShiftMove(machine_id, worker_id, machine_route, worker_route, machine_route.index(order_item_id_machine) + 1, worker_route.index(order_item_id_worker) + 1, order_item.id))
+        '''  
 
 
-                                                   
+    def EvaluateMove(self, move:InsertShiftMove) -> None:
+        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
+
+        #Update the Delta of the Move
+        move.setDelta(self.evaluationLogic.calculate_insert_shift_delta(move))
+
+    
+    def sort_move_solutions(self):
+
+        # Sort with lowest Delta first
+        self.MoveSolutions.sort(key=lambda move: move.Delta)
 
 
-                    
 
-                    
-        
+class InsertSiteMove(BaseMove):
+    """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
+
+    def __init__(self):
+
+        pass
 
 
+class InsertSiteNeighborhood(InsertNeighborhood):
+    """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
+
+    def __init__(self, inputData:InputData, evaluationLogic:EvaluationLogic, solutionPool:SolutionPool, rng):
+        super().__init__(inputData,  evaluationLogic, solutionPool, rng)
+
+        self.Type = 'Insert_Site'
 
 
+    def DiscoverMoves(self, solution:Solution, not_used_sites = None):
+        """ Generate all $n choose 2$ moves and shuffle them """
 
-        
+        if not_used_sites is None:
+            not_used_sites = solution.semifinished_orders + solution.not_started_orders
+
+        for site in not_used_sites:
+            site.order_items
+
 
 
     def EvaluateMove(self, move:InsertSiteMove) -> None:
@@ -280,9 +374,7 @@ class InsertShiftNeighborhood(SiteNeighborhood): # Not clear which neighborhood 
         #Update the Delta of the Move
         move.setDelta(self.EvaluationLogic.CalculateSwapIntraRouteDelta(move))
 
-
-
-
+'''
 "_____________________________________________________________________________________________________________________________________"
 
 
@@ -332,8 +424,8 @@ class SwapIntraRouteNeighborhood(DeltaNeighborhood):
 
 
     def EvaluateMove(self, move:SwapIntraRouteMove) -> None:
-        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
-
+        '''''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
+'''
         #Update the Delta of the Move
         move.setDelta(self.EvaluationLogic.CalculateSwapIntraRouteDelta(move))
     
@@ -438,7 +530,7 @@ class SwapInterRouteNeighborhood(DeltaNeighborhood):
 
     
     def SingleMove(self, solution: Solution, maxAttempts) -> Solution:
-        ''' Overwritten to avoid comparisons of strings'''
+       ''' ''' Overwritten to avoid comparisons of strings''''''
         
         MAX_ATTEMPTS = maxAttempts  # Maximum attempts limit
         feasible = False
@@ -459,9 +551,9 @@ class SwapInterRouteNeighborhood(DeltaNeighborhood):
 
         return move
     
-    
+
     def constructCompleteRoute(self, move:SwapInterRouteMove, solution = None) -> dict: 
-        ''' Constructs the comlete Route from the Move and the BaseMove'''
+        '''    ''' Constructs the comlete Route from the Move and the BaseMove''' '''   
         adapted_Route_Plan = solution.RoutePlan if solution else self.RoutePlan
 
         adapted_Route_Plan[move.DayA][move.CohortA] = move.RouteDayCohortA
@@ -490,7 +582,7 @@ class SwapInterRouteNeighborhood(DeltaNeighborhood):
         return None
     
     def MakeBestMove(self) -> BaseMove:
-        ''' Overwritten to avoid string comparisons'''
+         '''   ''' Overwritten to avoid string comparisons''' '''   
         self.MoveSolutions.sort(key=lambda move: move.Delta)
 
         for move_solution in self.MoveSolutions:
@@ -524,7 +616,7 @@ class SwapInterRouteNeighborhood(DeltaNeighborhood):
         return SwapInterRouteMove(solution.RoutePlan, dayA, cohortA, taskA, dayB, cohortB, taskB)
     
     def LocalSearch(self, neighborhoodEvaluationStrategy: str, solution: Solution) -> Solution:
-        ''' Own Definition to avoid string comparisons'''
+         '''   ''' Own Definition to avoid string comparisons''' '''   
 
         hasSolutionImproved = True
         bestNeighborhoodSolution = Solution(solution.RoutePlan, self.InputData)
@@ -607,7 +699,7 @@ class TwoEdgeExchangeNeighborhood(DeltaNeighborhood):
 
 
     def EvaluateMove(self, move) -> None:
-        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
+        '''    ''' Calculates the MakeSpan of thr certain move - adds to recent Solution''' '''   
 
         #Update the Delta of the Move
         move.setDelta(self.EvaluationLogic.WaitingTimeDifferenceOneRoute(move))
@@ -629,7 +721,7 @@ class TwoEdgeExchangeNeighborhood(DeltaNeighborhood):
         return TwoEdgeExchangeMove(cohort_tasks, waiting_time_old,day, cohort, task_i, task_j)
     
     def LocalSearch(self, neighborhoodEvaluationStrategy: str, solution: Solution) -> Solution:
-        ''' Own Definition to avoid string comparisons'''
+        '''    ''' Own Definition to avoid string comparisons''' '''   
 
         hasSolutionImproved = True
         bestNeighborhoodSolution = Solution(solution.RoutePlan, self.InputData)
@@ -726,7 +818,7 @@ class ReplaceDeltaNeighborhood(DeltaNeighborhood):
 
 
     def LocalSearch(self, neighborhoodEvaluationStrategy: str, solution: Solution) -> Solution:
-        ''' Own Definition to avoid string comparisons'''
+         '''   ''' Own Definition to avoid string comparisons''' '''   
 
         hasSolutionImproved = True
         bestNeighborhoodSolution = Solution(solution.RoutePlan, self.InputData)
@@ -793,7 +885,7 @@ class ReplaceDeltaNeighborhood(DeltaNeighborhood):
         return ReplaceMove(solution.RoutePlan[day][cohort], day, cohort, taskInRoute, unusedTask, profit_delta)
 
 
-        '''
+
         return move
     
     
@@ -833,12 +925,12 @@ class ReplaceDeltaNeighborhood(DeltaNeighborhood):
 #_______________________________________________________________________________________________________________________
 
 class InsertMove(BaseMove):
-    """
+    """ '''   
     Represents a move that inserts a task into various positions within a route.
 
     Attributes:
         Route (dict): A deep copy of the initial route plan after attempting to insert the task.
-    """
+    """ '''   
 
     def __init__(self, initialRoutePlan, task: int, day:int, cohort:int, index: int, profit:int):
         """
@@ -1023,3 +1115,4 @@ class ReplaceProfitNeighborhood(ProfitNeighborhood):
 
 #_______________________________________________________________________________________________________________________
 
+'''

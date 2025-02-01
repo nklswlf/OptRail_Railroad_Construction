@@ -8,7 +8,72 @@ class EvaluationLogic:
 
     def __init__(self, data:InputData):
         ''' Initialize by adding data'''
-        self.data = data      
+        self.data = data
+
+
+
+
+    def calculate_insert_shift_delta(self, move):
+        ''' Calculate the delta of the objective function value when inserting an order item into a route'''
+        
+
+        # Calculate the extra commute distance
+        delta_commute_distance = self.data.work_routes_order_item[move.WorkerID][move.OrderItemID] * 2
+
+        # Calculate the extra transport distance
+        if move.MachineRouteIndex == 0:
+            predecessor_id = None
+            successor_id = move.MachineRoute[move.MachineRouteIndex + 1] 
+            delta_transport_distance = self.data.transport_routes_order_item[move.OrderItemID][successor_id] 
+        elif move.MachineRouteIndex == len(move.MachineRoute) - 1:
+            predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
+            successor_id = None
+            delta_transport_distance = self.data.transport_routes_order_item[move.OrderItemID][predecessor_id]
+        else:
+            predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
+            successor_id = move.MachineRoute[move.MachineRouteIndex + 1]
+            delta_transport_distance = self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] + self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.transport_routes_order_item[predecessor_id][successor_id]
+        
+        # Calculate the extra driver violation
+        machine = self.data.machines[move.MachineID]
+        if move.WorkerID not in machine.default_drivers:
+            delta_driver_violation = 1
+        else:
+            delta_driver_violation = 0
+
+        # Calculate if extra machine is used
+        if len(move.MachineRoute) == 1:
+            delta_machine_count = 1
+        else:
+            delta_machine_count = 0
+
+        # Calculate the extra worker count
+        if len(move.WorkerRoute) == 1:
+            delta_worker_count = 1
+        else:
+            delta_worker_count = 0
+
+        # Calculate the best dynamic percentage order
+
+
+
+
+        delta = {}
+        delta["commute_distance"] = delta_commute_distance
+        delta["transport_distance"] = delta_transport_distance
+        delta["driver_violation"] = delta_driver_violation
+        delta["machine_count"] = delta_machine_count
+        delta["worker_count"] = delta_worker_count
+
+        delta = delta["commute_distance"] + delta["transport_distance"] + delta["driver_violation"] + delta["machine_count"] + delta["worker_count"]
+
+
+
+        return delta
+
+
+
+
 
 
     def evaluate(self, solution:Solution):
@@ -20,6 +85,23 @@ class EvaluationLogic:
         self.calculate_transport_distance(solution)
         self.calculate_driver_violation(solution)
         self.calculate_machine_worker_count_and_utilization_time(solution)
+        self.calculate_dynamic_percentage_order(solution)
+
+
+    def calculate_dynamic_percentage_order(self, solution:Solution):
+        ''' Calculate the dynamic percentage of the solution'''
+        print("\nCalculating dynamic percentage...")
+
+        finished_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
+       
+        for order in self.data.orders:
+            solution.dynamic_percentage_order[order.order_number] = 0
+            for order_item_id in order.order_item_ids:
+                if order_item_id in finished_order_item_ids:
+                    solution.dynamic_percentage_order[order.order_number] += 1
+
+            solution.dynamic_percentage_order[order.order_number] = solution.dynamic_percentage_order[order.order_number] / len(order.order_item_ids)
+                
 
 
 
@@ -28,6 +110,11 @@ class EvaluationLogic:
         print("\nCategorizing orders...")
 
         all_planned_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
+
+        for order_item in self.data.order_items:
+            if order_item.id not in all_planned_order_item_ids:
+                solution.not_started_order_items.append(order_item)
+        
 
         for order in self.data.orders:
             solution.finished_orders.append(order)

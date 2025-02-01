@@ -7,7 +7,7 @@ import time
 class ImprovementAlgorithm:
     """ Base class for several types of improvement algorithms. """ 
 
-    def __init__(self, inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Insert_Site']):
+    def __init__(self, inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Insert_Shift']):
         self.InputData = inputData
 
         self.EvaluationLogic = {}
@@ -22,7 +22,7 @@ class ImprovementAlgorithm:
         ''' Initializes empty variables'''
 
         self.EvaluationLogic = evaluationLogic
-        self.SolutionPool = solutionPool
+        self.SolutionPool = None #solutionPool
         self.RNG = rng
 
     def CreateNeighborhood(self, neighborhoodType:str): #-> BaseNeighborhood:
@@ -33,8 +33,8 @@ class ImprovementAlgorithm:
 
         if neighborhoodType == 'Insert_Site':
             return InsertSiteNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
-        elif neighborhoodType == 'SwapInterRoute':
-            return SwapInterRouteNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
+        elif neighborhoodType == 'Insert_Shift':
+            return InsertShiftNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
         elif neighborhoodType == 'TwoEdgeExchange':
             return TwoEdgeExchangeNeighborhood(self.InputData , self.EvaluationLogic, self.SolutionPool, self.RNG)
         elif neighborhoodType == 'Insert':
@@ -68,7 +68,7 @@ class ImprovementAlgorithm:
 class RepairAlgorithm(ImprovementAlgorithm):
     """ Repair algorithm to fix incomplete solutions. """
     
-    def __init__(self, inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Insert_Site']):
+    def __init__(self, inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Insert_Shift']):
         super().__init__(inputData, neighborhoodEvaluationStrategy, neighborhoodTypes)
 
     def Run(self, solution:Solution) -> Solution:
@@ -109,6 +109,7 @@ class RepairAlgorithm(ImprovementAlgorithm):
         route_plan_machine = deepcopy(solution.route_plan_machine)
         semifinished_orders = deepcopy(solution.semifinished_orders)
 
+        """
         print("Worker Route Plan before Destroy:")
         for worker, route in solution.route_plan_worker.items():
             print(f"Worker {worker}: {route}")
@@ -116,7 +117,7 @@ class RepairAlgorithm(ImprovementAlgorithm):
         print("Machine Route Plan before Destroy:")
         for machine, route in solution.route_plan_machine.items():
             print(f"Machine {machine}: {route}")
-
+        """
 
 
         for order in semifinished_orders:
@@ -131,7 +132,7 @@ class RepairAlgorithm(ImprovementAlgorithm):
 
         destroyed_solution = Solution(route_plan_worker, route_plan_machine, self.InputData)
 
-
+        """
         print("Worker Route Plan after Destroy:")
         for worker, route in destroyed_solution.route_plan_worker.items():
             print(f"Worker {worker}: {route}")
@@ -139,10 +140,13 @@ class RepairAlgorithm(ImprovementAlgorithm):
         print("Machine Route Plan after Destroy:")
         for machine, route in destroyed_solution.route_plan_machine.items():
             print(f"Machine {machine}: {route}")
+        """
         
 
         if destroyed_solution.feasibility_check():
             print("Solution is feasible after Destroy")
+            self.EvaluationLogic.evaluate(destroyed_solution)
+            print(f"Solution after Destroy: {destroyed_solution}")
         else:
             print("Solution is not feasible after Destroy")
 
@@ -162,35 +166,44 @@ class IterativeImprovement(ImprovementAlgorithm):
         Local Search with itereative steps through many different neighborhoods.
     """
 
-    def __init__(self,  inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['SwapWaiting']):
+    def __init__(self,  inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Insert_Shift']):
         super().__init__(inputData, neighborhoodEvaluationStrategy, neighborhoodTypes)
 
     def Run(self, solution:Solution) -> Solution:
         ''' Run local search with given solutions and iterate through all given neighborhood types'''
 
-        self.InitializeNeighborhoods()    
+        self.InitializeNeighborhoods()
 
-        # According to "Hansen et al. (2017): Variable neighorhood search", this is equivalent to the 
-        # sequential variable neighborhood descent with a pipe neighborhood change step.
+        #all_planned_order_items = [order_item_ids for route in solution.machine_route_plan.values() for order_item_ids in route]
 
-        usedTypes = []
-        #profit_over_time = {}
-        #profit_over_time[0] = 0, solution.TotalProfit
-        start_time = time.time()
-        used_time = 0
+        empty_dict_machine = {}
+        for machine in solution.route_plan_machine.keys():
+            empty_dict_machine[machine] = []
+        
+        empty_dict_worker = {}
+        for worker in solution.route_plan_worker.keys():
+            empty_dict_worker[worker] = []
+
+        solution = Solution(empty_dict_worker, empty_dict_machine, self.InputData)
+        self.EvaluationLogic.evaluate(solution)
+        print(f'\nInitial solution: {solution}')
+
 
         for neighborhoodType in self.NeighborhoodTypes:
-            usedTypes.append(neighborhoodType)
+
             print(f'\nRunning neighborhood {neighborhoodType}')
             neighborhood = self.Neighborhoods[neighborhoodType]
-            used_time = time.time() - start_time
-            iteration = len(usedTypes)
-            #profit_over_time[iteration] = used_time, solution.TotalProfit
+
 
             solution = neighborhood.LocalSearch(self.NeighborhoodEvaluationStrategy, solution)
-            print(f'Best solution after {usedTypes}: {solution}')
+            self.EvaluationLogic.evaluate(solution)
+            
+
+            print(f'\nBest solution after {neighborhoodType}: {solution}')
         
-        return solution#, profit_over_time
+        return solution
+
+
 
 
 
