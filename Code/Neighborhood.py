@@ -22,7 +22,6 @@ class BaseNeighborhood:
 
     def __init__(self, data: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng=None):
         self.data = data
-        self.routePlan = None
         self.evaluationLogic = evaluationLogic
         self.solutionPool = solutionPool
         self.rng = rng
@@ -71,6 +70,39 @@ class BaseNeighborhood:
         self.Moves.clear()
         self.MoveSolutions.clear()
 
+
+    def WorkerRouteFeasibilityCheck(self, worker_id, worker_route: list) -> bool:
+        ''' Checks if the worker route is feasible'''
+
+        worker = self.data.workers[worker_id]
+
+        # Check if the worker does not work more than 5 consecutive night shifts
+        night_shifts = 0
+        for order_item_id in worker_route:
+            if order_item_id in worker.night_shift_ids:
+                night_shifts += 1
+            else:
+                night_shifts = 0
+            if night_shifts > self.data._max_consecutive_night_shifts:
+                return False
+        
+        # Check if the worker does not work more than 10 shifts in 14 days
+        order_items = [self.data.order_items[order_item_id] for order_item_id in worker_route]
+        for i, order_item_i in enumerate(order_items):
+            window_start = order_item_i.start_time.date()
+            window_end = window_start + self.data._time_period_for_max_shifts
+            shift_count = 0
+            for order_item_j in order_items:
+                if window_start <= order_item_j.start_time.date() < window_end:
+                    shift_count += 1
+            if shift_count > self.data._max_shifts_in_time_period:
+                return False
+        
+
+        return True
+
+
+
 class InsertNeighborhood(BaseNeighborhood):
 
     def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
@@ -85,8 +117,8 @@ class InsertNeighborhood(BaseNeighborhood):
         self.sort_move_solutions()
         
         for move_solution in self.MoveSolutions:
-            # Feasibility check to implement
-            return move_solution
+            if self.WorkerRouteFeasibilityCheck(move_solution.WorkerID, move_solution.WorkerRoute):
+                return move_solution
                     
         return None
 
@@ -101,7 +133,7 @@ class InsertNeighborhood(BaseNeighborhood):
             self.EvaluateMove(move)
 
             ### NEED OF FEASIBILITY CHECK!! 
-            if self.SingleRouteFeasibilityCheck(move.RouteDayCohort):
+            if self.WorkerRouteFeasibilityCheck(move.RouteDayCohort):
                 self.MoveSolutions.append(move)
                 return None
         
@@ -115,6 +147,7 @@ class InsertNeighborhood(BaseNeighborhood):
         hasSolutionImproved = True
         bestNeighborhoodSolution = deepcopy(solution)
 
+        iterator = 1
         while hasSolutionImproved:
             
             # Sets Algorithm back!
@@ -126,16 +159,21 @@ class InsertNeighborhood(BaseNeighborhood):
 
 
             if bestNeighborhoodMove is not None:
+                #print(f"\nIteration: {iterator}")
 
-                worker_route, machine_route = self.constructCompleteRoute(bestNeighborhoodMove)
-                bestNeighborhoodSolution = Solution(worker_route, machine_route, self.InputData)
-                self.EvaluationLogic.evaluate(bestNeighborhoodSolution)
+                worker_route, machine_route = self.constructCompleteRoutes(bestNeighborhoodMove, bestNeighborhoodSolution)
+                bestNeighborhoodSolution = Solution(worker_route, machine_route, self.data)
+                self.evaluationLogic.evaluate(bestNeighborhoodSolution)
 
-                self.SolutionPool.AddSolution(bestNeighborhoodSolution)
+                self.solutionPool.AddSolution(bestNeighborhoodSolution)
+
+                #print(f"Best Neighborhood Solution: \n{bestNeighborhoodSolution}")
 
             else:
-            
+                print(f"\nNo better solution found in iteration {iterator}")
                 hasSolutionImproved = False
+
+            iterator += 1
 
         return bestNeighborhoodSolution
     
@@ -163,14 +201,11 @@ class InsertShiftMove(BaseMove):
         self.MachineRoute.insert(self.MachineRouteIndex, self.OrderItemID)
         self.WorkerRoute.insert(self.WorkerRouteIndex, self.OrderItemID)
 
-        print(f"Machine ID: {self.MachineID}")
-        print(f"Machine Route: {self.MachineRoute}")
-        print(f"Worker ID: {self.WorkerID}")
-        print(f"Worker Route: {self.WorkerRoute}")
+        #print(f"Machine ID: {self.MachineID}")
+        #print(f"Machine Route: {self.MachineRoute}")
+        #print(f"Worker ID: {self.WorkerID}")
+        #print(f"Worker Route: {self.WorkerRoute}")
     
-
-        
-
 
 
 class InsertShiftNeighborhood(InsertNeighborhood):
@@ -188,12 +223,9 @@ class InsertShiftNeighborhood(InsertNeighborhood):
         if not_used_shifts is None:
             unused_order_item_ids = solution.not_started_order_item_ids
 
-        print(f"Machine Route: {solution.route_plan_machine}")
-
-        print(f"Unused Order Item IDs: {unused_order_item_ids}")
         
         for order_item_id in unused_order_item_ids:
-            print(f"\nOrder Item ID: {order_item_id}")
+
             # Dictionary to store information about the position of the order_item in machine routes
             order_item_position_machine_route = dict()
             order_item_position_worker_route = dict()
@@ -242,11 +274,47 @@ class InsertShiftNeighborhood(InsertNeighborhood):
                     order_item_position_worker_route[worker_id] = [0, list(worker_route)]
                     continue
                 else:
+                    # Continue to next worker if the work time would exceed the maximum working hours
+                    if solution.worker_work_time[worker_id] + solution.data.order_items[order_item_id].duration > self.data._max_working_hours:
+                        continue
+                    
+                    night_tracker_start = 0
                     # Find the position of the order_item in the worker route
                     for order_item_id_worker in worker_route:
+                        
                         # Break to next worker if order_item is not a predecessor or successor of current order_item_worker
                         if order_item_id not in worker.predecessor_ids[order_item_id_worker] and order_item_id not in worker.successor_ids[order_item_id_worker]:
                             break
+                        
+                        '''
+                        # Break to next worker if order_item would be inserted into a sequence of order_items that would exceed the maximum consecutive night shifts
+                        if order_item_id in worker.night_shift_ids:
+                            if order_item_id_worker in worker.night_shift_ids:
+                                night_tracker_start += 1
+                                night_tracker_follower = 0
+                                if len(worker_route) >= self.data._max_consecutive_night_shifts:
+                                    for i in range(worker_route.index(order_item_id_worker)+1, worker_route.index(order_item_id_worker) + self.data._max_consecutive_night_shifts - night_tracker_start + 1):
+                                        if i >= len(worker_route):
+                                            break
+                                        if worker_route[i] in worker.night_shift_ids:
+                                            night_tracker_follower += 1
+                                        else:
+                                            night_tracker_follower = 0
+                                            break
+                                    
+                                    if night_tracker_start + night_tracker_follower >= self.data._max_consecutive_night_shifts:
+                                        continue
+
+                            else:
+                                if night_tracker_start >= self.data._max_consecutive_night_shifts:
+                                    night_tracker_start = 0
+                                    continue
+                                else:
+                                    night_tracker_start = 0
+                        '''
+                                    
+                                                     
+
 
                         # If order_item is a predecessor of order_item_worker, it can be inserted before order_item_id_worker
                         if order_item_id in worker.predecessor_ids[order_item_id_worker]:
@@ -261,22 +329,79 @@ class InsertShiftNeighborhood(InsertNeighborhood):
 
             
 
-            
-
-            
-
+    
 
             for machine_id, machine_route_and_index in order_item_position_machine_route.items():
                 for worker_id, worker_route_and_index in order_item_position_worker_route.items():
                     self.Moves.append(InsertShiftMove(machine_id, worker_id, machine_route_and_index[1], worker_route_and_index[1], machine_route_and_index[0], worker_route_and_index[0], order_item_id))
 
 
-            print(f"Order Item Position Machine Route: {order_item_position_machine_route}")
-            print(f"Order Item Position Worker Route: {order_item_position_worker_route}")
-            
+            #print(f"Order Item Position Machine Route: {order_item_position_machine_route}")
+            #print(f"Order Item Position Worker Route: {order_item_position_worker_route}")
+                                
 
-                    
-                    
+    def EvaluateMove(self, move:InsertShiftMove) -> None:
+        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
+
+        #Update the Delta of the Move
+        move.setDelta(self.evaluationLogic.calculate_insert_shift_delta(move))
+
+    
+    def sort_move_solutions(self):
+
+        # Sort with lowest Delta first
+        self.MoveSolutions.sort(key=lambda move: move.Delta, reverse=False)
+
+
+    def constructCompleteRoutes(self, move:InsertShiftMove, solution:Solution) -> dict: 
+        ''' Constructs the comlete Route from the Move'''
+        
+        machine_route_plan = deepcopy(solution.route_plan_machine)
+        worker_route_plan = deepcopy(solution.route_plan_worker)
+
+        machine_route_plan[move.MachineID] = move.MachineRoute
+        worker_route_plan[move.WorkerID] = move.WorkerRoute
+
+        return worker_route_plan, machine_route_plan
+
+        
+
+
+
+class InsertSiteMove(BaseMove):
+    """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
+
+    def __init__(self):
+
+        pass
+
+
+class InsertSiteNeighborhood(InsertNeighborhood):
+    """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
+
+    def __init__(self, inputData:InputData, evaluationLogic:EvaluationLogic, solutionPool:SolutionPool, rng):
+        super().__init__(inputData,  evaluationLogic, solutionPool, rng)
+
+        self.Type = 'Insert_Site'
+
+
+    def DiscoverMoves(self, solution:Solution, not_used_sites = None):
+        """ Generate all $n choose 2$ moves and shuffle them """
+
+        if not_used_sites is None:
+            not_used_sites = solution.semifinished_orders + solution.not_started_orders
+
+        for site in not_used_sites:
+            site.order_items
+
+
+
+    def EvaluateMove(self, move:InsertSiteMove) -> None:
+        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
+
+        #Update the Delta of the Move
+        move.setDelta(self.EvaluationLogic.CalculateSwapIntraRouteDelta(move))
+
 
 
 
@@ -338,58 +463,10 @@ class InsertShiftNeighborhood(InsertNeighborhood):
                             # Fourth possibility: Insert order_item in last position of machine_route and in last position of worker_route
                             elif machine_route.index(order_item_id_machine) + 1 == len(machine_route) and worker_route.index(order_item_id_worker) + 1 == len(worker_route):
                                 self.Moves.append(InsertShiftMove(machine_id, worker_id, machine_route, worker_route, machine_route.index(order_item_id_machine) + 1, worker_route.index(order_item_id_worker) + 1, order_item.id))
-        '''  
-
-
-    def EvaluateMove(self, move:InsertShiftMove) -> None:
-        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
-
-        #Update the Delta of the Move
-        move.setDelta(self.evaluationLogic.calculate_insert_shift_delta(move))
-
-    
-    def sort_move_solutions(self):
-
-        # Sort with lowest Delta first
-        self.MoveSolutions.sort(key=lambda move: move.Delta)
 
 
 
-class InsertSiteMove(BaseMove):
-    """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
 
-    def __init__(self):
-
-        pass
-
-
-class InsertSiteNeighborhood(InsertNeighborhood):
-    """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
-
-    def __init__(self, inputData:InputData, evaluationLogic:EvaluationLogic, solutionPool:SolutionPool, rng):
-        super().__init__(inputData,  evaluationLogic, solutionPool, rng)
-
-        self.Type = 'Insert_Site'
-
-
-    def DiscoverMoves(self, solution:Solution, not_used_sites = None):
-        """ Generate all $n choose 2$ moves and shuffle them """
-
-        if not_used_sites is None:
-            not_used_sites = solution.semifinished_orders + solution.not_started_orders
-
-        for site in not_used_sites:
-            site.order_items
-
-
-
-    def EvaluateMove(self, move:InsertSiteMove) -> None:
-        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
-
-        #Update the Delta of the Move
-        move.setDelta(self.EvaluationLogic.CalculateSwapIntraRouteDelta(move))
-
-'''
 "_____________________________________________________________________________________________________________________________________"
 
 

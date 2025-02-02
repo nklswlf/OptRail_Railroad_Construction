@@ -21,7 +21,11 @@ class EvaluationLogic:
         delta_commute_distance = self.data.work_routes_order_item[move.WorkerID][move.OrderItemID] * 2
 
         # Calculate the extra transport distance
-        if move.MachineRouteIndex == 0:
+        if len(move.MachineRoute) == 1:
+            predecessor_id = None
+            successor_id = None
+            delta_transport_distance = 0
+        elif move.MachineRouteIndex == 0:
             predecessor_id = None
             successor_id = move.MachineRoute[move.MachineRouteIndex + 1] 
             delta_transport_distance = self.data.transport_routes_order_item[move.OrderItemID][successor_id] 
@@ -67,7 +71,7 @@ class EvaluationLogic:
 
         delta = delta["commute_distance"] + delta["transport_distance"] + delta["driver_violation"] + delta["machine_count"] + delta["worker_count"]
 
-
+        print(f"Delta: {delta}")
 
         return delta
 
@@ -90,7 +94,6 @@ class EvaluationLogic:
 
     def calculate_dynamic_percentage_order(self, solution:Solution):
         ''' Calculate the dynamic percentage of the solution'''
-        print("\nCalculating dynamic percentage...")
 
         finished_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
        
@@ -107,7 +110,6 @@ class EvaluationLogic:
 
     def categorizing_orders(self, solution:Solution):
         ''' Categorize the orders into finished, semi-finished and not started orders'''
-        print("\nCategorizing orders...")
 
         all_planned_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
 
@@ -141,9 +143,7 @@ class EvaluationLogic:
     
     def categorizing_machine_worker(self, solution:Solution):
         ''' Categorize the machines and workers into finished, semi-finished and not started machines and workers'''
-        print("\nCategorizing machines and workers...")
 
-        all_planned_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
         
         for machine, route in solution.route_plan_machine.items():
             if len(route) == 0:
@@ -161,7 +161,6 @@ class EvaluationLogic:
 
     def calculate_finished_order_items(self, solution:Solution):
         ''' Calculate the number of finished order items'''
-        print("\nCalculating finished order items...")
 
         for worker_id, route in solution.route_plan_worker.items():
             for i in range(len(route)):
@@ -175,15 +174,13 @@ class EvaluationLogic:
         if checker == solution.number_of_finished_order_items:
             pass
         else:
-            print("Number of finished order items is not equal to the number of finished order items of the machines")
-            #raise Exception("Number of finished order items is not equal to the number of finished order items of the machines")
+            raise Exception("Number of finished order items is not equal to the number of finished order items of the machines")
 
 
 
 
     def calculate_commute_distance(self, solution:Solution):
         ''' Calculate the total commute distance of the workers'''
-        print("\nCalculating commute distance...")
 
         for worker_id, route in solution.route_plan_worker.items():
             solution.commute_distance_per_worker[worker_id] = 0
@@ -196,7 +193,6 @@ class EvaluationLogic:
     
     def calculate_transport_distance(self, solution:Solution):
         ''' Calculate the total transport distance of the machines'''
-        print("\nCalculating transport distance...")
 
         for machine_id, route in solution.route_plan_machine.items():
             solution.transport_distance_per_machine[machine_id] = 0
@@ -208,7 +204,6 @@ class EvaluationLogic:
 
     def calculate_driver_violation(self, solution:Solution):
         ''' Calculate the total driver violation time of the workers'''
-        print("\nCalculating driver violation...")
 
         for worker_id, route in solution.route_plan_worker.items():
             for i in range(len(route)):
@@ -221,7 +216,6 @@ class EvaluationLogic:
     
     def calculate_machine_worker_count_and_utilization_time(self, solution:Solution):
         ''' Calculate the number of workers and machines'''
-        print("\nCalculating machine and worker count...")
 
         for machine_id, route in solution.route_plan_machine.items():
             solution.machine_utilization_time[machine_id] = 0
