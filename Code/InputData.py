@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import List, Tuple, Optional
 from datetime import datetime,timedelta
+import itertools
 
 
 class InputData:
@@ -326,15 +327,17 @@ class InputData:
             self._transport_routes_order_item = self._convert_from_order_to_order_item(self._transport_routes, "transport")
             self._work_routes_order_item = self._convert_from_order_to_order_item(self._work_routes, "work")
 
+            # Add data to order items (day or night shift)
+            for order_item in self.order_items:
+                order_item.day_or_night(self)
+
             # Add data to workers and machines (predessors, successors, possible order items)
             for machine in self.machines:
                 machine.add_data(self)
             for worker in self.workers:
                 worker.add_data(self)
             
-            # Add data to order items (day or night shift)
-            for order_item in self.order_items:
-                order_item.day_or_night(self)
+            
 
 
             
@@ -619,6 +622,8 @@ class Worker:
         self.work_hours = 0
 
     def add_data(self, input_data: InputData):
+        
+    
         # Initialisiere _possible_order_items als leeres Dictionary
         for order in input_data.orders:
             self._possible_order_items[order] = []
@@ -664,6 +669,10 @@ class Worker:
                         self._successors[order_item_1].append(order_item_2)
                         self._successor_ids[order_item_1.id].append(order_item_2.id)
 
+        # Create night shift list
+        self._night_shifts = [order_item for order_items in self._possible_order_items.values() for order_item in order_items if order_item.night_shift]
+        self._night_shift_ids = [order_item.id for order_item in self._night_shifts]
+
     @property
     def personal_number(self) -> int:
         return self._personal_number
@@ -706,6 +715,14 @@ class Worker:
     @property
     def successor_ids(self) -> dict[int, List[int]]:
         return self._successor_ids
+    
+    @property
+    def night_shifts(self) -> List[int]:
+        return self._night_shifts
+    
+    @property
+    def night_shift_ids(self) -> List[int]:
+        return self._night_shift_ids
     
     
 

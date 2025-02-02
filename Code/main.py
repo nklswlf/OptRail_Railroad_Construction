@@ -95,7 +95,7 @@ def main():
 
 
 
-def single_run(instance_filename = "Construction_a15_o170_m9_an80_ar18.json", order_item_attractiveness_technique="balanced_greedy", machine_attractiveness_technique="machine_planned_importance"):
+def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", order_item_attractiveness_technique="balanced_greedy", machine_attractiveness_technique="balanced_greedy"):
 
     #time_start = time()
     data = InputData(instance_filename)
@@ -103,6 +103,7 @@ def single_run(instance_filename = "Construction_a15_o170_m9_an80_ar18.json", or
     #time_for_data_loading = time_end - time_start
 
     evaluationLogic = EvaluationLogic(data)
+    solutionPool = SolutionPool()
     
     #time_start = time()
     construct = ConstructiveHeuristics(solutionPool= None, evaluationLogic = evaluationLogic)
@@ -111,16 +112,16 @@ def single_run(instance_filename = "Construction_a15_o170_m9_an80_ar18.json", or
     #time_for_construction = time_end - time_start
 
 
-    print(f"Solution after construction: {construct_solution}")
+    print(f"\nSolution after construction: \n{construct_solution}")
 
 
     repair = RepairAlgorithm(data)
     localSearch = IterativeImprovement(data)
+    
 
-    localSearch.Initialize(evaluationLogic=evaluationLogic, solutionPool=None)
+    localSearch.Initialize(evaluationLogic=evaluationLogic, solutionPool=solutionPool)
 
     local_search_solution = localSearch.Run(construct_solution)
-
 
 
     #solution.create_output_file_greedy(time_for_data_loading, time_for_construction ,order_item_attractiveness_technique, machine_attractiveness_technique)

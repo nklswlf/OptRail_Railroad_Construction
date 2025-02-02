@@ -22,7 +22,7 @@ class ImprovementAlgorithm:
         ''' Initializes empty variables'''
 
         self.EvaluationLogic = evaluationLogic
-        self.SolutionPool = None #solutionPool
+        self.SolutionPool = solutionPool
         self.RNG = rng
 
     def CreateNeighborhood(self, neighborhoodType:str): #-> BaseNeighborhood:
@@ -174,19 +174,8 @@ class IterativeImprovement(ImprovementAlgorithm):
 
         self.InitializeNeighborhoods()
 
-        #all_planned_order_items = [order_item_ids for route in solution.machine_route_plan.values() for order_item_ids in route]
 
-        empty_dict_machine = {}
-        for machine in solution.route_plan_machine.keys():
-            empty_dict_machine[machine] = []
-        
-        empty_dict_worker = {}
-        for worker in solution.route_plan_worker.keys():
-            empty_dict_worker[worker] = []
-
-        solution = Solution(empty_dict_worker, empty_dict_machine, self.InputData)
-        self.EvaluationLogic.evaluate(solution)
-        print(f'\nInitial solution: {solution}')
+        print(f'\nInitial solution: \n{solution}')
 
 
         for neighborhoodType in self.NeighborhoodTypes:
@@ -196,10 +185,14 @@ class IterativeImprovement(ImprovementAlgorithm):
 
 
             solution = neighborhood.LocalSearch(self.NeighborhoodEvaluationStrategy, solution)
-            self.EvaluationLogic.evaluate(solution)
-            
 
-            print(f'\nBest solution after {neighborhoodType}: {solution}')
+            feasible = solution.feasibility_check()
+
+            if not feasible:
+                raise Exception(f'Solution is not feasible after neighborhood {neighborhoodType}')
+
+            
+            print(f'\nBest (feasible) solution after {neighborhoodType}: \n{solution}')
         
         return solution
 

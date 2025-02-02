@@ -49,7 +49,7 @@ class Solution:
         return (f"Number of finished orders: {self.number_of_finished_orders}\n"
                 f"Number of semi-finished orders: {len(self.semifinished_orders)}\n"
                 f"Number of not started orders: {len(self.not_started_orders)}\n"
-                f"Dynamic percentage: {self.dynamic_percentage_order}\n"
+                #f"Dynamic percentage: {self.dynamic_percentage_order}\n"
                 f"Number of finished order items: {self.number_of_finished_order_items}\n"
                 f"Driver violation: {self.driver_violation}\n"
                 f"Commute distance: {round(self.total_commute_distance, 2)}\n"
@@ -252,7 +252,7 @@ class Solution:
                             print(f"Worker {worker_id} has more than {self.data._max_consecutive_night_shifts} consecutive night shifts ({night_shifts}).")
                         return False
                     checked_indices.add(i)
-
+            
             # Check if the worker does not work more than 10 shifts in 14 days
             for i, order_item_i in enumerate(order_item_objects):
                 window_start = order_item_i.start_time.date()
@@ -272,7 +272,7 @@ class Solution:
                 if verbose:
                     print(f"Worker {worker_id} exceeds the maximum allowed total working hours ({self.data._max_working_hours} hours) with {total_duration_hours:.2f} hours.")
                 return False
-
+            
             if verbose:
                 print(f"Route for worker {worker_id} is feasible.")
 
