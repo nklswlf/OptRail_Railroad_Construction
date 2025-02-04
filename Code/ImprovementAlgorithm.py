@@ -31,12 +31,12 @@ class ImprovementAlgorithm:
         
         ### NEEDS TO BE ADJUSTED FOR ORIENTEERING PROBLEMLocalSearch
 
-        if neighborhoodType == 'Insert_Site':
-            return InsertSiteNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
-        elif neighborhoodType == 'Insert_Shift':
+        if neighborhoodType == 'Insert_Shift':
             return InsertShiftNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
-        elif neighborhoodType == 'TwoEdgeExchange':
-            return TwoEdgeExchangeNeighborhood(self.InputData , self.EvaluationLogic, self.SolutionPool, self.RNG)
+        elif neighborhoodType == 'Swap_Shift_Worker':
+            return SwapShiftWorkerNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
+        elif neighborhoodType == 'Replace_Shift_Worker':
+            return ReplaceShiftWorkerNeighborhood(self.InputData , self.EvaluationLogic, self.SolutionPool, self.RNG)
         elif neighborhoodType == 'Insert':
             return InsertNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
         elif neighborhoodType == 'ReplaceProfit':
@@ -166,7 +166,7 @@ class IterativeImprovement(ImprovementAlgorithm):
         Local Search with itereative steps through many different neighborhoods.
     """
 
-    def __init__(self,  inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Insert_Shift']):
+    def __init__(self,  inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Replace_Shift_Worker']):
         super().__init__(inputData, neighborhoodEvaluationStrategy, neighborhoodTypes)
 
     def Run(self, solution:Solution) -> Solution:
@@ -176,6 +176,9 @@ class IterativeImprovement(ImprovementAlgorithm):
 
 
         print(f'\nInitial solution: \n{solution}')
+
+        for orders in self.InputData.orders:
+            print(f'Order {orders.order_number} with order items: {orders.order_item_ids}')
 
 
         for neighborhoodType in self.NeighborhoodTypes:

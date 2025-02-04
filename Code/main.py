@@ -118,10 +118,19 @@ def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", or
     repair = RepairAlgorithm(data)
     localSearch = IterativeImprovement(data)
     
-
     localSearch.Initialize(evaluationLogic=evaluationLogic, solutionPool=solutionPool)
 
     local_search_solution = localSearch.Run(construct_solution)
+
+
+    print(f"\nAverage transport distance: {data.average_transport_distance}")
+    print(f"\nMax transport distance: {data.max_transport_distance}")
+    print(f"Min transport distance: {data.min_transport_distance}")
+    print(f"\nAverage work distance: {data.average_work_distance}")
+    print(f"\nMax work distance: {data.max_work_distance}")
+    print(f"Min work distance: {data.min_work_distance}")
+    print(f"Max order item count: {data._min_dynamic_precentage_change}")
+    print(f"Min order item count: {data._max_dynamic_precentage_change}")
 
 
     #solution.create_output_file_greedy(time_for_data_loading, time_for_construction ,order_item_attractiveness_technique, machine_attractiveness_technique)

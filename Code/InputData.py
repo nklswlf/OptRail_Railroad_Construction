@@ -336,8 +336,17 @@ class InputData:
                 machine.add_data(self)
             for worker in self.workers:
                 worker.add_data(self)
+
+            self._average_transport_distance = sum(sum(row) for row in self._transport_routes) / (len(self._transport_routes)*len(self._transport_routes[0]))
+            self._min_transport_distance = min(min(row) for row in self._transport_routes if any(row))            
+            self._max_transport_distance = max(max(row) for row in self._transport_routes if any(row))
+
+            self._average_work_distance = 2* sum(sum(row) for row in self._work_routes) / (len(self._work_routes)*len(self._work_routes[0]))
+            self._min_work_distance = 2*min(min(row) for row in self._work_routes if any(row))
+            self._max_work_distance = 2*max(max(row) for row in self._work_routes if any(row))
             
-            
+            self._min_dynamic_precentage_change = 1/max(len(order.order_item_ids) for order in self.orders)
+            self._max_dynamic_precentage_change = 1/min(len(order.order_item_ids) for order in self.orders)
 
 
             
@@ -445,6 +454,40 @@ class InputData:
     def work_routes_order_item(self) -> List[List[Optional[float]]]:
         ''' Returns the work routes matrix '''
         return self._work_routes_order_item
+    
+    @property
+    def average_transport_distance(self) -> float:
+        return self._average_transport_distance
+    
+    @property
+    def average_work_distance(self) -> float:
+        return self._average_work_distance
+    
+    @property
+    def min_transport_distance(self) -> float:
+        return self._min_transport_distance
+    
+    @property
+    def min_work_distance(self) -> float:
+        return self._min_work_distance
+    
+    @property
+    def max_transport_distance(self) -> float:
+        return self._max_transport_distance
+    
+    @property
+    def max_work_distance(self) -> float:
+        return self._max_work_distance
+    
+    @property
+    def min_dynamic_precentage_change(self) -> float:
+        return self._min_dynamic_precentage_change
+    
+    @property
+    def max_dynamic_precentage_change(self) -> float:
+        return self._max_dynamic_precentage_change
+    
+    
     
 
 
