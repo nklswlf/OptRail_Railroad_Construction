@@ -18,7 +18,7 @@ class EvaluationLogic:
         
 
         # Calculate the extra commute distance
-        delta_commute_distance = self.data.work_routes_order_item[move.WorkerID][move.OrderItemID] * 2
+        delta_commute_distance = ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemID] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
 
         # Calculate the extra transport distance
         if len(move.MachineRoute) == 1:
@@ -28,15 +28,17 @@ class EvaluationLogic:
         elif move.MachineRouteIndex == 0:
             predecessor_id = None
             successor_id = move.MachineRoute[move.MachineRouteIndex + 1] 
-            delta_transport_distance = self.data.transport_routes_order_item[move.OrderItemID][successor_id] 
+            delta_transport_distance = (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
         elif move.MachineRouteIndex == len(move.MachineRoute) - 1:
             predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
             successor_id = None
-            delta_transport_distance = self.data.transport_routes_order_item[move.OrderItemID][predecessor_id]
+            delta_transport_distance = (self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
         else:
             predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
             successor_id = move.MachineRoute[move.MachineRouteIndex + 1]
-            delta_transport_distance = self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] + self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.transport_routes_order_item[predecessor_id][successor_id]
+            delta_transport_distance = (((self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                        + (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                        - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
         
         # Calculate the extra driver violation
         machine = self.data.machines[move.MachineID]
@@ -52,7 +54,6 @@ class EvaluationLogic:
             delta_machine_count = 0
 
         # Calculate the extra worker count
-        #print(move.WorkerRoute)
         if len(move.WorkerRoute) == 1:
             delta_worker_count = 1
         else:
@@ -66,27 +67,18 @@ class EvaluationLogic:
 
 
         delta = {}
-        delta["dynamic_percentage_order"] = (delta_dynamic_percentage_order - self.data.min_dynamic_precentage_change) / (self.data.max_dynamic_precentage_change - self.data.min_dynamic_precentage_change)
-        delta["commute_distance"] = (delta_commute_distance - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)
-        delta["transport_distance"] = (delta_transport_distance - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        delta["dynamic_percentage_order"] = delta_dynamic_percentage_order
+        delta["commute_distance"] = delta_commute_distance
+        delta["transport_distance"] = delta_transport_distance
         delta["driver_violation"] = delta_driver_violation
         delta["machine_count"] = delta_machine_count
         delta["worker_count"] = delta_worker_count
         
         print(f"Delta: {delta}")
-        print(f"Commute: {delta_commute_distance}")
-        print(f"Dynamics: {delta_dynamic_percentage_order}")
 
 
-        delta = (
-                - (delta["dynamic_percentage_order"] * self.data._ahp_weights["order_item_count"])
-                + (delta["commute_distance"] * self.data._ahp_weights["worker_distance"])
-                + (delta["transport_distance"] * self.data._ahp_weights["transport_distance"])
-                + (delta["driver_violation"] * self.data._ahp_weights["regular_driver_count"])
-                + (delta["machine_count"] * self.data._ahp_weights["machine_type_count"])
-                + (delta["worker_count"] * self.data._ahp_weights["worker_qualification_count"])
-                )
-        
+        delta = [delta["dynamic_percentage_order"], (delta["commute_distance"] + delta["transport_distance"] + delta["driver_violation"] + delta["machine_count"] + delta["worker_count"])]
+        #delta =[delta["dynamic_percentage_order"], delta["machine_count"]]
 
         print(f"Delta: {delta}")
 
@@ -96,11 +88,15 @@ class EvaluationLogic:
         ''' Calculate the delta of the objective function value when swapping two order items between two workers'''
 
         # Calculate the extra commute distance
-        delta_commute_distance = (2 * (self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID2]
-                                 - self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID1] 
-                                 + self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID1] 
-                                 - self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID2]))
-        
+        delta_commute_distance = (+ ((2*self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID2] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                 + ((2*self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID1] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                 - ((2*self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID1] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                 - ((2*self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID2] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
+                                  
+        if delta_commute_distance > -1**-2 and delta_commute_distance < 0:
+            delta_commute_distance = 0
+
+
         # Calculate extra driver violation
         machine_1 = self.data.machines[move.MachineID1]
         machine_2 = self.data.machines[move.MachineID2]
@@ -123,9 +119,13 @@ class EvaluationLogic:
         delta["commute_distance"] = delta_commute_distance
         delta["driver_violation"] = delta_driver_violation
 
+        print(f"Delta: {delta}")
+
 
 
         delta = (delta["commute_distance"] + delta["driver_violation"])
+
+        print(f"Delta: {delta}")
 
 
         return delta
@@ -136,9 +136,10 @@ class EvaluationLogic:
         ''' Calculate the delta of the objective function value when replacing an order item between two workers'''
 
         # Calculate the extra commute distance
-        delta_commute_distance = (2 * (self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID]
-                                 - self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID]))
+        delta_commute_distance = (((2*self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                 - ((2*self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
         
+
         # Calculate extra driver violation
         machine = self.data.machines[move.MachineID]
 
@@ -149,26 +150,30 @@ class EvaluationLogic:
         if move.WorkerID2 in machine.default_drivers:
             delta_driver_violation -= 1
 
+        # Calculate if a worker lost his last order item
+        if len(move.WorkerRoute1) == 0:
+            delta_worker_count = -1
+        else:
+            delta_worker_count = 0
+
+        if len(move.WorkerRoute2) == 1:
+            delta_worker_count += 1
+
+        
+
         delta = {}
         delta["commute_distance"] = delta_commute_distance
         delta["driver_violation"] = delta_driver_violation
+        delta["worker_count"] = delta_worker_count
 
-        delta = (delta["commute_distance"] + delta["driver_violation"])
+        print(f"Delta: {delta}")
 
+        delta = delta["commute_distance"] + delta["driver_violation"] + delta["worker_count"]
+
+        print(f"Delta: {delta}")
 
 
         return delta
-
-
-
-
-
-        
-
-
-        
-
-
 
 
 

@@ -166,7 +166,7 @@ class IterativeImprovement(ImprovementAlgorithm):
         Local Search with itereative steps through many different neighborhoods.
     """
 
-    def __init__(self,  inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Replace_Shift_Worker']):
+    def __init__(self,  inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Swap']):
         super().__init__(inputData, neighborhoodEvaluationStrategy, neighborhoodTypes)
 
     def Run(self, solution:Solution) -> Solution:
