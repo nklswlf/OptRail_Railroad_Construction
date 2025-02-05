@@ -69,6 +69,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
+
 machine_attractiveness_techniques = ["balanced_greedy",
                                      "posible_order_items_best_order_importance",
                                      "machine_planned_importance",
@@ -80,6 +81,10 @@ order_item_attractiveness_techniques = ["balanced_greedy",
                                         "dynamic_percentage_importance",
                                         "time_difference_importance"]
 
+
+machine_attractiveness_techniques = ["balanced_greedy"]
+
+order_item_attractiveness_techniques = ["balanced_greedy"]
                                      
 
 def main():
@@ -93,9 +98,12 @@ def main():
                 single_run(instance, order_item_attractiveness_technique, machine_attractiveness_technique)
                 print("\n")
 
+neighboorhood_types = ['Replace_Shift_Worker', 'Swap_Shift_Worker', 'Insert_Shift']
+
+neighboorhood_types = ['Insert_Shift']
 
 
-def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", order_item_attractiveness_technique="balanced_greedy", machine_attractiveness_technique="balanced_greedy"):
+def single_run(instance_filename = "Construction_a20_o236_m12_an106_ar24.json", order_item_attractiveness_technique="balanced_greedy", machine_attractiveness_technique="balanced_greedy"):
 
     #time_start = time()
     data = InputData(instance_filename)
@@ -116,7 +124,7 @@ def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", or
 
 
     repair = RepairAlgorithm(data)
-    localSearch = IterativeImprovement(data)
+    localSearch = IterativeImprovement(data, neighborhoodTypes=neighboorhood_types)
     
     localSearch.Initialize(evaluationLogic=evaluationLogic, solutionPool=solutionPool)
 
@@ -129,8 +137,8 @@ def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", or
     print(f"\nAverage work distance: {data.average_work_distance}")
     print(f"\nMax work distance: {data.max_work_distance}")
     print(f"Min work distance: {data.min_work_distance}")
-    print(f"Max order item count: {data._min_dynamic_precentage_change}")
-    print(f"Min order item count: {data._max_dynamic_precentage_change}")
+    print(f"Min dynamic change: {data._min_dynamic_precentage_change}")
+    print(f"Max dynamic change: {data._max_dynamic_precentage_change}")
 
 
     #solution.create_output_file_greedy(time_for_data_loading, time_for_construction ,order_item_attractiveness_technique, machine_attractiveness_technique)

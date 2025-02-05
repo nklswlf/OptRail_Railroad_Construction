@@ -242,23 +242,23 @@ class InsertShiftNeighborhood(OutputNeighborhood):
                 if len(machine_route) == 0:
                     order_item_position_machine_route[machine_id] = [0, list(machine_route)]
                     continue
-                else:
-                    # Find the position of the order_item in the machine route
-                    for order_item_id_machine in machine_route:
-                        # Break to next machine if order_item is not a predecessor or successor of current order_item_machine
-                        if order_item_id not in machine.predecessor_ids[order_item_id_machine] and order_item_id not in machine.successor_ids[order_item_id_machine]:
-                            break
 
-                        # If order_item is a predecessor of order_item_machine, it can be inserted before order_item_id_machine
-                        if order_item_id in machine.predecessor_ids[order_item_id_machine]:
-                            order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine), list(machine_route)]
+                # Find the position of the order_item in the machine route
+                for order_item_id_machine in machine_route:
+                    # Break to next machine if order_item is not a predecessor or successor of current order_item_machine
+                    if order_item_id not in machine.predecessor_ids[order_item_id_machine] and order_item_id not in machine.successor_ids[order_item_id_machine]:
+                        break
+
+                    # If order_item is a predecessor of order_item_machine, it can be inserted before order_item_id_machine
+                    if order_item_id in machine.predecessor_ids[order_item_id_machine]:
+                        order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine), list(machine_route)]
+                        break
+                    
+                    # If order_item is a successor of the last order_item in the machine route, it can be inserted at the end of the machine route
+                    if len(machine_route) == machine_route.index(order_item_id_machine) + 1:
+                        if order_item_id in machine.successor_ids[order_item_id_machine]:
+                            order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine) + 1, list(machine_route)]
                             break
-                        
-                        # If order_item is a successor of the last order_item in the machine route, it can be inserted at the end of the machine route
-                        if len(machine_route) == machine_route.index(order_item_id_machine) + 1:
-                            if order_item_id in machine.successor_ids[order_item_id_machine]:
-                                order_item_position_machine_route[machine_id] = [machine_route.index(order_item_id_machine) + 1, list(machine_route)]
-                                break
                                 
 
             for worker_id, worker_route in solution.route_plan_worker.items():
@@ -268,34 +268,34 @@ class InsertShiftNeighborhood(OutputNeighborhood):
                 worker_possible_order_item_ids = [order_item_ids for orders in worker.possible_order_item_ids.values() for order_item_ids in orders]
                 if order_item_id not in worker_possible_order_item_ids:
                     continue
-
+                
+                # Continue to next worker if the work time would exceed the maximum working hours
+                if solution.worker_work_time[worker_id] + solution.data.order_items[order_item_id].duration > self.data._max_working_hours:
+                    continue
+  
                 # If (possible) worker is not included in current solution, order item can be inserted at first position
                 if len(worker_route) == 0:
                     order_item_position_worker_route[worker_id] = [0, list(worker_route)]
                     continue
-                else:
-                    # Continue to next worker if the work time would exceed the maximum working hours
-                    if solution.worker_work_time[worker_id] + solution.data.order_items[order_item_id].duration > self.data._max_working_hours:
-                        continue
+                
+                # Find the position of the order_item in the worker route
+                for order_item_id_worker in worker_route:
                     
-                    # Find the position of the order_item in the worker route
-                    for order_item_id_worker in worker_route:
-                        
-                        # Break to next worker if order_item is not a predecessor or successor of current order_item_worker
-                        if order_item_id not in worker.predecessor_ids[order_item_id_worker] and order_item_id not in worker.successor_ids[order_item_id_worker]:
-                            break
+                    # Break to next worker if order_item is not a predecessor or successor of current order_item_worker
+                    if order_item_id not in worker.predecessor_ids[order_item_id_worker] and order_item_id not in worker.successor_ids[order_item_id_worker]:
+                        break
 
 
-                        # If order_item is a predecessor of order_item_worker, it can be inserted before order_item_id_worker
-                        if order_item_id in worker.predecessor_ids[order_item_id_worker]:
-                            order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker), list(worker_route)]
+                    # If order_item is a predecessor of order_item_worker, it can be inserted before order_item_id_worker
+                    if order_item_id in worker.predecessor_ids[order_item_id_worker]:
+                        order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker), list(worker_route)]
+                        break
+                    
+                    # If order_item is a successor of the last order_item in the worker route, it can be inserted at the end of the worker route
+                    if len(worker_route) == worker_route.index(order_item_id_worker) + 1:
+                        if order_item_id in worker.successor_ids[order_item_id_worker]:
+                            order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker) + 1, list(worker_route)]
                             break
-                        
-                        # If order_item is a successor of the last order_item in the worker route, it can be inserted at the end of the worker route
-                        if len(worker_route) == worker_route.index(order_item_id_worker) + 1:
-                            if order_item_id in worker.successor_ids[order_item_id_worker]:
-                                order_item_position_worker_route[worker_id] = [worker_route.index(order_item_id_worker) + 1, list(worker_route)]
-                                break
 
 
     
@@ -318,8 +318,8 @@ class InsertShiftNeighborhood(OutputNeighborhood):
     
     def sort_move_solutions(self):
 
-        # Sort with lowest Delta first
-        self.MoveSolutions.sort(key=lambda move: move.Delta, reverse=False)
+        # Sort with highest Delta[0] first, if equal sort with lowest Delta[1] first
+        self.MoveSolutions.sort(key=lambda move: (move.Delta[0], -move.Delta[1]), reverse=True)
 
 
     def constructCompleteRoutes(self, move:InsertShiftMove, solution:Solution) -> dict: 
@@ -407,6 +407,7 @@ class TimeNeighborhood(BaseNeighborhood):
                 print(f"\nIteration: {iterator}")
                 if self.Type == 'Swap_Shift_Worker':
                     print(f"Best Neighborhood Move Items: \n{bestNeighborhoodMove.WorkerID1}: {bestNeighborhoodMove.WorkerRoute1} New Order Item: {bestNeighborhoodMove.OrderItemID2} \n{bestNeighborhoodMove.WorkerID2}: {bestNeighborhoodMove.WorkerRoute2} New Order Item: {bestNeighborhoodMove.OrderItemID1}")
+                    print(f"Best Neighborhood Move Delta: {bestNeighborhoodMove.Delta}")
                 elif self.Type == 'Replace_Shift_Worker':
                     print(f"Best Neighborhood Move Items: \n{bestNeighborhoodMove.WorkerID1}: {bestNeighborhoodMove.WorkerRoute1} \n{bestNeighborhoodMove.WorkerID2}: {bestNeighborhoodMove.WorkerRoute2} New Order Item: {bestNeighborhoodMove.OrderItemID}")
 
@@ -419,6 +420,8 @@ class TimeNeighborhood(BaseNeighborhood):
                 print(f"Feasibility Check failed in iteration {iterator}")
 
             iterator += 1
+
+            print(f"\nBest Current Solution: \n{bestNeighborhoodSolution}")
 
         print(f"\nBest Worker Route: \n{bestNeighborhoodSolution.route_plan_worker}")
 
@@ -446,11 +449,6 @@ class ReplaceShiftWorkerMove(BaseMove):
 
         self.MachineID = machine_id
 
-        #print(f"Worker ID 1: {self.WorkerID1}")
-        #print(f"Worker Route 1: {self.WorkerRoute1}")
-        #print(f"Worker ID 2: {self.WorkerID2}")
-        #print(f"Worker Route 2: {self.WorkerRoute2}")
-
 
 class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
@@ -468,9 +466,9 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
             for worker_id_2, worker_route_2 in solution.route_plan_worker.items():
                 worker_2_order_item_positions = {}
 
-                # Skip if one of the workers is not included in the current solution
-                if len(worker_route_1) == 0 or len(worker_route_2) == 0:
-                    continue
+                # If no order item is included in worker route 1 continue to next worker 1, break from all worker 2 for this worker 1
+                if len(worker_route_1) == 0:
+                    break
 
                 # Skip if the same worker is selected
                 if worker_id_1 == worker_id_2:
@@ -478,22 +476,28 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
                 else:
                     worker_2 = solution.data.workers[worker_id_2]
 
-                for order_item_id_1 in worker_route_1:
-                    # Continue to next order item if order_item_id_1 is not in the list of all planned order items for worker 2
-                    worker_2_possible_order_item_ids = [order_item_ids for orders in worker_2.possible_order_item_ids.values() for order_item_ids in orders]
-                    if order_item_id_1 not in worker_2_possible_order_item_ids:
-                        continue
-                    else:                        
-                        # Find the position of order_item_id_1 in the worker route of worker 2
-                        for index, order_item_id_2 in enumerate(worker_route_2):
+                    for order_item_id_1 in worker_route_1:
 
-                            # Continue to next order item if order_item_id_1 would exceed the maximum work time of worker 2
-                            if solution.worker_work_time[worker_id_2] + solution.data.order_items[order_item_id_1].duration > self.data._max_working_hours:
-                                continue
+                        # Continue to next order item if order_item_id_1 is not in the list of all planned order items for worker 2
+                        worker_2_possible_order_item_ids = [order_item_ids for orders in worker_2.possible_order_item_ids.values() for order_item_ids in orders]
+                        if order_item_id_1 not in worker_2_possible_order_item_ids:
+                            continue
+                        
+                        # Continue to next order item if order_item_id_1 would exceed the maximum work time of worker 2
+                        if solution.worker_work_time[worker_id_2] + solution.data.order_items[order_item_id_1].duration > self.data._max_working_hours:
+                            continue
+                        
+                        # If worker 2 has no order items in its route, order item 1 can be inserted at the first position
+                        if len(worker_route_2) == 0:
+                            worker_2_order_item_positions[order_item_id_1] = 0
+                            continue
+
+                        # Find the position of order_item_id_1 in the work route of worker 2
+                        for order_item_id_2 in worker_route_2:
 
                             # If both order items collide order item 1 cannot be inserted
                             if order_item_id_1 not in worker_2.predecessor_ids[order_item_id_2] and order_item_id_1 not in worker_2.successor_ids[order_item_id_2]:
-                                continue
+                                break
 
                             # If order_item_id_1 is a predecessor of order_item_id_2, it can be inserted before order_item_id_2
                             if order_item_id_1 in worker_2.predecessor_ids[order_item_id_2]:
@@ -507,13 +511,8 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
                                     break
 
 
-
-
-
                 for order_item_id, worker_route_index_2 in worker_2_order_item_positions.items():
-
-                    machine_id = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id in machine_route][0]
-                    
+                    machine_id = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id in machine_route][0]                 
                     self.Moves.append(ReplaceShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index_2, order_item_id, machine_id))
 
 
@@ -571,11 +570,6 @@ class SwapShiftWorkerMove(BaseMove):
         self.MachineID1 = machine_id_1
         self.MachineID2 = machine_id_2
 
-        #print(f"Worker ID 1: {self.WorkerID1}")
-        #print(f"Worker Route 1: {self.WorkerRoute1}")
-        #print(f"Worker ID 2: {self.WorkerID2}")
-        #print(f"Worker Route 2: {self.WorkerRoute2}")
-
 
 class SwapShiftWorkerNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
@@ -593,6 +587,10 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
             for worker_id_2, worker_route_2 in solution.route_plan_worker.items():
                 worker_1_order_item_positions = {}
                 worker_2_order_item_positions = {}
+
+                same_position_work_route_1 = {}
+                same_position_work_route_2 = {}
+
 
                 # Skip if one of the workers is not included in the current solution
                 if len(worker_route_1) == 0 or len(worker_route_2) == 0:
@@ -614,25 +612,22 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
                         # Find the position of order_item_id_1 in the worker route of worker 2
                         for index, order_item_id_2 in enumerate(worker_route_2):
 
-                            # Continue to next order item if order_item_id_2 would exceed the maximum work time of worker 2
-                            if solution.worker_work_time[worker_id_2] + solution.data.order_items[order_item_id_1].duration - solution.data.order_items[order_item_id_2].duration > self.data._max_working_hours:
-                                continue
-
-                            # If both order items collide check teh following conditions
+                            # If both order items collide check the following conditions
                             if order_item_id_1 not in worker_2.predecessor_ids[order_item_id_2] and order_item_id_1 not in worker_2.successor_ids[order_item_id_2]:
-                                continue
+                                
                                 # Check for order_items until the second last order_item in the worker route of worker 2
                                 if len(worker_route_2) > index + 1:
                                     # If order_item_id_1 collides with order_item_id_2 and order_item_id_1 is a predecessor of the successor of order_item_id_2, it can be inserted in the position of order_item_id_2
                                     if order_item_id_1 in worker_2.predecessor_ids[worker_route_2[index + 1]]:
-                                        worker_2_order_item_positions[order_item_id_1] = index
+                                        same_position_work_route_2[order_item_id_1] = [index, order_item_id_2]
                                         break
                                 # Check for the last order_item in the worker route of worker 2
                                 elif len(worker_route_2) == index + 1:
                                     # If order_item_id_1 collides with order_item_id_2 and order_item_id_1 is a successor of the predecessor of order_item_id_2, it can be inserted in the position of order_item_id_2
                                     if order_item_id_1 in worker_2.successor_ids.get(index - 1, []):
-                                        worker_2_order_item_positions[order_item_id_1] = index
+                                        same_position_work_route_2[order_item_id_1] = [index, order_item_id_2]
                                         break
+                                break
 
 
                             # If order_item_id_1 is a predecessor of order_item_id_2, it can be inserted before order_item_id_2
@@ -656,25 +651,23 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
                         # Find the position of order_item_id_2 in the worker route of worker 1
                         for index, order_item_id_1 in enumerate(worker_route_1):
 
-                            # Continue to next order item if order_item_id_1 would exceed the maximum work time of worker 1
-                            if solution.worker_work_time[worker_id_1] + solution.data.order_items[order_item_id_2].duration - solution.data.order_items[order_item_id_1].duration > self.data._max_working_hours:
-                                continue
-
-                            # If both order items collide check teh following conditions
+                        
+                            # If both order items collide check the following conditions
                             if order_item_id_2 not in worker_1.predecessor_ids[order_item_id_1] and order_item_id_2 not in worker_1.successor_ids[order_item_id_1]:
-                                continue
+                                
                                 # Check for order_items until the second last order_item in the worker route of worker 1
                                 if len(worker_route_1) > index + 1:
                                     # If order_item_id_2 collides with order_item_id_1 and order_item_id_2 is a predecessor of the successor of order_item_id_1, it can be inserted in the position of order_item_id_1
                                     if order_item_id_2 in worker_1.predecessor_ids[worker_route_1[index + 1]]:
-                                        worker_1_order_item_positions[order_item_id_2] = index
+                                        same_position_work_route_1[order_item_id_2] = [index, order_item_id_1]
                                         break
                                 # Check for the last order_item in the worker route of worker 1
                                 elif len(worker_route_1) == index + 1:
                                     # If order_item_id_2 collides with order_item_id_1 and order_item_id_2 is a successor of the predecessor of order_item_id_1, it can be inserted in the position of order_item_id_1
                                     if order_item_id_2 in worker_1.successor_ids.get(index - 1, []):
-                                        worker_1_order_item_positions[order_item_id_2] = index
+                                        same_position_work_route_1[order_item_id_2] = [index, order_item_id_1]
                                         break
+                                break
 
                             # If order_item_id_2 is a predecessor of order_item_id_1, it can be inserted before order_item_id_1
                             if order_item_id_2 in worker_1.predecessor_ids[order_item_id_1]:
@@ -688,19 +681,59 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
                                     break
 
 
-
+                # Swaps where order items go into different positions in other worker routes
                 for order_item_id_2, worker_route_index_1 in worker_1_order_item_positions.items():
                     for order_item_id_1, worker_route_index_2 in worker_2_order_item_positions.items():
-
+                        # Check if Swap could be executed without exceeding the maximum working hours
+                        if solution.worker_work_time[worker_id_1] + solution.data.order_items[order_item_id_2].duration - solution.data.order_items[order_item_id_1].duration > self.data._max_working_hours:
+                            continue
+                        if solution.worker_work_time[worker_id_2] + solution.data.order_items[order_item_id_1].duration - solution.data.order_items[order_item_id_2].duration > self.data._max_working_hours:
+                            continue
                         machine_id_1 = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id_1 in machine_route][0]
                         machine_id_2 = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id_2 in machine_route][0]
-                        
-
                         self.Moves.append(SwapShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index_1, worker_route_index_2, order_item_id_1, order_item_id_2, machine_id_1, machine_id_2))
+                '''
+                # Swaps where both order items go into the same position in the other worker routes
+                for order_item_id_2, worker_route_index_1_and_order_item_id_1 in same_position_work_route_1.items():
+                    for order_item_id_1, worker_route_index_2_and_order_item_id_2 in same_position_work_route_2.items():
+                        if order_item_id_2 == worker_route_index_2_and_order_item_id_2[1] and order_item_id_1 == worker_route_index_1_and_order_item_id_1[1]:
+                            # Check if Swap could be executed without exceeding the maximum working hours
+                            if solution.worker_work_time[worker_id_1] + solution.data.order_items[order_item_id_2].duration - solution.data.order_items[order_item_id_1].duration > self.data._max_working_hours:
+                                continue
+                            if solution.worker_work_time[worker_id_2] + solution.data.order_items[order_item_id_1].duration - solution.data.order_items[order_item_id_2].duration > self.data._max_working_hours:
+                                continue
+                            
+                            machine_id_1 = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id_1 in machine_route][0]
+                            machine_id_2 = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id_2 in machine_route][0]
+                            self.Moves.append(SwapShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index_1_and_order_item_id_1[0], worker_route_index_2_and_order_item_id_2[0], order_item_id_1, order_item_id_2, machine_id_1, machine_id_2))
+                
 
+                # Swaps where one order item goes into the same position in the other worker route and the other order item goes into a different position
+                for order_item_id_2, worker_route_index_1_and_order_item_id_1 in same_position_work_route_1.items():
+                    for order_item_id_1, worker_route_index_2 in worker_2_order_item_positions.items():
+                        if order_item_id_1 == worker_route_index_1_and_order_item_id_1[1]:
+                            # Check if Swap could be executed without exceeding the maximum working hours
+                            if solution.worker_work_time[worker_id_1] + solution.data.order_items[order_item_id_2].duration - solution.data.order_items[order_item_id_1].duration > self.data._max_working_hours:
+                                continue
+                            if solution.worker_work_time[worker_id_2] + solution.data.order_items[order_item_id_1].duration - solution.data.order_items[order_item_id_2].duration > self.data._max_working_hours:
+                                continue
+                            machine_id_1 = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id_1 in machine_route][0]
+                            machine_id_2 = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id_2 in machine_route][0]
+                            self.Moves.append(SwapShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index_1_and_order_item_id_1[0], worker_route_index_2, order_item_id_1, order_item_id_2, machine_id_1, machine_id_2))
 
-
-
+                # The other way around
+                for order_item_id_1, worker_route_index_2_and_order_item_id_2 in same_position_work_route_2.items():
+                    for order_item_id_2, worker_route_index_1 in worker_1_order_item_positions.items():
+                        if order_item_id_2 == worker_route_index_2_and_order_item_id_2[1]:
+                            # Check if Swap could be executed without exceeding the maximum working hours
+                            if solution.worker_work_time[worker_id_1] + solution.data.order_items[order_item_id_2].duration - solution.data.order_items[order_item_id_1].duration > self.data._max_working_hours:
+                                continue
+                            if solution.worker_work_time[worker_id_2] + solution.data.order_items[order_item_id_1].duration - solution.data.order_items[order_item_id_2].duration > self.data._max_working_hours:
+                                continue
+                            machine_id_1 = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id_1 in machine_route][0]
+                            machine_id_2 = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id_2 in machine_route][0]
+                            self.Moves.append(SwapShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index_1, worker_route_index_2_and_order_item_id_2[0], order_item_id_1, order_item_id_2, machine_id_1, machine_id_2))
+                '''
 
     def EvaluateMove(self, move: SwapShiftWorkerMove) -> None:
         ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
