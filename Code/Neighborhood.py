@@ -551,10 +551,16 @@ class ReplaceShiftMachineNeighborhood(TimeNeighborhood):
 class SwapShiftMachineMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
     
-    def __init__(self, machine_id_1, machine_id_2, machine_route_1, machine_route_2, machine_route_index_1, machine_route_index_2, order_item_id_1, order_item_id_2, worker_id_1, worker_id_2):
+    def __init__(self, machine_id_1, machine_id_2, machine_route_1, machine_route_2, machine_route_index_1, machine_route_index_2, order_item_id_1, order_item_id_2, worker_id_1, worker_id_2, taken_index_1, taken_index_2):
 
         self.MachineRoute1 = list(machine_route_1)
         self.MachineRoute2 = list(machine_route_2)
+
+        self.MachineRoute1Original = list(machine_route_1)
+        self.MachineRoute2Original = list(machine_route_2)
+
+        self.MachineRouteTakenIndex1 = taken_index_1
+        self.MachineRouteTakenIndex2 = taken_index_2
 
         self.MachineRouteIndex1 = machine_route_index_1
         self.MachineRouteIndex2 = machine_route_index_2
@@ -582,6 +588,17 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
 
         self.Type = 'Swap_Shift_Machine'
 
+
+    def MakeBestMove(self) -> BaseMove:
+        
+        # Sorting will be handled by the child classes
+        self.sort_move_solutions()
+        
+        for move_solution in self.MoveSolutions:
+            return move_solution
+                    
+        return None
+
     def DiscoverMoves(self, solution: Solution):
         """ Generate all $n choose 2$ moves """
 
@@ -594,7 +611,9 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
                 same_position_machine_route_2 = {}
 
                 # Skip if one of the machines is not included in the current solution
-                if len(machine_route_1) == 0 or len(machine_route_2) == 0:
+                if len(machine_route_1) == 0:
+                    break
+                if len(machine_route_2) == 0:
                     continue
 
                 # Skip if the same machine is selected
@@ -615,7 +634,21 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
 
                             # If both order items collide check the following conditions
                             if order_item_id_1 not in machine_2.predecessor_ids[order_item_id_2] and order_item_id_1 not in machine_2.successor_ids[order_item_id_2]:
+                                
+                                # Check for order_itesm until the second last order item in the machine route of machine 2
+                                if len(machine_route_2) > index + 1:
+                                    # If order_item_id_1 collides with order_item_id_2 and order_item_id_1 is a predecessor of the successor of order_item_id_2, it can be inserted in the position of order_item_id_2
+                                    if order_item_id_1 in machine_2.predecessor_ids[machine_route_2[index + 1]]:
+                                        same_position_machine_route_2[order_item_id_1] = [index, order_item_id_2, machine_route_1.index(order_item_id_1)]
+                                        break
+                                # Check for the last order item in the machine route of machine 2
+                                elif len(machine_route_2) == index + 1:
+                                    # If order_item_id_1 collides with order_item_id_2 and order_item_id_1 is a predecessor of order_item_id_2, it can be inserted in the position of order_item_id_2
+                                    if order_item_id_1 in machine_2.successor_ids.get(index - 1, []):
+                                        same_position_machine_route_2[order_item_id_1] = [index, order_item_id_2, machine_route_1.index(order_item_id_1)]
+                                        break
                                 break
+
 
                             # If order_item_id_1 is a predecessor of order_item_id_2, it can be inserted before order_item_id_2
                             if order_item_id_1 in machine_2.predecessor_ids[order_item_id_2]:
@@ -623,9 +656,10 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
                                 break
 
                             # If order_item_id_1 is a successor of order_item_id_2, it can be inserted after order_item_id_2
-                            if order_item_id_1 in machine_2.successor_ids[order_item_id_2]:
-                                machine_2_order_item_positions[order_item_id_1] = [index + 1, machine_route_1.index(order_item_id_1)]
-                                break
+                            if len(machine_route_2) == index + 1:
+                                if order_item_id_1 in machine_2.successor_ids[order_item_id_2]:
+                                    machine_2_order_item_positions[order_item_id_1] = [index + 1, machine_route_1.index(order_item_id_1)]
+                                    break
 
                 for order_item_id_2 in machine_route_2:
                     # Continue to next order item if order_item_id_2 is not in the list of all planned order items for machine 1
@@ -638,6 +672,19 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
 
                             # If both order items collide check the following conditions
                             if order_item_id_2 not in machine_1.predecessor_ids[order_item_id_1] and order_item_id_2 not in machine_1.successor_ids[order_item_id_1]:
+                                
+                                # Check for order_itesm until the second last order item in the machine route of machine 1
+                                if len(machine_route_1) > index + 1:
+                                    # If order_item_id_2 collides with order_item_id_1 and order_item_id_2 is a predecessor of the successor of order_item_id_1, it can be inserted in the position of order_item_id_1
+                                    if order_item_id_2 in machine_1.predecessor_ids[machine_route_1[index + 1]]:
+                                        same_position_machine_route_1[order_item_id_2] = [index, order_item_id_1, machine_route_2.index(order_item_id_2)]
+                                        break
+                                # Check for the last order item in the machine route of machine 1
+                                elif len(machine_route_1) == index + 1:
+                                    # If order_item_id_2 collides with order_item_id_1 and order_item_id_2 is a predecessor of order_item_id_1, it can be inserted in the position of order_item_id_1
+                                    if order_item_id_2 in machine_1.successor_ids.get(index - 1, []):
+                                        same_position_machine_route_1[order_item_id_2] = [index, order_item_id_1, machine_route_2.index(order_item_id_2)]
+                                        break
                                 break
 
                             # If order_item_id_2 is a predecessor of order_item_id_1, it can be inserted before order_item_id_1
@@ -646,11 +693,66 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
                                 break
 
                             # If order_item_id_2 is a successor of order_item_id_1, it can be inserted after order_item_id_1
-                            if order_item_id_2 in machine_1.successor_ids[order_item_id_1]:
-                                machine_1_order_item_positions[order_item_id_2] = [index + 1, machine_route_2.index(order_item_id_2)]
-                                break
+                            if len(machine_route_1) == index + 1:
+                                if order_item_id_2 in machine_1.successor_ids[order_item_id_1]:
+                                    machine_1_order_item_positions[order_item_id_2] = [index + 1, machine_route_2.index(order_item_id_2)]
+                                    break
+                
+                # Swaps where both order items go into the same position in the other machine route
+                for order_item_id_2, machine_route_index_1_taken_index_2 in machine_1_order_item_positions.items():
+                    for order_item_id_1, machine_route_index_2_taken_index_1 in machine_2_order_item_positions.items():
+                        worker_id_1 = [worker_id for worker_id, worker_route in solution.route_plan_worker.items() if order_item_id_1 in worker_route][0]
+                        worker_id_2 = [worker_id for worker_id, worker_route in solution.route_plan_worker.items() if order_item_id_2 in worker_route][0]
+                        self.Moves.append(SwapShiftMachineMove(machine_id_1, machine_id_2, machine_route_1, machine_route_2, machine_route_index_1_taken_index_2[0], machine_route_index_2_taken_index_1[0], order_item_id_1, order_item_id_2, worker_id_1, worker_id_2, machine_route_index_2_taken_index_1[1], machine_route_index_1_taken_index_2[1]))
 
-               
+
+                # Swaps where both order items go into the same position in the other machine route
+                for order_item_id_2, machine_route_index_1_and_order_item_id_1_and_taken_index_2 in same_position_machine_route_1.items():
+                    for order_item_id_1, machine_route_index_2_and_order_item_id_2_and_taken_index_1 in same_position_machine_route_2.items():
+                        if order_item_id_2 == machine_route_index_2_and_order_item_id_2_and_taken_index_1[1] and order_item_id_1 == machine_route_index_1_and_order_item_id_1_and_taken_index_2[1]:
+                            worker_id_1 = [worker_id for worker_id, worker_route in solution.route_plan_worker.items() if order_item_id_1 in worker_route][0]
+                            worker_id_2 = [worker_id for worker_id, worker_route in solution.route_plan_worker.items() if order_item_id_2 in worker_route][0]
+                            self.Moves.append(SwapShiftMachineMove(machine_id_1, machine_id_2, machine_route_1, machine_route_2, machine_route_index_1_and_order_item_id_1_and_taken_index_2[0], machine_route_index_2_and_order_item_id_2_and_taken_index_1[0], order_item_id_1, order_item_id_2, worker_id_1, worker_id_2, machine_route_index_2_and_order_item_id_2_and_taken_index_1[2], machine_route_index_1_and_order_item_id_1_and_taken_index_2[2]))
+
+                
+                # Swaps where one order item goes into the same position in the other machine route
+                for order_item_id_2, machine_route_index_1_and_order_item_id_1_and_taken_index_2 in same_position_machine_route_1.items():
+                    for order_item_id_1, machine_route_index_2_taken_index_1 in machine_2_order_item_positions.items():
+                        if order_item_id_1 == machine_route_index_1_and_order_item_id_1_and_taken_index_2[1]:
+                            worker_id_1 = [worker_id for worker_id, worker_route in solution.route_plan_worker.items() if order_item_id_1 in worker_route][0]
+                            worker_id_2 = [worker_id for worker_id, worker_route in solution.route_plan_worker.items() if order_item_id_2 in worker_route][0]
+                            self.Moves.append(SwapShiftMachineMove(machine_id_1, machine_id_2, machine_route_1, machine_route_2, machine_route_index_1_and_order_item_id_1_and_taken_index_2[0], machine_route_index_2_taken_index_1[0], order_item_id_1, order_item_id_2, worker_id_1, worker_id_2, machine_route_index_2_taken_index_1[1], machine_route_index_1_and_order_item_id_1_and_taken_index_2[2]))
+                # The other way around
+                for order_item_id_1, machine_route_index_2_and_order_item_id_2_and_taken_index_1 in same_position_machine_route_2.items():
+                    for order_item_id_2, machine_route_index_1_taken_index_2 in machine_1_order_item_positions.items():
+                        if order_item_id_2 == machine_route_index_2_and_order_item_id_2_and_taken_index_1[1]:
+                            worker_id_1 = [worker_id for worker_id, worker_route in solution.route_plan_worker.items() if order_item_id_1 in worker_route][0]
+                            worker_id_2 = [worker_id for worker_id, worker_route in solution.route_plan_worker.items() if order_item_id_2 in worker_route][0]
+                            self.Moves.append(SwapShiftMachineMove(machine_id_1, machine_id_2, machine_route_1, machine_route_2, machine_route_index_1_taken_index_2[0], machine_route_index_2_and_order_item_id_2_and_taken_index_1[0], order_item_id_1, order_item_id_2, worker_id_1, worker_id_2, machine_route_index_2_and_order_item_id_2_and_taken_index_1[2], machine_route_index_1_taken_index_2[1]))
+
+    def EvaluateMove(self, move: SwapShiftMachineMove) -> None:
+        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
+
+        #Update the Delta of the Move
+        move.setDelta(self.evaluationLogic.calculate_swap_shift_machine_delta(move))
+
+    
+    def sort_move_solutions(self):
+
+        # Sort with highest Delta first, if equal sort with lowest Delta first
+        self.MoveSolutions.sort(key=lambda move: move.Delta, reverse=False)
+
+    
+    def constructCompleteRoutes(self, move:SwapShiftMachineMove, solution:Solution) -> dict:
+
+        machine_route_plan = deepcopy(solution.route_plan_machine)
+        worker_route_plan = deepcopy(solution.route_plan_worker)
+
+        machine_route_plan[move.MachineID1] = move.MachineRoute1
+        machine_route_plan[move.MachineID2] = move.MachineRoute2
+
+        return worker_route_plan, machine_route_plan
+
 
 
 
@@ -819,7 +921,9 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
 
 
                 # Skip if one of the workers is not included in the current solution
-                if len(worker_route_1) == 0 or len(worker_route_2) == 0:
+                if len(worker_route_1) == 0:
+                    break
+                if len(worker_route_2) == 0:
                     continue
 
                 # Skip if the same worker is selected
@@ -858,13 +962,13 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
 
                             # If order_item_id_1 is a predecessor of order_item_id_2, it can be inserted before order_item_id_2
                             if order_item_id_1 in worker_2.predecessor_ids[order_item_id_2]:
-                                worker_2_order_item_positions[order_item_id_1] = worker_route_2.index(order_item_id_2)
+                                worker_2_order_item_positions[order_item_id_1] = index
                                 break
 
                             # If order_item_id_1 is a successor of the last order_item in the worker route of worker 2, it can be inserted at the end of the worker route
-                            if len(worker_route_2) == worker_route_2.index(order_item_id_2) + 1:
+                            if len(worker_route_2) == index + 1:
                                 if order_item_id_1 in worker_2.successor_ids[order_item_id_2]:
-                                    worker_2_order_item_positions[order_item_id_1] = worker_route_2.index(order_item_id_2) + 1
+                                    worker_2_order_item_positions[order_item_id_1] = index + 1
                                     break
 
 
@@ -897,13 +1001,13 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
 
                             # If order_item_id_2 is a predecessor of order_item_id_1, it can be inserted before order_item_id_1
                             if order_item_id_2 in worker_1.predecessor_ids[order_item_id_1]:
-                                worker_1_order_item_positions[order_item_id_2] = worker_route_1.index(order_item_id_1)
+                                worker_1_order_item_positions[order_item_id_2] = index
                                 break
 
                             # If order_item_id_2 is a successor of the last order_item in the worker route of worker 1, it can be inserted at the end of the worker route
-                            if len(worker_route_1) == worker_route_1.index(order_item_id_1) + 1:
+                            if len(worker_route_1) == index + 1:
                                 if order_item_id_2 in worker_1.successor_ids[order_item_id_1]:
-                                    worker_1_order_item_positions[order_item_id_2] = worker_route_1.index(order_item_id_1) + 1
+                                    worker_1_order_item_positions[order_item_id_2] = index + 1
                                     break
 
 
