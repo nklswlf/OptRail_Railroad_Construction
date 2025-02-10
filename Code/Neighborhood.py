@@ -421,11 +421,237 @@ class TimeNeighborhood(BaseNeighborhood):
 
             iterator += 1
 
-            print(f"\nBest Current Solution: \n{bestNeighborhoodSolution}")
+            #print(f"\nBest Current Solution: \n{bestNeighborhoodSolution}")
 
         print(f"\nBest Worker Route: \n{bestNeighborhoodSolution.route_plan_worker}")
 
         return bestNeighborhoodSolution
+
+
+
+class ReplaceShiftMachineMove(BaseMove):
+    """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
+    
+    def __init__(self, machine_id_1, machine_id_2, machine_route_1, machine_route_2, machine_route_index_2, machine_route_index_1, order_item_id, worker_id):
+
+        self.MachineRoute1 = list(machine_route_1)
+        self.MachineRoute2 = list(machine_route_2)
+
+        self.MachineRouteIndex1 = machine_route_index_1
+        self.MachineRouteIndex2 = machine_route_index_2
+
+        self.OrderItemID = order_item_id
+
+        self.MachineID1 = machine_id_1
+        self.MachineID2 = machine_id_2
+
+        self.MachineRoute2.insert(self.MachineRouteIndex2, self.OrderItemID)
+
+        self.MachineRoute1.remove(self.OrderItemID)
+
+        self.WorkerID = worker_id
+
+    
+
+class ReplaceShiftMachineNeighborhood(TimeNeighborhood):
+    """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
+
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
+        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+
+        self.Type = 'Replace_Shift_Machine'
+
+    def MakeBestMove(self) -> BaseMove:
+        
+        # Sorting will be handled by the child classes
+        self.sort_move_solutions()
+        
+        for move_solution in self.MoveSolutions:
+            return move_solution
+                    
+        return None
+
+    def DiscoverMoves(self, solution: Solution):
+        """ Generate all $n choose 2$ moves """
+
+        for machine_id_1, machine_route_1 in solution.route_plan_machine.items():
+            for machine_id_2, machine_route_2 in solution.route_plan_machine.items():
+                machine_2_order_item_positions = {}
+
+                # If no order item is included in machine route 1 continue to next machine 1, break from all machine 2 for this machine 1
+                if len(machine_route_1) == 0:
+                    break
+
+                # Skip if the same machine is selected
+                if machine_id_1 == machine_id_2:
+                    continue
+                else:
+                    machine_2 = solution.data.machines[machine_id_2]
+
+                    for order_item_id_1 in machine_route_1:
+
+                        # Continue to next order item if order_item_id_1 is not in the list of all planned order items for machine 2
+                        machine_2_possible_order_item_ids = [order_item_ids for orders in machine_2.possible_order_item_ids.values() for order_item_ids in orders]
+                        if order_item_id_1 not in machine_2_possible_order_item_ids:
+                            continue
+
+                        # If machine 2 has no order items in its route, order item 1 can be inserted at the first position
+                        if len(machine_route_2) == 0:
+                            machine_2_order_item_positions[order_item_id_1] = [0, machine_route_1.index(order_item_id_1)]
+                            continue
+
+                        # Find the position of order_item_id_1 in the machine route of machine 2
+                        for order_item_id_2 in machine_route_2:
+
+                            # If both order items collide order item 1 cannot be inserted
+                            if order_item_id_1 not in machine_2.predecessor_ids[order_item_id_2] and order_item_id_1 not in machine_2.successor_ids[order_item_id_2]:
+                                break
+
+                            # If order_item_id_1 is a predecessor of order_item_id_2, it can be inserted before order_item_id_2
+                            if order_item_id_1 in machine_2.predecessor_ids[order_item_id_2]:
+                                machine_2_order_item_positions[order_item_id_1] = [machine_route_2.index(order_item_id_2), machine_route_1.index(order_item_id_1)]
+                                break
+
+                            # If order_item_id_1 is a successor of the last order_item in the machine route of machine 2, it can be inserted at the end of the machine route
+                            if len(machine_route_2) == machine_route_2.index(order_item_id_2) + 1:
+                                if order_item_id_1 in machine_2.successor_ids[order_item_id_2]:
+                                    machine_2_order_item_positions[order_item_id_1] = [machine_route_2.index(order_item_id_2) + 1 , machine_route_1.index(order_item_id_1)]
+                                    break
+
+                            
+                for order_item_id, machine_route_index_2_1 in machine_2_order_item_positions.items():
+                    worker_id = [worker_id for worker_id, worker_route in solution.route_plan_worker.items() if order_item_id in worker_route][0]
+                    self.Moves.append(ReplaceShiftMachineMove(machine_id_1, machine_id_2, machine_route_1, machine_route_2, machine_route_index_2_1[0], machine_route_index_2_1[1], order_item_id, worker_id))
+
+
+    def EvaluateMove(self, move: ReplaceShiftMachineMove) -> None:
+        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
+
+        #Update the Delta of the Move
+        move.setDelta(self.evaluationLogic.calculate_replace_shift_machine_delta(move))
+
+
+    def sort_move_solutions(self):
+        
+        # Sort with lowest Delta first
+        self.MoveSolutions.sort(key=lambda move: move.Delta, reverse=False)
+
+
+    def constructCompleteRoutes(self, move:ReplaceShiftMachineMove, solution:Solution) -> dict:
+        
+        machine_route_plan = deepcopy(solution.route_plan_machine)
+        worker_route_plan = deepcopy(solution.route_plan_worker)
+
+        machine_route_plan[move.MachineID1] = move.MachineRoute1
+        machine_route_plan[move.MachineID2] = move.MachineRoute2
+
+        return worker_route_plan, machine_route_plan        
+
+
+class SwapShiftMachineMove(BaseMove):
+    """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
+    
+    def __init__(self, machine_id_1, machine_id_2, machine_route_1, machine_route_2, machine_route_index_1, machine_route_index_2, order_item_id_1, order_item_id_2, worker_id_1, worker_id_2):
+
+        self.MachineRoute1 = list(machine_route_1)
+        self.MachineRoute2 = list(machine_route_2)
+
+        self.MachineRouteIndex1 = machine_route_index_1
+        self.MachineRouteIndex2 = machine_route_index_2
+
+        self.OrderItemID1 = order_item_id_1
+        self.OrderItemID2 = order_item_id_2
+
+        self.MachineID1 = machine_id_1
+        self.MachineID2 = machine_id_2
+
+        self.MachineRoute1.insert(self.MachineRouteIndex1, self.OrderItemID2)
+        self.MachineRoute2.insert(self.MachineRouteIndex2, self.OrderItemID1)
+
+        self.MachineRoute1.remove(self.OrderItemID1)
+        self.MachineRoute2.remove(self.OrderItemID2)
+
+        self.WorkerID1 = worker_id_1
+        self.WorkerID2 = worker_id_2
+
+class SwapShiftMachineNeighborhood(TimeNeighborhood):
+    """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
+
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
+        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+
+        self.Type = 'Swap_Shift_Machine'
+
+    def DiscoverMoves(self, solution: Solution):
+        """ Generate all $n choose 2$ moves """
+
+        for machine_id_1, machine_route_1 in solution.route_plan_machine.items():
+            for machine_id_2, machine_route_2 in solution.route_plan_machine.items():
+                machine_1_order_item_positions = {}
+                machine_2_order_item_positions = {}
+
+                same_position_machine_route_1 = {}
+                same_position_machine_route_2 = {}
+
+                # Skip if one of the machines is not included in the current solution
+                if len(machine_route_1) == 0 or len(machine_route_2) == 0:
+                    continue
+
+                # Skip if the same machine is selected
+                if machine_id_1 == machine_id_2:
+                    continue
+                else:
+                    machine_1 = solution.data.machines[machine_id_1]
+                    machine_2 = solution.data.machines[machine_id_2]
+
+                for order_item_id_1 in machine_route_1:
+                    # Continue to next order item if order_item_id_1 is not in the list of all planned order items for machine 2
+                    machine_2_possible_order_item_ids = [order_item_ids for orders in machine_2.possible_order_item_ids.values() for order_item_ids in orders]
+                    if order_item_id_1 not in machine_2_possible_order_item_ids:
+                        continue
+                    else:
+                        # Find the position of order_item_id_1 in the machine route of machine 2
+                        for index, order_item_id_2 in enumerate(machine_route_2):
+
+                            # If both order items collide check the following conditions
+                            if order_item_id_1 not in machine_2.predecessor_ids[order_item_id_2] and order_item_id_1 not in machine_2.successor_ids[order_item_id_2]:
+                                break
+
+                            # If order_item_id_1 is a predecessor of order_item_id_2, it can be inserted before order_item_id_2
+                            if order_item_id_1 in machine_2.predecessor_ids[order_item_id_2]:
+                                machine_2_order_item_positions[order_item_id_1] = [index, machine_route_1.index(order_item_id_1)]
+                                break
+
+                            # If order_item_id_1 is a successor of order_item_id_2, it can be inserted after order_item_id_2
+                            if order_item_id_1 in machine_2.successor_ids[order_item_id_2]:
+                                machine_2_order_item_positions[order_item_id_1] = [index + 1, machine_route_1.index(order_item_id_1)]
+                                break
+
+                for order_item_id_2 in machine_route_2:
+                    # Continue to next order item if order_item_id_2 is not in the list of all planned order items for machine 1
+                    machine_1_possible_order_item_ids = [order_item_ids for orders in machine_1.possible_order_item_ids.values() for order_item_ids in orders]
+                    if order_item_id_2 not in machine_1_possible_order_item_ids:
+                        continue
+                    else:
+                        # Find the position of order_item_id_2 in the machine route of machine 1
+                        for index, order_item_id_1 in enumerate(machine_route_1):
+
+                            # If both order items collide check the following conditions
+                            if order_item_id_2 not in machine_1.predecessor_ids[order_item_id_1] and order_item_id_2 not in machine_1.successor_ids[order_item_id_1]:
+                                break
+
+                            # If order_item_id_2 is a predecessor of order_item_id_1, it can be inserted before order_item_id_1
+                            if order_item_id_2 in machine_1.predecessor_ids[order_item_id_1]:
+                                machine_1_order_item_positions[order_item_id_2] = [index, machine_route_2.index(order_item_id_2)]
+                                break
+
+                            # If order_item_id_2 is a successor of order_item_id_1, it can be inserted after order_item_id_1
+                            if order_item_id_2 in machine_1.successor_ids[order_item_id_1]:
+                                machine_1_order_item_positions[order_item_id_2] = [index + 1, machine_route_2.index(order_item_id_2)]
+                                break
+
+               
+
 
 
 class ReplaceShiftWorkerMove(BaseMove):
@@ -692,7 +918,7 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
                         machine_id_1 = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id_1 in machine_route][0]
                         machine_id_2 = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id_2 in machine_route][0]
                         self.Moves.append(SwapShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index_1, worker_route_index_2, order_item_id_1, order_item_id_2, machine_id_1, machine_id_2))
-                '''
+
                 # Swaps where both order items go into the same position in the other worker routes
                 for order_item_id_2, worker_route_index_1_and_order_item_id_1 in same_position_work_route_1.items():
                     for order_item_id_1, worker_route_index_2_and_order_item_id_2 in same_position_work_route_2.items():
@@ -733,7 +959,7 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
                             machine_id_1 = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id_1 in machine_route][0]
                             machine_id_2 = [machine_id for machine_id, machine_route in solution.route_plan_machine.items() if order_item_id_2 in machine_route][0]
                             self.Moves.append(SwapShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index_1, worker_route_index_2_and_order_item_id_2[0], order_item_id_1, order_item_id_2, machine_id_1, machine_id_2))
-                '''
+
 
     def EvaluateMove(self, move: SwapShiftWorkerMove) -> None:
         ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
