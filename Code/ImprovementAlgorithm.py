@@ -37,8 +37,8 @@ class ImprovementAlgorithm:
             return SwapShiftWorkerNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
         elif neighborhoodType == 'Replace_Shift_Worker':
             return ReplaceShiftWorkerNeighborhood(self.InputData , self.EvaluationLogic, self.SolutionPool, self.RNG)
-        elif neighborhoodType == 'Insert':
-            return InsertNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
+        elif neighborhoodType == 'Replace_Shift_Machine':
+            return ReplaceShiftMachineNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
         elif neighborhoodType == 'ReplaceProfit':
             return ReplaceProfitNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
         elif neighborhoodType == 'ReplaceDelta':

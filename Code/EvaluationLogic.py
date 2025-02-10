@@ -11,7 +11,81 @@ class EvaluationLogic:
         self.data = data
 
 
+    def calculate_replace_shift_machine_delta(self, move):
+        ''' Calculate the delta of the objective function value when replacing an order item between two machines'''
 
+        # Calculate the extra transport distance
+        delta_transport_distance = 0
+        if len(move.MachineRoute2) == 1:
+            predecessor_id = None
+            successor_id = None
+        elif move.MachineRouteIndex2 == 0:
+            predecessor_id = None
+            successor_id = move.MachineRoute2[move.MachineRouteIndex2 + 1]
+            delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        elif move.MachineRouteIndex2 == len(move.MachineRoute2) - 1:
+            predecessor_id = move.MachineRoute2[move.MachineRouteIndex2 - 1]
+            successor_id = None
+            delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        else:
+            predecessor_id = move.MachineRoute2[move.MachineRouteIndex2 - 1]
+            successor_id = move.MachineRoute2[move.MachineRouteIndex2 + 1]
+            delta_transport_distance += (((self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                        + (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                        - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)) 
+        
+        if len(move.MachineRoute1) == 0:
+            predecessor_id = None
+            successor_id = None
+            delta_transport_distance -= 0
+        elif move.MachineRouteIndex1 == 0:
+            predecessor_id = None
+            successor_id = move.MachineRoute1[move.MachineRouteIndex1]
+            delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        elif move.MachineRouteIndex1 == len(move.MachineRoute1):
+            predecessor_id = move.MachineRoute1[move.MachineRouteIndex1 - 1]
+            successor_id = None
+            delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        else:
+            predecessor_id = move.MachineRoute1[move.MachineRouteIndex1 - 1]
+            successor_id = move.MachineRoute1[move.MachineRouteIndex1]
+            delta_transport_distance -= (((self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                        + (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                        - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+
+
+        # Calculate the extra driver violation
+        machine_1 = self.data.machines[move.MachineID1]
+        machine_2 = self.data.machines[move.MachineID2]
+
+        delta_driver_violation = 0
+        if move.WorkerID in machine_1.default_drivers:
+            delta_driver_violation += 1
+
+        if move.WorkerID in machine_2.default_drivers:
+            delta_driver_violation -= 1
+
+        # Calculate if a machine lost his last order item
+        if len(move.MachineRoute1) == 0:
+            delta_machine_count = -1
+        else:
+            delta_machine_count = 0
+
+        if len(move.MachineRoute2) == 1:
+            delta_machine_count += 1
+
+        delta = {}
+        delta["transport_distance"] = delta_transport_distance
+        delta["driver_violation"] = delta_driver_violation
+        delta["machine_count"] = delta_machine_count
+
+        #print(f"Delta: {delta}")
+
+        delta = delta["transport_distance"] + delta["driver_violation"] + delta["machine_count"]
+
+        #print(f"Delta: {delta}")
+
+        return delta
 
     def calculate_insert_shift_delta(self, move):
         ''' Calculate the delta of the objective function value when inserting an order item into a route'''

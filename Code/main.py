@@ -98,12 +98,12 @@ def main():
                 single_run(instance, order_item_attractiveness_technique, machine_attractiveness_technique)
                 print("\n")
 
-neighboorhood_types = ['Replace_Shift_Worker', 'Swap_Shift_Worker', 'Insert_Shift']
+neighboorhood_types = ['Replace_Shift_Worker', 'Swap_Shift_Worker', 'Insert_Shift', 'Replace_Shift_Machine', 'Swap_Shift_Machine', 'Replace_Shift']
 
-neighboorhood_types = ['Insert_Shift']
+neighboorhood_types = ['Swap_Shift_Worker']
 
 
-def single_run(instance_filename = "Construction_a20_o236_m12_an106_ar24.json", order_item_attractiveness_technique="balanced_greedy", machine_attractiveness_technique="balanced_greedy"):
+def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", order_item_attractiveness_technique="balanced_greedy", machine_attractiveness_technique="balanced_greedy"):
 
     #time_start = time()
     data = InputData(instance_filename)
