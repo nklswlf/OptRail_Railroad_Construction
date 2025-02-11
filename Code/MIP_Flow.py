@@ -66,7 +66,7 @@ class FlowFormulation:
         # ========================
         # 5. Occupational Safety Constants
         # ========================
-        self.S_Nmax = data._consecutive_night_shifts
+        self.S_Nmax = data._max_consecutive_night_shifts
         self.S_max = data._max_shifts_in_time_period
         self.T_Smax = data._time_period_for_max_shifts
         self.T_Wmax = data._max_working_hours
