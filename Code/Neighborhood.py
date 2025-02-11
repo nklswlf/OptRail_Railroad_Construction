@@ -159,6 +159,7 @@ class OutputNeighborhood(BaseNeighborhood):
 
 
             if bestNeighborhoodMove is not None:
+                
                 #print(f"\nIteration: {iterator}")
 
                 worker_route, machine_route = self.constructCompleteRoutes(bestNeighborhoodMove, bestNeighborhoodSolution)
@@ -334,7 +335,164 @@ class InsertShiftNeighborhood(OutputNeighborhood):
         return worker_route_plan, machine_route_plan
 
         
+class SwapShiftExternalMove(BaseMove):
+    
+    def __init__(self, machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, dynamic_percentage_int, dynamic_percentage_ext):
+        
+        self.MachineRoute = list(machine_route)
+        self.WorkerRoute = list(worker_route)
 
+        self.MachineRouteIndex = machine_index
+        self.WorkerRouteIndex = worker_index
+
+        self.OrderItemIDInt = order_item_id_int
+        self.OrderItemIDExt = order_item_id_ext
+
+        self.MachineID = machine_id
+        self.WorkerID = worker_id
+
+        self.MachineRoute.insert(self.MachineRouteIndex, self.OrderItemIDExt)
+        self.WorkerRoute.insert(self.WorkerRouteIndex, self.OrderItemIDExt)
+
+        self.MachineRoute.remove(self.OrderItemIDInt)
+        self.WorkerRoute.remove(self.OrderItemIDInt)
+
+        self.DynamicPercentageInt = dynamic_percentage_int
+        self.DynamicPercentageExt = dynamic_percentage_ext
+
+
+class SwapShiftExternalNeighborhood(OutputNeighborhood):
+    
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
+        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+
+        self.Type = 'Swap_Shift_External'
+
+    def DiscoverMoves(self, solution: Solution, not_used_shifts = None):
+        """ Generate all $n choose 2$ moves """
+
+        if not_used_shifts is None:
+            unused_order_item_ids = solution.not_started_order_item_ids
+
+        for order_item_id_ext in unused_order_item_ids:
+            for machine_id, machine_route in solution.route_plan_machine.items():
+                
+                # Continue to next machine if current machine is not part of the solution
+                if len(machine_route) == 0:
+                    continue
+
+                machine = solution.data.machines[machine_id]
+
+                # Continue to next machine if order_item cannot be processed by current machine
+                machine_possible_order_item_ids = [order_item_ids for orders in machine.possible_order_item_ids.values() for order_item_ids in orders]
+                if order_item_id_ext not in machine_possible_order_item_ids:
+                    continue
+
+                # Find the position of the order_item in the machine route
+                for machine_index, order_item_id_int in enumerate(machine_route):
+                    
+                    # If both order items collide check the following conditions
+                    if order_item_id_ext not in machine.predecessor_ids[order_item_id_int] and order_item_id_ext not in machine.successor_ids[order_item_id_int]:
+                        
+                        # Check for order_items until the second last order item in the machine route
+                        if len(machine_route) > machine_index + 1:
+                            # If order_item_id_ext collides with order_item_id_machine and order_item_id_ext is a predecessor of the successor of order_item_id_machine, it can be inserted in the position of order_item_id_machine
+                            if order_item_id_ext in machine.predecessor_ids[machine_route[machine_index + 1]]:
+                                worker_id, worker_index, worker_route = self.find_worker_route(solution, order_item_id_ext, order_item_id_int)
+                                if worker_id is not None:
+                                    order_int = [order.order_number for order in solution.data.orders if order_item_id_int in order.order_item_ids][0]
+                                    order_ext = [order.order_number for order in solution.data.orders if order_item_id_ext in order.order_item_ids][0]
+                                    self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext]))
+                                break
+                        # Check for the last order item in the machine route
+                        elif len(machine_route) == machine_index + 1:
+                            # If order_item_id_ext collides with order_item_id_machine and order_item_id_ext is a successor of the predecessor of order_item_id_machine, it can be inserted in the position of order_item_id_machine
+                            if order_item_id_ext in machine.successor_ids.get(machine_index - 1, []):
+                                worker_id, worker_index, worker_route = self.find_worker_route(solution, order_item_id_ext, order_item_id_int)
+                                if worker_id is not None:
+                                    order_int = [order.order_number for order in solution.data.orders if order_item_id_int in order.order_item_ids][0]
+                                    order_ext = [order.order_number for order in solution.data.orders if order_item_id_ext in order.order_item_ids][0]
+                                    self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext]))
+                                break
+
+
+
+    def find_worker_route(self, solution: Solution, order_item_id_ext: int, order_item_id_int: int) -> dict:
+                        
+            for worker_id, worker_route in solution.route_plan_worker.items():
+
+                # Search for the worker route of the order_item_id_int
+                if order_item_id_int not in worker_route:
+                    continue
+
+                # Continue to next worker if current worker is not part of the solution
+                if len(worker_route) == 0:
+                    continue
+
+                worker = solution.data.workers[worker_id]
+                
+                # Continue to next worker if the work time would exceed the maximum working hours
+                if solution.worker_work_time[worker_id] + solution.data.order_items[order_item_id_ext].duration - solution.data.order_items[order_item_id_int].duration > self.data._max_working_hours:
+                    continue
+
+                # Continue to next worker if order_item_ext cannot be processed by current worker
+                worker_possible_order_item_ids = [order_item_ids for orders in worker.possible_order_item_ids.values() for order_item_ids in orders]
+                if order_item_id_ext not in worker_possible_order_item_ids:
+                    continue
+
+                index = worker_route.index(order_item_id_int)
+
+                # Check if order_item_id_ext can be inserted at position index depending on the predecessor and successor relations
+
+                predecessor_id = worker_route[index - 1] if index > 0 else None
+                successor_id = worker_route[index + 1] if index < len(worker_route) - 1 else None
+
+                if predecessor_id in worker.predecessor_ids[order_item_id_ext] and successor_id in worker.successor_ids[order_item_id_ext]:
+                    return worker_id, index, worker_route
+            
+            return None, None, None
+
+
+    def EvaluateMove(self, move: SwapShiftExternalMove) -> None:
+        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
+
+        #Update the Delta of the Move
+        move.setDelta(self.evaluationLogic.calculate_swap_shift_external_delta(move))
+
+
+    def sort_move_solutions(self):
+        
+        # Sort with highest Delta[0] first, if equal sort with lowest Delta[1] first
+        self.MoveSolutions.sort(key=lambda move: (move.Delta[0], -move.Delta[1]), reverse=True)
+
+    
+    def constructCompleteRoutes(self, move:SwapShiftExternalMove, solution:Solution) -> dict:
+        
+        machine_route_plan = deepcopy(solution.route_plan_machine)
+        worker_route_plan = deepcopy(solution.route_plan_worker)
+
+        machine_route_plan[move.MachineID] = move.MachineRoute
+        worker_route_plan[move.WorkerID] = move.WorkerRoute
+
+        return worker_route_plan, machine_route_plan
+    
+
+    def MakeBestMove(self) -> BaseMove:
+        
+        # Sorting will be handled by the child classes
+        self.sort_move_solutions()
+        
+        for move_solution in self.MoveSolutions:
+            if self.WorkerRouteFeasibilityCheck(move_solution.WorkerID, move_solution.WorkerRoute):
+                if move_solution.Delta[0] > 0:
+                    return move_solution
+                    
+        return None
+
+
+                
+
+        
 
 
 

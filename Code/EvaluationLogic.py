@@ -124,6 +124,65 @@ class EvaluationLogic:
         return delta
         
 
+    def calculate_swap_shift_external_delta(self, move):
+        ''' Calculate the delta of the objective function value when swapping two order items between two external workers'''
+
+        # Calculate the extra commute distance
+        delta_commute_distance = (+ ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemIDExt] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                - ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemIDInt] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
+
+
+        # Calculate the extra transport distance
+        delta_transport_distance = 0
+
+        if len(move.MachineRoute) == 1:
+            predecessor_id = None
+            successor_id = None
+        elif move.MachineRouteIndex == 0:
+            predecessor_id = None
+            successor_id = move.MachineRoute[move.MachineRouteIndex + 1]
+            delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        elif move.MachineRouteIndex == len(move.MachineRoute) - 1:
+            predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
+            successor_id = None
+            delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        else:
+            predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
+            successor_id = move.MachineRoute[move.MachineRouteIndex + 1]
+            delta_transport_distance += (((self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                        + (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+            delta_transport_distance -= (((self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                        + (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+            
+        
+        # Calculate the precentage difference this order item makes
+        delta_dynamic_percentage_order = 0
+        for order in self.data.orders:
+            if move.OrderItemIDExt in order.order_item_ids:
+                delta_dynamic_percentage_order += (1 / len(order.order_item_ids)) + move.DynamicPercentageExt
+            if move.OrderItemIDInt in order.order_item_ids:
+                delta_dynamic_percentage_order -= (1 / len(order.order_item_ids)) + move.DynamicPercentageInt
+
+
+        delta = {}
+        delta["dynamic_percentage_order"] = delta_dynamic_percentage_order
+        delta["commute_distance"] = delta_commute_distance
+        delta["transport_distance"] = delta_transport_distance
+
+        print(f"Delta: {delta}")
+
+        delta = [delta["dynamic_percentage_order"], delta["commute_distance"] + delta["transport_distance"]]
+
+        print(f"Delta: {delta}")
+
+        return delta
+    
+
+
+
+
 
 
     def calculate_replace_shift_machine_delta(self, move):

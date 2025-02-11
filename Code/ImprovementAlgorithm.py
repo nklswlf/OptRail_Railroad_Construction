@@ -41,8 +41,8 @@ class ImprovementAlgorithm:
             return ReplaceShiftMachineNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
         elif neighborhoodType == 'Swap_Shift_Machine':
             return SwapShiftMachineNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
-        elif neighborhoodType == 'Replace_Shift':
-            return ReplaceDeltaNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
+        elif neighborhoodType == 'Swap_Shift_External':
+            return SwapShiftExternalNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
         else:
             raise Exception(f"Neighborhood type {neighborhoodType} not defined.")
 
