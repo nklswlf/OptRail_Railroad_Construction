@@ -339,6 +339,13 @@ class InputData:
             for attachment in self.attachments:
                 attachment.add_data(self)
 
+            for order_item in self.order_items:
+                needed_attachment_types = order_item.equipment_types
+                for attachment_type in needed_attachment_types:
+                    all_attachment_types = [attachment.type for attachment in self.attachments]
+                    if attachment_type not in all_attachment_types:
+                        raise Exception(f"Missing attachment type '{attachment_type}' required for order item ID {order_item.id}.")
+
 
             self._average_transport_distance = sum(sum(row) for row in self._transport_routes) / (len(self._transport_routes)*len(self._transport_routes[0]))
             self._min_transport_distance = min(min(row) for row in self._transport_routes if any(row))            
