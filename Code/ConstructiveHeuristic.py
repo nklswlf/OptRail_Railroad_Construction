@@ -272,7 +272,7 @@ class ConstructiveHeuristics:
 
 
         # Check feasibility of the solution
-        start_solution = Solution(route_plan_worker, route_plan_machine, self.data)
+        start_solution = Solution(route_plan_worker, route_plan_machine, route_plan_attachment, self.data)
         
         feasible = start_solution.feasibility_check()
 
