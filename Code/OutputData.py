@@ -8,12 +8,13 @@ from datetime import timedelta
 
 class Solution:
 
-    def __init__(self, route_plan_worker:dict, route_plan_machine:dict, data:InputData):
+    def __init__(self, route_plan_worker:dict, route_plan_machine:dict, route_plan_attachment:dict, data:InputData):
         ''' Define the attributes for solution'''
 
         self.data = data
         self.route_plan_worker = route_plan_worker
         self.route_plan_machine = route_plan_machine
+        self.route_plan_attachment = route_plan_attachment
         
         self.finished_orders = []
         self.semifinished_orders = []
@@ -29,13 +30,18 @@ class Solution:
         self.used_workers = []
         self.unused_machines = []
         self.unused_workers = []
+        self.used_attachments = []
+        self.unused_attachments = []
 
         self.transport_distance_per_machine = {}
         self.total_transport_distance = -0
         self.commute_distance_per_worker = {}
         self.total_commute_distance = -0
+        self.transport_distance_per_attachment = {}
+        self.total_transport_distance_attachment = -0
         self.number_of_workers = -0
         self.number_of_machines = -0
+        self.number_of_attachments = -0
         self.driver_violation = -0
         self.worker_work_time = {}
         self.machine_utilization_time = {}
@@ -55,8 +61,10 @@ class Solution:
                 f"Driver violation: {self.driver_violation}\n"
                 f"Commute distance: {round(self.total_commute_distance, 2)}\n"
                 f"Transport distance: {round(self.total_transport_distance, 2)}\n"
+                f"Transport distance attachment: {round(self.total_transport_distance_attachment, 2)}\n"
                 f"Number of workers: {self.number_of_workers}\n"
-                f"Number of machines: {self.number_of_machines}\n")
+                f"Number of machines: {self.number_of_machines}\n"
+                f"Number of attachments: {self.number_of_attachments}\n")
     
 
     def repair_solution(self):
@@ -154,6 +162,15 @@ class Solution:
                 if sum(order_item in machine_route for machine_route in self.route_plan_machine.values()) > 1:
                     print(f"Order item {order_item} is assigned to more than one machine.")
                     return False
+                
+        # Check if the order items with attachment needs are assigned to all necessary attachments
+        for machine_route_order_items in self.route_plan_machine.values():
+            for order_item in machine_route_order_items:
+                order_item_object = next((o for o in self.data.order_items if o.id == order_item), None)
+                if len(order_item_object.equipment_types) > 0:
+                    if not any(order_item in attachment_route_order_items for attachment_route_order_items in self.route_plan_attachment.values()):
+                        print(f"Order item {order_item} with attachment needs is not assigned to an attachment.")
+                        return False
 
         if verbose:
             print("The assigned order items are present in both route plans.")
@@ -264,6 +281,43 @@ class Solution:
             
             if verbose:
                 print(f"Route for worker {worker_id} is feasible.")
+
+        
+        # ========================
+        # 4. Attachment Route Feasibility
+        # ========================
+
+        for attachment_id, route in self.route_plan_attachment.items():
+            if verbose:
+                print(f"\nChecking route for attachment {attachment_id}...")
+
+            attachment_object = next((a for a in self.data.attachments if a.id == attachment_id), None)
+            order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
+
+            # Check if the attachment type is correct for the order items in the route
+            for order_item in order_item_objects:
+                if attachment_object.type not in order_item.equipment_types:
+                    print(f"Attachment {attachment_id} is not correct assigned to order item {order_item.id}.")
+                    return False
+                
+            # Check if the sequence of the order items is correct with start, end and travel times
+            for order_item_i in order_item_objects:
+                for order_item_j in order_item_objects:
+                    order_item_i_index = order_item_objects.index(order_item_i)
+                    order_item_j_index = order_item_objects.index(order_item_j)
+                    if order_item_i_index + 1 == order_item_j_index:
+                        order_i = next((order for order in self.data.orders if int(order_item_i.id) in [int(item) for item in order.order_item_ids]), None)
+                        order_j = next((order for order in self.data.orders if int(order_item_j.id) in [int(item) for item in order.order_item_ids]), None)
+                        distance = self.data.transport_routes[order_i.site_number][order_j.site_number]
+                        travel_time_double = (distance / self.data._transport_speed_kmh)
+                        travel_time = timedelta(hours=travel_time_double)
+                        if order_item_i.end_time + travel_time >= order_item_j.start_time:
+                            print(f"Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
+                            return False
+                        
+            if verbose:
+                print(f"Route for attachment {attachment_id} is feasible.")
+
 
         print("\nFeasibility check completed. Solution is feasible.")
         return True
