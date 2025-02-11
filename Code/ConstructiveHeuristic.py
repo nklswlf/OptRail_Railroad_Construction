@@ -56,6 +56,7 @@ class ConstructiveHeuristics:
         # Initialize route plan for workers and machines
         route_plan_worker = dict()
         route_plan_machine = dict()
+        route_plan_attachment = dict()
 
         # All machines are available at the start - machine planned needed for machine attractiveness
         machine_planned = dict()
