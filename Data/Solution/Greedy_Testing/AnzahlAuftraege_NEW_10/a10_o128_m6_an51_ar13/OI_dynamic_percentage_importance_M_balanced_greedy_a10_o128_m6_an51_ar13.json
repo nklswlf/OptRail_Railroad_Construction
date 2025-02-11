@@ -1,0 +1,172 @@
+{
+    "Instance": "a10_o128_m6_an51_ar13",
+    "Time_for_data_loading": 0.26688385009765625,
+    "Time_for_construction": 0.019198894500732422,
+    "Order_item_attractiveness_technique": "dynamic_percentage_importance",
+    "Machine_attractiveness_technique": "balanced_greedy",
+    "Number_of_finished_orders": 5,
+    "Number_of_semifinished_orders": 0,
+    "Number_of_not_started_orders": 5,
+    "Number_of_finished_order_items": 54,
+    "Driver_violation": 33,
+    "Commute_distance": 4965.38,
+    "Transport_distance": 395.04,
+    "Number_of_workers": 10,
+    "Number_of_machines": 2,
+    "Sum_dynamic_precentage": 5.0,
+    "Dynamic_percentage": [
+        0,
+        0,
+        1.0,
+        0,
+        1.0,
+        1.0,
+        1.0,
+        0,
+        0,
+        1.0
+    ],
+    "Worker_route_plan": {
+        "0": [
+            71,
+            73,
+            51
+        ],
+        "1": [
+            72,
+            74,
+            52
+        ],
+        "2": [
+            29,
+            31,
+            33,
+            35,
+            37,
+            39,
+            41,
+            43,
+            45,
+            47
+        ],
+        "3": [
+            30,
+            32,
+            34,
+            36,
+            38,
+            49
+        ],
+        "4": [
+            40,
+            42,
+            44,
+            46,
+            48
+        ],
+        "5": [
+            50
+        ],
+        "6": [],
+        "7": [],
+        "8": [
+            125,
+            126,
+            127,
+            95,
+            96,
+            97,
+            75,
+            77,
+            79,
+            81
+        ],
+        "9": [],
+        "10": [
+            89,
+            90,
+            91,
+            92,
+            93,
+            94,
+            76,
+            78,
+            80,
+            82,
+            84,
+            87
+        ],
+        "11": [
+            83,
+            85,
+            88
+        ],
+        "12": [
+            86
+        ]
+    },
+    "Machine_route_plan": {
+        "0": [],
+        "1": [],
+        "2": [
+            125,
+            126,
+            127,
+            95,
+            96,
+            97,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            71,
+            72,
+            73,
+            74,
+            51,
+            52
+        ],
+        "3": [],
+        "4": [],
+        "5": [
+            89,
+            90,
+            91,
+            92,
+            93,
+            94,
+            75,
+            76,
+            77,
+            78,
+            79,
+            80,
+            81,
+            82,
+            83,
+            84,
+            85,
+            86,
+            87,
+            88,
+            47,
+            48,
+            49,
+            50
+        ]
+    }
+}
