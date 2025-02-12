@@ -125,7 +125,6 @@ def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", or
     print(f"\nSolution after construction: \n{construct_solution}")
 
 
-    repair = RepairAlgorithm(data)
     localSearch = IterativeImprovement(data, neighborhoodTypes=neighboorhood_types)
     
     localSearch.Initialize(evaluationLogic=evaluationLogic, solutionPool=solutionPool)
@@ -213,5 +212,5 @@ def TestInputData():
     
 if __name__ == "__main__":
     #TestInputData()
-    #single_run()
-    main()
+    single_run()
+    #main()
