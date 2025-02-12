@@ -63,6 +63,11 @@ class ConstructiveHeuristics:
         for machine in self.data.machines:
             machine_planned[machine] = False
             route_plan_machine[machine.id] = list()
+
+        attachment_planned = dict()
+        for attachment in self.data.attachments:
+            attachment_planned[attachment] = False
+            route_plan_attachment[attachment.id] = list()
             
         # Fill route plan worker by worker in sequenced time order
         for worker in self.data.workers:
@@ -90,7 +95,6 @@ class ConstructiveHeuristics:
                 continue
 
             
-
             # Index needed to iterate through sorted order items if a specific order item is not suitable
             index = 0
             
@@ -127,6 +131,93 @@ class ConstructiveHeuristics:
                         index += 1
                         continue
 
+                # Add order item to route plan for attachment
+                if len(best_order_item.equipment_types) > 0:
+                    order_item_impossible = False
+                    for equipment_type in best_order_item.equipment_types:
+                        attachment_task_assigned = False
+                        if order_item_impossible:
+                            break
+                        attachment_attractiveness = dict()
+                        for attachment in self.data.attachments:
+                            if best_order_item in attachment._possible_order_items[best_order] and attachment.type == equipment_type:
+                                attachment_attractiveness[attachment] = {"attachment_planned": attachment_planned[attachment]}
+
+
+                        # Sort attachments by attractiveness
+                        if len(attachment_attractiveness) > 0:
+                            true_list = [att for att in attachment_attractiveness if attachment_attractiveness[att]["attachment_planned"]]
+                            false_list = [att for att in attachment_attractiveness if not attachment_attractiveness[att]["attachment_planned"]]
+                            random.shuffle(true_list)
+                            random.shuffle(false_list)
+                            sorted_attachment_attractiveness = true_list + false_list
+                        else: # Break to next order item if one equipment type is not available
+                            index += 1
+                            # Remove order item from route plan of all attachments if it is not possible to assign it to all necessary attachments
+                            for attachment, route in route_plan_attachment.items():
+                                if best_order_item.id in route:
+                                    route.remove(best_order_item.id)
+                            break
+
+                        # Index needed to iterate through sorted attachments if a specific attachment is not suitable
+                        attachment_index = 0
+                        
+                        # Assign order item to attachment as long as no suitable attachment is found
+                        while not attachment_task_assigned:
+                            
+                            # Break to next order item if there is no suitable attachment for the current order item
+                            if attachment_index == len(sorted_attachment_attractiveness):
+                                index += 1
+                                order_item_impossible = True
+                                # Remove order item from route plan of all attachments if it is not possible to assign it to all necessary attachments
+                                for attachment, route in route_plan_attachment.items():
+                                    if best_order_item.id in route:
+                                        route.remove(best_order_item.id)
+                                break
+
+                            # Select the best attachment for the order item
+                            best_attachment = sorted_attachment_attractiveness[attachment_index]
+
+                            # If the attachment has no planned order items yet, assign the order item to the attachment
+                            if len(route_plan_attachment[best_attachment.id]) == 0:
+                                route_plan_attachment[best_attachment.id].append(best_order_item.id)
+                                attachment_planned[best_attachment] = True
+                                attachment_task_assigned = True
+
+                            # If the attachment has planned order items, assign the order item to the attachment according to the order item's predecessors and successors
+                            elif len(route_plan_attachment[best_attachment.id]) > 0:
+                                order_item_index_attachment_route = 0
+
+                                # Check predecerssor and successor of the order item
+                                while not attachment_task_assigned:
+                                    current_order_item = next((order_item for order_item in self.data.order_items if order_item.id == route_plan_attachment[best_attachment.id][order_item_index_attachment_route]))
+
+                                    # If the best order item is not a successor or predecessor of the current order item it can not be assigned to the attachment
+                                    # Continue to next attachment in attachment_attractiveness
+                                    if current_order_item not in best_attachment._successors[best_order_item] and current_order_item not in best_attachment._predecessors[best_order_item]:
+                                        attachment_index += 1
+                                        break
+
+                                    # If the current order item is a successor of the best order item, assign the best order item to the attachment before the current order item
+                                    if current_order_item in best_attachment._successors[best_order_item]:
+                                        route_plan_attachment[best_attachment.id].insert(order_item_index_attachment_route, best_order_item.id)
+                                        attachment_task_assigned = True
+
+                                    # Check next order item in route plan of the attachment for predecessors and successors
+                                    order_item_index_attachment_route += 1
+
+                                    # If length of route plan is reached, check if the current order item is a predecessor of the best order item
+                                    if order_item_index_attachment_route == len(route_plan_attachment[best_attachment.id]):
+                                        # If the current order item is a predecessor of the best order item, assign the best order item to the attachment after the current order item (in the end of the route plan)
+                                        if current_order_item in best_attachment._predecessors[best_order_item]:
+                                            route_plan_attachment[best_attachment.id].append(best_order_item.id)
+                                            attachment_task_assigned = True
+
+                            
+                # Continue to next order item if order item is not assigned to an attachment
+                if len(best_order_item.equipment_types) > 0:
+                    if not attachment_task_assigned:
+                        continue
                 
 
                 # Assign machine to order item according to machine attractiveness
@@ -141,13 +232,12 @@ class ConstructiveHeuristics:
                             default_driver = False
                         
                         # Calculate machine attractiveness for this order item for all potential machines
-                        possible_order_items_best_order = [order_item for order_item in self.data.order_items if order_item in machine._possible_order_items[best_order] and order_item not in self.data.planned_shifts_machine[best_order]]
+                        #possible_order_items_best_order = [order_item for order_item in self.data.order_items if order_item in machine._possible_order_items[best_order] and order_item not in self.data.planned_shifts_machine[best_order]]
                         machine_attractiveness[machine] = {"machine_planned": machine_planned[machine],
                                                            "worker_default_driver": default_driver,
-                                                           "possible_default_drivers": len(machine._default_drivers),
-                                                           "posible_order_items_best_order": len(possible_order_items_best_order)}
-                        
-                
+                                                           "possible_default_drivers": len(machine._default_drivers)}
+                                                           #"posible_order_items_best_order": len(possible_order_items_best_order)}                        
+
 
                 # Sort machines by attractiveness
                 if len(machine_attractiveness) > 0:
@@ -160,12 +250,16 @@ class ConstructiveHeuristics:
                 machine_index = 0
 
                 # Assign order item to machine as long as no suitable machine is found
-                task_assigned = False
-                while not task_assigned:
+                machine_task_assigned = False
+                while not machine_task_assigned:
                     
                     # Break to next order item if there is no suitable machine for the current order item
                     if machine_index == len(sorted_machine_attractiveness):
                         index += 1
+                        # Remove order item from route plan of all attachments if it is not possible to assign it to a machine
+                        for attachment, route in route_plan_attachment.items():
+                            if best_order_item.id in route:
+                                route.remove(best_order_item.id)
                         break
                     
                     # Select the best machine for the order item --> Could be changed to roulette wheel selection
@@ -175,16 +269,16 @@ class ConstructiveHeuristics:
                     if len(route_plan_machine[best_machine.id]) == 0:
                         route_plan_machine[best_machine.id].append(best_order_item.id)
                         machine_planned[best_machine] = True
-                        task_assigned = True
+                        machine_task_assigned = True
                         self.data.planned_shifts_machine[best_order].append(best_order_item)
 
                     # If the machine has planned order items, assign the order item to the machine according to the order item's predecessors and successors
                     elif len(route_plan_machine[best_machine.id]) > 0:
-                        order_item_index = 0
+                        order_item_index_machine_route = 0
                         
                         # Check predecerssor and successor of the order item
-                        while not task_assigned:
-                            current_order_item = next((order_item for order_item in self.data.order_items if order_item.id == route_plan_machine[best_machine.id][order_item_index]))
+                        while not machine_task_assigned:
+                            current_order_item = next((order_item for order_item in self.data.order_items if order_item.id == route_plan_machine[best_machine.id][order_item_index_machine_route]))
                             
                             # If the best order item is not a successor or predecessor of the current order item it can not be assigned to the machine
                             # Continue to next machine in machine_attractiveness
@@ -194,19 +288,19 @@ class ConstructiveHeuristics:
                             
                             # If the current order item is a successor of the best order item, assign the best order item to the machine before the current order item
                             if current_order_item in best_machine._successors[best_order_item]:
-                                route_plan_machine[best_machine.id].insert(order_item_index, best_order_item.id)
-                                task_assigned = True
+                                route_plan_machine[best_machine.id].insert(order_item_index_machine_route, best_order_item.id)
+                                machine_task_assigned = True
                                 self.data.planned_shifts_machine[best_order].append(best_order_item)
                             
                             # Check next order item in route plan of the machine for predecessors and successors
-                            order_item_index += 1
+                            order_item_index_machine_route += 1
 
                             # If length of route plan is reached, check if the current order item is a predecessor of the best order item
-                            if order_item_index == len(route_plan_machine[best_machine.id]):
+                            if order_item_index_machine_route == len(route_plan_machine[best_machine.id]):
                                 # If the current order item is a predecessor of the best order item, assign the best order item to the machine after the current order item (in the end of the route plan)
                                 if current_order_item in best_machine._predecessors[best_order_item]:
                                     route_plan_machine[best_machine.id].append(best_order_item.id)
-                                    task_assigned = True
+                                    machine_task_assigned = True
                                     self.data.planned_shifts_machine[best_order].append(best_order_item)
                                 # If the current order item is not a predecessor of the best order item, continue to next machine in machine_attractiveness
                                 else:
@@ -215,7 +309,7 @@ class ConstructiveHeuristics:
 
                 
                 # If the order item is assigned to a machine, assign the order item to the worker
-                if task_assigned:                       
+                if machine_task_assigned:                       
 
                     # Update current shifts in time period for controlling the maximum shifts in a time period
                     for i in range(len(current_shifts_in_time_period) - 1, -1, -1):
@@ -279,6 +373,9 @@ class ConstructiveHeuristics:
         if feasible:
             print("Solution is feasible")
             self.EvaluationLogic.evaluate(start_solution)
+            print(start_solution.route_plan_attachment)
+            print(start_solution.route_plan_machine)
+            print(start_solution.route_plan_worker)
             return start_solution
         else:
             raise Exception("Solution is not feasible")
@@ -378,12 +475,71 @@ class ConstructiveHeuristics:
         '''
 
         
-
-        
-
-
     def machine_attractiveness_function(self, attractiveness):
-        ''' Attractiveness function for machines'''
+            ''' Attractiveness function for machines'''
+
+            
+
+            min_drivers = min(attributes["possible_default_drivers"] for attributes in attractiveness.values())
+            max_drivers = max(attributes["possible_default_drivers"] for attributes in attractiveness.values())
+
+
+            if self.machine_attractiveness_technique == "balanced_greedy":
+                for machine, attributes in attractiveness.items():
+                    machine_planned_value = 1 if attributes["machine_planned"] else 0
+                    default_driver_value = 1 if attributes["worker_default_driver"] else 0
+
+                    possible_default_drivers_value = ((attributes["possible_default_drivers"] - min_drivers) / (max_drivers - min_drivers + 1e-6))
+
+                    attractiveness[machine] = (machine_planned_value + default_driver_value + possible_default_drivers_value)
+
+                sorted_attractiveness = sorted(attractiveness, key=attractiveness.get, reverse=True)
+
+
+            elif self.machine_attractiveness_technique == "machine_planned_importance":
+                for machine, attributes in attractiveness.items():
+                    machine_planned_value = 1 if attributes["machine_planned"] else 0
+                    default_driver_value = 1 if attributes["worker_default_driver"] else 0
+
+                    possible_default_drivers_value = ((attributes["possible_default_drivers"] - min_drivers) / (max_drivers - min_drivers + 1e-6))
+
+                    attractiveness[machine] = {"machine_planned": machine_planned_value, "value": default_driver_value + possible_default_drivers_value}
+
+                sorted_attractiveness = sorted(attractiveness.keys(), key=lambda x: (attractiveness[x]["machine_planned"], attractiveness[x]["value"]), reverse=True)
+
+            
+            elif self.machine_attractiveness_technique == "worker_default_driver_importance":
+                for machine, attributes in attractiveness.items():
+                    machine_planned_value = 1 if attributes["machine_planned"] else 0
+                    default_driver_value = 1 if attributes["worker_default_driver"] else 0
+
+                    possible_default_drivers_value = ((attributes["possible_default_drivers"] - min_drivers) / (max_drivers - min_drivers + 1e-6))
+
+                    attractiveness[machine] = {"worker_default_driver": default_driver_value, "value": machine_planned_value + possible_default_drivers_value}
+
+                sorted_attractiveness = sorted(attractiveness.keys(), key=lambda x: (attractiveness[x]["worker_default_driver"], attractiveness[x]["value"]), reverse=True)
+
+            
+            elif self.machine_attractiveness_technique == "possible_default_drivers_importance":
+                for machine, attributes in attractiveness.items():
+                    machine_planned_value = 1 if attributes["machine_planned"] else 0
+                    default_driver_value = 1 if attributes["worker_default_driver"] else 0
+
+                    possible_default_drivers_value = ((attributes["possible_default_drivers"] - min_drivers) / (max_drivers - min_drivers + 1e-6))
+
+                    attractiveness[machine] = {"possible_default_drivers": possible_default_drivers_value, "value": machine_planned_value + default_driver_value}
+
+                sorted_attractiveness = sorted(attractiveness.keys(), key=lambda x: (attractiveness[x]["possible_default_drivers"], attractiveness[x]["value"]), reverse=True)
+
+
+
+            
+            return sorted_attractiveness
+        
+    # Version with possible order items best order which is the same for every machine that might be possible
+    '''
+    def machine_attractiveness_function(self, attractiveness):
+        Attractiveness function for machines
 
         
 
@@ -462,10 +618,10 @@ class ConstructiveHeuristics:
 
         
         return sorted_attractiveness
-
+ 
 
         # Non scaled version
-        '''
+
         if self.machine_attractiveness_technique == "balanced_greedy":
             for machine, attributes in attractiveness.items():
                 machine_planned_value = 1 if attributes["machine_planned"] else 0

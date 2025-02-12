@@ -14,7 +14,6 @@ class EvaluationLogic:
     def calculate_swap_shift_machine_delta(self, move):
         
         # Calculate the extra transport distance
-
         move.MachineRouteIndex1 = move.MachineRoute1.index(move.OrderItemID2)
         delta_transport_distance = 0
         if len(move.MachineRoute1) == 1:
@@ -123,7 +122,6 @@ class EvaluationLogic:
 
         return delta
         
-
     def calculate_swap_shift_external_delta(self, move):
         ''' Calculate the delta of the objective function value when swapping two order items between two external workers'''
 
@@ -179,12 +177,6 @@ class EvaluationLogic:
 
         return delta
     
-
-
-
-
-
-
     def calculate_replace_shift_machine_delta(self, move):
         ''' Calculate the delta of the objective function value when replacing an order item between two machines'''
 
@@ -378,8 +370,6 @@ class EvaluationLogic:
 
         return delta
     
-
-
     def calculate_replace_shift_worker_delta(self, move):
         ''' Calculate the delta of the objective function value when replacing an order item between two workers'''
 
@@ -425,8 +415,6 @@ class EvaluationLogic:
 
 
 
-
-
     def evaluate(self, solution:Solution):
         
         self.categorizing_orders(solution)
@@ -435,9 +423,21 @@ class EvaluationLogic:
         self.calculate_commute_distance(solution)
         self.calculate_transport_distance(solution)
         self.calculate_driver_violation(solution)
-        self.calculate_machine_worker_count_and_utilization_time(solution)
+        self.calculate_machine_worker_attachment_count_and_utilization_time(solution)
         self.calculate_dynamic_percentage_order(solution)
+        self.calculate_transport_distance_attachments(solution)
 
+
+    def calculate_transport_distance_attachments(self, solution:Solution):
+            ''' Calculate the total transport distance of the attachments'''
+
+            for attachment_id, route in solution.route_plan_attachment.items():
+                solution.transport_distance_per_attachment[attachment_id] = 0
+                for i in range(len(route) - 1):
+                    solution.transport_distance_per_attachment[attachment_id] += self.data.transport_routes_order_item[route[i]][route[i + 1]]
+                print(f"Attachment: {attachment_id} --> Transport Distance: {solution.transport_distance_per_attachment[attachment_id]}")
+                
+            solution.total_transport_distance_attachments = sum(solution.transport_distance_per_attachment.values())
 
     def calculate_dynamic_percentage_order(self, solution:Solution):
         ''' Calculate the dynamic percentage of the solution'''
@@ -452,9 +452,6 @@ class EvaluationLogic:
 
             solution.dynamic_percentage_order[order.order_number] = solution.dynamic_percentage_order[order.order_number] / len(order.order_item_ids)
                 
-
-
-
     def categorizing_orders(self, solution:Solution):
         ''' Categorize the orders into finished, semi-finished and not started orders'''
 
@@ -487,7 +484,6 @@ class EvaluationLogic:
 
         solution.number_of_finished_orders = len(solution.finished_orders)
 
-    
     def categorizing_machine_worker(self, solution:Solution):
         ''' Categorize the machines and workers into finished, semi-finished and not started machines and workers'''
 
@@ -503,8 +499,6 @@ class EvaluationLogic:
                 solution.unused_workers.append(worker)
             elif len(route) > 0:
                 solution.used_workers.append(worker)
-
-
 
     def calculate_finished_order_items(self, solution:Solution):
         ''' Calculate the number of finished order items'''
@@ -523,9 +517,6 @@ class EvaluationLogic:
         else:
             raise Exception("Number of finished order items is not equal to the number of finished order items of the machines")
 
-
-
-
     def calculate_commute_distance(self, solution:Solution):
         ''' Calculate the total commute distance of the workers'''
 
@@ -537,7 +528,6 @@ class EvaluationLogic:
 
         solution.total_commute_distance = sum(solution.commute_distance_per_worker.values())
 
-    
     def calculate_transport_distance(self, solution:Solution):
         ''' Calculate the total transport distance of the machines'''
 
@@ -548,7 +538,6 @@ class EvaluationLogic:
 
         solution.total_transport_distance = sum(solution.transport_distance_per_machine.values())
 
-
     def calculate_driver_violation(self, solution:Solution):
         ''' Calculate the total driver violation time of the workers'''
 
@@ -558,10 +547,8 @@ class EvaluationLogic:
                 involved_machine = next((machine for machine in self.data.machines if machine.id == involved_machine_id), None)
                 if worker_id not in involved_machine.default_drivers:
                     solution.driver_violation += 1
-
-
-    
-    def calculate_machine_worker_count_and_utilization_time(self, solution:Solution):
+  
+    def calculate_machine_worker_attachment_count_and_utilization_time(self, solution:Solution):
         ''' Calculate the number of workers and machines'''
 
         for machine_id, route in solution.route_plan_machine.items():
@@ -579,5 +566,10 @@ class EvaluationLogic:
             for order_item_id in route:
                 solution.worker_work_time[worker_id] += self.data.order_items[order_item_id].duration
 
-    
-    
+
+        for attachment_id, route in solution.route_plan_attachment.items():
+            solution.attachment_utilization_time[attachment_id] = 0
+            if len(route) > 0:
+                solution.number_of_attachments += 1
+            for order_item_id in route:
+                solution.attachment_utilization_time[attachment_id] += self.data.order_items[order_item_id].duration
