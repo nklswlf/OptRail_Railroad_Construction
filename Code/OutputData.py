@@ -38,13 +38,14 @@ class Solution:
         self.commute_distance_per_worker = {}
         self.total_commute_distance = -0
         self.transport_distance_per_attachment = {}
-        self.total_transport_distance_attachment = -0
+        self.total_transport_distance_attachments = -0
         self.number_of_workers = -0
         self.number_of_machines = -0
         self.number_of_attachments = -0
         self.driver_violation = -0
         self.worker_work_time = {}
         self.machine_utilization_time = {}
+        self.attachment_utilization_time = {}
 
         self.dynamic_percentage_order = {}
 
@@ -61,7 +62,7 @@ class Solution:
                 f"Driver violation: {self.driver_violation}\n"
                 f"Commute distance: {round(self.total_commute_distance, 2)}\n"
                 f"Transport distance: {round(self.total_transport_distance, 2)}\n"
-                f"Transport distance attachment: {round(self.total_transport_distance_attachment, 2)}\n"
+                f"Transport distance attachment: {round(self.total_transport_distance_attachments, 2)}\n"
                 f"Number of workers: {self.number_of_workers}\n"
                 f"Number of machines: {self.number_of_machines}\n"
                 f"Number of attachments: {self.number_of_attachments}\n")
@@ -164,14 +165,20 @@ class Solution:
                     return False
                 
         # Check if the order items with attachment needs are assigned to all necessary attachments
+        possible_types = []
+        for attachment_id, route in self.route_plan_attachment.items():
+            attachment_object = self.data.attachments[int(attachment_id)]
+            possible_types.append(attachment_object.type)
+
         for machine_route_order_items in self.route_plan_machine.values():
             for order_item in machine_route_order_items:
                 order_item_object = next((o for o in self.data.order_items if o.id == order_item), None)
                 if len(order_item_object.equipment_types) > 0:
-                    if not any(order_item in attachment_route_order_items for attachment_route_order_items in self.route_plan_attachment.values()):
-                        print(f"Order item {order_item} with attachment needs is not assigned to an attachment.")
-                        return False
-
+                    for equipment_type in order_item_object.equipment_types:
+                        if equipment_type not in possible_types:
+                            print(f"Order item {order_item} with equipment type {equipment_type} is not assigned to a suitable attachment.")
+                            return False
+                        
         if verbose:
             print("The assigned order items are present in both route plans.")
 

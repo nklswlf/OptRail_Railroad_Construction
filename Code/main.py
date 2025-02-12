@@ -71,7 +71,6 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
 
 
 machine_attractiveness_techniques = ["balanced_greedy",
-                                     "posible_order_items_best_order_importance",
                                      "machine_planned_importance",
                                      "worker_default_driver_importance",
                                      "possible_default_drivers_importance"]
@@ -107,6 +106,11 @@ def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", or
     data = InputData(instance_filename)
     #time_end = time()
     #time_for_data_loading = time_end - time_start
+
+    for order_item in data.order_items:
+        if len(order_item.equipment_types) > 0:
+            print(f"Order Item: {order_item.id} --> Equipment Types: {order_item.equipment_types} + Possible equipments: {set(attachment.id for attachment in data.attachments if attachment.type in order_item.equipment_types)}")
+
 
     evaluationLogic = EvaluationLogic(data)
     solutionPool = SolutionPool()
@@ -148,11 +152,9 @@ def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", or
 def TestInputData():
     instance_filename = "Construction_a10_o107_m5_an57_ar12.json"
 
-    # Erstellen einer InputData-Instanz
-    data = InputData(instance_filename)
-
-    # Anzeigen der Instanz-Metadaten
-    print("\nInstance Name:", data.instance)
+    for instance_filename in instances:
+        # Erstellen einer InputData-Instanz
+        data = InputData(instance_filename)
 
 
 
@@ -211,5 +213,5 @@ def TestInputData():
     
 if __name__ == "__main__":
     #TestInputData()
-    single_run()
-    #main()
+    #single_run()
+    main()
