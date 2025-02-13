@@ -5,6 +5,7 @@ from EvaluationLogic import EvaluationLogic
 import concurrent.futures  # For parallelism
 from copy import deepcopy
 from itertools import chain
+import itertools
 
 
 class BaseMove:
@@ -162,8 +163,8 @@ class OutputNeighborhood(BaseNeighborhood):
                 
                 #print(f"\nIteration: {iterator}")
 
-                worker_route, machine_route = self.constructCompleteRoutes(bestNeighborhoodMove, bestNeighborhoodSolution)
-                bestNeighborhoodSolution = Solution(worker_route, machine_route, self.data)
+                worker_route, machine_route, attachement_route = self.constructCompleteRoutes(bestNeighborhoodMove, bestNeighborhoodSolution)
+                bestNeighborhoodSolution = Solution(worker_route, machine_route, attachement_route, self.data)
                 self.evaluationLogic.evaluate(bestNeighborhoodSolution)
 
                 self.solutionPool.AddSolution(bestNeighborhoodSolution)
@@ -183,7 +184,7 @@ class OutputNeighborhood(BaseNeighborhood):
 class InsertShiftMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
 
-    def __init__(self, machine_id, worker_id, machine_route, worker_route, machine_route_index, worker_route_index, order_item_id):
+    def __init__(self, machine_id, worker_id, machine_route, worker_route, machine_route_index, worker_route_index, order_item_id, attachment_information=None):
 
 
         self.MachineRoute = list(machine_route)
@@ -201,6 +202,29 @@ class InsertShiftMove(BaseMove):
 
         self.MachineRoute.insert(self.MachineRouteIndex, self.OrderItemID)
         self.WorkerRoute.insert(self.WorkerRouteIndex, self.OrderItemID)
+
+        
+
+        if attachment_information is not None:
+            index = 0
+            for attachment_id, attachment_index, attachment_route in attachment_information:
+                # Dynamically set the attributes using f-string formatting
+                setattr(self, f"Attachment_Route_{index}", list(attachment_route))
+                setattr(self, f"Attachment_Index_{index}", attachment_index)
+                setattr(self, f"Attachment_ID_{index}", attachment_id)
+                
+                # Retrieve the newly created route attribute and insert the order item
+                route = getattr(self, f"Attachment_Route_{index}")
+                route.insert(attachment_index, self.OrderItemID)
+                
+                index += 1
+
+            self.NumberOfAttachments = index
+
+        else:
+            self.NumberOfAttachments = 0
+
+
 
         #print(f"Machine ID: {self.MachineID}")
         #print(f"Machine Route: {self.MachineRoute}")
@@ -228,8 +252,9 @@ class InsertShiftNeighborhood(OutputNeighborhood):
         for order_item_id in unused_order_item_ids:
 
             # Dictionary to store information about the position of the order_item in machine routes
-            order_item_position_machine_route = dict()
-            order_item_position_worker_route = dict()
+            order_item_position_machine_route = dict() # This will map machine ids to the corresponding insertion information which is a list of the form [position, route]
+            order_item_position_worker_route = dict() # This will map worker ids to the corresponding insertion information which is a list of the form [position, route]
+            possible_attachment_positions = dict()  # This will map a key (tuple of attachment ids) to the corresponding insertion information which is a tuple of the form [(position, route), ...]
 
             for machine_id, machine_route in solution.route_plan_machine.items():
                 machine = solution.data.machines[machine_id]
@@ -299,11 +324,92 @@ class InsertShiftNeighborhood(OutputNeighborhood):
                             break
 
 
+            # Only search for attachment positions if the order item requires attachments
+            order_item_obj = solution.data.order_items[order_item_id]
+            
+
+            if order_item_obj.equipment_types:
+                # For each required equipment occurrence (order_item_obj.equipment_types can have duplicates), collect possible insertion positions from the attachment route plan
+                positions_for_each_occurrence = []
+                for equipment_type in order_item_obj.equipment_types:
+                    possible_positions_for_type = []
+                    for attachment_id, attachment_route in solution.route_plan_attachment.items():
+                        attachment = solution.data.attachments[int(attachment_id)]
+
+                        # Only consider attachments that can process this equipment type.
+                        if equipment_type != attachment.type:
+                            continue
+
+                        # Check if the order item is allowed for this attachment
+                        attachment_possible_order_item_ids = [oid for orders in attachment.possible_order_item_ids.values() for oid in orders]
+                        if order_item_id not in attachment_possible_order_item_ids:
+                            continue
+
+                        # If the attachment route is empty, insertion position is 0
+                        if len(attachment_route) == 0:
+                            possible_positions_for_type.append((attachment_id, 0, list(attachment_route)))
+                            continue
+
+                        # Otherwise, find a valid insertion position based on predecessor/successor relationships
+                        for order_item_id_attachment in attachment_route:
+                            pred = attachment.predecessor_ids.get(order_item_id_attachment, [])
+                            succ = attachment.successor_ids.get(order_item_id_attachment, [])
+                            # If the order item is neither a predecessor nor a successor, skip this element.
+                            if order_item_id not in pred and order_item_id not in succ:
+                                continue
+
+                            # If the order item is a predecessor, it can be inserted before the current item.
+                            if order_item_id in pred:
+                                pos = attachment_route.index(order_item_id_attachment)
+                                possible_positions_for_type.append((attachment_id, pos, list(attachment_route)))
+                                break
+
+                            # If it is a successor of the last element, insert at the end.
+                            if attachment_route.index(order_item_id_attachment) == len(attachment_route) - 1:
+                                if order_item_id in succ:
+                                    pos = attachment_route.index(order_item_id_attachment) + 1
+                                    possible_positions_for_type.append((attachment_id, pos, list(attachment_route)))
+                                    break
+
+                    positions_for_each_occurrence.append(possible_positions_for_type)
+
+                attachment_insertion_combinations = list(itertools.product(*positions_for_each_occurrence))
+                # Store the valid combinations in the dictionary.
+                for combo in attachment_insertion_combinations:
+                    # Create a key tuple consisting of the attachment IDs from each insertion option in the combo.
+                    attachment_ids_tuple = tuple(pos[0] for pos in combo)
+                    # Filter out combinations where the same attachment is used more than once.
+                    if len(set(attachment_ids_tuple)) < len(attachment_ids_tuple):
+                        continue  # Skip this combination if there's a duplicate attachment ID.
+                    possible_attachment_positions[attachment_ids_tuple] = combo
+
+
     
 
-            for machine_id, machine_route_and_index in order_item_position_machine_route.items():
-                for worker_id, worker_route_and_index in order_item_position_worker_route.items():
-                    self.Moves.append(InsertShiftMove(machine_id, worker_id, machine_route_and_index[1], worker_route_and_index[1], machine_route_and_index[0], worker_route_and_index[0], order_item_id))
+            for machine_id, machine_index_and_route in order_item_position_machine_route.items():
+                for worker_id, worker_index_and_route in order_item_position_worker_route.items():
+                    if order_item_obj.equipment_types:
+                        for attachment_ids_tuple, attachment_info in possible_attachment_positions.items():
+                            self.Moves.append(InsertShiftMove(
+                                machine_id,
+                                worker_id,
+                                machine_index_and_route[1],  # machine route snapshot
+                                worker_index_and_route[1],   # worker route snapshot
+                                machine_index_and_route[0],  # machine insertion index
+                                worker_index_and_route[0],   # worker insertion index
+                                order_item_id,
+                                attachment_information=attachment_info  # attachment insertion information tuple
+                            ))
+                    else:
+                        self.Moves.append(InsertShiftMove(
+                            machine_id,
+                            worker_id,
+                            machine_index_and_route[1],
+                            worker_index_and_route[1],
+                            machine_index_and_route[0],
+                            worker_index_and_route[0],
+                            order_item_id
+                        ))
 
 
             #print(f"Order Item Position Machine Route: {order_item_position_machine_route}")
@@ -328,11 +434,15 @@ class InsertShiftNeighborhood(OutputNeighborhood):
         
         machine_route_plan = deepcopy(solution.route_plan_machine)
         worker_route_plan = deepcopy(solution.route_plan_worker)
+        attachment_route_plan = deepcopy(solution.route_plan_attachment)
 
         machine_route_plan[move.MachineID] = move.MachineRoute
         worker_route_plan[move.WorkerID] = move.WorkerRoute
+        
+        for index in range(move.NumberOfAttachments):
+            attachment_route_plan[getattr(move, f"Attachment_ID_{index}")] = getattr(move, f"Attachment_Route_{index}")
 
-        return worker_route_plan, machine_route_plan
+        return worker_route_plan, machine_route_plan, attachment_route_plan
 
         
 class SwapShiftExternalMove(BaseMove):
