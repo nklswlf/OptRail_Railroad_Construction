@@ -84,7 +84,7 @@ order_item_attractiveness_techniques = ["balanced_greedy",
 machine_attractiveness_techniques = ["balanced_greedy"]
 
 order_item_attractiveness_techniques = ["balanced_greedy"]
-                                     
+                                    
 
 def main():
     for instance in instances:
@@ -208,9 +208,25 @@ def TestInputData():
     '''
 
 
+def feasi_check():
+
+    attachment_route = {0: [23], 1: [19], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [23, 34], 13: [], 14: [], 15: [], 16: [], 17: [23], 18: [], 19: [], 20: [], 21: [], 22: [], 23: [], 24: [], 25: [], 26: [23], 27: [], 28: [], 29: [], 30: [], 31: [], 32: [], 33: [], 34: [], 35: [19], 36: [], 37: [], 38: [], 39: [], 40: [], 41: [], 42: [], 43: [], 44: [], 45: [], 46: [], 47: [], 48: [], 49: [], 50: [23], 51: [], 52: [], 53: [], 54: [], 55: [23], 56: []}
+    machine_route = {0: [22, 87, 28, 104, 31, 33, 36, 41], 1: [19, 20, 17, 18, 23, 24, 82, 83, 25, 84, 26, 85, 27, 86, 100, 13, 14, 15, 16, 30, 106, 32, 34, 35, 38, 39, 40], 2: [88, 89, 78, 80], 3: [21, 93, 94, 95, 96, 97, 98, 99, 101, 102, 103, 29, 105, 90, 91, 92, 37], 4: []}
+    worker_route = {0: [17, 23, 25, 26, 27, 13, 15, 30, 32, 34, 38, 40], 1: [14, 16, 106], 2: [93, 95, 97, 99, 101, 103, 105], 3: [94, 96, 98, 100, 102], 4: [18, 24, 104, 31, 33, 36, 41], 5: [], 6: [39], 7: [19, 21, 28, 35, 37], 8: [20, 22, 29, 90, 91, 92], 9: [], 10: [], 11: [82, 83, 84, 85, 86, 87, 88, 89, 78, 80]}
+
+    data = InputData("Construction_a10_o107_m5_an57_ar12.json")
+
+    evaluationLogic = EvaluationLogic(data)
+
+    solution = Solution(worker_route, machine_route, attachment_route, data)
+
+    solution.feasibility_check()
+
+
 
     
 if __name__ == "__main__":
     #TestInputData()
     single_run()
     #main()
+    #feasi_check()
