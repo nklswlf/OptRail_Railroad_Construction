@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import os
 from datetime import timedelta
+from collections import Counter
 
 
 class Solution:
@@ -129,7 +130,7 @@ class Solution:
     def feasibility_check(self, verbose=False):
         ''' Check the feasibility of the solution'''
         print("\nChecking the feasibility of the solution...")
-
+        
         # ========================
         # 1. Order Item Feasibility
         # ========================
@@ -150,33 +151,66 @@ class Solution:
                     print(f"Order item {order_item} is not present in the machine route.")
                     return False
 
-        # Check that no order item is assigned to more than one worker
+        # 1. Check: No duplicates within each worker's route
         for worker_id, route in self.route_plan_worker.items():
-            for order_item in route:
-                if sum(order_item in worker_route for worker_route in self.route_plan_worker.values()) > 1:
-                    print(f"Order item {order_item} is assigned to more than one worker.")
-                    return False
+            if len(route) != len(set(route)):
+                print(f"Worker {worker_id} has duplicate order items in their route: {route}")
+                return False
 
-        # Check that no order item is assigned to more than one machine
+        # 2. Check: Each order item appears only in one worker's route overall
+        all_worker_order_items = [order_item for route in self.route_plan_worker.values() for order_item in route]
+        if len(all_worker_order_items) != len(set(all_worker_order_items)):
+            print("An order item has been assigned to more than one worker.")
+            return False
+
+        # 1. Check: No duplicates within each machine's route
         for machine_id, route in self.route_plan_machine.items():
-            for order_item in route:
-                if sum(order_item in machine_route for machine_route in self.route_plan_machine.values()) > 1:
-                    print(f"Order item {order_item} is assigned to more than one machine.")
-                    return False
-                
-        # Check if the order items with attachment needs are assigned to all necessary attachments
-        possible_types = []
-        for attachment_id, route in self.route_plan_attachment.items():
-            attachment_object = self.data.attachments[int(attachment_id)]
-            possible_types.append(attachment_object.type)
+            if len(route) != len(set(route)):
+                print(f"Machine {machine_id} has duplicate order items in its route: {route}")
+                return False
 
+        # 2. Check: Each order item appears only in one machine's route overall
+        all_machine_order_items = [order_item for route in self.route_plan_machine.values() for order_item in route]
+        if len(all_machine_order_items) != len(set(all_machine_order_items)):
+            print("An order item has been assigned to more than one machine.")
+            return False
+
+        # 1. Check: No duplicates within each attachment's route
+        for attachment_id, route in self.route_plan_attachment.items():
+            if len(route) != len(set(route)):
+                print(f"Attachment {attachment_id} has duplicate order items in its route: {route}")
+                return False
+                
+        # Check that all order items are assigned to the needed attachments with the correct counts
         for machine_route_order_items in self.route_plan_machine.values():
-            for order_item in machine_route_order_items:
-                order_item_object = next((o for o in self.data.order_items if o.id == order_item), None)
-                if len(order_item_object.equipment_types) > 0:
-                    for equipment_type in order_item_object.equipment_types:
-                        if equipment_type not in possible_types:
-                            print(f"Order item {order_item} with equipment type {equipment_type} is not assigned to a suitable attachment.")
+            for order_item_id in machine_route_order_items:
+                order_item_object = next((o for o in self.data.order_items if o.id == order_item_id), None)
+                if order_item_object is None:
+                    print(f"Order Item {order_item_id} was not found in the data.")
+                    return False 
+                if order_item_object.equipment_types:
+                    assigned_types = []
+                    for attachment_id, route in self.route_plan_attachment.items():
+                        if order_item_id in route:
+                            attachment_object = self.data.attachments[int(attachment_id)]
+                            assigned_types.append(attachment_object.type)
+
+                    required_counts = Counter(order_item_object.equipment_types)
+                    assigned_counts = Counter(assigned_types)
+
+                    # Check for too few attachments for each required equipment type
+                    for equipment_type, required_count in required_counts.items():
+                        if assigned_counts[equipment_type] < required_count:
+                            print(f"Order Item {order_item_id} needs {required_count}x Equipment-Type {equipment_type}, "
+                                f"but there are only {assigned_counts[equipment_type]} assigned.")
+                            return False
+
+                    # Check for too many attachments or attachments that are not needed
+                    for equipment_type, assigned_count in assigned_counts.items():
+                        # If the equipment type isn't required at all or is over-assigned:
+                        if assigned_count > required_counts.get(equipment_type, 0):
+                            print(f"Order Item {order_item_id} has {assigned_count}x Equipment-Type {equipment_type} assigned, "
+                                f"but only {required_counts.get(equipment_type, 0)} are needed.")
                             return False
                         
         if verbose:
@@ -289,7 +323,7 @@ class Solution:
             if verbose:
                 print(f"Route for worker {worker_id} is feasible.")
 
-        
+                
         # ========================
         # 4. Attachment Route Feasibility
         # ========================
@@ -300,13 +334,13 @@ class Solution:
 
             attachment_object = next((a for a in self.data.attachments if a.id == attachment_id), None)
             order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
-
+ 
             # Check if the attachment type is correct for the order items in the route
             for order_item in order_item_objects:
                 if attachment_object.type not in order_item.equipment_types:
-                    print(f"Attachment {attachment_id} is not correct assigned to order item {order_item.id}.")
+                    print(f"Attachment {attachment_id} is not correctly assigned to order item {order_item.id}.")
                     return False
-                
+
             # Check if the sequence of the order items is correct with start, end and travel times
             for order_item_i in order_item_objects:
                 for order_item_j in order_item_objects:
