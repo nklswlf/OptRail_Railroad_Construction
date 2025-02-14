@@ -583,11 +583,12 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
         
         machine_route_plan = deepcopy(solution.route_plan_machine)
         worker_route_plan = deepcopy(solution.route_plan_worker)
+        attachement_route_plan = deepcopy(solution.route_plan_attachment)
 
         machine_route_plan[move.MachineID] = move.MachineRoute
         worker_route_plan[move.WorkerID] = move.WorkerRoute
 
-        return worker_route_plan, machine_route_plan
+        return worker_route_plan, machine_route_plan, attachement_route_plan
     
 
     def MakeBestMove(self) -> BaseMove:
@@ -669,8 +670,8 @@ class TimeNeighborhood(BaseNeighborhood):
             if bestNeighborhoodMove is not None and bestNeighborhoodMove.Delta < 0:
                 #print(f"\nIteration: {iterator}")
 
-                worker_route, machine_route = self.constructCompleteRoutes(bestNeighborhoodMove, bestNeighborhoodSolution)
-                bestNeighborhoodSolution = Solution(worker_route, machine_route, self.data)
+                worker_route, machine_route, attachement_route = self.constructCompleteRoutes(bestNeighborhoodMove, bestNeighborhoodSolution)
+                bestNeighborhoodSolution = Solution(worker_route, machine_route, attachement_route, self.data)
                 self.evaluationLogic.evaluate(bestNeighborhoodSolution)
 
                 self.solutionPool.AddSolution(bestNeighborhoodSolution)
@@ -812,11 +813,12 @@ class ReplaceShiftMachineNeighborhood(TimeNeighborhood):
         
         machine_route_plan = deepcopy(solution.route_plan_machine)
         worker_route_plan = deepcopy(solution.route_plan_worker)
+        attachement_route_plan = deepcopy(solution.route_plan_attachment)
 
         machine_route_plan[move.MachineID1] = move.MachineRoute1
         machine_route_plan[move.MachineID2] = move.MachineRoute2
 
-        return worker_route_plan, machine_route_plan        
+        return worker_route_plan, machine_route_plan, attachement_route_plan 
 
 
 class SwapShiftMachineMove(BaseMove):
@@ -1018,11 +1020,12 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
 
         machine_route_plan = deepcopy(solution.route_plan_machine)
         worker_route_plan = deepcopy(solution.route_plan_worker)
+        attachment_route_plan = deepcopy(solution.route_plan_attachment)
 
         machine_route_plan[move.MachineID1] = move.MachineRoute1
         machine_route_plan[move.MachineID2] = move.MachineRoute2
 
-        return worker_route_plan, machine_route_plan
+        return worker_route_plan, machine_route_plan, attachment_route_plan
 
 
 
@@ -1135,11 +1138,12 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
 
         machine_route_plan = deepcopy(solution.route_plan_machine)
         worker_route_plan = deepcopy(solution.route_plan_worker)
+        attachment_route_plan = deepcopy(solution.route_plan_attachment)
 
         worker_route_plan[move.WorkerID1] = move.WorkerRoute1
         worker_route_plan[move.WorkerID2] = move.WorkerRoute2
 
-        return worker_route_plan, machine_route_plan
+        return worker_route_plan, machine_route_plan, attachment_route_plan
 
 
 
@@ -1353,11 +1357,12 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
 
         machine_route_plan = deepcopy(solution.route_plan_machine)
         worker_route_plan = deepcopy(solution.route_plan_worker)
+        attachment_route_plan = deepcopy(solution.route_plan_attachment)
 
         worker_route_plan[move.WorkerID1] = move.WorkerRoute1
         worker_route_plan[move.WorkerID2] = move.WorkerRoute2
 
-        return worker_route_plan, machine_route_plan
+        return worker_route_plan, machine_route_plan, attachment_route_plan
 
 
 

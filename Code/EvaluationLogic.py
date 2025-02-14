@@ -159,9 +159,9 @@ class EvaluationLogic:
         delta_dynamic_percentage_order = 0
         for order in self.data.orders:
             if move.OrderItemIDExt in order.order_item_ids:
-                delta_dynamic_percentage_order += (1 / len(order.order_item_ids)) + move.DynamicPercentageExt
+                delta_dynamic_percentage_order += (1 / len(order.order_item_ids))# + move.DynamicPercentageExt
             if move.OrderItemIDInt in order.order_item_ids:
-                delta_dynamic_percentage_order -= (1 / len(order.order_item_ids)) + move.DynamicPercentageInt
+                delta_dynamic_percentage_order -= (1 / len(order.order_item_ids))# + move.DynamicPercentageInt
 
 
         delta = {}
@@ -470,7 +470,6 @@ class EvaluationLogic:
                 solution.transport_distance_per_attachment[attachment_id] = 0
                 for i in range(len(route) - 1):
                     solution.transport_distance_per_attachment[attachment_id] += self.data.transport_routes_order_item[route[i]][route[i + 1]]
-                print(f"Attachment: {attachment_id} --> Transport Distance: {solution.transport_distance_per_attachment[attachment_id]}")
                 
             solution.total_transport_distance_attachments = sum(solution.transport_distance_per_attachment.values())
 
