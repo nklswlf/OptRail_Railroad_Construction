@@ -701,6 +701,139 @@ class TimeNeighborhood(BaseNeighborhood):
 
 
 
+class ReplaceShiftAttachmentMove(BaseMove):
+    """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
+    
+    def __init__(self, attachment_id_1, attachment_id_2, attachment_route_1, attachment_route_2, attachment_route_index_2, attachment_route_index_1, order_item_id):
+
+        self.AttachmentRoute1 = list(attachment_route_1)
+        self.AttachmentRoute2 = list(attachment_route_2)
+
+        self.AttachmentRouteIndex1 = attachment_route_index_1
+        self.AttachmentRouteIndex2 = attachment_route_index_2
+
+        self.OrderItemID = order_item_id
+
+        self.AttachmentID1 = attachment_id_1
+        self.AttachmentID2 = attachment_id_2
+
+        self.AttachmentRoute2.insert(self.AttachmentRouteIndex2, self.OrderItemID)
+
+        self.AttachmentRoute1.remove(self.OrderItemID)
+
+
+class ReplaceShiftAttachmentNeighborhood(TimeNeighborhood):
+    """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
+
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
+        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+
+        self.Type = 'Replace_Shift_Attachment'
+
+    def MakeBestMove(self) -> BaseMove:
+        
+        # Sorting will be handled by the child classes
+        self.sort_move_solutions()
+        
+        for move_solution in self.MoveSolutions:
+            return move_solution
+                    
+        return None
+
+    def DiscoverMoves(self, solution: Solution):
+        """ Generate all $n choose 2$ moves """
+
+        for attachment_id_1, attachment_route_1 in solution.route_plan_attachment.items():
+            for attachment_id_2, attachment_route_2 in solution.route_plan_attachment.items():
+                attachment_2_order_item_positions = {}
+
+                # If no order item is included in attachment route 1 continue to next attachment 1, break from all attachment 2 for this attachment 1
+                if len(attachment_route_1) == 0:
+                    break
+                
+                attachment_1_obj = solution.data.attachments[attachment_id_1]
+                attachment_2_obj = solution.data.attachments[attachment_id_2]
+
+                # Skip if attachment 1 and attachment 2 have different equipment types
+                if attachment_1_obj.type != attachment_2_obj.type:
+                    continue
+
+
+                # Skip if the same attachment is selected
+                if attachment_id_1 == attachment_id_2:
+                    continue
+                else:
+                    attachment_2 = solution.data.attachments[attachment_id_2]
+
+                    for order_item_id_1 in attachment_route_1:
+
+                        # Continue to next order item if order_item_id_1 is not in the list of all planned order items for attachment 2
+                        attachment_2_possible_order_item_ids = [order_item_ids for orders in attachment_2.possible_order_item_ids.values() for order_item_ids in orders]
+                        if order_item_id_1 not in attachment_2_possible_order_item_ids:
+                            continue
+
+
+                        # Continue to next order item if order_item_id_1 is already included in the attachment route of attachment 2
+                        # Order_items can be included in multiple attachments since an order item can have multiple equipment type needs of the same type
+                        if order_item_id_1 in attachment_route_2:
+                            continue
+
+
+                        # If attachment 2 has no order items in its route, order item 1 can be inserted at the first position
+                        if len(attachment_route_2) == 0:
+                            attachment_2_order_item_positions[order_item_id_1] = [0, attachment_route_1.index(order_item_id_1)]
+                            continue
+
+                        # Find the position of order_item_id_1 in the attachment route of attachment 2
+                        for order_item_id_2 in attachment_route_2:
+
+                            # If both order items collide order item 1 cannot be inserted
+                            if order_item_id_1 not in attachment_2.predecessor_ids[order_item_id_2] and order_item_id_1 not in attachment_2.successor_ids[order_item_id_2]:
+                                break
+
+                            # If order_item_id_1 is a predecessor of order_item_id_2, it can be inserted before order_item_id_2
+                            if order_item_id_1 in attachment_2.predecessor_ids[order_item_id_2]:
+                                attachment_2_order_item_positions[order_item_id_1] = [attachment_route_2.index(order_item_id_2), attachment_route_1.index(order_item_id_1)]
+                                break
+                            
+                            # If order_item_id_1 is a successor of the last order_item in the attachment route of attachment 2, it can be inserted at the end of the attachment route
+                            if len(attachment_route_2) == attachment_route_2.index(order_item_id_2) + 1:
+                                if order_item_id_1 in attachment_2.successor_ids[order_item_id_2]:
+                                    attachment_2_order_item_positions[order_item_id_1] = [attachment_route_2.index(order_item_id_2) + 1 , attachment_route_1.index(order_item_id_1)]
+                                    break
+
+                for order_item_id, attachment_route_index_2_1 in attachment_2_order_item_positions.items():
+                    self.Moves.append(ReplaceShiftAttachmentMove(attachment_id_1, attachment_id_2, attachment_route_1, attachment_route_2, attachment_route_index_2_1[0], attachment_route_index_2_1[1], order_item_id))
+
+            
+    def EvaluateMove(self, move: ReplaceShiftAttachmentMove) -> None:
+        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
+
+        #Update the Delta of the Move
+        move.setDelta(self.evaluationLogic.calculate_replace_shift_attachment_delta(move))
+
+    def sort_move_solutions(self):
+            
+            # Sort with lowest Delta first
+            self.MoveSolutions.sort(key=lambda move: move.Delta, reverse=False)
+
+
+    def constructCompleteRoutes(self, move:ReplaceShiftAttachmentMove, solution:Solution) -> dict:
+        ''' Constructs the comlete Route from the Move'''
+        
+        attachment_route_plan = deepcopy(solution.route_plan_attachment)
+        worker_route_plan = deepcopy(solution.route_plan_worker)
+        machine_route_plan = deepcopy(solution.route_plan_machine)
+
+        attachment_route_plan[move.AttachmentID1] = move.AttachmentRoute1
+        attachment_route_plan[move.AttachmentID2] = move.AttachmentRoute2
+
+        return worker_route_plan, machine_route_plan, attachment_route_plan
+
+
+
+
+
 class ReplaceShiftMachineMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
     

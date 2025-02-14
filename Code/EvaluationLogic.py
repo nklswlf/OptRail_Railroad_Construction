@@ -253,6 +253,69 @@ class EvaluationLogic:
 
         return delta
 
+    def calculate_replace_shift_attachment_delta(self, move):
+        ''' Calculate the delta of the objective function value when replacing an order item between two attachments'''
+
+        # Calculate the extra transport distance
+        delta_transport_distance = 0
+        if len(move.AttachmentRoute2) == 1:
+            predecessor_id = None
+            successor_id = None
+        elif move.AttachmentRouteIndex2 == 0:
+            predecessor_id = None
+            successor_id = move.AttachmentRoute2[move.AttachmentRouteIndex2 + 1]
+            delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        elif move.AttachmentRouteIndex2 == len(move.AttachmentRoute2) - 1:
+            predecessor_id = move.AttachmentRoute2[move.AttachmentRouteIndex2 - 1]
+            successor_id = None
+            delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        else:
+            predecessor_id = move.AttachmentRoute2[move.AttachmentRouteIndex2 - 1]
+            successor_id = move.AttachmentRoute2[move.AttachmentRouteIndex2 + 1]
+            delta_transport_distance += (((self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                        + (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                        - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)) 
+        
+        if len(move.AttachmentRoute1) == 0:
+            predecessor_id = None
+            successor_id = None
+            delta_transport_distance -= 0
+        elif move.AttachmentRouteIndex1 == 0:
+            predecessor_id = None
+            successor_id = move.AttachmentRoute1[move.AttachmentRouteIndex1]
+            delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        elif move.AttachmentRouteIndex1 == len(move.AttachmentRoute1):
+            predecessor_id = move.AttachmentRoute1[move.AttachmentRouteIndex1 - 1]
+            successor_id = None
+            delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        else:
+            predecessor_id = move.AttachmentRoute1[move.AttachmentRouteIndex1 - 1]
+            successor_id = move.AttachmentRoute1[move.AttachmentRouteIndex1]
+            delta_transport_distance -= (((self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                        + (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                        - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+            
+        # Calculate the extra attachment count
+        if len(move.AttachmentRoute1) == 0:
+            delta_attachment_count = -1
+        else:
+            delta_attachment_count = 0
+
+        if len(move.AttachmentRoute2) == 1:
+            delta_attachment_count += 1
+
+        delta = {}
+        delta["transport_distance"] = delta_transport_distance
+        delta["attachment_count"] = delta_attachment_count
+
+        print(f"Delta: {delta}")
+
+        delta = delta["transport_distance"] + delta["attachment_count"]
+        print(f"Delta: {delta}")
+
+        return delta
+
+
     def calculate_insert_shift_delta(self, move):
         ''' Calculate the delta of the objective function value when inserting an order item into a route'''
         
