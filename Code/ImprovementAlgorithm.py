@@ -43,6 +43,8 @@ class ImprovementAlgorithm:
             return SwapShiftMachineNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
         elif neighborhoodType == 'Swap_Shift_External':
             return SwapShiftExternalNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
+        elif neighborhoodType == 'Replace_Shift_Attachment':
+            return ReplaceShiftAttachmentNeighborhood(self.InputData, self.EvaluationLogic, self.SolutionPool, self.RNG)
         else:
             raise Exception(f"Neighborhood type {neighborhoodType} not defined.")
 
