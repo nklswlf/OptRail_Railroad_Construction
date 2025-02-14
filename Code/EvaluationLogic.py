@@ -302,7 +302,40 @@ class EvaluationLogic:
         # Calculate percentage difference this order item makes
         for order in self.data.orders:
             if move.OrderItemID in order.order_item_ids:
-                delta_dynamic_percentage_order = 1 / len(order.order_item_ids)
+                delta_dynamic_percentage_order = (1 / len(order.order_item_ids)) + move.DynamicPercentage
+
+        
+        # Calculate the number of attachments
+        delta_attachment_count = 0
+        for i in range(move.NumberOfAttachments):
+            if len(getattr(move, f"AttachmentRoute_{i}")) > 0:
+                delta_attachment_count += 1
+
+        
+        # Calculate the extra transport distance of the attachments
+        delta_transport_distance_attachments = 0
+        for i in range(move.NumberOfAttachments):
+            if len(getattr(move, f"AttachmentRoute_{i}")) == 1:
+                predecessor_id = None
+                successor_id = None
+            elif getattr(move, f"AttachmentRouteIndex_{i}") == 0:
+                predecessor_id = None
+                successor_id = getattr(move, f"AttachmentRoute_{i}")[getattr(move, f"AttachmentRouteIndex_{i}") + 1]
+                delta_transport_distance_attachments += (self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            elif getattr(move, f"AttachmentRouteIndex_{i}") == len(getattr(move, f"AttachmentRoute_{i}")) - 1:
+                predecessor_id = getattr(move, f"AttachmentRoute_{i}")[getattr(move, f"AttachmentRouteIndex_{i}") - 1]
+                successor_id = None
+                delta_transport_distance_attachments += (self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            else:
+                predecessor_id = getattr(move, f"AttachmentRoute_{i}")[getattr(move, f"AttachmentRouteIndex_{i}") - 1]
+                successor_id = getattr(move, f"AttachmentRoute_{i}")[getattr(move, f"AttachmentRouteIndex_{i}") + 1]
+                delta_transport_distance_attachments += (((self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                            + (self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                            - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                
+            
+
+        
 
 
 
@@ -310,15 +343,17 @@ class EvaluationLogic:
         delta["dynamic_percentage_order"] = delta_dynamic_percentage_order
         delta["commute_distance"] = delta_commute_distance
         delta["transport_distance"] = delta_transport_distance
+        delta["transport_distance_attachments"] = delta_transport_distance_attachments
         delta["driver_violation"] = delta_driver_violation
         delta["machine_count"] = delta_machine_count
         delta["worker_count"] = delta_worker_count
+        delta["attachment_count"] = delta_attachment_count
         
         print(f"Delta: {delta}")
 
 
-        delta = [delta["dynamic_percentage_order"], (delta["commute_distance"] + delta["transport_distance"] + delta["driver_violation"] + delta["machine_count"] + delta["worker_count"])]
-        #delta =[delta["dynamic_percentage_order"], delta["machine_count"]]
+        delta = [delta["dynamic_percentage_order"], delta["commute_distance"] + delta["transport_distance"] + delta["driver_violation"] + delta["machine_count"] + delta["worker_count"] + delta["attachment_count"] + delta["transport_distance_attachments"]]
+        #delta =[delta["dynamic_percentage_order"], delta["attachment_count"]]
 
         print(f"Delta: {delta}")
 

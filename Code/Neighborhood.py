@@ -184,7 +184,7 @@ class OutputNeighborhood(BaseNeighborhood):
 class InsertShiftMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
 
-    def __init__(self, machine_id, worker_id, machine_route, worker_route, machine_route_index, worker_route_index, order_item_id, attachment_information=None):
+    def __init__(self, machine_id, worker_id, machine_route, worker_route, machine_route_index, worker_route_index, order_item_id, dynamic_percentage, attachment_information=None):
 
 
         self.MachineRoute = list(machine_route)
@@ -203,18 +203,20 @@ class InsertShiftMove(BaseMove):
         self.MachineRoute.insert(self.MachineRouteIndex, self.OrderItemID)
         self.WorkerRoute.insert(self.WorkerRouteIndex, self.OrderItemID)
 
+
+        self.DynamicPercentage = dynamic_percentage
         
 
         if attachment_information is not None:
             index = 0
             for attachment_id, attachment_index, attachment_route in attachment_information:
                 # Dynamically set the attributes using f-string formatting
-                setattr(self, f"Attachment_Route_{index}", list(attachment_route))
-                setattr(self, f"Attachment_Index_{index}", attachment_index)
-                setattr(self, f"Attachment_ID_{index}", attachment_id)
+                setattr(self, f"AttachmentRoute_{index}", list(attachment_route))
+                setattr(self, f"AttachmentRouteIndex_{index}", attachment_index)
+                setattr(self, f"AttachmentID_{index}", attachment_id)
                 
                 # Retrieve the newly created route attribute and insert the order item
-                route = getattr(self, f"Attachment_Route_{index}")
+                route = getattr(self, f"AttachmentRoute_{index}")
                 route.insert(attachment_index, self.OrderItemID)
                 
                 index += 1
@@ -383,8 +385,7 @@ class InsertShiftNeighborhood(OutputNeighborhood):
                         continue  # Skip this combination if there's a duplicate attachment ID.
                     possible_attachment_positions[attachment_ids_tuple] = combo
 
-
-    
+            order = [order.order_number for order in solution.data.orders if order_item_id in order.order_item_ids][0]
 
             for machine_id, machine_index_and_route in order_item_position_machine_route.items():
                 for worker_id, worker_index_and_route in order_item_position_worker_route.items():
@@ -398,6 +399,7 @@ class InsertShiftNeighborhood(OutputNeighborhood):
                                 machine_index_and_route[0],  # machine insertion index
                                 worker_index_and_route[0],   # worker insertion index
                                 order_item_id,
+                                dynamic_percentage = solution.dynamic_percentage_order[order],
                                 attachment_information=attachment_info  # attachment insertion information tuple
                             ))
                     else:
@@ -408,7 +410,8 @@ class InsertShiftNeighborhood(OutputNeighborhood):
                             worker_index_and_route[1],
                             machine_index_and_route[0],
                             worker_index_and_route[0],
-                            order_item_id
+                            order_item_id,
+                            dynamic_percentage = solution.dynamic_percentage_order[order]
                         ))
 
 
@@ -440,7 +443,7 @@ class InsertShiftNeighborhood(OutputNeighborhood):
         worker_route_plan[move.WorkerID] = move.WorkerRoute
         
         for index in range(move.NumberOfAttachments):
-            attachment_route_plan[getattr(move, f"Attachment_ID_{index}")] = getattr(move, f"Attachment_Route_{index}")
+            attachment_route_plan[getattr(move, f"AttachmentID_{index}")] = getattr(move, f"AttachmentRoute_{index}")
 
         return worker_route_plan, machine_route_plan, attachment_route_plan
 
