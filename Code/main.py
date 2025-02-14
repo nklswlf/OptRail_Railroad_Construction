@@ -98,7 +98,7 @@ def main():
                 print("\n")
 
 neighboorhood_types = ['Replace_Shift_Worker', 'Swap_Shift_Worker', 'Insert_Shift', 'Replace_Shift_Machine', 'Swap_Shift_Machine', 'Swap_Shift_External']
-neighboorhood_types = ['Insert_Shift']
+neighboorhood_types = ['Replace_Shift_Worker', 'Swap_Shift_Worker', 'Insert_Shift', 'Replace_Shift_Machine', 'Swap_Shift_Machine', 'Swap_Shift_External']
 
 def single_run(instance_filename = "Construction_a10_o107_m5_an57_ar12.json", order_item_attractiveness_technique="balanced_greedy", machine_attractiveness_technique="balanced_greedy"):
 
