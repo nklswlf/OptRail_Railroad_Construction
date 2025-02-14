@@ -2,7 +2,6 @@
 from OutputData import *
 from InputData import *
 from EvaluationLogic import *
-import random
 
 class ConstructiveHeuristics:
     ''' Class for creating objects to run different constructive heuristics'''
@@ -148,8 +147,8 @@ class ConstructiveHeuristics:
                         if len(attachment_attractiveness) > 0:
                             true_list = [att for att in attachment_attractiveness if attachment_attractiveness[att]["attachment_planned"]]
                             false_list = [att for att in attachment_attractiveness if not attachment_attractiveness[att]["attachment_planned"]]
-                            random.shuffle(true_list)
-                            random.shuffle(false_list)
+                            #random.shuffle(true_list)
+                            #random.shuffle(false_list)
                             sorted_attachment_attractiveness = true_list + false_list
                         else: # Break to next order item if one equipment type is not available
                             index += 1

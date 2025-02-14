@@ -700,6 +700,210 @@ class TimeNeighborhood(BaseNeighborhood):
         return bestNeighborhoodSolution
 
 
+class SwapShiftAttachmentMove(BaseMove):
+    """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
+                    
+    def __init__(self, attachment_id_1, attachment_id_2, attachment_route_1, attachment_route_2, attachment_index_1, attachment_index_2, order_item_id_1, order_item_id_2, taken_index_1, taken_index_2):
+
+        self.AttachmentRoute1 = list(attachment_route_1)
+        self.AttachmentRoute2 = list(attachment_route_2)
+
+        self.AttachmentRoute1Original = list(attachment_route_1)
+        self.AttachmentRoute2Original = list(attachment_route_2)
+
+        self.AttachmentRouteTakenIndex1 = taken_index_1
+        self.AttachmentRouteTakenIndex2 = taken_index_2
+
+        self.AttachmentRouteIndex1 = attachment_index_1
+        self.AttachmentRouteIndex2 = attachment_index_2
+
+        self.OrderItemID1 = order_item_id_1
+        self.OrderItemID2 = order_item_id_2
+
+        self.AttachmentID1 = attachment_id_1
+        self.AttachmentID2 = attachment_id_2
+
+        self.AttachmentRoute1.insert(self.AttachmentRouteIndex1, self.OrderItemID2)
+        self.AttachmentRoute2.insert(self.AttachmentRouteIndex2, self.OrderItemID1)
+
+        self.AttachmentRoute1.remove(self.OrderItemID1)
+        self.AttachmentRoute2.remove(self.OrderItemID2)
+
+
+
+class SwapShiftAttachmentNeighborhood(TimeNeighborhood):
+    """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
+
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
+        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+
+        self.Type = 'Swap_Shift_Attachment'
+
+    def MakeBestMove(self) -> BaseMove:
+        
+        # Sorting will be handled by the child classes
+        self.sort_move_solutions()
+        
+        for move_solution in self.MoveSolutions:
+            return move_solution
+                    
+        return None
+
+    def DiscoverMoves(self, solution: Solution):
+        """ Generate all $n choose 2$ moves """
+
+        for attachment_id_1, attachment_route_1 in solution.route_plan_attachment.items():
+            for attachment_id_2, attachment_route_2 in solution.route_plan_attachment.items():
+                attachment_1_order_item_positions = {}
+                attachment_2_order_item_positions = {}
+
+                same_position_attachment_route_1 = {}
+                same_position_attachment_route_2 = {}
+
+                # Skip if one attachment route is empty
+                if len(attachment_route_1) == 0:
+                    break
+                if len(attachment_route_2) == 0:
+                    continue
+
+                # Skip if the same attachment is selected
+                if attachment_id_1 == attachment_id_2:
+                    continue
+                else:
+                    attachment_1 = solution.data.attachments[attachment_id_1]
+                    attachment_2 = solution.data.attachments[attachment_id_2]
+
+                    if attachment_1.type != attachment_2.type:
+                        continue
+
+                    for order_item_id_1 in attachment_route_1:
+                        # Continue to next order item if order_item_id_1 is not in the list of all planned order items for attachment 2
+                        attachment_2_possible_order_item_ids = [order_item_ids for orders in attachment_2.possible_order_item_ids.values() for order_item_ids in orders]
+                        if order_item_id_1 not in attachment_2_possible_order_item_ids:
+                            continue
+                        else:
+                            # Find the position of order_item_id_1 in the attachment route of attachment 2
+                            for index, order_item_id_2 in enumerate(attachment_route_2):
+
+                                # If both order items collide check the following conditions
+                                if order_item_id_1 not in attachment_2.predecessor_ids[order_item_id_2] and order_item_id_1 not in attachment_2.successor_ids[order_item_id_2]:
+
+                                    # Check for order_items until the second last order item in the attachment route
+                                    if len(attachment_route_2) > index + 1:
+                                        # If order_item_id_1 collides with order_item_id_2 and order_item_id_1 is a predecessor of the successor of order_item_id_2, it can be inserted in the position of order_item_id_2
+                                        if order_item_id_1 in attachment_2.predecessor_ids[attachment_route_2[index + 1]]:
+                                            same_position_attachment_route_2[order_item_id_1] = [index, order_item_id_2, attachment_route_1.index(order_item_id_1)]
+                                            break
+                                    # Check for the last order item in the attachment route of attachment 2
+                                    elif len(attachment_route_2) == index + 1:
+                                        # If order_item_id_1 collides with order_item_id_2 and order_item_id_1 is a successor of the predecessor of order_item_id_2, it can be inserted in the position of order_item_id_2
+                                        if order_item_id_1 in attachment_2.successor_ids.get(index - 1, []):
+                                            same_position_attachment_route_2[order_item_id_1] = [index, order_item_id_2, attachment_route_1.index(order_item_id_1)]
+                                            break
+                                    break
+
+                                # If order_item_id_1 is a predecessor of order_item_id_2, it can be inserted before order_item_id_2
+                                if order_item_id_1 in attachment_2.predecessor_ids[order_item_id_2]:
+                                    attachment_2_order_item_positions[order_item_id_1] = [index, attachment_route_1.index(order_item_id_1)]
+                                    break
+
+                                # If order_item_id_1 is a successor of the last order_item in the attachment route of attachment 2, it can be inserted at the end of the attachment route
+                                if len(attachment_route_2) == index + 1:
+                                    if order_item_id_1 in attachment_2.successor_ids[order_item_id_2]:
+                                        attachment_2_order_item_positions[order_item_id_1] = [index + 1, attachment_route_1.index(order_item_id_1)]
+                                        break
+
+                    for order_item_id_2 in attachment_route_2:
+                        # Continue to next order item if order_item_id_2 is not in the list of all planned order items for attachment 1
+                        attachment_1_possible_order_item_ids = [order_item_ids for orders in attachment_1.possible_order_item_ids.values() for order_item_ids in orders]
+                        if order_item_id_2 not in attachment_1_possible_order_item_ids:
+                            continue
+                        else:
+                            # Find the position of order_item_id_2 in the attachment route of attachment 1
+                            for index, order_item_id_1 in enumerate(attachment_route_1):
+
+                                # If both order items collide check the following conditions
+                                if order_item_id_2 not in attachment_1.predecessor_ids[order_item_id_1] and order_item_id_2 not in attachment_1.successor_ids[order_item_id_1]:
+
+                                    # Check for order_items until the second last order item in the attachment route
+                                    if len(attachment_route_1) > index + 1:
+                                        # If order_item_id_2 collides with order_item_id_1 and order_item_id_2 is a predecessor of the successor of order_item_id_1, it can be inserted in the position of order_item_id_1
+                                        if order_item_id_2 in attachment_1.predecessor_ids[attachment_route_1[index + 1]]:
+                                            same_position_attachment_route_1[order_item_id_2] = [index, order_item_id_1, attachment_route_2.index(order_item_id_2)]
+                                            break
+                                    # Check for the last order item in the attachment route of attachment 1
+                                    elif len(attachment_route_1) == index + 1:
+                                        # If order_item_id_2 collides with order_item_id_1 and order_item_id_2 is a successor of the predecessor of order_item_id_1, it can be inserted in the position of order_item_id_1
+                                        if order_item_id_2 in attachment_1.successor_ids.get(index - 1, []):
+                                            same_position_attachment_route_1[order_item_id_2] = [index, order_item_id_1, attachment_route_2.index(order_item_id_2)]
+                                            break
+                                    break
+
+                                # If order_item_id_2 is a predecessor of order_item_id_1, it can be inserted before order_item_id_1
+                                if order_item_id_2 in attachment_1.predecessor_ids[order_item_id_1]:
+                                    attachment_1_order_item_positions[order_item_id_2] = [index, attachment_route_2.index(order_item_id_2)]
+                                    break
+
+                                # If order_item_id_2 is a successor of the last order_item in the attachment route of attachment 1, it can be inserted at the end of the attachment route
+                                if len(attachment_route_1) == index + 1:
+                                    if order_item_id_2 in attachment_1.successor_ids[order_item_id_1]:
+                                        attachment_1_order_item_positions[order_item_id_2] = [index + 1, attachment_route_2.index(order_item_id_2)]
+                                        break
+                    
+                    # Swaps where both order items go into different positions
+                    for order_item_id_2, attachment_route_index_1_taken_index_2 in attachment_1_order_item_positions.items():
+                        for order_item_id_1, attachment_route_index_2_taken_index_1 in attachment_2_order_item_positions.items():
+                            self.Moves.append(SwapShiftAttachmentMove(attachment_id_1, attachment_id_2, attachment_route_1, attachment_route_2, attachment_route_index_1_taken_index_2[0], attachment_route_index_2_taken_index_1[0], order_item_id_1, order_item_id_2, attachment_route_index_2_taken_index_1[1], attachment_route_index_1_taken_index_2[1]))
+                    
+                    # Swaps where both order items go into the same position
+                    for order_item_id_2, attachment_route_index_1_and_order_item_id_1_and_taken_index_2 in same_position_attachment_route_1.items():
+                        for order_item_id_1, attachment_route_index_2_and_order_item_id_2_and_taken_index_1 in same_position_attachment_route_2.items():
+                            if order_item_id_1 != order_item_id_2:
+                                if order_item_id_2 == attachment_route_index_2_and_order_item_id_2_and_taken_index_1[1] and order_item_id_1 == attachment_route_index_1_and_order_item_id_1_and_taken_index_2[1]:
+                                    self.Moves.append(SwapShiftAttachmentMove(attachment_id_1, attachment_id_2, attachment_route_1, attachment_route_2, attachment_route_index_1_and_order_item_id_1_and_taken_index_2[0], attachment_route_index_2_and_order_item_id_2_and_taken_index_1[0], order_item_id_1, order_item_id_2, attachment_route_index_2_and_order_item_id_2_and_taken_index_1[2], attachment_route_index_1_and_order_item_id_1_and_taken_index_2[2]))
+
+
+                    # Swaps where one order item goes into the same position in the other attachment route
+                    for order_item_id_2, attachment_route_index_1_and_order_item_id_1_and_taken_index_2 in same_position_attachment_route_1.items():
+                        for order_item_id_1, attachment_route_index_2_taken_index_1 in attachment_2_order_item_positions.items():
+                            if order_item_id_1 == attachment_route_index_1_and_order_item_id_1_and_taken_index_2[1]:
+                                self.Moves.append(SwapShiftAttachmentMove(attachment_id_1, attachment_id_2, attachment_route_1, attachment_route_2, attachment_route_index_1_and_order_item_id_1_and_taken_index_2[0], attachment_route_index_2_taken_index_1[0], order_item_id_1, order_item_id_2, attachment_route_index_2_taken_index_1[1], attachment_route_index_1_and_order_item_id_1_and_taken_index_2[2]))
+                    # The other way around
+                    for order_item_id_1, attachment_route_index_2_and_order_item_id_2_and_taken_index_1 in same_position_attachment_route_2.items():
+                        for order_item_id_2, attachment_route_index_1_taken_index_2 in attachment_1_order_item_positions.items():
+                            if order_item_id_2 == attachment_route_index_2_and_order_item_id_2_and_taken_index_1[1]:
+                                self.Moves.append(SwapShiftAttachmentMove(attachment_id_1, attachment_id_2, attachment_route_1, attachment_route_2, attachment_route_index_1_taken_index_2[0], attachment_route_index_2_and_order_item_id_2_and_taken_index_1[0], order_item_id_1, order_item_id_2, attachment_route_index_2_and_order_item_id_2_and_taken_index_1[2], attachment_route_index_1_taken_index_2[1]))
+
+                                
+
+
+
+    def EvaluateMove(self, move: SwapShiftAttachmentMove) -> None:
+        ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
+
+        #Update the Delta of the Move
+        move.setDelta(self.evaluationLogic.calculate_swap_shift_attachment_delta(move))
+
+
+    def sort_move_solutions(self):
+
+        # Sort with smallest Delta first
+        self.MoveSolutions.sort(key=lambda move: move.Delta, reverse=False)
+
+    
+    def constructCompleteRoutes(self, move:SwapShiftAttachmentMove, solution:Solution) -> dict:
+
+        worker_route_plan = deepcopy(solution.route_plan_worker)
+        machine_route_plan = deepcopy(solution.route_plan_machine)
+        attachment_route_plan = deepcopy(solution.route_plan_attachment)
+
+        attachment_route_plan[move.AttachmentID1] = move.AttachmentRoute1
+        attachment_route_plan[move.AttachmentID2] = move.AttachmentRoute2
+
+        return worker_route_plan, machine_route_plan, attachment_route_plan
+
+
+
 
 class ReplaceShiftAttachmentMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
@@ -1041,7 +1245,7 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
                             # If both order items collide check the following conditions
                             if order_item_id_1 not in machine_2.predecessor_ids[order_item_id_2] and order_item_id_1 not in machine_2.successor_ids[order_item_id_2]:
                                 
-                                # Check for order_itesm until the second last order item in the machine route of machine 2
+                                # Check for order_items until the second last order item in the machine route of machine 2
                                 if len(machine_route_2) > index + 1:
                                     # If order_item_id_1 collides with order_item_id_2 and order_item_id_1 is a predecessor of the successor of order_item_id_2, it can be inserted in the position of order_item_id_2
                                     if order_item_id_1 in machine_2.predecessor_ids[machine_route_2[index + 1]]:
@@ -1104,7 +1308,7 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
                                     machine_1_order_item_positions[order_item_id_2] = [index + 1, machine_route_2.index(order_item_id_2)]
                                     break
                 
-                # Swaps where both order items go into the same position in the other machine route
+                # Swaps where both order items go into different positions
                 for order_item_id_2, machine_route_index_1_taken_index_2 in machine_1_order_item_positions.items():
                     for order_item_id_1, machine_route_index_2_taken_index_1 in machine_2_order_item_positions.items():
                         worker_id_1 = [worker_id for worker_id, worker_route in solution.route_plan_worker.items() if order_item_id_1 in worker_route][0]

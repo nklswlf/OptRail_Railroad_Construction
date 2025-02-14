@@ -69,7 +69,7 @@ Number of finished order items: 363
 Driver violation: 271
 Commute distance: 34472.51
 Transport distance: 11872.78
-Transport distance attachment: 759.84
+Transport distance attachment: 708.84
 Number of workers: 37
 Number of machines: 14
 Number of attachments: 25
