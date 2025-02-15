@@ -247,9 +247,9 @@ class EvaluationLogic:
         delta_dynamic_percentage_order = 0
         for order in self.data.orders:
             if move.OrderItemIDExt in order.order_item_ids:
-                delta_dynamic_percentage_order += (1 / len(order.order_item_ids))# + move.DynamicPercentageExt
+                delta_dynamic_percentage_order += (1 / len(order.order_item_ids)) + move.DynamicPercentageExt
             if move.OrderItemIDInt in order.order_item_ids:
-                delta_dynamic_percentage_order -= (1 / len(order.order_item_ids))# + move.DynamicPercentageInt
+                delta_dynamic_percentage_order -= (1 / len(order.order_item_ids)) + move.DynamicPercentageInt
 
 
         delta = {}

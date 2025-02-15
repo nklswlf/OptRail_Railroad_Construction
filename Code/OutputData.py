@@ -7,6 +7,7 @@ from datetime import timedelta
 from collections import Counter
 
 
+
 class Solution:
 
     def __init__(self, route_plan_worker:dict, route_plan_machine:dict, route_plan_attachment:dict, data:InputData):
@@ -183,7 +184,6 @@ class Solution:
                 return False
 
         # Check that each order item is assigned to the needed attachments with the correct counts
-        from collections import Counter
         for machine_route_order_items in self.route_plan_machine.values():
             for order_item_id in machine_route_order_items:
                 order_item_object = next((o for o in self.data.order_items if o.id == order_item_id), None)
@@ -220,7 +220,6 @@ class Solution:
         # ========================
         # 2. Machine Route Feasibility
         # ========================
-        from datetime import timedelta
         for machine_name, route in self.route_plan_machine.items():
             if verbose:
                 print(f"\nChecking route for machine {machine_name}...")
@@ -246,12 +245,12 @@ class Solution:
                 travel_time_double = distance / self.data._transport_speed_kmh
                 travel_time = timedelta(hours=travel_time_double)
                 if order_item_i.end_time + travel_time >= order_item_j.start_time:
-                    print(f"Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
+                    print(f"In machine route: {machine_name}, Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
                     return False
 
             if verbose:
                 print(f"Route for machine {machine_name} is feasible.")
-
+    
         # ========================
         # 3. Worker Route Feasibility
         # ========================
@@ -276,7 +275,7 @@ class Solution:
                 break_time_double = self.data._hours_between_shifts
                 break_time = timedelta(hours=break_time_double)
                 if order_item_i.end_time + break_time >= order_item_j.start_time:
-                    print(f"Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
+                    print(f"In worker route: {worker_id}, Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
                     return False
 
             # Check that the worker does not work more than the maximum allowed consecutive night shifts
@@ -348,7 +347,7 @@ class Solution:
                 travel_time_double = distance / self.data._transport_speed_kmh
                 travel_time = timedelta(hours=travel_time_double)
                 if order_item_i.end_time + travel_time >= order_item_j.start_time:
-                    print(f"Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
+                    print(f"In attachment route: {attachment_id}, Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
                     return False
 
             if verbose:
