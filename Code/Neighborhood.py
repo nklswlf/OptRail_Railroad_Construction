@@ -17,8 +17,6 @@ class BaseMove:
         ''' Set the Delta of the Move'''
         self.Delta = delta
 
-
-
 class BaseNeighborhood:
 
     def __init__(self, data: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng=None):
@@ -180,7 +178,6 @@ class OutputNeighborhood(BaseNeighborhood):
         return bestNeighborhoodSolution
     
 
-
 class InsertShiftMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
 
@@ -232,8 +229,6 @@ class InsertShiftMove(BaseMove):
         #print(f"Machine Route: {self.MachineRoute}")
         #print(f"Worker ID: {self.WorkerID}")
         #print(f"Worker Route: {self.WorkerRoute}")
-    
-
 
 class InsertShiftNeighborhood(OutputNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
@@ -338,7 +333,7 @@ class InsertShiftNeighborhood(OutputNeighborhood):
                     for attachment_id, attachment_route in solution.route_plan_attachment.items():
                         attachment = solution.data.attachments[int(attachment_id)]
 
-                        # Only consider attachments that can process this equipment type.
+                        # Only consider attachments that can process this equipment type
                         if equipment_type != attachment.type:
                             continue
 
@@ -450,7 +445,7 @@ class InsertShiftNeighborhood(OutputNeighborhood):
         
 class SwapShiftExternalMove(BaseMove):
     
-    def __init__(self, machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, dynamic_percentage_int, dynamic_percentage_ext):
+    def __init__(self, machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, dynamic_percentage_int, dynamic_percentage_ext, attachment_information_int=None, attachment_information_ext=None):
         
         self.MachineRoute = list(machine_route)
         self.WorkerRoute = list(worker_route)
@@ -472,6 +467,47 @@ class SwapShiftExternalMove(BaseMove):
 
         self.DynamicPercentageInt = dynamic_percentage_int
         self.DynamicPercentageExt = dynamic_percentage_ext
+
+
+        if attachment_information_ext is not None:
+            index = 0
+            for attachment_id, attachment_index, attachment_route in attachment_information_ext:
+                # Dynamically set the attributes using f-string formatting
+                setattr(self, f"AttachmentRouteExt_{index}", list(attachment_route))
+                setattr(self, f"AttachmentRouteIndexExt_{index}", attachment_index)
+                setattr(self, f"AttachmentIDExt_{index}", attachment_id)
+                
+                # Retrieve the newly created route attribute and insert the order item
+                route = getattr(self, f"AttachmentRouteExt_{index}")
+                route.insert(attachment_index, self.OrderItemIDExt)
+                
+                index += 1
+
+            self.NumberOfAttachmentsExt = index
+
+        else:
+            self.NumberOfAttachmentsExt = 0
+                
+
+
+        if attachment_information_int is not None:
+            index = 0
+            for attachment_id, attachment_index_route in attachment_information_int.items():
+                setattr(self, f"AttachmentRouteInt_{index}", list(attachment_index_route[1]))
+                setattr(self, f"AttachmentRouteIndexInt_{index}", attachment_index_route[0])
+                setattr(self, f"AttachmentIDInt_{index}", attachment_id)
+
+                route = getattr(self, f"AttachmentRouteInt_{index}")
+                route.remove(self.OrderItemIDInt)
+                
+                index += 1
+
+            self.NumberOfAttachmentsInt = index
+
+        else:
+            self.NumberOfAttachmentsInt = 0
+
+
 
 
 class SwapShiftExternalNeighborhood(OutputNeighborhood):
@@ -507,25 +543,71 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                     # If both order items collide check the following conditions
                     if order_item_id_ext not in machine.predecessor_ids[order_item_id_int] and order_item_id_ext not in machine.successor_ids[order_item_id_int]:
                         
-                        # Check for order_items until the second last order item in the machine route
-                        if len(machine_route) > machine_index + 1:
+                        # Check for the first order item in the machine route
+                        if machine_index == 0:
                             # If order_item_id_ext collides with order_item_id_machine and order_item_id_ext is a predecessor of the successor of order_item_id_machine, it can be inserted in the position of order_item_id_machine
                             if order_item_id_ext in machine.predecessor_ids[machine_route[machine_index + 1]]:
                                 worker_id, worker_index, worker_route = self.find_worker_route(solution, order_item_id_ext, order_item_id_int)
+                                attachment_info_int, attachment_info_ext = self.find_attachment_routes(solution, order_item_id_ext, order_item_id_int)
                                 if worker_id is not None:
                                     order_int = [order.order_number for order in solution.data.orders if order_item_id_int in order.order_item_ids][0]
                                     order_ext = [order.order_number for order in solution.data.orders if order_item_id_ext in order.order_item_ids][0]
-                                    self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext]))
+                                    if attachment_info_int == True and attachment_info_ext == True:
+                                        self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index,
+                                                                                order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], 
+                                                                                solution.dynamic_percentage_order[order_ext]))
+                                    
+                                    elif attachment_info_ext == True and attachment_info_int:
+                                        self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index,
+                                                                                order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int],
+                                                                                solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int))
+                                    
+                                    elif attachment_info_int and attachment_info_ext:
+                                        for attachment_ids_tuple, attachment_info in attachment_info_ext.items():
+                                            self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int, attachment_information_ext = attachment_info))
                                 break
+
+                        # Check for order_items from the second until the second last order item in the machine route
+                        elif len(machine_route) > machine_index + 1:
+                            # If order_item_id_ext collides with order_item_id_machine and order_item_id_ext is a predecessor of the successor of order_item_id_machine, it can be inserted in the position of order_item_id_machine
+                            if order_item_id_ext in machine.predecessor_ids[machine_route[machine_index + 1]] and order_item_id_ext in machine.successor_ids[machine_route[machine_index - 1]]:
+                                worker_id, worker_index, worker_route = self.find_worker_route(solution, order_item_id_ext, order_item_id_int)
+                                attachment_info_int, attachment_info_ext = self.find_attachment_routes(solution, order_item_id_ext, order_item_id_int)
+                                if worker_id is not None:
+                                    order_int = [order.order_number for order in solution.data.orders if order_item_id_int in order.order_item_ids][0]
+                                    order_ext = [order.order_number for order in solution.data.orders if order_item_id_ext in order.order_item_ids][0]
+                                    if attachment_info_int == True and attachment_info_ext == True:
+                                        self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index,
+                                                                                order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], 
+                                                                                solution.dynamic_percentage_order[order_ext]))
+                                    
+                                    elif attachment_info_ext == True and attachment_info_int:
+                                        self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index,
+                                                                                order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int],
+                                                                                solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int))
+                                    
+                                    elif attachment_info_int and attachment_info_ext:
+                                        for attachment_ids_tuple, attachment_info in attachment_info_ext.items():
+                                            self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int, attachment_information_ext = attachment_info))
+                                break
+
+
                         # Check for the last order item in the machine route
                         elif len(machine_route) == machine_index + 1:
                             # If order_item_id_ext collides with order_item_id_machine and order_item_id_ext is a successor of the predecessor of order_item_id_machine, it can be inserted in the position of order_item_id_machine
                             if order_item_id_ext in machine.successor_ids.get(machine_index - 1, []):
                                 worker_id, worker_index, worker_route = self.find_worker_route(solution, order_item_id_ext, order_item_id_int)
+                                attachment_info_int, attachment_info_ext = self.find_attachment_routes(solution, order_item_id_ext, order_item_id_int)
                                 if worker_id is not None:
                                     order_int = [order.order_number for order in solution.data.orders if order_item_id_int in order.order_item_ids][0]
                                     order_ext = [order.order_number for order in solution.data.orders if order_item_id_ext in order.order_item_ids][0]
-                                    self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext]))
+                                    if attachment_info_int == True and attachment_info_ext == True:
+                                        self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext]))
+                                    elif attachment_info_ext == True and attachment_info_int:
+                                        self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int))
+                                    elif attachment_info_int and attachment_info_ext:
+                                        for attachment_ids_tuple, attachment_info in attachment_info_ext.items():
+                                            self.Moves.append(SwapShiftExternalMove(machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int, attachment_information_ext = attachment_info))
                                 break
 
 
@@ -564,6 +646,106 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                     return worker_id, index, worker_route
             
             return None, None, None
+    
+    def find_attachment_routes(self, solution: Solution, order_item_id_ext: int, order_item_id_int: int) -> dict:
+        """ Change the attachment routes to reflect the swap of the internal and external order items. """
+        
+        order_item_ext_obj = solution.data.order_items[order_item_id_ext]
+        order_item_int_obj = solution.data.order_items[order_item_id_int]
+
+        # If neither the internal nor the external order item requires attachments, the attachment routes do not need to be changed
+        if not order_item_ext_obj.equipment_types and not order_item_int_obj.equipment_types:
+            return True, True
+        
+        attachment_info_int = dict()
+        attachment_info_ext = dict()
+
+
+        # Search for the attachment routes of the internal order item
+        for attachment_id, attachment_route in solution.route_plan_attachment.items():
+                if order_item_id_int in attachment_route:
+                    attachment_info_int[attachment_id] = [attachment_route.index(order_item_id_int), list(attachment_route)]
+
+
+        # If the external order item does not require attachments, only attachments information for the internal order item is needed
+        if not order_item_ext_obj.equipment_types:
+            return attachment_info_int, True
+
+
+        # If the external order item requires attachments, the attachment routes for both the internal and external order items need to be changed
+        # Therefore in addition to the information fo internal order item, the positions of the external order item in the attachment routes is searched, depending on the number of equipment types
+        positions_for_each_occurrence = []
+        for equipment_type in order_item_ext_obj.equipment_types:
+            possible_positions_for_type = []
+            for attachment_id, attachment_route in solution.route_plan_attachment.items():
+                attachment = solution.data.attachments[int(attachment_id)]
+
+                # Only consider attachments that can process this equipment type
+                if equipment_type != attachment.type:
+                    continue
+
+                # Check if the order item is allowed for this attachment
+                attachment_possible_order_item_ids = [oid for orders in attachment.possible_order_item_ids.values() for oid in orders]
+                if order_item_id_ext not in attachment_possible_order_item_ids:
+                    continue
+
+                # If the attachment route is empty, insertion position is 0
+                if len(attachment_route) == 0:
+                    possible_positions_for_type.append((attachment_id, 0, list(attachment_route)))
+                    continue
+                
+                # If the order_item_int is in the attachment route, the order_item_ext can be inserted at the same position if it is a predecessor or successor of the order_item_int
+                if order_item_id_int in attachment_route:
+                    index = attachment_route.index(order_item_id_int)
+                    pred_id = attachment_route[index - 1] if index > 0 else None
+                    succ_id = attachment_route[index + 1] if index < len(attachment_route) - 1 else None
+
+                    if order_item_id_ext in attachment.predecessor_ids.get(pred_id, []) and order_item_id_ext in attachment.successor_ids.get(succ_id, []):
+                        possible_positions_for_type.append((attachment_id, index, list(attachment_route)))
+                        continue
+
+
+                # Otherwise, find a valid insertion position based on predecessor/successor relationships
+                for order_item_id_attachment in attachment_route:
+
+                    pred = attachment.predecessor_ids.get(order_item_id_attachment, [])
+                    succ = attachment.successor_ids.get(order_item_id_attachment, [])
+                    # If the order item is neither a predecessor nor a successor, skip this element
+                    if order_item_id_ext not in pred and order_item_id_ext not in succ:
+                        continue
+
+                    # If the order item is a predecessor, it can be inserted before the current item
+                    if order_item_id_ext in pred:
+                        pos = attachment_route.index(order_item_id_attachment)
+                        possible_positions_for_type.append((attachment_id, pos, list(attachment_route)))
+                        break
+
+                    # If it is a successor of the last element, insert at the end
+                    if attachment_route.index(order_item_id_attachment) == len(attachment_route) - 1:
+                        if order_item_id_ext in succ:
+                            pos = attachment_route.index(order_item_id_attachment) + 1
+                            possible_positions_for_type.append((attachment_id, pos, list(attachment_route)))
+                            break
+
+            positions_for_each_occurrence.append(possible_positions_for_type)
+
+        attachment_insertion_combinations = list(itertools.product(*positions_for_each_occurrence))
+        # Store the valid combinations in the dictionary
+        for combo in attachment_insertion_combinations:
+            # Create a key tuple consisting of the attachment IDs from each insertion option in the combo
+            attachment_ids_tuple = tuple(pos[0] for pos in combo)
+            # Filter out combinations where the same attachment is used more than once
+            if len(set(attachment_ids_tuple)) < len(attachment_ids_tuple):
+                continue  # Skip this combination if there's a duplicate attachment ID
+            attachment_info_ext[attachment_ids_tuple] = combo
+
+        if not attachment_info_ext:
+            return False, False
+
+
+        return attachment_info_int, attachment_info_ext
+
+
 
 
     def EvaluateMove(self, move: SwapShiftExternalMove) -> None:
@@ -602,11 +784,6 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                     return move_solution
                     
         return None
-
-
-                
-
-        
 
 
 
@@ -728,8 +905,6 @@ class SwapShiftAttachmentMove(BaseMove):
 
         self.AttachmentRoute1.remove(self.OrderItemID1)
         self.AttachmentRoute2.remove(self.OrderItemID2)
-
-
 
 class SwapShiftAttachmentNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
@@ -903,8 +1078,6 @@ class SwapShiftAttachmentNeighborhood(TimeNeighborhood):
         return worker_route_plan, machine_route_plan, attachment_route_plan
 
 
-
-
 class ReplaceShiftAttachmentMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
     
@@ -924,7 +1097,6 @@ class ReplaceShiftAttachmentMove(BaseMove):
         self.AttachmentRoute2.insert(self.AttachmentRouteIndex2, self.OrderItemID)
 
         self.AttachmentRoute1.remove(self.OrderItemID)
-
 
 class ReplaceShiftAttachmentNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
@@ -1035,9 +1207,6 @@ class ReplaceShiftAttachmentNeighborhood(TimeNeighborhood):
         return worker_route_plan, machine_route_plan, attachment_route_plan
 
 
-
-
-
 class ReplaceShiftMachineMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
     
@@ -1059,8 +1228,6 @@ class ReplaceShiftMachineMove(BaseMove):
         self.MachineRoute1.remove(self.OrderItemID)
 
         self.WorkerID = worker_id
-
-    
 
 class ReplaceShiftMachineNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
@@ -1365,8 +1532,6 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
         return worker_route_plan, machine_route_plan, attachment_route_plan
 
 
-
-
 class ReplaceShiftWorkerMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
     
@@ -1387,7 +1552,6 @@ class ReplaceShiftWorkerMove(BaseMove):
         self.WorkerRoute1.remove(self.OrderItemID)
 
         self.MachineID = machine_id
-
 
 class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
@@ -1483,7 +1647,6 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
         return worker_route_plan, machine_route_plan, attachment_route_plan
 
 
-
 class SwapShiftWorkerMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
     
@@ -1509,7 +1672,6 @@ class SwapShiftWorkerMove(BaseMove):
 
         self.MachineID1 = machine_id_1
         self.MachineID2 = machine_id_2
-
 
 class SwapShiftWorkerNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """

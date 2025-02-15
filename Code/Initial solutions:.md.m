@@ -43,6 +43,21 @@ Number of machines: 5
 Number of attachments: 15
 
 
+Initial solution: 
+Instance: a30_o355_m18_an148_ar42
+Number of finished orders: 29
+Number of semi-finished orders: 1
+Number of not started orders: 0
+Number of finished order items: 326
+Driver violation: 209
+Commute distance: 32453.38
+Transport distance: 7791.47
+Transport distance attachment: 310.81
+Number of workers: 31
+Number of machines: 13
+Number of attachments: 12
+
+
 
 Initial solution: 
 Instance: a40_o476_m22_an215_ar51
