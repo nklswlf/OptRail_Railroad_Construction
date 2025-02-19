@@ -89,7 +89,9 @@ neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace
                        'Swap_Shift_Worker', 'Swap_Shift_Machine', 'Swap_Shift_Attachment',
                        'Swap_Shift_External', 'Insert_Shift']
 
-neighboorhood_types = ['Replace_Shift_Worker']
+neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine']
+
+neighboorhood_types_local_search = ['Replace_Shift_Attachment']
 
 
 only_constructive = False
@@ -100,17 +102,17 @@ def main():
         data = InputData(i)
         print(f"Instance: {data.instance}")
 
-        solver = Solver(data, 0)
+        solver = Solver(data, 3)
 
 
         local_search = IterativeImprovement(inputData=data,
                                             neighborhoodTypes=neighboorhood_types)
 
-        simulated_annelaing_local_search = SimulatedAnnealingLocalSearch(inputData=data,
+        simulated_annealing_local_search = SimulatedAnnealingLocalSearch(inputData=data,
                                                                         start_temp=100,
                                                                         min_temp=0.1,
-                                                                        cooling_rate=0.999,
-                                                                        max_iterations=1000,
+                                                                        cooling_rate=0.9,
+                                                                        max_iterations=500,
                                                                         neighborhoodTypes=neighboorhood_types)
 
         if only_constructive:
@@ -124,7 +126,7 @@ def main():
             solver.RunAlgorithm(
                 order_item_attractiveness_technique="balanced_greedy",
                 machine_attractiveness_technique="balanced_greedy",
-                algorithm=simulated_annelaing_local_search
+                algorithm=simulated_annealing_local_search
             )
 
 

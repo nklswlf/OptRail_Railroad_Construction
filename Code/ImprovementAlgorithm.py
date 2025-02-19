@@ -230,9 +230,17 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
         print(f'\nInitial solution: \n{solution}')
 
 
-        currentSolution = solution
+        currentSolution = deepcopy(solution)
 
         currentTemperature = self.StartTemperature
+
+        count = dict()
+        count['dominates'] = 0
+        count['dominated'] = 0
+        count['non-dominated'] = 0
+
+        fallback_counter = 0
+        fallback = False
 
         while currentTemperature > self.MinTemperature:
 
@@ -243,6 +251,7 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
 
                 move = neighborhood.SingleMove(currentSolution)
 
+
                 values = list(move.DeltaDetails.values())
 
                 all_less_equal_zero = all(v <= 0 for v in values)
@@ -252,35 +261,54 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                 any_greater_than_zero = any(v > 0 for v in values)
 
                 if all_less_equal_zero and any_less_than_zero:
+                    count['dominates'] += 1
                     print("dominates")
-                    worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
-                    currentSolution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
-                    added = self.ParetoSolutions.UpdateParetoFront(currentSolution)
-                    self.EvaluationLogic.evaluate(currentSolution)
-                    if added:
-                        print("Added to Pareto Front")
-                    elif not added:
-                        raise Exception("Solution not added to Pareto Front, because it is dominated")
-    
                 elif all_greater_equal_zero and any_greater_than_zero:
+                    count['dominated'] += 1
                     print("dominated")
+                    prob =  math.exp(-move.Delta / currentTemperature)
+                    random_number = self.RNG.random()
+                    print(f"Comparison: {random_number} <=> {prob}")
+
+                    if prob < random_number:
+                        print("Random number is greater than probability")
+                        continue
                 else:
+                    count['non-dominated'] += 1
+                    print(f"Delta: {move.Delta}")
+                    print(f"Delta Details: {move.DeltaDetails}")
                     print("non-dominated")
-                    worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
-                    currentSolution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
-                    added = self.ParetoSolutions.UpdateParetoFront(currentSolution)
-                    self.EvaluationLogic.evaluate(currentSolution)
-                    if added:
-                        print("Added to Pareto Front")
-                    elif not added:
-                        print("Solution not added to Pareto Front, because it is dominated")
+
   
-                    
+                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
+                currentSolution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                feasible = currentSolution.feasibility_check()
+                if not feasible:
+                    raise Exception("Solution is not feasible after neighborhood move")
+                self.EvaluationLogic.evaluate(currentSolution)
+                added = self.ParetoSolutions.UpdateParetoFront(currentSolution)
 
 
-            currentTemperature *= 1 - self.CoolingRate
+                '''
+                if added:
+                    fallback_counter = 0
+                elif not added:
+                    fallback_counter += 1
+                    if fallback_counter > 10 and fallback:
+                        print("Fallback")
+                        fallback_counter = 0
+                        self.ParetoSolutions.PurgeParetoFront()
+                        currentSolution = self.RNG.choice(self.ParetoSolutions.ParetoFront)
+                        break
+                '''
 
 
+            currentTemperature *= self.CoolingRate
+
+        print(f"Number of dominates: {count['dominates']}")
+        print(f"Number of dominated: {count['dominated']}")
+        print(f"Number of non-dominated: {count['non-dominated']}")
+        print(f"Number of Pareto solutions: {len(self.ParetoSolutions.ParetoFront)}")
         self.ParetoSolutions.PurgeParetoFront()
 
         return self.ParetoSolutions.ShowFront()

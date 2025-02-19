@@ -125,13 +125,14 @@ class Solution:
 
         print(f"Solution saved to: {output_file_path}")
 
-    def feasibility_check(self, verbose=False):
+    def feasibility_check(self, verbose=False, allverbose=False):
         """
         Check the feasibility of the solution.
         This function verifies that the assignment of order items to the machine, worker, and attachment routes
         meets all constraints.
         """
-        print("\nChecking the feasibility of the solution...")
+        if allverbose:
+            print("\nChecking the feasibility of the solution...")
 
         # ========================
         # 1. Order Item Feasibility
@@ -354,7 +355,8 @@ class Solution:
             if verbose:
                 print(f"Route for attachment {attachment_id} is feasible.")
 
-        print("\nFeasibility check completed. Solution is feasible.")
+        if allverbose:
+            print("\nFeasibility check completed. Solution is feasible.")
         return True    
 
     
@@ -609,26 +611,49 @@ class ParetoSolutions:
     def PurgeParetoFront(self):
         """
         Iterates over all solutions in the Pareto Front (self.ParetoFront) and removes any solution 
-        that is dominated by another solution in the list.
+        that is dominated by another solution in the list, or that is completely identical in all objectives.
         
-        Function compare_solutions(solution_a, solution_b) is available:
+        The function CompareSolutions(solution_a, solution_b) is available:
         - Returns 1 if solution_a dominates solution_b.
         - Returns -1 if solution_b dominates solution_a.
         - Returns 0 if neither dominates the other.
         
-        After execution, self.ParetoFront contains only non-dominated solutions.
+        After execution, self.ParetoFront contains only non-dominated, unique solutions.
         """
         non_dominated = []
+        seen_objective_tuples = set()
+        
         for i, sol in enumerate(self.ParetoFront):
             dominated = False
+            
+            # Create a tuple of objective values. Adjust the order if necessary.
+            obj_tuple = (
+                sol.total_dynamic_percentage,
+                sol.total_commute_distance,
+                sol.total_transport_distance,
+                sol.total_transport_distance_attachments,
+                sol.driver_violation,
+                sol.number_of_workers,
+                sol.number_of_machines,
+                sol.number_of_attachments
+            )
+            
+            # If an identical solution has already been seen, mark this solution as dominated.
+            if obj_tuple in seen_objective_tuples:
+                dominated = True
+            else:
+                seen_objective_tuples.add(obj_tuple)
+            
+            # Compare with all other solutions in the Pareto Front.
             for j, other_sol in enumerate(self.ParetoFront):
                 if i != j:
-                    # Check if other_sol dominates sol
-                    if self.CompareSolutions(other_sol, sol) == 1:
+                    if self.CompareSolutions(other_sol, sol) == -1:
                         dominated = True
                         break
+            
             if not dominated:
                 non_dominated.append(sol)
+        
         self.ParetoFront = non_dominated
 
     
@@ -693,6 +718,7 @@ class ParetoSolutions:
             ("number_of_attachments", "min")
         ]
         
+
         new_better_count = 0  # Anzahl der Ziele, in denen new_solution besser ist
         current_better_count = 0  # Anzahl der Ziele, in denen current_solution besser ist
 
@@ -717,13 +743,16 @@ class ParetoSolutions:
         # - in keinem Ziel ist new_solution schlechter (d.h. current_better_count == 0)
         # - und in mindestens einem Ziel ist new_solution besser (new_better_count > 0)
         if current_better_count == 0 and new_better_count > 0:
+
             return 1
 
         # current_solution dominates new_solution if:
         # - in keinem Ziel ist current_solution schlechter (new_better_count == 0)
         # - und in mindestens einem Ziel ist current_solution besser (current_better_count > 0)
         if new_better_count == 0 and current_better_count > 0:
+
             return -1
+
 
         return 0  # Neither dominates the other
 
