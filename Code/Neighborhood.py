@@ -887,11 +887,7 @@ class TimeNeighborhood(BaseNeighborhood):
             self.EvaluateMove(move)
             return move
         else:
-            raise Exception('No moves found in the neighborhood.')
-
-
-
-            
+            raise Exception(f'No moves found in SingleMove() for neighborhood {self.Type}.')
 
 
 
@@ -1199,6 +1195,116 @@ class ReplaceShiftAttachmentNeighborhood(TimeNeighborhood):
                 for order_item_id, attachment_route_index_2_1 in attachment_2_order_item_positions.items():
                     self.Moves.append(ReplaceShiftAttachmentMove(attachment_id_1, attachment_id_2, attachment_route_1, attachment_route_2, attachment_route_index_2_1[0], attachment_route_index_2_1[1], order_item_id))
 
+
+    def MakeOneMove(self, solution: Solution) -> BaseMove:
+        """
+        Chooses a random valid attachment move using self.RNG.
+        
+        Procedure:
+        1. Randomly select a pair of attachments (attachment_id_1 and attachment_id_2) from solution.route_plan_attachment.
+        2. Check that attachment 1 has at least one order item.
+        3. Ensure that attachment 1 and attachment 2 have the same equipment type.
+        4. For each order item in attachment_route_1:
+            - Check if the order item is in the list of possible order items for attachment 2.
+            - Skip the order item if it is already in attachment 2's route.
+            - Determine a valid insertion position in attachment 2's route based on predecessor/successor constraints:
+                * If attachment 2 has no order items, the order item can be inserted at position 0.
+                * Otherwise, if the order item is a predecessor of an order item in attachment 2's route, it can be inserted before it.
+                * Or, if the order item is a successor of the last order item, it can be inserted at the end.
+        5. For each valid insertion, create a ReplaceShiftAttachmentMove and add it to a list of valid moves.
+        6. If valid moves exist, return one randomly using self.RNG.choice.
+        7. If no valid move is found after max_attempts, return None.
+        """
+        max_attempts = 100
+        attachment_ids = list(solution.route_plan_attachment.keys())
+        attempts = 0
+        # Clear any previously stored moves
+        self.Moves.clear()
+        
+        while attempts < max_attempts:
+            attempts += 1
+            
+            # Randomly select attachment_id_1 (must have at least one order item)
+            attachment_id_1 = self.RNG.choice(attachment_ids)
+            attachment_route_1 = solution.route_plan_attachment[attachment_id_1]
+            if len(attachment_route_1) == 0:
+                continue
+            
+            # Randomly select attachment_id_2 ensuring it's different from attachment_id_1
+            possible_attachment_2 = [aid for aid in attachment_ids if aid != attachment_id_1]
+            if not possible_attachment_2:
+                continue
+            attachment_id_2 = self.RNG.choice(possible_attachment_2)
+            attachment_route_2 = solution.route_plan_attachment[attachment_id_2]
+            
+            # Get attachment objects from input data
+            attachment_1_obj = solution.data.attachments[attachment_id_1]
+            attachment_2_obj = solution.data.attachments[attachment_id_2]
+            
+            # Skip if the equipment types do not match
+            if attachment_1_obj.type != attachment_2_obj.type:
+                continue
+            
+            valid_moves = []
+            
+            # Iterate over each order item in attachment_route_1
+            for order_item_id in attachment_route_1:
+                # Create a flattened list of possible order item IDs for attachment 2
+                attachment_2_possible_order_item_ids = [
+                    oid for orders in attachment_2_obj.possible_order_item_ids.values() for oid in orders
+                ]
+                # Skip if the order item is not possible for attachment 2
+                if order_item_id not in attachment_2_possible_order_item_ids:
+                    continue
+                
+                # Skip if the order item is already in attachment_route_2
+                if order_item_id in attachment_route_2:
+                    continue
+                
+                insertion_position = None
+                # If attachment 2 has no order items, insert at position 0
+                if len(attachment_route_2) == 0:
+                    insertion_position = [0, attachment_route_1.index(order_item_id)]
+                else:
+                    # Determine a valid insertion position in attachment_route_2
+                    for order_item_id_2 in attachment_route_2:
+                        # If the order item is neither in the predecessor nor in the successor lists for order_item_id_2,
+                        # then insertion relative to this order item is not possible – break out.
+                        if order_item_id not in attachment_2_obj.predecessor_ids[order_item_id_2] and \
+                        order_item_id not in attachment_2_obj.successor_ids[order_item_id_2]:
+                            insertion_position = None
+                            break
+                        # If order_item_id is a predecessor of order_item_id_2, it can be inserted before it.
+                        if order_item_id in attachment_2_obj.predecessor_ids[order_item_id_2]:
+                            insertion_position = [attachment_route_2.index(order_item_id_2), attachment_route_1.index(order_item_id)]
+                            break
+                        # If we are at the last order item in attachment_route_2 and order_item_id is a successor of it,
+                        # then it can be inserted at the end.
+                        if attachment_route_2.index(order_item_id_2) == len(attachment_route_2) - 1:
+                            if order_item_id in attachment_2_obj.successor_ids[order_item_id_2]:
+                                insertion_position = [attachment_route_2.index(order_item_id_2) + 1, attachment_route_1.index(order_item_id)]
+                                break
+                
+                # If a valid insertion position was found, create the move.
+                if insertion_position is not None:
+                    move = ReplaceShiftAttachmentMove(
+                        attachment_id_1,
+                        attachment_id_2,
+                        attachment_route_1,
+                        attachment_route_2,
+                        insertion_position[0],  # insertion index in attachment_route_2
+                        insertion_position[1],  # reference index in attachment_route_1
+                        order_item_id
+                    )
+                    valid_moves.append(move)
+            
+            # If any valid moves have been found for the chosen attachment pair, return one randomly using self.RNG.
+            if valid_moves:
+                return self.RNG.choice(valid_moves)
+        
+        # If no valid move is found after max_attempts, return None.
+        return None
+
             
     def EvaluateMove(self, move: ReplaceShiftAttachmentMove) -> None:
         ''' Calculates the MakeSpan of thr certain move - adds to recent Solution'''
@@ -1316,6 +1422,106 @@ class ReplaceShiftMachineNeighborhood(TimeNeighborhood):
                 for order_item_id, machine_route_index_2_1 in machine_2_order_item_positions.items():
                     worker_id = [worker_id for worker_id, worker_route in solution.route_plan_worker.items() if order_item_id in worker_route][0]
                     self.Moves.append(ReplaceShiftMachineMove(machine_id_1, machine_id_2, machine_route_1, machine_route_2, machine_route_index_2_1[0], machine_route_index_2_1[1], order_item_id, worker_id))
+
+
+    def MakeOneMove(self, solution: Solution) -> BaseMove:
+        """
+        Chooses a random valid machine move using self.RNG.
+        
+        Procedure:
+        1. Randomly select a pair of machines (machine_id_1 and machine_id_2) from solution.route_plan_machine.
+        2. For machine_id_1, iterate over its order items.
+        3. For each order item, check if it is contained in the list of possible order items for machine_id_2.
+            - If machine_id_2 has no order items, the order item can be inserted at position 0.
+            - Otherwise, determine a valid insertion position in machine_id_2's route based on predecessor/successor constraints.
+        4. For each valid insertion, create a ReplaceShiftMachineMove (including the corresponding worker_id, found via solution.route_plan_worker)
+            and add it to a list of valid moves.
+        5. If at least one valid move is found, return a random move from the list using self.RNG.choice.
+        6. If no valid move is found after max_attempts, return None.
+        """
+        max_attempts = 100
+        machine_ids = list(solution.route_plan_machine.keys())
+        attempts = 0
+        # Clear previous moves
+        self.Moves.clear()
+        
+        while attempts < max_attempts:
+            attempts += 1
+            
+            # Randomly select machine_id_1 (it must have at least one order item)
+            machine_id_1 = self.RNG.choice(machine_ids)
+            machine_route_1 = solution.route_plan_machine[machine_id_1]
+            if len(machine_route_1) == 0:
+                continue
+            
+            # Randomly select machine_id_2 ensuring it is different from machine_id_1
+            possible_machine_2 = [mid for mid in machine_ids if mid != machine_id_1]
+            if not possible_machine_2:
+                continue
+            machine_id_2 = self.RNG.choice(possible_machine_2)
+            machine_route_2 = solution.route_plan_machine[machine_id_2]
+            machine_2 = solution.data.machines[machine_id_2]
+            
+            valid_moves = []
+            
+            # Iterate over each order item in machine_route_1
+            for order_item_id in machine_route_1:
+                # Create a flattened list of possible order item IDs for machine_2
+                machine_2_possible_order_item_ids = [
+                    oid for orders in machine_2.possible_order_item_ids.values() for oid in orders
+                ]
+                # Skip if the order item is not possible for machine_2
+                if order_item_id not in machine_2_possible_order_item_ids:
+                    continue
+                
+                insertion_position = None
+                # If machine_2 has no order items, we can insert at position 0
+                if len(machine_route_2) == 0:
+                    insertion_position = [0, machine_route_1.index(order_item_id)]
+                else:
+                    # Determine a valid insertion position in machine_route_2
+                    for order_item_id_2 in machine_route_2:
+                        # If the order item is neither in the predecessor nor in the successor lists for order_item_id_2,
+                        # then insertion is not possible relative to this order item – break out of the loop.
+                        if order_item_id not in machine_2.predecessor_ids[order_item_id_2] and \
+                        order_item_id not in machine_2.successor_ids[order_item_id_2]:
+                            insertion_position = None
+                            break
+                        # If order_item_id is a predecessor of order_item_id_2, it can be inserted before it.
+                        if order_item_id in machine_2.predecessor_ids[order_item_id_2]:
+                            insertion_position = [machine_route_2.index(order_item_id_2), machine_route_1.index(order_item_id)]
+                            break
+                        # If we are at the last order item in machine_route_2 and order_item_id is a successor of it,
+                        # then it can be inserted at the end.
+                        if machine_route_2.index(order_item_id_2) == len(machine_route_2) - 1:
+                            if order_item_id in machine_2.successor_ids[order_item_id_2]:
+                                insertion_position = [machine_route_2.index(order_item_id_2) + 1, machine_route_1.index(order_item_id)]
+                                break
+                
+                # If a valid insertion position was found, create the move.
+                if insertion_position is not None:
+                    # Find the corresponding worker_id in whose route the order item appears
+                    worker_id = [wid for wid, route in solution.route_plan_worker.items() if order_item_id in route][0]
+                    move = ReplaceShiftMachineMove(
+                        machine_id_1, 
+                        machine_id_2, 
+                        machine_route_1, 
+                        machine_route_2,
+                        insertion_position[0],  # insertion index in machine_route_2
+                        insertion_position[1],  # position index in machine_route_1 (for reference)
+                        order_item_id, 
+                        worker_id
+                    )
+                    valid_moves.append(move)
+            
+            # If any valid moves have been found for the chosen pair, return one randomly using self.RNG.
+            if valid_moves:
+                return self.RNG.choice(valid_moves)
+        
+        # If no valid move is found after max_attempts, return None.
+        return None
+
+
 
 
     def EvaluateMove(self, move: ReplaceShiftMachineMove) -> None:
@@ -1724,13 +1930,15 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
                             break
                     if machine_id is not None:
                         move = ReplaceShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, insertion_position, order_item_id, machine_id)
-                        self.Moves.append(move)
+                        # Check if the move is feasible for both workers
+                        if self.WorkerRouteFeasibilityCheck(move.WorkerID1, move.WorkerRoute1) and self.WorkerRouteFeasibilityCheck(move.WorkerID2, move.WorkerRoute2):
+                            self.Moves.append(move)
 
-            # If we have found any valid moves for the chosen pair, select one randomly.
+            # If we have found any valid moves for the chosen pair, select one randomly
             if self.Moves:
                 return self.RNG.choice(self.Moves)
 
-        # If no valid move is found after max_attempts, return None.
+        # If no valid move is found after max_attempts, return None
         return None
     
 
@@ -1750,9 +1958,9 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
     
     def constructCompleteRoutes(self, move:ReplaceShiftWorkerMove, solution:Solution) -> dict:
 
-        machine_route_plan = deepcopy(solution.route_plan_machine)
-        worker_route_plan = deepcopy(solution.route_plan_worker)
-        attachment_route_plan = deepcopy(solution.route_plan_attachment)
+        machine_route_plan = {k: v[:] for k, v in solution.route_plan_machine.items()}
+        worker_route_plan = {k: v[:] for k, v in solution.route_plan_worker.items()}
+        attachment_route_plan = {k: v[:] for k, v in solution.route_plan_attachment.items()}
 
         worker_route_plan[move.WorkerID1] = move.WorkerRoute1
         worker_route_plan[move.WorkerID2] = move.WorkerRoute2
