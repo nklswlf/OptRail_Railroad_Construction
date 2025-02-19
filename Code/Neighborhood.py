@@ -13,17 +13,18 @@ class BaseMove:
     def __init__(self):
         self.Delta = None
 
-    def setDelta(self,delta:float) -> None: 
+    def setDelta(self,delta_tuple):
         ''' Set the Delta of the Move'''
-        self.Delta = delta
+        self.Delta = delta_tuple[0]
+        self.DeltaDetails = delta_tuple[1]
 
 class BaseNeighborhood:
 
-    def __init__(self, data: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng=None):
+    def __init__(self, data: InputData, evaluationLogic: EvaluationLogic, paretoSolutions: ParetoSolutions, rng):
         self.data = data
         self.evaluationLogic = evaluationLogic
-        self.solutionPool = solutionPool
-        self.rng = rng
+        self.ParetoSolutions = paretoSolutions
+        self.RNG = rng
 
         # Create empty lists for discovering different moves
         self.Moves = []
@@ -104,8 +105,8 @@ class BaseNeighborhood:
 
 class OutputNeighborhood(BaseNeighborhood):
 
-    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
-        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, paretoSolutions: ParetoSolutions, rng):
+        super().__init__(inputData, evaluationLogic, paretoSolutions, rng)
 
     def EvaluateMove(self, move: BaseMove) -> None:
         raise Exception('EvaluateMove() is not implemented for the abstract OutputNeighborhood class.')
@@ -165,7 +166,7 @@ class OutputNeighborhood(BaseNeighborhood):
                 bestNeighborhoodSolution = Solution(worker_route, machine_route, attachement_route, self.data)
                 self.evaluationLogic.evaluate(bestNeighborhoodSolution)
 
-                self.solutionPool.AddSolution(bestNeighborhoodSolution)
+                #self.solutionPool.AddSolution(bestNeighborhoodSolution)
 
                 #print(f"Best Neighborhood Solution: \n{bestNeighborhoodSolution}")
 
@@ -202,6 +203,7 @@ class InsertShiftMove(BaseMove):
 
 
         self.DynamicPercentage = dynamic_percentage
+
         
 
         if attachment_information is not None:
@@ -233,8 +235,8 @@ class InsertShiftMove(BaseMove):
 class InsertShiftNeighborhood(OutputNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
 
-    def __init__(self, inputData:InputData, evaluationLogic:EvaluationLogic, solutionPool:SolutionPool, rng):
-        super().__init__(inputData,  evaluationLogic, solutionPool, rng)
+    def __init__(self, inputData:InputData, evaluationLogic:EvaluationLogic, paretoSolutions: ParetoSolutions, rng):
+        super().__init__(inputData,  evaluationLogic, paretoSolutions, rng)
 
         self.Type = 'Insert_Shift'
 
@@ -507,13 +509,10 @@ class SwapShiftExternalMove(BaseMove):
         else:
             self.NumberOfAttachmentsInt = 0
 
-
-
-
 class SwapShiftExternalNeighborhood(OutputNeighborhood):
     
-    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
-        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, paretoSolutions: ParetoSolutions, rng):
+        super().__init__(inputData, evaluationLogic, paretoSolutions, rng)
 
         self.Type = 'Swap_Shift_External'
 
@@ -789,8 +788,8 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
 
 class TimeNeighborhood(BaseNeighborhood):
 
-    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
-        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, paretoSolutions: ParetoSolutions, rng):
+        super().__init__(inputData, evaluationLogic, paretoSolutions, rng)
 
     def EvaluateMove(self, move: BaseMove) -> None:
         raise Exception('EvaluateMove() is not implemented for the abstract OutputNeighborhood class.')
@@ -851,7 +850,7 @@ class TimeNeighborhood(BaseNeighborhood):
                 bestNeighborhoodSolution = Solution(worker_route, machine_route, attachement_route, self.data)
                 self.evaluationLogic.evaluate(bestNeighborhoodSolution)
 
-                self.solutionPool.AddSolution(bestNeighborhoodSolution)
+                #self.solutionPool.AddSolution(bestNeighborhoodSolution)
 
                 print(f"\nIteration: {iterator}")
                 if self.Type == 'Swap_Shift_Worker':
@@ -875,6 +874,25 @@ class TimeNeighborhood(BaseNeighborhood):
         print(f"\nBest Worker Route: \n{bestNeighborhoodSolution.route_plan_worker}")
 
         return bestNeighborhoodSolution
+    
+    def SingleMove(self, solution: Solution) -> BaseMove:
+        """ Generate a single move for the given solution. """
+        
+
+        self.Update()
+        
+        move = self.MakeOneMove(solution)
+
+        if move:
+            self.EvaluateMove(move)
+            return move
+        else:
+            raise Exception('No moves found in the neighborhood.')
+
+
+
+            
+
 
 
 class SwapShiftAttachmentMove(BaseMove):
@@ -909,8 +927,8 @@ class SwapShiftAttachmentMove(BaseMove):
 class SwapShiftAttachmentNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
 
-    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
-        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, paretoSolutions: ParetoSolutions, rng):
+        super().__init__(inputData, evaluationLogic, paretoSolutions, rng)
 
         self.Type = 'Swap_Shift_Attachment'
 
@@ -1101,8 +1119,8 @@ class ReplaceShiftAttachmentMove(BaseMove):
 class ReplaceShiftAttachmentNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
 
-    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
-        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, paretoSolutions: ParetoSolutions, rng):
+        super().__init__(inputData, evaluationLogic, paretoSolutions, rng)
 
         self.Type = 'Replace_Shift_Attachment'
 
@@ -1232,8 +1250,8 @@ class ReplaceShiftMachineMove(BaseMove):
 class ReplaceShiftMachineNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
 
-    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
-        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, paretoSolutions: ParetoSolutions, rng):
+        super().__init__(inputData, evaluationLogic, paretoSolutions, rng)
 
         self.Type = 'Replace_Shift_Machine'
 
@@ -1360,8 +1378,8 @@ class SwapShiftMachineMove(BaseMove):
 class SwapShiftMachineNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
 
-    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
-        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, paretoSolutions: ParetoSolutions, rng):
+        super().__init__(inputData, evaluationLogic, paretoSolutions, rng)
 
         self.Type = 'Swap_Shift_Machine'
 
@@ -1556,8 +1574,8 @@ class ReplaceShiftWorkerMove(BaseMove):
 class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
 
-    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
-        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, paretoSolutions: ParetoSolutions, rng):
+        super().__init__(inputData, evaluationLogic, paretoSolutions, rng)
 
         self.Type = 'Replace_Shift_Worker'
 
@@ -1619,7 +1637,102 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
                     self.Moves.append(ReplaceShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index_2, order_item_id, machine_id))
 
 
+    def MakeOneMove(self, solution: Solution) -> BaseMove:
+        """
+        Chooses a random valid move by:
+        1. Randomly selecting a pair of workers (worker_1 and worker_2) using self.RNG.
+        2. Generating all valid moves for that pair based on the following conditions:
+            - worker_1 must have at least one order item.
+            - worker_2 must be different from worker_1.
+            - The order item from worker_1 must be in worker_2's possible order items.
+            - Adding its duration must not exceed worker_2's maximum working hours.
+            - A valid insertion position in worker_2's route must be determined based on 
+                predecessor/successor constraints.
+        3. Appending each valid move (constructed via ReplaceShiftWorkerMove) to self.Moves.
+        4. Randomly selecting one move from self.Moves (using self.RNG) and returning it.
+        
+        If no valid move is found after max_attempts, returns None.
+        """
+        max_attempts = 100
+        worker_ids = list(solution.route_plan_worker.keys())
+        attempts = 0
+        # Clear any previously stored moves
+        self.Moves.clear()
 
+        while attempts < max_attempts:
+            attempts += 1
+
+            # Randomly select a worker_1; it must have at least one order item.
+            worker_id_1 = self.RNG.choice(worker_ids)
+            if not solution.route_plan_worker[worker_id_1]:
+                continue
+
+            # Randomly select worker_2, ensuring it's different from worker_1.
+            possible_worker_2 = [wid for wid in worker_ids if wid != worker_id_1]
+            if not possible_worker_2:
+                continue
+            worker_id_2 = self.RNG.choice(possible_worker_2)
+
+            worker_route_1 = solution.route_plan_worker[worker_id_1]
+            worker_route_2 = solution.route_plan_worker[worker_id_2]
+            worker_2 = solution.data.workers[worker_id_2]
+
+            # For each order item in worker_1's route, attempt to determine a valid insertion in worker_2.
+            for order_item_id in worker_route_1:
+                # Flatten worker_2's possible order item IDs.
+                worker_2_possible_order_item_ids = [
+                    oid for orders in worker_2.possible_order_item_ids.values() for oid in orders
+                ]
+                # Skip if the order item is not available for worker_2.
+                if order_item_id not in worker_2_possible_order_item_ids:
+                    continue
+
+                # Check if adding the order item would exceed worker_2's maximum working hours.
+                if solution.worker_work_time[worker_id_2] + solution.data.order_items[order_item_id].duration > self.data._max_working_hours:
+                    continue
+
+                insertion_position = None
+
+                # If worker_2 has no order items, we can insert at position 0.
+                if not worker_route_2:
+                    insertion_position = 0
+                else:
+                    # Iterate over worker_2's route to find a valid insertion position.
+                    for order_item_id_2 in worker_route_2:
+                        # If the order item is neither in the predecessor nor successor lists for order_item_id_2,
+                        # then insertion relative to this item ist not possible.
+                        if order_item_id not in worker_2.predecessor_ids[order_item_id_2] and order_item_id not in worker_2.successor_ids[order_item_id_2]:
+                            insertion_position = None
+                            break
+                        # If order_item_id is a predecessor of order_item_id_2, insert before it.
+                        if order_item_id in worker_2.predecessor_ids[order_item_id_2]:
+                            insertion_position = worker_route_2.index(order_item_id_2)
+                            break
+                        # If we are at the last order item and order_item_id is a successor of it, insert at the end.
+                        if worker_route_2.index(order_item_id_2) == len(worker_route_2) - 1:
+                            if order_item_id in worker_2.successor_ids[order_item_id_2]:
+                                insertion_position = len(worker_route_2)
+                                break
+
+                # If a valid insertion position was determined, create the move.
+                if insertion_position is not None:
+                    # Find the machine associated with the order item from solution.route_plan_machine.
+                    machine_id = None
+                    for m_id, machine_route in solution.route_plan_machine.items():
+                        if order_item_id in machine_route:
+                            machine_id = m_id
+                            break
+                    if machine_id is not None:
+                        move = ReplaceShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, insertion_position, order_item_id, machine_id)
+                        self.Moves.append(move)
+
+            # If we have found any valid moves for the chosen pair, select one randomly.
+            if self.Moves:
+                return self.RNG.choice(self.Moves)
+
+        # If no valid move is found after max_attempts, return None.
+        return None
+    
 
 
     def EvaluateMove(self, move: ReplaceShiftWorkerMove) -> None:
@@ -1676,8 +1789,8 @@ class SwapShiftWorkerMove(BaseMove):
 class SwapShiftWorkerNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
 
-    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, solutionPool: SolutionPool, rng):
-        super().__init__(inputData, evaluationLogic, solutionPool, rng)
+    def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, paretoSolutions: ParetoSolutions, rng):
+        super().__init__(inputData, evaluationLogic, paretoSolutions, rng)
 
         self.Type = 'Swap_Shift_Worker'
 

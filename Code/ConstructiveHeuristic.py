@@ -6,10 +6,10 @@ from EvaluationLogic import *
 class ConstructiveHeuristics:
     ''' Class for creating objects to run different constructive heuristics'''
 
-    def __init__(self,  solutionPool:SolutionPool, evaluationLogic:EvaluationLogic):
+    def __init__(self,  paretoSolutions: ParetoSolutions, evaluationLogic: EvaluationLogic):
 
         self.EvaluationLogic = evaluationLogic
-        self._SolutionPool = solutionPool
+        self.ParetoSolutions = paretoSolutions
 
 
     def Run(self, input_data:InputData, order_item_attractiveness_technique, machine_attractiveness_technique):
@@ -372,9 +372,7 @@ class ConstructiveHeuristics:
         if feasible:
             print("Solution is feasible")
             self.EvaluationLogic.evaluate(start_solution)
-            print(start_solution.route_plan_attachment)
-            print(start_solution.route_plan_machine)
-            print(start_solution.route_plan_worker)
+            self.ParetoSolutions.ParetoFront.append(start_solution)
             return start_solution
         else:
             raise Exception("Solution is not feasible")
