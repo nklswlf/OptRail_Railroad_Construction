@@ -50,6 +50,7 @@ class Solution:
         self.attachment_utilization_time = {}
 
         self.dynamic_percentage_order = {}
+        self.total_dynamic_percentage = -0
 
 
 
@@ -59,7 +60,7 @@ class Solution:
                 f"Number of finished orders: {self.number_of_finished_orders}\n"
                 f"Number of semi-finished orders: {len(self.semifinished_orders)}\n"
                 f"Number of not started orders: {len(self.not_started_orders)}\n"
-                #f"Dynamic percentage: {self.dynamic_percentage_order}\n"
+                f"Dynamic percentage: {self.total_dynamic_percentage}\n"
                 f"Number of finished order items: {self.number_of_finished_order_items}\n"
                 f"Driver violation: {self.driver_violation}\n"
                 f"Commute distance: {round(self.total_commute_distance, 2)}\n"
@@ -598,24 +599,188 @@ class Solution:
         '''
        
 
-class SolutionPool:
+class ParetoSolutions:
     ''' Class for creating lits objects containing solution objects'''
 
     def __init__(self):
         ''' Create an empty list for the solutions'''
-        self.Solutions = []
+        self.ParetoFront = []
+
+    def PurgeParetoFront(self):
+        """
+        Iterates over all solutions in the Pareto Front (self.ParetoFront) and removes any solution 
+        that is dominated by another solution in the list.
+        
+        Function compare_solutions(solution_a, solution_b) is available:
+        - Returns 1 if solution_a dominates solution_b.
+        - Returns -1 if solution_b dominates solution_a.
+        - Returns 0 if neither dominates the other.
+        
+        After execution, self.ParetoFront contains only non-dominated solutions.
+        """
+        non_dominated = []
+        for i, sol in enumerate(self.ParetoFront):
+            dominated = False
+            for j, other_sol in enumerate(self.ParetoFront):
+                if i != j:
+                    # Check if other_sol dominates sol
+                    if self.CompareSolutions(other_sol, sol) == 1:
+                        dominated = True
+                        break
+            if not dominated:
+                non_dominated.append(sol)
+        self.ParetoFront = non_dominated
+
+    
+    def UpdateParetoFront(self, new_solution: Solution) -> bool:
+        """
+        Compares new_solution with all solutions in the Pareto Front.
+        
+        If new_solution is dominated by any solution in the Pareto Front,
+        it is not added and the function returns False.
+        
+        Otherwise, it removes all solutions that are dominated by new_solution,
+        adds new_solution to the Pareto Front, and returns True.
+        
+        For total_dynamic_percentage: higher is better.
+        For all other objectives: lower is better.
+        
+        Returns:
+        True if new_solution can be added to the Pareto Front,
+        False if it is dominated by an existing solution.
+        """
+        # First, check if any solution in the Pareto Front dominates new_solution.
+        for current_solution in list(self.ParetoFront):
+            # CompareSolutions returns:
+            #   1  if new_solution dominates current_solution,
+            #  -1  if current_solution dominates new_solution,
+            #   0  if neither dominates the other.
+            if self.CompareSolutions(current_solution, new_solution) == -1:
+                # new_solution is dominated by current_solution.
+                return False
+
+        # Remove all solutions in the Pareto Front that are dominated by new_solution.
+        self.ParetoFront = [current_solution for current_solution in self.ParetoFront
+                            if self.CompareSolutions(new_solution, current_solution) != 1]
+
+        # Add new_solution to the Pareto Front.
+        self.ParetoFront.append(new_solution)
+        return True
+    
+
+    def CompareSolutions(self, current_solution: Solution, new_solution: Solution) -> int:
+        """
+        Compares current_solution and new_solution.
+        
+        Returns:
+        1  if new_solution dominates current_solution,
+        -1  if current_solution dominates new_solution,
+        0  if neither dominates the other.
+        
+        For total_dynamic_percentage: higher is better.
+        For all other objectives: lower is better.
+        
+        A solution dominates another if it is not worse in any objective and is strictly better in at least one.
+        """
+        objectives = [
+            ("total_dynamic_percentage", "max"),
+            ("total_commute_distance", "min"),
+            ("total_transport_distance", "min"),
+            ("total_transport_distance_attachments", "min"),
+            ("driver_violation", "min"),
+            ("number_of_workers", "min"),
+            ("number_of_machines", "min"),
+            ("number_of_attachments", "min")
+        ]
+        
+        new_better_count = 0  # Anzahl der Ziele, in denen new_solution besser ist
+        current_better_count = 0  # Anzahl der Ziele, in denen current_solution besser ist
+
+        for attr, goal in objectives:
+            new_val = getattr(new_solution, attr)
+            curr_val = getattr(current_solution, attr)
+            
+            if goal == "max":
+                # Higher is better
+                if new_val > curr_val:
+                    new_better_count += 1
+                elif new_val < curr_val:
+                    current_better_count += 1
+            else:
+                # Lower is better
+                if new_val < curr_val:
+                    new_better_count += 1
+                elif new_val > curr_val:
+                    current_better_count += 1
+
+        # new_solution dominates current_solution if:
+        # - in keinem Ziel ist new_solution schlechter (d.h. current_better_count == 0)
+        # - und in mindestens einem Ziel ist new_solution besser (new_better_count > 0)
+        if current_better_count == 0 and new_better_count > 0:
+            return 1
+
+        # current_solution dominates new_solution if:
+        # - in keinem Ziel ist current_solution schlechter (new_better_count == 0)
+        # - und in mindestens einem Ziel ist current_solution besser (current_better_count > 0)
+        if new_better_count == 0 and current_better_count > 0:
+            return -1
+
+        return 0  # Neither dominates the other
+
+    def ShowFront(self):
+        ''' Show the Pareto Front as a DataFrame'''
+
+        # Create a DataFrame from the Pareto Front
+
+        # Create a list of dictionaries for the solutions
+        solutions = []
+        for solution in self.ParetoFront:
+            solutions.append({
+                "Total Dynamic Percentage": solution.total_dynamic_percentage,
+                "Driver Violation": solution.driver_violation,
+                "Total Commute Distance": solution.total_commute_distance,
+                "Total Transport Distance": solution.total_transport_distance,
+                "Total Transport Distance Attachments": solution.total_transport_distance_attachments,
+                "Number of Machines": solution.number_of_machines,
+                "Number of Workers": solution.number_of_workers,
+                "Number of Attachments": solution.number_of_attachments
+            })
+
+        # Create a DataFrame from the list of dictionaries
+        df = pd.DataFrame(solutions)
+
+        # Sort according to the total_dynamic_percentage (higher is better), then sort by the other objectives
+        df = df.sort_values(by=["Total Dynamic Percentage", "Driver Violation", "Total Commute Distance",
+                                "Total Transport Distance", "Total Transport Distance Attachments",
+                                "Number of Machines", "Number of Workers", "Number of Attachments"],
+                            ascending=[False, True, True, True, True, True, True, True])
         
 
-    def AddSolution(self, newSolution:Solution) -> None:
-        ''' Add a new solution to the solution pool'''
-        self.Solutions.append(newSolution)
+        # Show the DataFrame
+        print(df)
 
-    
-    
-    def GetBestSolution(self) -> Solution:
-        ''' Get the best solution from the solution pool'''
-        # Solution with the most finished order items
-        return max(self.Solutions, key=lambda solution: solution.number_of_finished_order_items)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
