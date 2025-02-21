@@ -96,7 +96,7 @@ class EvaluationLogic:
 
         # 1️⃣ Single Delta Details as Dictionary
         delta_details = {
-            "dynamic_percentage_order": delta_dynamic_percentage_order,
+            "dynamic_percentage_order": -delta_dynamic_percentage_order,
             "commute_distance": delta_commute_distance,
             "transport_distance": delta_transport_distance,
             "transport_distance_attachments": delta_transport_distance_attachments,
