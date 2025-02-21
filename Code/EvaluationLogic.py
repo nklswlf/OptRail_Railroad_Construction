@@ -124,7 +124,7 @@ class EvaluationLogic:
     
     def calculate_swap_shift_external_delta(self, move):
         ''' Calculate the delta of the objective function value when swapping two order items between two external workers'''
-
+        '''
         # Calculate the extra commute distance
         delta_commute_distance = (+ ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemIDExt] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
                                 - ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemIDInt] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
@@ -154,7 +154,7 @@ class EvaluationLogic:
             delta_transport_distance -= (((self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
                                         + (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
             
-        
+        '''
         # Calculate the precentage difference this order item makes
         delta_dynamic_percentage_order = 0
         for order in self.data.orders:
@@ -166,10 +166,10 @@ class EvaluationLogic:
 
         # 1️⃣ Store individual delta values as a dictionary (details)
         delta_details = {
-            "dynamic_percentage_order": delta_dynamic_percentage_order,
-            "commute_distance": delta_commute_distance,
-            "transport_distance": delta_transport_distance,
-        }
+            "dynamic_percentage_order": delta_dynamic_percentage_order}
+   #         "commute_distance": delta_commute_distance,
+   #         "transport_distance": delta_transport_distance,
+   #     }
 
         #print(f"Delta Details: {delta_details}")
 
@@ -178,8 +178,9 @@ class EvaluationLogic:
         # Second value: sum of commute_distance and transport_distance
         delta_summary = [
             delta_details["dynamic_percentage_order"],
-            delta_details["commute_distance"] + delta_details["transport_distance"],
-        ]
+            1]
+   #         delta_details["commute_distance"] + delta_details["transport_distance"],
+   #     ]
 
         #print(f"Delta Summary: {delta_summary}")
 

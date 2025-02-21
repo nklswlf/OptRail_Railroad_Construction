@@ -69,7 +69,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-instances = ["Construction_a50_o578_m28_an276_ar66.json"]
+#instances = ["Construction_a10_o128_m6_an51_ar13.json"]
 
 
 
