@@ -163,8 +163,6 @@ class RepairAlgorithm(ImprovementAlgorithm):
 
 
 
-
-
 class IterativeImprovement(ImprovementAlgorithm):
     """ Iterative improvement algorithm through sequential variable neighborhood descent. 
         Local Search with itereative steps through many different neighborhoods.
@@ -197,6 +195,7 @@ class IterativeImprovement(ImprovementAlgorithm):
 
             
             print(f'\nBest (feasible) solution after {neighborhoodType}: \n{solution}')
+
         
         return solution
 
@@ -211,14 +210,16 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                  min_temp:int,
                  cooling_rate:float,
                  max_iterations:int,
-                 neighborhoodTypes:list[str] = ['Swap']):
+                 neighborhoodTypesSA:list[str] = ['Swap'],
+                neighborhoodTypesLS:list[str] = ['Insert']):
         super().__init__(inputData)
 
         self.StartTemperature = start_temp
         self.MinTemperature = min_temp
         self.CoolingRate = cooling_rate
         self.MaxIterations = max_iterations
-        self.NeighborhoodTypes = neighborhoodTypes
+        self.NeighborhoodTypes = neighborhoodTypesSA
+        self.NeighborhoodTypesLS = neighborhoodTypesLS
 
 
     
@@ -229,8 +230,13 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
 
         print(f'\nInitial solution: \n{solution}')
 
+        local_search_on = False
+        if local_search_on:
+            local_search = IterativeImprovement(self.InputData, self.NeighborhoodEvaluationStrategy, self.NeighborhoodTypesLS)
+            local_search.Initialize(self.EvaluationLogic, self.ParetoSolutions, self.RNG)
 
         currentSolution = deepcopy(solution)
+
 
         currentTemperature = self.StartTemperature
 
@@ -240,17 +246,24 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
         count['non-dominated'] = 0
 
         fallback_counter = 0
-        fallback = False
+        fallback = True
+        fallbacks = 0
 
         while currentTemperature > self.MinTemperature:
+            
+            if local_search_on:
+                currentSolution = local_search.Run(deepcopy(currentSolution))
 
             for i in range(self.MaxIterations):
+
 
                 neighborhoodType = self.RNG.choice(self.NeighborhoodTypes)
                 neighborhood = self.Neighborhoods[neighborhoodType]
 
                 move = neighborhood.SingleMove(currentSolution)
 
+                if move is None:
+                    continue
 
                 values = list(move.DeltaDetails.values())
 
@@ -266,7 +279,13 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                 elif all_greater_equal_zero and any_greater_than_zero:
                     count['dominated'] += 1
                     print("dominated")
-                    prob =  math.exp(-move.Delta / currentTemperature)
+
+                    overall_delta = 0
+                    for v in values:
+                        if v > 0:
+                            overall_delta += v
+
+                    prob =  math.exp(-overall_delta / currentTemperature)
                     random_number = self.RNG.random()
                     print(f"Comparison: {random_number} <=> {prob}")
 
@@ -282,25 +301,24 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
   
                 worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
                 currentSolution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                self.EvaluationLogic.evaluate(currentSolution)
+                print(f"New solution: {currentSolution}")
                 feasible = currentSolution.feasibility_check()
                 if not feasible:
                     raise Exception("Solution is not feasible after neighborhood move")
-                self.EvaluationLogic.evaluate(currentSolution)
+                
                 added = self.ParetoSolutions.UpdateParetoFront(currentSolution)
 
 
-                '''
-                if added:
-                    fallback_counter = 0
-                elif not added:
+                if not added:
                     fallback_counter += 1
-                    if fallback_counter > 10 and fallback:
+                    if fallback_counter % 10 == 0 and fallback:
                         print("Fallback")
-                        fallback_counter = 0
+                        fallbacks += 1
                         self.ParetoSolutions.PurgeParetoFront()
                         currentSolution = self.RNG.choice(self.ParetoSolutions.ParetoFront)
                         break
-                '''
+
 
 
             currentTemperature *= self.CoolingRate
@@ -308,8 +326,9 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
         print(f"Number of dominates: {count['dominates']}")
         print(f"Number of dominated: {count['dominated']}")
         print(f"Number of non-dominated: {count['non-dominated']}")
-        print(f"Number of Pareto solutions: {len(self.ParetoSolutions.ParetoFront)}")
+        print(f"Number of fallbacks: {fallbacks}")
         self.ParetoSolutions.PurgeParetoFront()
+        print(f"Number of Pareto solutions: {len(self.ParetoSolutions.ParetoFront)}")
 
         return self.ParetoSolutions.ShowFront()
     

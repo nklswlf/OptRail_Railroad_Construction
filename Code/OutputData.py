@@ -349,7 +349,8 @@ class Solution:
                 travel_time_double = distance / self.data._transport_speed_kmh
                 travel_time = timedelta(hours=travel_time_double)
                 if order_item_i.end_time + travel_time >= order_item_j.start_time:
-                    print(f"In attachment route: {attachment_id}, Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
+                    print(f"Route {route}")
+                    print(f"In attachment {attachment_id} route: Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
                     return False
 
             if verbose:
@@ -765,24 +766,25 @@ class ParetoSolutions:
         solutions = []
         for solution in self.ParetoFront:
             solutions.append({
-                "Total Dynamic Percentage": solution.total_dynamic_percentage,
+                "Finished Orders": solution.number_of_finished_orders,
+                "Dynamic Percentage": solution.total_dynamic_percentage,
                 "Driver Violation": solution.driver_violation,
-                "Total Commute Distance": solution.total_commute_distance,
-                "Total Transport Distance": solution.total_transport_distance,
-                "Total Transport Distance Attachments": solution.total_transport_distance_attachments,
-                "Number of Machines": solution.number_of_machines,
-                "Number of Workers": solution.number_of_workers,
-                "Number of Attachments": solution.number_of_attachments
+                "Commute Distance": solution.total_commute_distance,
+                "Transport Machines": solution.total_transport_distance,
+                "Transport Attachments": solution.total_transport_distance_attachments,
+                "Machines": solution.number_of_machines,
+                "Workers": solution.number_of_workers,
+                "Attachments": solution.number_of_attachments
             })
 
         # Create a DataFrame from the list of dictionaries
         df = pd.DataFrame(solutions)
 
         # Sort according to the total_dynamic_percentage (higher is better), then sort by the other objectives
-        df = df.sort_values(by=["Total Dynamic Percentage", "Driver Violation", "Total Commute Distance",
-                                "Total Transport Distance", "Total Transport Distance Attachments",
-                                "Number of Machines", "Number of Workers", "Number of Attachments"],
-                            ascending=[False, True, True, True, True, True, True, True])
+        df = df.sort_values(by=["Finished Orders" ,"Dynamic Percentage", "Driver Violation", "Commute Distance",
+                                "Transport Machines", "Transport Attachments",
+                                "Machines", "Workers", "Attachments"],
+                            ascending=[False, False, True, True, True, True, True, True, True])
         
 
         # Show the DataFrame
