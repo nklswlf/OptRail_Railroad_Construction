@@ -230,7 +230,7 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
 
         print(f'\nInitial solution: \n{solution}')
 
-        local_search_on = False
+        local_search_on = True
         if local_search_on:
             local_search = IterativeImprovement(self.InputData, self.NeighborhoodEvaluationStrategy, self.NeighborhoodTypesLS)
             local_search.Initialize(self.EvaluationLogic, self.ParetoSolutions, self.RNG)
@@ -244,10 +244,13 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
         count['dominates'] = 0
         count['dominated'] = 0
         count['non-dominated'] = 0
+        count['none'] = 0
 
         fallback_counter = 0
         fallback = True
         fallbacks = 0
+
+        energy_strategy = 'deltas'
 
         while currentTemperature > self.MinTemperature:
             
@@ -263,6 +266,7 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                 move = neighborhood.SingleMove(currentSolution)
 
                 if move is None:
+                    count['none'] += 1
                     continue
 
                 values = list(move.DeltaDetails.values())
@@ -280,18 +284,41 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                     count['dominated'] += 1
                     print("dominated")
 
-                    overall_delta = 0
-                    for v in values:
-                        if v > 0:
-                            overall_delta += v
+                    
+                    if energy_strategy == 'deltas':
+                        overall_delta = 0
+                        for v in values:
+                            if v > 0:
+                                overall_delta += v
 
-                    prob =  math.exp(-overall_delta / currentTemperature)
-                    random_number = self.RNG.random()
-                    print(f"Comparison: {random_number} <=> {prob}")
+                        prob =  math.exp(-overall_delta / currentTemperature)
+                        random_number = self.RNG.random()
+                        print(f"Comparison: {random_number} <=> {prob}")
 
-                    if prob < random_number:
-                        print("Random number is greater than probability")
-                        continue
+                        if prob < random_number:
+                            print("Random number is greater than probability")
+                            continue
+
+                    elif energy_strategy == 'pareto':
+                        overall_difference = 0
+                        dominating_count_current = self.ParetoSolutions.CountDominatingSolutions(currentSolution)
+
+                        worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
+                        new_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                        self.EvaluationLogic.evaluate(new_solution)
+                        dominating_count_new = self.ParetoSolutions.CountDominatingSolutions(new_solution)
+
+                        overall_difference = dominating_count_new - dominating_count_current
+
+                        prob =  math.exp(-overall_difference / currentTemperature)
+                        random_number = self.RNG.random()
+                        print(f"Comparison: {random_number} <=> {prob}")
+
+                        if prob < random_number:
+                            print("Random number is greater than probability")
+                            continue
+
+                    
                 else:
                     count['non-dominated'] += 1
                     print(f"Delta: {move.Delta}")
@@ -315,10 +342,13 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                     if fallback_counter % 10 == 0 and fallback:
                         print("Fallback")
                         fallbacks += 1
-                        self.ParetoSolutions.PurgeParetoFront()
+                        #self.ParetoSolutions.PurgeParetoFront()
                         currentSolution = self.RNG.choice(self.ParetoSolutions.ParetoFront)
-                        break
 
+                print(f"Lenght of Pareto Front: {len(self.ParetoSolutions.ParetoFront)}")
+                if energy_strategy == 'deltas':
+                    if len(self.ParetoSolutions.ParetoFront) > 100:
+                        energy_strategy = 'pareto'
 
 
             currentTemperature *= self.CoolingRate
@@ -326,6 +356,7 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
         print(f"Number of dominates: {count['dominates']}")
         print(f"Number of dominated: {count['dominated']}")
         print(f"Number of non-dominated: {count['non-dominated']}")
+        print(f"Number of none: {count['none']}")
         print(f"Number of fallbacks: {fallbacks}")
         self.ParetoSolutions.PurgeParetoFront()
         print(f"Number of Pareto solutions: {len(self.ParetoSolutions.ParetoFront)}")

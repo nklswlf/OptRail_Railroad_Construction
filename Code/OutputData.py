@@ -657,6 +657,22 @@ class ParetoSolutions:
         
         self.ParetoFront = non_dominated
 
+    def CountDominatingSolutions(self, new_solution: Solution) -> int:
+        """
+        Zählt, wie viele Lösungen aus der Pareto-Front die new_solution dominieren.
+
+        Args:
+        pareto_front (list): Liste der Lösungen, die zur Pareto-Front gehören.
+        new_solution (Solution): Die neue Lösung, die überprüft wird.
+
+        Returns:
+        int: Anzahl der Lösungen aus der Pareto-Front, die die new_solution dominieren.
+        """
+        count = 0
+        for solution in self.ParetoFront:
+            if self.CompareSolutions(solution, new_solution) == -1:  # -1 bedeutet, dass die Lösung die neue Lösung dominiert
+                count += 1
+        return count
     
     def UpdateParetoFront(self, new_solution: Solution) -> bool:
         """
@@ -681,13 +697,19 @@ class ParetoSolutions:
             #   1  if new_solution dominates current_solution,
             #  -1  if current_solution dominates new_solution,
             #   0  if neither dominates the other.
+            # 100  if both solutions are identical.
             if self.CompareSolutions(current_solution, new_solution) == -1:
                 # new_solution is dominated by current_solution.
                 return False
-
-        # Remove all solutions in the Pareto Front that are dominated by new_solution.
-        self.ParetoFront = [current_solution for current_solution in self.ParetoFront
-                            if self.CompareSolutions(new_solution, current_solution) != 1]
+            if self.CompareSolutions(current_solution, new_solution) == 100:
+                # new_solution is identical to current_solution.
+                return False
+            if self.CompareSolutions(current_solution, new_solution) == 1:
+                # current_solution is dominated by new_solution.
+                self.ParetoFront.remove(current_solution)
+            if self.CompareSolutions(current_solution, new_solution) == 0:
+                # current_solution and new_solution are not dominated by each other.
+                continue
 
         # Add new_solution to the Pareto Front.
         self.ParetoFront.append(new_solution)
@@ -700,8 +722,9 @@ class ParetoSolutions:
         
         Returns:
         1  if new_solution dominates current_solution,
-        -1  if current_solution dominates new_solution,
+        -1 if current_solution dominates new_solution,
         0  if neither dominates the other.
+        100 if both solutions are identical.
         
         For total_dynamic_percentage: higher is better.
         For all other objectives: lower is better.
@@ -719,43 +742,40 @@ class ParetoSolutions:
             ("number_of_attachments", "min")
         ]
         
-
         new_better_count = 0  # Anzahl der Ziele, in denen new_solution besser ist
         current_better_count = 0  # Anzahl der Ziele, in denen current_solution besser ist
+        identical_count = 0  # Anzahl der identischen Werte
 
         for attr, goal in objectives:
             new_val = getattr(new_solution, attr)
             curr_val = getattr(current_solution, attr)
             
-            if goal == "max":
-                # Higher is better
+            if new_val == curr_val:
+                identical_count += 1
+            elif goal == "max":
                 if new_val > curr_val:
                     new_better_count += 1
-                elif new_val < curr_val:
+                else:
                     current_better_count += 1
-            else:
-                # Lower is better
+            else:  # goal == "min"
                 if new_val < curr_val:
                     new_better_count += 1
-                elif new_val > curr_val:
+                else:
                     current_better_count += 1
 
-        # new_solution dominates current_solution if:
-        # - in keinem Ziel ist new_solution schlechter (d.h. current_better_count == 0)
-        # - und in mindestens einem Ziel ist new_solution besser (new_better_count > 0)
-        if current_better_count == 0 and new_better_count > 0:
+        # Falls alle Werte identisch sind, return 100
+        if identical_count == len(objectives):
+            return 100
 
+        # new_solution dominiert current_solution
+        if current_better_count == 0 and new_better_count > 0:
             return 1
 
-        # current_solution dominates new_solution if:
-        # - in keinem Ziel ist current_solution schlechter (new_better_count == 0)
-        # - und in mindestens einem Ziel ist current_solution besser (current_better_count > 0)
+        # current_solution dominiert new_solution
         if new_better_count == 0 and current_better_count > 0:
-
             return -1
 
-
-        return 0  # Neither dominates the other
+        return 0  # Keine Dominanz
 
     def ShowFront(self):
         ''' Show the Pareto Front as a DataFrame'''
@@ -789,25 +809,6 @@ class ParetoSolutions:
 
         # Show the DataFrame
         print(df)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -69,7 +69,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-#instances = ["Construction_a10_o128_m6_an51_ar13.json"]
+instances = ["Construction_a10_o128_m6_an51_ar13.json"]
 
 
 
@@ -89,11 +89,9 @@ neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace
                        'Swap_Shift_Worker', 'Swap_Shift_Machine', 'Swap_Shift_Attachment',
                        'Swap_Shift_External', 'Insert_Shift']
 
-neighboorhood_types_simulated_annealing = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Swap_Shift_Worker', 'Swap_Shift_Machine','Insert_Shift', 'Replace_Shift_Attachment']
-#neighboorhood_types_simulated_annealing = ['Insert_Shift']
+neighboorhood_types_simulated_annealing = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Swap_Shift_Worker', 'Swap_Shift_Machine', 'Replace_Shift_Attachment', 'Swap_Shift_Attachment']
 
-neighboorhood_types_local_search = ['Replace_Shift_Attachment', 'Insert_Shift', 'Swap_Shift_Attachment']
-neighboorhood_types_local_search = ['Swap_Shift_External']
+neighboorhood_types_local_search = ['Swap_Shift_External', 'Insert_Shift']
 
 
 
@@ -112,12 +110,15 @@ def main():
                                             neighborhoodTypes=neighboorhood_types_local_search)
 
         simulated_annealing_local_search = SimulatedAnnealingLocalSearch(inputData=data,
-                                                                        start_temp=100,
+                                                                        start_temp=10,
                                                                         min_temp=0.1,
-                                                                        cooling_rate=0.9,
-                                                                        max_iterations=5000,
+                                                                        cooling_rate=0.95,
+                                                                        max_iterations= 500,
                                                                         neighborhoodTypesSA=neighboorhood_types_simulated_annealing,
                                                                         neighborhoodTypesLS=neighboorhood_types_local_search)
+
+        worker = data.workers[6]
+        print(f"Worker Possible Order Items: {worker.possible_order_item_ids}")
 
         if only_constructive:
             # Run ONLY the constructive heuristic
@@ -130,7 +131,7 @@ def main():
             solver.RunAlgorithm(
                 order_item_attractiveness_technique="balanced_greedy",
                 machine_attractiveness_technique="balanced_greedy",
-                algorithm=local_search
+                algorithm=simulated_annealing_local_search
             )
 
 
