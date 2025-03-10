@@ -6,6 +6,7 @@ import concurrent.futures  # For parallelism
 from copy import deepcopy
 from itertools import chain
 import itertools
+import numpy as np
 
 
 class BaseMove:
@@ -630,29 +631,50 @@ class SwapShiftExternalMove(BaseMove):
     
     def __init__(self, machine_info_intern ,machine_id, worker_id, machine_route, worker_route, machine_index, worker_index, order_item_id_int, order_item_id_ext, dynamic_percentage_int, dynamic_percentage_ext, attachment_information_int=None, attachment_information_ext=None):
         
-        self.MachineIDExt = machine_id
-        self.MachineIDInt = next(iter(machine_info_intern.keys()))
-        self.WorkerID = worker_id
-        
-        self.MachineRouteExt = list(machine_route)
-        self.MachineRouteInt = list(machine_info_intern[self.MachineIDInt][1])
-        self.WorkerRoute = list(worker_route)
-
-        self.MachineRouteIndexExt = machine_index
-        self.MachineRouteIndexInt = machine_info_intern[self.MachineIDInt][0]
-        self.WorkerRouteIndex = worker_index
-
         self.OrderItemIDInt = order_item_id_int
         self.OrderItemIDExt = order_item_id_ext
 
-        self.MachineRouteExt.insert(self.MachineRouteIndexExt, self.OrderItemIDExt)
-        self.WorkerRoute.insert(self.WorkerRouteIndex, self.OrderItemIDExt)
 
-        self.MachineRouteInt.remove(self.OrderItemIDInt)
+        self.WorkerID = worker_id
+        
+        self.WorkerRoute = list(worker_route)
+
+        self.WorkerRouteIndex = worker_index
+
+        self.WorkerRoute.insert(self.WorkerRouteIndex, self.OrderItemIDExt)
         self.WorkerRoute.remove(self.OrderItemIDInt)
+
+
 
         self.DynamicPercentageInt = dynamic_percentage_int
         self.DynamicPercentageExt = dynamic_percentage_ext
+
+
+
+        self.MachineIDExt = machine_id
+        self.MachineIDInt = next(iter(machine_info_intern.keys()))
+
+        if self.MachineIDExt == self.MachineIDInt:
+            self.SameMachine = True
+            self.MachineRoute = list(machine_route)
+            self.MachineRouteIndex = machine_info_intern[self.MachineIDInt][0]
+
+            self.MachineRoute.insert(self.MachineRouteIndex, self.OrderItemIDExt)
+            self.MachineRoute.remove(self.OrderItemIDInt)
+
+
+
+        else:
+            self.SameMachine = False
+            self.MachineRouteExt = list(machine_route)
+            self.MachineRouteInt = list(machine_info_intern[self.MachineIDInt][1])
+
+            self.MachineRouteIndexExt = machine_index
+            self.MachineRouteIndexInt = machine_info_intern[self.MachineIDInt][0]
+
+            self.MachineRouteExt.insert(self.MachineRouteIndexExt, self.OrderItemIDExt)
+
+            self.MachineRouteInt.remove(self.OrderItemIDInt)
 
 
         if attachment_information_ext is not None:
@@ -734,7 +756,7 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                         if len(worker_route) == 1:
                             machine_info_int, machine_info_ext = self.find_machine_routes(solution, order_item_id_int, order_item_id_ext)
                             attachment_info_int, attachment_info_ext = self.find_attachment_routes(solution, order_item_id_ext, order_item_id_int)
-                            if machine_info_int is not None:
+                            if machine_info_int is not None and machine_info_ext is not None:
                                 order_int = [order.order_number for order in solution.data.orders if order_item_id_int in order.order_item_ids][0]
                                 order_ext = [order.order_number for order in solution.data.orders if order_item_id_ext in order.order_item_ids][0]
                                 for machine_id, machine_index_and_route in machine_info_ext.items():
@@ -754,7 +776,7 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                             if order_item_id_ext in worker.predecessor_ids[worker_route[worker_index + 1]]:
                                 machine_info_int, machine_info_ext = self.find_machine_routes(solution, order_item_id_int, order_item_id_ext)
                                 attachment_info_int, attachment_info_ext = self.find_attachment_routes(solution, order_item_id_ext, order_item_id_int)
-                                if machine_info_int is not None:
+                                if machine_info_int is not None and machine_info_ext is not None:
                                     order_int = [order.order_number for order in solution.data.orders if order_item_id_int in order.order_item_ids][0]
                                     order_ext = [order.order_number for order in solution.data.orders if order_item_id_ext in order.order_item_ids][0]
                                     for machine_id, machine_index_and_route in machine_info_ext.items():
@@ -774,7 +796,7 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                             if order_item_id_ext in worker.predecessor_ids[worker_route[worker_index + 1]] and order_item_id_ext in worker.successor_ids[worker_route[worker_index - 1]]:
                                 machine_info_int, machine_info_ext = self.find_machine_routes(solution, order_item_id_int, order_item_id_ext)
                                 attachment_info_int, attachment_info_ext = self.find_attachment_routes(solution, order_item_id_ext, order_item_id_int)
-                                if machine_info_int is not None:
+                                if machine_info_int is not None and machine_info_ext is not None:
                                     order_int = [order.order_number for order in solution.data.orders if order_item_id_int in order.order_item_ids][0]
                                     order_ext = [order.order_number for order in solution.data.orders if order_item_id_ext in order.order_item_ids][0]
                                     for machine_id, machine_index_and_route in machine_info_ext.items():
@@ -795,7 +817,7 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                             if order_item_id_ext in worker.successor_ids.get(worker_index - 1, []):
                                 machine_info_int, machine_info_ext = self.find_machine_routes(solution, order_item_id_int, order_item_id_ext)
                                 attachment_info_int, attachment_info_ext = self.find_attachment_routes(solution, order_item_id_ext, order_item_id_int)
-                                if machine_info_int is not None:
+                                if machine_info_int is not None and machine_info_ext is not None:
                                     order_int = [order.order_number for order in solution.data.orders if order_item_id_int in order.order_item_ids][0]
                                     order_ext = [order.order_number for order in solution.data.orders if order_item_id_ext in order.order_item_ids][0]
                                     for machine_id, machine_index_and_route in machine_info_ext.items():
@@ -810,43 +832,6 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
 
                                 break               
 
-        '''
-
-    def find_worker_route(self, solution: Solution, order_item_id_ext: int, order_item_id_int: int) -> dict:
-                        
-            for worker_id, worker_route in solution.route_plan_worker.items():
-
-                # Search for the worker route of the order_item_id_int
-                if order_item_id_int not in worker_route:
-                    continue
-
-                # Continue to next worker if current worker is not part of the solution
-                if len(worker_route) == 0:
-                    continue
-
-                worker = solution.data.workers[worker_id]
-                
-                # Continue to next worker if the work time would exceed the maximum working hours
-                if solution.worker_work_time[worker_id] + solution.data.order_items[order_item_id_ext].duration - solution.data.order_items[order_item_id_int].duration > self.data._max_working_hours:
-                    continue
-
-                # Continue to next worker if order_item_ext cannot be processed by current worker
-                worker_possible_order_item_ids = [order_item_ids for orders in worker.possible_order_item_ids.values() for order_item_ids in orders]
-                if order_item_id_ext not in worker_possible_order_item_ids:
-                    continue
-
-                index = worker_route.index(order_item_id_int)
-
-                # Check if order_item_id_ext can be inserted at position index depending on the predecessor and successor relations
-
-                predecessor_id = worker_route[index - 1] if index > 0 else None
-                successor_id = worker_route[index + 1] if index < len(worker_route) - 1 else None
-
-                if predecessor_id in worker.predecessor_ids[order_item_id_ext] and successor_id in worker.successor_ids[order_item_id_ext]:
-                    return worker_id, index, worker_route
-            
-            return None, None, None
-        '''
 
     
     def find_machine_routes(self, solution: Solution, order_item_id_int: int, order_item_id_ext: int) -> tuple:
@@ -1008,6 +993,112 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
 
 
         return attachment_info_int, attachment_info_ext
+    
+
+    def MakeOneMove(self, solution: Solution, not_used_shifts=None) -> BaseMove:
+        """
+        Chooses a random valid "Swap Shift (external)" move.
+
+        - Randomly selects an order item from unused shifts.
+        - Randomly selects a worker with a valid route.
+        - Randomly selects a machine that can process the swap.
+        - Randomly selects valid attachment swaps (if required).
+        """
+
+        max_attempts = 100
+        attempts = 0
+        self.Moves.clear()
+
+        if not_used_shifts is None:
+            unused_order_item_ids = solution.not_started_order_item_ids
+        else:
+            unused_order_item_ids = not_used_shifts
+
+        if not unused_order_item_ids:
+            return None  # No unused order items available
+
+        while attempts < max_attempts:
+            attempts += 1
+            order_item_id_ext = self.RNG.choice(unused_order_item_ids)
+            order_item_ext_obj = solution.data.order_items[order_item_id_ext]
+
+            # --- WORKER Component ---
+            candidate_workers = [
+                worker_id for worker_id, worker_route in solution.route_plan_worker.items()
+                if worker_route  # Worker must have at least one order
+            ]
+            
+            if not candidate_workers:
+                continue  # No valid workers
+
+            self.RNG.shuffle(candidate_workers)  # Zufällige Reihenfolge der Worker
+            
+            for worker_id in candidate_workers:
+                worker_route = solution.route_plan_worker[worker_id]
+                worker = solution.data.workers[worker_id]
+
+                worker_possible_order_item_ids = [order_item_ids for orders in worker.possible_order_item_ids.values() for order_item_ids in orders]
+                
+                if order_item_id_ext not in worker_possible_order_item_ids:
+                    continue # Worker cannot process the order item
+
+                for worker_index, order_item_id_int in enumerate(worker_route):
+                    # Check precedence constraints
+                    if order_item_id_ext not in worker.predecessor_ids[order_item_id_int] and order_item_id_ext not in worker.successor_ids[order_item_id_int]:
+                        # Check working hours constraint
+                        if solution.worker_work_time[worker_id] + order_item_ext_obj.duration - solution.data.order_items[order_item_id_int].duration > self.data._max_working_hours:
+                            continue
+
+                        
+                        if len(worker_route) == 1:
+                            pass
+                        elif worker_index == 0:
+                            if order_item_id_ext in worker.predecessor_ids[worker_route[worker_index + 1]]:
+                                pass
+                            else:
+                                continue
+                        elif len(worker_route) > worker_index + 1:
+                            if order_item_id_ext in worker.predecessor_ids[worker_route[worker_index + 1]] and order_item_id_ext in worker.successor_ids[worker_route[worker_index - 1]]:
+                                pass
+                            else:
+                                continue
+                        elif len(worker_route) == worker_index + 1:
+                            if order_item_id_ext in worker.successor_ids.get(worker_route[worker_index - 1], []):
+                                pass
+                            else:
+                                continue
+
+                        order_int = [order.order_number for order in solution.data.orders if order_item_id_int in order.order_item_ids][0]
+                        order_ext = [order.order_number for order in solution.data.orders if order_item_id_ext in order.order_item_ids][0]
+                        
+                        # --- MACHINE Component ---
+                        machine_info_int, machine_info_ext = self.find_machine_routes(solution, order_item_id_int, order_item_id_ext)
+                        if not machine_info_int or not machine_info_ext:
+                            continue  # No valid machine swap available
+                        
+                        # **Random Machine Choice using self.RNG**
+                        machine_id = self.RNG.choice(list(machine_info_ext.keys()))
+                        machine_index_and_route = machine_info_ext[machine_id]
+
+                        # --- ATTACHMENT Component ---
+                        attachment_info_int, attachment_info_ext = self.find_attachment_routes(solution, order_item_id_ext, order_item_id_int)
+
+                        if attachment_info_int == True and attachment_info_ext == True:
+                            return SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext])
+                        elif attachment_info_ext == True and attachment_info_int:
+                            return SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int)
+                        elif attachment_info_int and attachment_info_ext:
+                            attachment_tuple = self.RNG.choice(list(attachment_info_ext.keys()))
+                            if isinstance(attachment_tuple, np.ndarray):
+                                attachment_tuple = tuple(attachment_tuple.tolist())  # Falls es mehrere Werte sind, erst in List konvertieren
+                            elif isinstance(attachment_tuple, (list, set)):
+                                attachment_tuple = tuple(attachment_tuple)  # Falls es eine Liste ist, ebenfalls konvertieren
+
+                            attachment_info = attachment_info_ext[attachment_tuple]  # Jetzt fehlerfrei
+                            return SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int, attachment_information_ext = attachment_info)
+
+        return None  # No valid move found after max_attempts
+
 
 
 
@@ -1031,19 +1122,29 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
         worker_route_plan = deepcopy(solution.route_plan_worker)
         attachement_route_plan = deepcopy(solution.route_plan_attachment)
 
-        worker_route_plan[move.WorkerID] = move.WorkerRoute
+        print("\n")
 
-        machine_route_plan[move.MachineIDInt] = move.MachineRouteInt
-        machine_route_plan[move.MachineIDExt] = move.MachineRouteExt
+        worker_route_plan[move.WorkerID] = move.WorkerRoute
+        print(f"Worker ID: {move.WorkerID} Worker Route: {move.WorkerRoute}")
+
+        if not move.SameMachine:
+            machine_route_plan[move.MachineIDInt] = move.MachineRouteInt
+            machine_route_plan[move.MachineIDExt] = move.MachineRouteExt
+
+            print(f"Machine ID Int: {move.MachineIDInt} Machine Route Int: {move.MachineRouteInt}")
+            print(f"Machine ID Ext: {move.MachineIDExt} Machine Route Ext: {move.MachineRouteExt}")
+        else:
+            machine_route_plan[move.MachineIDExt] = move.MachineRoute
+
+            print(f"Machine ID: {move.MachineIDExt} Machine Route: {move.MachineRoute}")
+
+        
 
         for index in range(move.NumberOfAttachmentsInt):
             attachement_route_plan[getattr(move, f"AttachmentIDInt_{index}")] = getattr(move, f"AttachmentRouteInt_{index}")
 
         for index in range(move.NumberOfAttachmentsExt):
             attachement_route_plan[getattr(move, f"AttachmentIDExt_{index}")] = getattr(move, f"AttachmentRouteExt_{index}")
-
-        print("\n")
-        print(machine_route_plan)
 
 
         return worker_route_plan, machine_route_plan, attachement_route_plan
@@ -1164,7 +1265,7 @@ class TimeNeighborhood(BaseNeighborhood):
             self.EvaluateMove(move)
             return move
         else:
-            raise Exception(f'No moves found in SingleMove() for neighborhood {self.Type}.')
+            print(f'No moves found in SingleMove() for neighborhood {self.Type}.')
 
 
 
