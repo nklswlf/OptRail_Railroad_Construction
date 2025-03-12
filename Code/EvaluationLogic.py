@@ -135,9 +135,7 @@ class EvaluationLogic:
 
 
         if move.SameMachine:
-
-            print(f"Machine Route: {move.MachineRoute}")
-            print(f"Machine Route Index: {move.MachineRouteIndex}")
+            
             if len(move.MachineRoute) == 1:
                 predecessor_id = None
                 successor_id = None
@@ -298,7 +296,7 @@ class EvaluationLogic:
         # First value: dynamic percentage order
         # Second value: sum of commute_distance and transport_distance
         delta_summary = [
-            delta_details["dynamic_percentage_order"],
+            -delta_details["transport_distance"],
             delta_details["commute_distance"]
             + delta_details["transport_distance"]
             + delta_details["driver_violation"]

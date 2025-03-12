@@ -167,6 +167,35 @@ class OutputNeighborhood(BaseNeighborhood):
                 bestNeighborhoodSolution = Solution(worker_route, machine_route, attachement_route, self.data)
                 self.evaluationLogic.evaluate(bestNeighborhoodSolution)
 
+                
+
+                print(f"Order Item ID Internal: {bestNeighborhoodMove.OrderItemIDInt}")
+                print(f"Order Item ID External: {bestNeighborhoodMove.OrderItemIDExt}")
+
+                print(f"Attachment Route: {attachement_route}")
+
+                print(f"Internal")
+
+                for attachment in range(bestNeighborhoodMove.NumberOfAttachmentsInt):
+                    print(f"Attachment Route: {getattr(bestNeighborhoodMove, f'AttachmentRouteInt_{attachment}')}")
+                    print(f"Attachment Route Index: {getattr(bestNeighborhoodMove, f'AttachmentRouteIndexInt_{attachment}')}")
+                    print(f"Attachment ID: {getattr(bestNeighborhoodMove, f'AttachmentIDInt_{attachment}')}")
+
+                print(f"External")
+
+                for attachment in range(bestNeighborhoodMove.NumberOfAttachmentsExt):
+                    print(f"Attachment Route: {getattr(bestNeighborhoodMove, f'AttachmentRouteExt_{attachment}')}")
+                    print(f"Attachment Route Index: {getattr(bestNeighborhoodMove, f'AttachmentRouteIndexExt_{attachment}')}")
+                    print(f"Attachment ID: {getattr(bestNeighborhoodMove, f'AttachmentIDExt_{attachment}')}")
+                
+
+                print(f"Move Attachment Information: {bestNeighborhoodMove.NumberOfAttachmentsExt}")
+                print(f"Move Attachment Information: {bestNeighborhoodMove.NumberOfAttachmentsInt}")
+
+                feasible = bestNeighborhoodSolution.feasibility_check()
+                if not feasible:
+                    raise Exception('Infeasible solution found in LocalSearch()')
+
                 #self.solutionPool.AddSolution(bestNeighborhoodSolution)
 
                 #print(f"Best Neighborhood Solution: \n{bestNeighborhoodSolution}")
@@ -241,12 +270,6 @@ class InsertShiftMove(BaseMove):
         else:
             self.NumberOfAttachments = 0
 
-
-
-        #print(f"Machine ID: {self.MachineID}")
-        #print(f"Machine Route: {self.MachineRoute}")
-        #print(f"Worker ID: {self.WorkerID}")
-        #print(f"Worker Route: {self.WorkerRoute}")
 
 class InsertShiftNeighborhood(OutputNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
@@ -814,7 +837,7 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                         # Check for the last order item in the machine route
                         elif len(worker_route) == worker_index + 1:
                             # If order_item_id_ext collides with order_item_id_machine and order_item_id_ext is a successor of the predecessor of order_item_id_machine, it can be inserted in the position of order_item_id_machine
-                            if order_item_id_ext in worker.successor_ids.get(worker_index - 1, []):
+                            if order_item_id_ext in worker.successor_ids[worker_route[worker_index - 1]]:
                                 machine_info_int, machine_info_ext = self.find_machine_routes(solution, order_item_id_int, order_item_id_ext)
                                 attachment_info_int, attachment_info_ext = self.find_attachment_routes(solution, order_item_id_ext, order_item_id_int)
                                 if machine_info_int is not None and machine_info_ext is not None:
@@ -1084,9 +1107,13 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                         attachment_info_int, attachment_info_ext = self.find_attachment_routes(solution, order_item_id_ext, order_item_id_int)
 
                         if attachment_info_int == True and attachment_info_ext == True:
-                            return SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext])
+                            move = SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext])
+                            if self.WorkerRouteFeasibilityCheck(move.WorkerID, move.WorkerRoute):
+                                return move
                         elif attachment_info_ext == True and attachment_info_int:
-                            return SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int)
+                            move = SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int)
+                            if self.WorkerRouteFeasibilityCheck(move.WorkerID, move.WorkerRoute):
+                                return move
                         elif attachment_info_int and attachment_info_ext:
                             attachment_tuple = self.RNG.choice(list(attachment_info_ext.keys()))
                             if isinstance(attachment_tuple, np.ndarray):
@@ -1095,8 +1122,10 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                                 attachment_tuple = tuple(attachment_tuple)  # Falls es eine Liste ist, ebenfalls konvertieren
 
                             attachment_info = attachment_info_ext[attachment_tuple]  # Jetzt fehlerfrei
-                            return SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int, attachment_information_ext = attachment_info)
-
+                            move = SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int, attachment_information_ext = attachment_info)
+                            if self.WorkerRouteFeasibilityCheck(move.WorkerID, move.WorkerRoute):
+                                return move
+    
         return None  # No valid move found after max_attempts
 
 
@@ -1125,18 +1154,14 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
         print("\n")
 
         worker_route_plan[move.WorkerID] = move.WorkerRoute
-        print(f"Worker ID: {move.WorkerID} Worker Route: {move.WorkerRoute}")
 
         if not move.SameMachine:
             machine_route_plan[move.MachineIDInt] = move.MachineRouteInt
             machine_route_plan[move.MachineIDExt] = move.MachineRouteExt
 
-            print(f"Machine ID Int: {move.MachineIDInt} Machine Route Int: {move.MachineRouteInt}")
-            print(f"Machine ID Ext: {move.MachineIDExt} Machine Route Ext: {move.MachineRouteExt}")
         else:
             machine_route_plan[move.MachineIDExt] = move.MachineRoute
 
-            print(f"Machine ID: {move.MachineIDExt} Machine Route: {move.MachineRoute}")
 
         
 
