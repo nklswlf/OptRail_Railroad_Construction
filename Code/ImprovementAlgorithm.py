@@ -190,6 +190,8 @@ class IterativeImprovement(ImprovementAlgorithm):
 
             feasible = solution.feasibility_check()
 
+            print(f"Attachment Route Plan: {solution.route_plan_attachment}")
+
             if not feasible:
                 raise Exception(f'Solution is not feasible after neighborhood {neighborhoodType}')
 
@@ -332,7 +334,7 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                 print(f"New solution: {currentSolution}")
                 feasible = currentSolution.feasibility_check()
                 if not feasible:
-                    raise Exception("Solution is not feasible after neighborhood move")
+                    raise Exception(f"Solution is not feasible after neighborhood {neighborhoodType}")
                 
                 added = self.ParetoSolutions.UpdateParetoFront(currentSolution)
 

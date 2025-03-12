@@ -69,7 +69,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-instances = ["Construction_a10_o128_m6_an51_ar13.json"]
+instances = ["Construction_a30_o355_m18_an148_ar42.json"]
 
 
 
@@ -90,9 +90,10 @@ neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace
                        'Swap_Shift_External', 'Insert_Shift']
 
 neighboorhood_types_simulated_annealing = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Swap_Shift_Worker', 'Swap_Shift_Machine', 'Replace_Shift_Attachment', 'Swap_Shift_Attachment']
+neighboorhood_types_simulated_annealing = ['Swap_Shift_External']
 
 neighboorhood_types_local_search = ['Swap_Shift_External', 'Insert_Shift']
-
+neighboorhood_types_local_search = ['Swap_Shift_External']
 
 
 only_constructive = False
@@ -117,8 +118,6 @@ def main():
                                                                         neighborhoodTypesSA=neighboorhood_types_simulated_annealing,
                                                                         neighborhoodTypesLS=neighboorhood_types_local_search)
 
-        worker = data.workers[6]
-        print(f"Worker Possible Order Items: {worker.possible_order_item_ids}")
 
         if only_constructive:
             # Run ONLY the constructive heuristic
@@ -131,7 +130,7 @@ def main():
             solver.RunAlgorithm(
                 order_item_attractiveness_technique="balanced_greedy",
                 machine_attractiveness_technique="balanced_greedy",
-                algorithm=simulated_annealing_local_search
+                algorithm=local_search
             )
 
 
