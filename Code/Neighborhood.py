@@ -790,6 +790,8 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                                         self.Moves.append(SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int))
                                     elif attachment_info_int and attachment_info_ext:
                                         for attachment_ids_tuple, attachment_info in attachment_info_ext.items():
+                                            if any(attachment_id_int == attachment_id_ext for attachment_id_ext in attachment_ids_tuple for attachment_id_int in attachment_info_int.keys()):
+                                                continue
                                             self.Moves.append(SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int, attachment_information_ext = attachment_info))
                             break
 
@@ -810,6 +812,8 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                                             self.Moves.append(SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int))
                                         elif attachment_info_int and attachment_info_ext:
                                             for attachment_ids_tuple, attachment_info in attachment_info_ext.items():
+                                                if any(attachment_id_int == attachment_id_ext for attachment_id_ext in attachment_ids_tuple for attachment_id_int in attachment_info_int.keys()):
+                                                    continue
                                                 self.Moves.append(SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int, attachment_information_ext = attachment_info))
                                 break
 
@@ -830,6 +834,8 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                                             self.Moves.append(SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int))
                                         elif attachment_info_int and attachment_info_ext:
                                             for attachment_ids_tuple, attachment_info in attachment_info_ext.items():
+                                                if any(attachment_id_int == attachment_id_ext for attachment_id_ext in attachment_ids_tuple for attachment_id_int in attachment_info_int.keys()):
+                                                    continue
                                                 self.Moves.append(SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int, attachment_information_ext = attachment_info))
                                 break
 
@@ -851,6 +857,8 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
                                             self.Moves.append(SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int))
                                         elif attachment_info_int and attachment_info_ext:
                                             for attachment_ids_tuple, attachment_info in attachment_info_ext.items():
+                                                if any(attachment_id_int == attachment_id_ext for attachment_id_ext in attachment_ids_tuple for attachment_id_int in attachment_info_int.keys()):
+                                                    continue
                                                 self.Moves.append(SwapShiftExternalMove(machine_info_int, machine_id, worker_id, machine_index_and_route[1], worker_route, machine_index_and_route[0], worker_index, order_item_id_int, order_item_id_ext, solution.dynamic_percentage_order[order_int], solution.dynamic_percentage_order[order_ext], attachment_information_int = attachment_info_int, attachment_information_ext = attachment_info))
 
                                 break               
