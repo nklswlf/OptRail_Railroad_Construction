@@ -69,7 +69,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-instances = ["Construction_a10_o107_m5_an57_ar12.json"]
+instances = ["Construction_a40_o476_m22_an215_ar51.json"]
 
 
 
@@ -93,7 +93,7 @@ neighboorhood_types_simulated_annealing = ['Replace_Shift_Worker', 'Replace_Shif
 
 neighboorhood_types_local_search = ['Swap_Shift_External', 'Insert_Shift']
 
-neighboorhood_types_local_search = ['Swap_Shift_External']
+neighboorhood_types_local_search = ['Insert_Shift']
 
 
 only_constructive = False
