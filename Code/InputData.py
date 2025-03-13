@@ -336,6 +336,16 @@ class InputData:
                 machine.add_data(self)
             for worker in self.workers:
                 worker.add_data(self)
+            for attachment in self.attachments:
+                attachment.add_data(self)
+
+            for order_item in self.order_items:
+                needed_attachment_types = order_item.equipment_types
+                for attachment_type in needed_attachment_types:
+                    all_attachment_types = [attachment.type for attachment in self.attachments]
+                    if attachment_type not in all_attachment_types:
+                        raise Exception(f"Missing attachment type '{attachment_type}' required for order item ID {order_item.id}.")
+
 
             self._average_transport_distance = sum(sum(row) for row in self._transport_routes) / (len(self._transport_routes)*len(self._transport_routes[0]))
             self._min_transport_distance = min(min(row) for row in self._transport_routes if any(row))            
@@ -633,6 +643,60 @@ class Attachment:
         self._id = int(json_data.get("ID", 0))
         self._year_of_manufacture = int(json_data.get("Baujahr", 0))
         self._type = int(json_data.get("Typ", 0))
+        self._possible_order_items = dict()  # Als Dictionary mit `order` als Key
+        self._possible_order_item_ids = dict()  # Als Dictionary mit `order` als Key
+        self._predecessors = dict()
+        self._predecessor_ids = dict()
+        self._successors = dict()
+        self._successor_ids = dict()
+
+
+    def add_data(self, input_data: InputData):
+
+        for order in input_data.orders:
+            self._possible_order_items[order] = []
+            self._possible_order_item_ids[order.order_number] = []
+
+
+        for order_item in input_data.order_items:
+            for order in input_data.orders:
+                if order_item.order_number == order.order_number:
+                    if self._type in order_item.equipment_types:
+                        self._possible_order_items[order].append(order_item)
+                        self._possible_order_item_ids[order.order_number].append(order_item.id)
+
+        all_order_items = [item for order_items in self._possible_order_items.values() for item in order_items]
+        
+        
+        for order_item_1 in all_order_items:
+            
+            if order_item_1 not in self._predecessors:
+                self._predecessors[order_item_1] = []
+                self._predecessor_ids[order_item_1.id] = []
+            if order_item_1 not in self._successors:
+                self._successors[order_item_1] = []
+                self._successor_ids[order_item_1.id] = []
+
+            for order_item_2 in all_order_items:
+                if order_item_1 != order_item_2:
+                    start_time_order_item_1 = (order_item_1.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+                    end_time_order_item_1 = (order_item_1.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+                    start_time_order_item_2 = (order_item_2.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+                    end_time_order_item_2 = (order_item_2.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+
+                    transport_distance = input_data._transport_routes_order_item[order_item_1.id][order_item_2.id]
+                    transport_time = transport_distance / input_data._transport_speed_kmh
+                    transport_time = transport_time / 24
+
+                    if start_time_order_item_1 >= end_time_order_item_2 + transport_time:
+                        self._predecessors[order_item_1].append(order_item_2)
+                        self._predecessor_ids[order_item_1.id].append(order_item_2.id)
+
+                    if start_time_order_item_2 >= end_time_order_item_1 + transport_time:
+                        self._successors[order_item_1].append(order_item_2)
+                        self._successor_ids[order_item_1.id].append(order_item_2.id)
+            
+        
 
     @property
     def id(self) -> int:
@@ -645,6 +709,31 @@ class Attachment:
     @property
     def type(self) -> int:
         return self._type
+    
+    @property
+    def possible_order_items(self) -> dict[int, List[int]]:
+        return self._possible_order_items
+    
+    @property
+    def possible_order_item_ids(self) -> dict[int, List[int]]:
+        return self._possible_order_item_ids
+    
+    @property
+    def predecessors(self) -> dict[int, List[int]]:
+        return self._predecessors
+    
+    @property
+    def successors(self) -> dict[int, List[int]]:
+        return self._successors
+    
+    @property
+    def predecessor_ids(self) -> dict[int, List[int]]:
+        return self._predecessor_ids
+    
+    @property
+    def successor_ids(self) -> dict[int, List[int]]:
+        return self._successor_ids
+    
 
     def __str__(self):
         return f"Attachment(ID: {self._id}, Type: {self._type}, Year of Manufacture: {self._year_of_manufacture})"
@@ -857,7 +946,7 @@ class Machine:
         return self._type
 
     @property
-    def default_drivers(self) -> List[str]:
+    def default_drivers(self) -> List[int]:
         return self._default_drivers
     
     @property

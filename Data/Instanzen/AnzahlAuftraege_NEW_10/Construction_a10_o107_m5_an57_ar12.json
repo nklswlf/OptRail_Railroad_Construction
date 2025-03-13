@@ -194,7 +194,7 @@
         {
             "ID": 0,
             "Baujahr": 2002,
-            "Typ": 15
+            "Typ": 0
         },
         {
             "ID": 1,
@@ -987,7 +987,10 @@
             "Dauer": 11,
             "Auftragsnummer": "3",
             "MaschinenTyp": 1,
-            "AnbaugeraeteTypen": [],
+            "AnbaugeraeteTypen": [
+                19,
+                19
+            ],
             "ArbeiterQualifikationen": [
                 9,
                 4
