@@ -69,7 +69,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-instances = ["Construction_a40_o476_m22_an215_ar51.json"]
+instances = ["Construction_a30_o355_m18_an148_ar42.json"]
 
 
 
@@ -89,11 +89,26 @@ neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace
                        'Swap_Shift_Worker', 'Swap_Shift_Machine', 'Swap_Shift_Attachment',
                        'Swap_Shift_External', 'Insert_Shift']
 
-neighboorhood_types_simulated_annealing = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Swap_Shift_Worker', 'Swap_Shift_Machine', 'Replace_Shift_Attachment', 'Swap_Shift_Attachment', 'Swap_Shift_External', 'Insert_Shift']
+neighboorhood_types_simulated_annealing = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 
+                                           'Swap_Shift_Worker', 'Swap_Shift_Machine', 
+                                           'Replace_Shift_Attachment', 'Swap_Shift_Attachment', 
+                                           'Swap_Shift_External', 'Insert_Shift']
 
 neighboorhood_types_local_search = ['Swap_Shift_External', 'Insert_Shift']
 
-neighboorhood_types_local_search = ['Insert_Shift']
+neighboorhood_types_simulated_annealing = ['Replace_Shift_Worker',"Replace_Shift_Machine",
+                                           'Swap_Shift_Worker', 'Swap_Shift_Machine'
+                                           ]
+
+
+neighboorhood_types_local_search = ['Replace_Shift_Worker',"Replace_Shift_Machine",
+                                           'Swap_Shift_Worker', 'Swap_Shift_Machine'
+                                           ]
+
+
+objectives = ["commute_distance", "transport_distance", "attachment_distance",
+              "worker_count", "machine_count", "attachment_count",
+              "dynamic_percentage", "driver_violation"]
 
 
 only_constructive = False
@@ -106,17 +121,15 @@ def main():
 
         solver = Solver(data, 3)
 
-        print(f"Regular Drivers Machine 1: {data.machines[0].default_drivers}")
-
 
         local_search = IterativeImprovement(inputData=data,
                                             neighborhoodTypes=neighboorhood_types_local_search)
 
         simulated_annealing_local_search = SimulatedAnnealingLocalSearch(inputData=data,
-                                                                        start_temp=10,
+                                                                        start_temp=100,
                                                                         min_temp=0.1,
                                                                         cooling_rate=0.95,
-                                                                        max_iterations= 50,
+                                                                        max_iterations= 30,
                                                                         neighborhoodTypesSA=neighboorhood_types_simulated_annealing,
                                                                         neighborhoodTypesLS=neighboorhood_types_local_search)
 
@@ -132,7 +145,7 @@ def main():
             solver.RunAlgorithm(
                 order_item_attractiveness_technique="balanced_greedy",
                 machine_attractiveness_technique="balanced_greedy",
-                algorithm=local_search
+                algorithm=simulated_annealing_local_search
             )
 
 

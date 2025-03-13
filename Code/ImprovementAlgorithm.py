@@ -261,7 +261,6 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
 
             for i in range(self.MaxIterations):
 
-
                 neighborhoodType = self.RNG.choice(self.NeighborhoodTypes)
                 neighborhood = self.Neighborhoods[neighborhoodType]
 
@@ -270,8 +269,59 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                 if move is None:
                     count['none'] += 1
                     continue
+                
+                print(f"Move Delta Details: {move.DeltaDetails}")
+                #values = list(move.DeltaDetails.values())
+                value = move.DeltaDetails["driver_violation"]
 
-                values = list(move.DeltaDetails.values())
+                if value < 0:
+                    count['dominates'] += 1
+                    pass
+                elif value > 0:
+                    count['dominated'] += 1
+                    prob = math.exp(-value / currentTemperature)
+                    random_number = self.RNG.random()
+
+                    if prob < random_number:
+                        continue
+
+
+                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
+                currentSolution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                self.EvaluationLogic.evaluate(currentSolution)
+                print(f"New solution: {currentSolution}")
+                feasible = currentSolution.feasibility_check()
+                if not feasible:
+                    raise Exception(f"Solution is not feasible after neighborhood {neighborhoodType}")
+                
+                added = self.ParetoSolutions.UpdateParetoFront(currentSolution)
+
+                if not added:
+                    fallback_counter += 1
+                    if fallback_counter % 100 == 0 and fallback:
+                        print("Fallback")
+                        fallbacks += 1
+                        #self.ParetoSolutions.PurgeParetoFront()
+
+
+                        #currentSolution = self.RNG.choice(self.ParetoSolutions.ParetoFront)
+
+            currentTemperature *= self.CoolingRate
+
+        print(f"Number of dominates: {count['dominates']}")
+        print(f"Number of dominated: {count['dominated']}")
+        print(f"Number of non-dominated: {count['non-dominated']}")
+        print(f"Number of none: {count['none']}")
+
+
+                
+
+        return self.ParetoSolutions.ShowFront()
+    
+
+
+
+'''
 
                 all_less_equal_zero = all(v <= 0 for v in values)
                 all_greater_equal_zero = all(v >= 0 for v in values)
@@ -324,7 +374,6 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                 else:
                     count['non-dominated'] += 1
                     print(f"Delta: {move.Delta}")
-                    print(f"Delta Details: {move.DeltaDetails}")
                     print("non-dominated")
 
   
@@ -351,7 +400,7 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
 
                 print(f"Lenght of Pareto Front: {len(self.ParetoSolutions.ParetoFront)}")
                 if energy_strategy == 'deltas':
-                    if len(self.ParetoSolutions.ParetoFront) > 100:
+                    if len(self.ParetoSolutions.ParetoFront) > 2000:
                         energy_strategy = 'pareto'
 
 
@@ -364,8 +413,4 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
         print(f"Number of fallbacks: {fallbacks}")
         self.ParetoSolutions.PurgeParetoFront()
         print(f"Number of Pareto solutions: {len(self.ParetoSolutions.ParetoFront)}")
-
-        return self.ParetoSolutions.ShowFront()
-    
-
-
+        '''

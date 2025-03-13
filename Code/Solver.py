@@ -52,6 +52,7 @@ class Solver:
 
         starttime = time.time()
         startSolution = self.ConstructionPhase(order_item_attractiveness_technique, machine_attractiveness_technique)
+        self.ParetoSolutions.UpdateParetoFront(startSolution)
 
         bestSolution = self.ImprovementPhase(startSolution, algorithm)
 
