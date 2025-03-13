@@ -44,7 +44,20 @@ Number of attachments: 6
 
 
 
-
+Best found Solution.
+Instance: a10_o128_m6_an51_ar13
+Number of finished orders: 7
+Number of semi-finished orders: 2
+Number of not started orders: 1
+Dynamic percentage: 8.029411764705882
+Number of finished order items: 85
+Driver violation: 20
+Commute distance: 7500.57
+Transport distance: 672.01
+Transport distance attachment: 74.15
+Number of workers: 9
+Number of machines: 6
+Number of attachments: 6
 
 
 
@@ -139,6 +152,25 @@ Transport distance attachment: 310.81
 Number of workers: 31
 Number of machines: 13
 Number of attachments: 12
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
