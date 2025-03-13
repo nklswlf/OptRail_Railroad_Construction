@@ -232,7 +232,7 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
 
         print(f'\nInitial solution: \n{solution}')
 
-        local_search_on = True
+        local_search_on = False
         if local_search_on:
             local_search = IterativeImprovement(self.InputData, self.NeighborhoodEvaluationStrategy, self.NeighborhoodTypesLS)
             local_search.Initialize(self.EvaluationLogic, self.ParetoSolutions, self.RNG)
@@ -345,6 +345,8 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                         print("Fallback")
                         fallbacks += 1
                         #self.ParetoSolutions.PurgeParetoFront()
+
+
                         currentSolution = self.RNG.choice(self.ParetoSolutions.ParetoFront)
 
                 print(f"Lenght of Pareto Front: {len(self.ParetoSolutions.ParetoFront)}")
