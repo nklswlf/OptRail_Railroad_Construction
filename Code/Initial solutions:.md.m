@@ -14,6 +14,19 @@ Number of machines: 4
 Number of attachments: 8
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 Initial solution: 
 Instance: a10_o128_m6_an51_ar13
 Number of finished orders: 7

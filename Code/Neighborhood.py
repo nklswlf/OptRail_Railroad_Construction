@@ -169,6 +169,8 @@ class OutputNeighborhood(BaseNeighborhood):
 
                 print(bestNeighborhoodSolution)
 
+                print(bestNeighborhoodMove.DeltaDetails)
+
                 #self.solutionPool.AddSolution(bestNeighborhoodSolution)
 
                 #print(f"Best Neighborhood Solution: \n{bestNeighborhoodSolution}")
@@ -242,7 +244,6 @@ class InsertShiftMove(BaseMove):
 
         else:
             self.NumberOfAttachments = 0
-
 
 class InsertShiftNeighborhood(OutputNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
@@ -621,7 +622,8 @@ class InsertShiftNeighborhood(OutputNeighborhood):
             attachment_route_plan[getattr(move, f"AttachmentID_{index}")] = getattr(move, f"AttachmentRoute_{index}")
 
         return worker_route_plan, machine_route_plan, attachment_route_plan
-
+    
+    
         
 class SwapShiftExternalMove(BaseMove):
     
