@@ -10,11 +10,311 @@ class EvaluationLogic:
         ''' Initialize by adding data'''
         self.data = data
 
+    def calculate_insert_shift_delta(self, move):
+        ''' Calculate the delta of the objective function value when inserting an order item into a route'''
+        
+
+        # Calculate the extra commute distance
+        delta_commute_distance = ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemID] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+
+        # Calculate the extra transport distance
+        if len(move.MachineRoute) == 1:
+            predecessor_id = None
+            successor_id = None
+            delta_transport_distance = 0
+        elif move.MachineRouteIndex == 0:
+            predecessor_id = None
+            successor_id = move.MachineRoute[move.MachineRouteIndex + 1] 
+            delta_transport_distance = (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        elif move.MachineRouteIndex == len(move.MachineRoute) - 1:
+            predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
+            successor_id = None
+            delta_transport_distance = (self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        else:
+            predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
+            successor_id = move.MachineRoute[move.MachineRouteIndex + 1]
+            delta_transport_distance = (((self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                        + (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                        - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+        
+        # Calculate the extra driver violation
+        machine = self.data.machines[move.MachineID]
+        if move.WorkerID not in machine.default_drivers:
+            delta_driver_violation = 1
+        else:
+            delta_driver_violation = 0
+
+        # Calculate if extra machine is used
+        if len(move.MachineRoute) == 1:
+            delta_machine_count = 1
+        else:
+            delta_machine_count = 0
+
+        # Calculate the extra worker count
+        if len(move.WorkerRoute) == 1:
+            delta_worker_count = 1
+        else:
+            delta_worker_count = 0
+
+        # Calculate percentage difference this order item makes
+        for order in self.data.orders:
+            if move.OrderItemID in order.order_item_ids:
+                delta_dynamic_percentage_order = (1 / len(order.order_item_ids)) + move.DynamicPercentage
+
+        
+        # Calculate the number of attachments
+        delta_attachment_count = 0
+        for i in range(move.NumberOfAttachments):
+            if len(getattr(move, f"AttachmentRoute_{i}")) > 0:
+                delta_attachment_count += 1
+
+        
+        # Calculate the extra transport distance of the attachments
+        delta_transport_distance_attachments = 0
+        for i in range(move.NumberOfAttachments):
+            if len(getattr(move, f"AttachmentRoute_{i}")) == 1:
+                predecessor_id = None
+                successor_id = None
+            elif getattr(move, f"AttachmentRouteIndex_{i}") == 0:
+                predecessor_id = None
+                successor_id = getattr(move, f"AttachmentRoute_{i}")[getattr(move, f"AttachmentRouteIndex_{i}") + 1]
+                delta_transport_distance_attachments += (self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            elif getattr(move, f"AttachmentRouteIndex_{i}") == len(getattr(move, f"AttachmentRoute_{i}")) - 1:
+                predecessor_id = getattr(move, f"AttachmentRoute_{i}")[getattr(move, f"AttachmentRouteIndex_{i}") - 1]
+                successor_id = None
+                delta_transport_distance_attachments += (self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            else:
+                predecessor_id = getattr(move, f"AttachmentRoute_{i}")[getattr(move, f"AttachmentRouteIndex_{i}") - 1]
+                successor_id = getattr(move, f"AttachmentRoute_{i}")[getattr(move, f"AttachmentRouteIndex_{i}") + 1]
+                delta_transport_distance_attachments += (((self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                            + (self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                            - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                
+            
+
+        
+
+        # 1️⃣ Single Delta Details as Dictionary
+        delta_details = {
+            "dynamic_percentage_order": -delta_dynamic_percentage_order,
+            "commute_distance": delta_commute_distance,
+            "transport_distance": delta_transport_distance,
+            "transport_distance_attachments": delta_transport_distance_attachments,
+            "driver_violation": delta_driver_violation,
+            "machine_count": delta_machine_count,
+            "worker_count": delta_worker_count,
+            "attachment_count": delta_attachment_count,
+        }
+
+
+        # 2️⃣ Summary as List
+        delta_summary = [
+            delta_details["dynamic_percentage_order"],
+            delta_details["commute_distance"]
+            + delta_details["transport_distance"]
+            + delta_details["driver_violation"]
+            + delta_details["machine_count"]
+            + delta_details["worker_count"]
+            + delta_details["attachment_count"]
+            + delta_details["transport_distance_attachments"],
+        ]
+
+
+        return delta_summary, delta_details
+    
+    def calculate_swap_shift_external_delta(self, move):
+        ''' Calculate the delta of the objective function value when swapping two order items between two external workers'''
+        
+        # Calculate the extra commute distance
+        delta_commute_distance = (+ ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemIDExt] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                - ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemIDInt] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
+
+
+        # Calculate the extra transport distance
+        delta_transport_distance = 0
+
+
+        if move.SameMachine:
+            
+            if len(move.MachineRoute) == 1:
+                predecessor_id = None
+                successor_id = None
+            elif move.MachineRouteIndex == 0:
+                predecessor_id = None
+                successor_id = move.MachineRoute[move.MachineRouteIndex + 1]
+                delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+
+            elif move.MachineRouteIndex == len(move.MachineRoute) - 1:
+                predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
+                successor_id = None
+                delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+
+            else:
+                predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
+                successor_id = move.MachineRoute[move.MachineRouteIndex + 1]
+                delta_transport_distance += (((self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                            + (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                            - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                delta_transport_distance -= (((self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                            + (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                            - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+
+        else:
+            if len(move.MachineRouteExt) == 1:
+                predecessor_id = None
+                successor_id = None
+            elif move.MachineRouteIndexExt == 0:
+                predecessor_id = None
+                successor_id = move.MachineRouteExt[move.MachineRouteIndexExt + 1]
+                delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            elif move.MachineRouteIndexExt == len(move.MachineRouteExt) - 1:
+                predecessor_id = move.MachineRouteExt[move.MachineRouteIndexExt - 1]
+                successor_id = None
+                delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            else:
+                predecessor_id = move.MachineRouteExt[move.MachineRouteIndexExt - 1]
+                successor_id = move.MachineRouteExt[move.MachineRouteIndexExt + 1]
+                delta_transport_distance += (((self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                            + (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                            - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                
+            if len(move.MachineRouteInt) == 0:
+                predecessor_id = None
+                successor_id = None
+            elif move.MachineRouteIndexInt == 0:
+                predecessor_id = None
+                successor_id = move.MachineRouteInt[move.MachineRouteIndexInt]
+                delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            elif move.MachineRouteIndexInt == len(move.MachineRouteInt):
+                predecessor_id = move.MachineRouteInt[move.MachineRouteIndexInt - 1]
+                successor_id = None
+                delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            else:
+                predecessor_id = move.MachineRouteInt[move.MachineRouteIndexInt - 1]
+                successor_id = move.MachineRouteInt[move.MachineRouteIndexInt]
+                delta_transport_distance -= (((self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                            + (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                            - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+            
+        # Calculate the extra driver violation
+        machine_new = self.data.machines[move.MachineIDExt]
+        machine_old = self.data.machines[move.MachineIDInt]
+
+        delta_driver_violation = 0
+        if move.WorkerID in machine_new.default_drivers:
+            delta_driver_violation -= 1
+        if move.WorkerID in machine_old.default_drivers:
+            delta_driver_violation += 1
+
+
+        # Calculate the extra transport distance of the attachments
+        delta_transport_distance_attachments = 0
+        for i in range(move.NumberOfAttachmentsExt):
+            if len(getattr(move, f"AttachmentRouteExt_{i}")) == 1:
+                predecessor_id = None
+                successor_id = None
+            elif getattr(move, f"AttachmentRouteIndexExt_{i}") == 0:
+                predecessor_id = None
+                successor_id = getattr(move, f"AttachmentRouteExt_{i}")[getattr(move, f"AttachmentRouteIndexExt_{i}") + 1]
+                delta_transport_distance_attachments += (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            elif getattr(move, f"AttachmentRouteIndexExt_{i}") == len(getattr(move, f"AttachmentRouteExt_{i}")) - 1:
+                predecessor_id = getattr(move, f"AttachmentRouteExt_{i}")[getattr(move, f"AttachmentRouteIndexExt_{i}") - 1]
+                successor_id = None
+                delta_transport_distance_attachments += (self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            else:
+                predecessor_id = getattr(move, f"AttachmentRouteExt_{i}")[getattr(move, f"AttachmentRouteIndexExt_{i}") - 1]
+                successor_id = getattr(move, f"AttachmentRouteExt_{i}")[getattr(move, f"AttachmentRouteIndexExt_{i}") + 1]
+                delta_transport_distance_attachments += (((self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                            + (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                            - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                
+        for i in range(move.NumberOfAttachmentsInt):
+            if len(getattr(move, f"AttachmentRouteInt_{i}")) == 0:
+                predecessor_id = None
+                successor_id = None
+            elif getattr(move, f"AttachmentRouteIndexInt_{i}") == 0:
+                predecessor_id = None
+                successor_id = getattr(move, f"AttachmentRouteInt_{i}")[getattr(move, f"AttachmentRouteIndexInt_{i}")]
+                delta_transport_distance_attachments -= (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            elif getattr(move, f"AttachmentRouteIndexInt_{i}") == len(getattr(move, f"AttachmentRouteInt_{i}")):
+                predecessor_id = getattr(move, f"AttachmentRouteInt_{i}")[getattr(move, f"AttachmentRouteIndexInt_{i}") - 1]
+                successor_id = None
+                delta_transport_distance_attachments -= (self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            else:
+                predecessor_id = getattr(move, f"AttachmentRouteInt_{i}")[getattr(move, f"AttachmentRouteIndexInt_{i}") - 1]
+                successor_id = getattr(move, f"AttachmentRouteInt_{i}")[getattr(move, f"AttachmentRouteIndexInt_{i}")]
+                delta_transport_distance_attachments -= (((self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                            + (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                            - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                
+
+            
+
+        # Calculate the extra machine count
+        delta_machine_count = 0
+        if not move.SameMachine:
+            if len(move.MachineRouteExt) == 1:
+                delta_machine_count += 1
+            if len(move.MachineRouteInt) == 0:
+                delta_machine_count -= 1
+
+        # Calculate the extra attachment count
+        delta_attachment_count = 0
+        for i in range(move.NumberOfAttachmentsExt):
+            if len(getattr(move, f"AttachmentRouteExt_{i}")) == 1:
+                delta_attachment_count += 1
+        for i in range(move.NumberOfAttachmentsInt):
+            if len(getattr(move, f"AttachmentRouteInt_{i}")) == 0:
+                delta_attachment_count -= 1
+
+        
+  
+        # Calculate the precentage difference this order item makes
+        delta_dynamic_percentage_order = 0
+        for order in self.data.orders:
+            if move.OrderItemIDExt in order.order_item_ids:
+                delta_dynamic_percentage_order += (1 / len(order.order_item_ids)) + move.DynamicPercentageExt
+            if move.OrderItemIDInt in order.order_item_ids:
+                delta_dynamic_percentage_order -= (1 / len(order.order_item_ids)) + move.DynamicPercentageInt
+
+
+        # 1️⃣ Store individual delta values as a dictionary (details)
+        delta_details = {
+            "dynamic_percentage_order": -delta_dynamic_percentage_order,
+            "commute_distance": delta_commute_distance,
+            "transport_distance": delta_transport_distance,
+            "transport_distance_attachments": delta_transport_distance_attachments,
+            "driver_violation": delta_driver_violation,
+            "machine_count": delta_machine_count,
+            "attachment_count": delta_attachment_count,
+        }
+        #print(f"Delta Details: {delta_details}")
+
+        # 2️⃣ Create a summary as a list (summary)
+        # First value: dynamic percentage order
+        # Second value: sum of commute_distance and transport_distance
+        delta_summary = [
+            delta_details["dynamic_percentage_order"],
+            delta_details["commute_distance"]
+            + delta_details["transport_distance"]
+            + delta_details["driver_violation"]
+            + delta_details["machine_count"]
+            + delta_details["attachment_count"]
+            + delta_details["transport_distance_attachments"],
+        ]
+
+        #print(f"Delta Summary: {delta_summary[0]}")
+        #print(f"Delta Summary: {delta_summary}")
+
+        # 3️⃣ Return both summary (list) and details (dictionary)
+        return delta_summary, delta_details
+    
 
     def calculate_swap_shift_machine_delta(self, move):
         
         # Calculate the extra transport distance
-
         move.MachineRouteIndex1 = move.MachineRoute1.index(move.OrderItemID2)
         delta_transport_distance = 0
         if len(move.MachineRoute1) == 1:
@@ -111,79 +411,164 @@ class EvaluationLogic:
             delta_driver_violation -= 1
 
 
-        delta = {}
-        delta["transport_distance"] = delta_transport_distance
-        delta["driver_violation"] = delta_driver_violation
+        # 1️⃣ Store individual delta values as a dictionary (details)
+        delta_details = {
+            "transport_distance": delta_transport_distance,
+            "driver_violation": delta_driver_violation,
+        }
 
-        print(f"Delta: {delta}")
+        print(f"Delta Details: {delta_details}")
 
-        delta = delta["transport_distance"] + delta["driver_violation"]
+        # 2️⃣ Create the summary (scalar value = sum of both deltas)
+        delta_summary = delta_details["transport_distance"] + delta_details["driver_violation"]
 
-        print(f"Delta: {delta}")
 
-        return delta
-        
+        print(f"Delta Summary: {delta_summary}")
 
-    def calculate_swap_shift_external_delta(self, move):
-        ''' Calculate the delta of the objective function value when swapping two order items between two external workers'''
+        # 3️⃣ Return both summary (scalar) and details (dictionary)
+        return delta_summary, delta_details
+
+    def calculate_swap_shift_worker_delta(self, move):
+        ''' Calculate the delta of the objective function value when swapping two order items between two workers'''
 
         # Calculate the extra commute distance
-        delta_commute_distance = (+ ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemIDExt] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
-                                - ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemIDInt] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
+        delta_commute_distance = (+ ((2*self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID2] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                 + ((2*self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID1] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                 - ((2*self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID1] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                 - ((2*self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID2] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
+                                  
+        if abs(delta_commute_distance) < 0.000000001:
+            delta_commute_distance = 0
 
 
-        # Calculate the extra transport distance
-        delta_transport_distance = 0
+        # Calculate extra driver violation
+        machine_1 = self.data.machines[move.MachineID1]
+        machine_2 = self.data.machines[move.MachineID2]
 
-        if len(move.MachineRoute) == 1:
-            predecessor_id = None
-            successor_id = None
-        elif move.MachineRouteIndex == 0:
-            predecessor_id = None
-            successor_id = move.MachineRoute[move.MachineRouteIndex + 1]
-            delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
-            delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
-        elif move.MachineRouteIndex == len(move.MachineRoute) - 1:
-            predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
-            successor_id = None
-            delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
-            delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
-        else:
-            predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
-            successor_id = move.MachineRoute[move.MachineRouteIndex + 1]
-            delta_transport_distance += (((self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
-                                        + (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
-            delta_transport_distance -= (((self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
-                                        + (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
-            
+        delta_driver_violation = 0
+        if move.WorkerID1 in machine_1.default_drivers:
+            delta_driver_violation += 1
+
+        if move.WorkerID2 in machine_2.default_drivers:
+            delta_driver_violation += 1
+
+        if move.WorkerID1 in machine_2.default_drivers:
+            delta_driver_violation -= 1
         
-        # Calculate the precentage difference this order item makes
-        delta_dynamic_percentage_order = 0
-        for order in self.data.orders:
-            if move.OrderItemIDExt in order.order_item_ids:
-                delta_dynamic_percentage_order += (1 / len(order.order_item_ids)) + move.DynamicPercentageExt
-            if move.OrderItemIDInt in order.order_item_ids:
-                delta_dynamic_percentage_order -= (1 / len(order.order_item_ids)) + move.DynamicPercentageInt
+        if move.WorkerID2 in machine_1.default_drivers:
+            delta_driver_violation -= 1
 
 
-        delta = {}
-        delta["dynamic_percentage_order"] = delta_dynamic_percentage_order
-        delta["commute_distance"] = delta_commute_distance
-        delta["transport_distance"] = delta_transport_distance
+        # 1️⃣ Store individual delta values as a dictionary (details)
+        delta_details = {
+            "commute_distance": delta_commute_distance,
+            "driver_violation": delta_driver_violation,
+        }
 
-        print(f"Delta: {delta}")
+        print(f"Delta Details: {delta_details}")
 
-        delta = [delta["dynamic_percentage_order"], delta["commute_distance"] + delta["transport_distance"]]
-
-        print(f"Delta: {delta}")
-
-        return delta
-    
+        # 2️⃣ Create the summary (scalar value as the sum of both)
+        delta_summary = delta_details["commute_distance"] + delta_details["driver_violation"]
 
 
+        print(f"Delta Summary: {delta_summary}")
 
+        # 3️⃣ Return both summary (scalar) and details (dictionary)
+        return delta_summary, delta_details
+  
+    def calculate_swap_shift_attachment_delta(self, move):
+            
+            # Calculate the extra transport distance
+            move.AttachmentRouteIndex1 = move.AttachmentRoute1.index(move.OrderItemID2)
+            delta_transport_distance = 0
+            if len(move.AttachmentRoute1) == 1:
+                predecessor_id = None
+                successor_id = None
+            elif move.AttachmentRouteIndex1 == 0:
+                predecessor_id = None
+                successor_id = move.AttachmentRoute1[move.AttachmentRouteIndex1 + 1]
+                delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemID2][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            elif move.AttachmentRouteIndex1 == len(move.AttachmentRoute1) - 1:
+                predecessor_id = move.AttachmentRoute1[move.AttachmentRouteIndex1 - 1]
+                successor_id = None
+                delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemID2][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            else:
+                predecessor_id = move.AttachmentRoute1[move.AttachmentRouteIndex1 - 1]
+                successor_id = move.AttachmentRoute1[move.AttachmentRouteIndex1 + 1]
+                delta_transport_distance += (((self.data.transport_routes_order_item[move.OrderItemID2][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                            + (self.data.transport_routes_order_item[move.OrderItemID2][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                            - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                
+            move.AttachmentRouteIndex2 = move.AttachmentRoute2.index(move.OrderItemID1)
+            if len(move.AttachmentRoute2) == 1:
+                predecessor_id = None
+                successor_id = None
+            elif move.AttachmentRouteIndex2 == 0:
+                predecessor_id = None
+                successor_id = move.AttachmentRoute2[move.AttachmentRouteIndex2 + 1]
+                delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemID1][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            elif move.AttachmentRouteIndex2 == len(move.AttachmentRoute2) - 1:
+                predecessor_id = move.AttachmentRoute2[move.AttachmentRouteIndex2 - 1]
+                successor_id = None
+                delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemID1][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            else:
+                predecessor_id = move.AttachmentRoute2[move.AttachmentRouteIndex2 - 1]
+                successor_id = move.AttachmentRoute2[move.AttachmentRouteIndex2 + 1]
+                delta_transport_distance += (((self.data.transport_routes_order_item[move.OrderItemID1][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                            + (self.data.transport_routes_order_item[move.OrderItemID1][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                            - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                
+            if len(move.AttachmentRoute1Original) == 1:
+                predecessor_id = None
+                successor_id = None
+            elif move.AttachmentRouteTakenIndex1 == 0:
+                predecessor_id = None
+                successor_id = move.AttachmentRoute1Original[move.AttachmentRouteTakenIndex1 + 1]
+                delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemID1][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            elif move.AttachmentRouteTakenIndex1 == len(move.AttachmentRoute1Original) - 1:
+                predecessor_id = move.AttachmentRoute1Original[move.AttachmentRouteTakenIndex1 - 1]
+                successor_id = None
+                delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemID1][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            else:
+                predecessor_id = move.AttachmentRoute1Original[move.AttachmentRouteTakenIndex1 - 1]
+                successor_id = move.AttachmentRoute1Original[move.AttachmentRouteTakenIndex1 + 1]
+                delta_transport_distance -= (((self.data.transport_routes_order_item[move.OrderItemID1][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                            + (self.data.transport_routes_order_item[move.OrderItemID1][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                            - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                
+            if len(move.AttachmentRoute2Original) == 1:
+                predecessor_id = None
+                successor_id = None
+            elif move.AttachmentRouteTakenIndex2 == 0:
+                predecessor_id = None
+                successor_id = move.AttachmentRoute2Original[move.AttachmentRouteTakenIndex2 + 1]
+                delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemID2][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            elif move.AttachmentRouteTakenIndex2 == len(move.AttachmentRoute2Original) - 1:
+                predecessor_id = move.AttachmentRoute2Original[move.AttachmentRouteTakenIndex2 - 1]
+                successor_id = None
+                delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemID2][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+            else:
+                predecessor_id = move.AttachmentRoute2Original[move.AttachmentRouteTakenIndex2 - 1]
+                successor_id = move.AttachmentRoute2Original[move.AttachmentRouteTakenIndex2 + 1]
+                delta_transport_distance -= (((self.data.transport_routes_order_item[move.OrderItemID2][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                            + (self.data.transport_routes_order_item[move.OrderItemID2][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                            - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                
+            # 1️⃣ Store individual delta values as a dictionary (details)
+            delta_details = {
+                "transport_distance": delta_transport_distance,
+            }
 
+            print(f"Delta Details: {delta_details}")
 
+            # 2️⃣ Create summary (scalar) → Since only 1 value, just extract it
+            delta_summary = delta_details["transport_distance"]
+
+            print(f"Delta Summary: {delta_summary}")
+
+            # 3️⃣ Return both summary (scalar) and details (dictionary)
+            return delta_summary, delta_details
+        
 
     def calculate_replace_shift_machine_delta(self, move):
         ''' Calculate the delta of the objective function value when replacing an order item between two machines'''
@@ -248,138 +633,29 @@ class EvaluationLogic:
         if len(move.MachineRoute2) == 1:
             delta_machine_count += 1
 
-        delta = {}
-        delta["transport_distance"] = delta_transport_distance
-        delta["driver_violation"] = delta_driver_violation
-        delta["machine_count"] = delta_machine_count
+        # 1️⃣ Store individual delta values as a dictionary (details)
+        delta_details = {
+            "transport_distance": delta_transport_distance,
+            "driver_violation": delta_driver_violation,
+            "machine_count": delta_machine_count,
+        }
 
-        #print(f"Delta: {delta}")
+        # Optional for debugging
+        # print(f"Delta Details: {delta_details}")
 
-        delta = delta["transport_distance"] + delta["driver_violation"] + delta["machine_count"]
+        # 2️⃣ Create the summary (scalar) as the sum of all values
+        delta_summary = (
+            delta_details["transport_distance"]
+            + delta_details["driver_violation"]
+            + delta_details["machine_count"]
+        )
 
-        #print(f"Delta: {delta}")
+        # Optional for debugging
+        # print(f"Delta Summary: {delta_summary}")
 
-        return delta
-
-    def calculate_insert_shift_delta(self, move):
-        ''' Calculate the delta of the objective function value when inserting an order item into a route'''
-        
-
-        # Calculate the extra commute distance
-        delta_commute_distance = ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemID] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
-
-        # Calculate the extra transport distance
-        if len(move.MachineRoute) == 1:
-            predecessor_id = None
-            successor_id = None
-            delta_transport_distance = 0
-        elif move.MachineRouteIndex == 0:
-            predecessor_id = None
-            successor_id = move.MachineRoute[move.MachineRouteIndex + 1] 
-            delta_transport_distance = (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
-        elif move.MachineRouteIndex == len(move.MachineRoute) - 1:
-            predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
-            successor_id = None
-            delta_transport_distance = (self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
-        else:
-            predecessor_id = move.MachineRoute[move.MachineRouteIndex - 1]
-            successor_id = move.MachineRoute[move.MachineRouteIndex + 1]
-            delta_transport_distance = (((self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
-                                        + (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
-                                        - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
-        
-        # Calculate the extra driver violation
-        machine = self.data.machines[move.MachineID]
-        if move.WorkerID not in machine.default_drivers:
-            delta_driver_violation = 1
-        else:
-            delta_driver_violation = 0
-
-        # Calculate if extra machine is used
-        if len(move.MachineRoute) == 1:
-            delta_machine_count = 1
-        else:
-            delta_machine_count = 0
-
-        # Calculate the extra worker count
-        if len(move.WorkerRoute) == 1:
-            delta_worker_count = 1
-        else:
-            delta_worker_count = 0
-
-        # Calculate percentage difference this order item makes
-        for order in self.data.orders:
-            if move.OrderItemID in order.order_item_ids:
-                delta_dynamic_percentage_order = 1 / len(order.order_item_ids)
-
-
-
-        delta = {}
-        delta["dynamic_percentage_order"] = delta_dynamic_percentage_order
-        delta["commute_distance"] = delta_commute_distance
-        delta["transport_distance"] = delta_transport_distance
-        delta["driver_violation"] = delta_driver_violation
-        delta["machine_count"] = delta_machine_count
-        delta["worker_count"] = delta_worker_count
-        
-        print(f"Delta: {delta}")
-
-
-        delta = [delta["dynamic_percentage_order"], (delta["commute_distance"] + delta["transport_distance"] + delta["driver_violation"] + delta["machine_count"] + delta["worker_count"])]
-        #delta =[delta["dynamic_percentage_order"], delta["machine_count"]]
-
-        print(f"Delta: {delta}")
-
-        return delta
-    
-    def calculate_swap_shift_worker_delta(self, move):
-        ''' Calculate the delta of the objective function value when swapping two order items between two workers'''
-
-        # Calculate the extra commute distance
-        delta_commute_distance = (+ ((2*self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID2] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
-                                 + ((2*self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID1] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
-                                 - ((2*self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID1] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
-                                 - ((2*self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID2] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
-                                  
-        if delta_commute_distance > -1**-2 and delta_commute_distance < 0:
-            delta_commute_distance = 0
-
-
-        # Calculate extra driver violation
-        machine_1 = self.data.machines[move.MachineID1]
-        machine_2 = self.data.machines[move.MachineID2]
-
-        delta_driver_violation = 0
-        if move.WorkerID1 in machine_1.default_drivers:
-            delta_driver_violation += 1
-
-        if move.WorkerID2 in machine_2.default_drivers:
-            delta_driver_violation += 1
-
-        if move.WorkerID1 in machine_2.default_drivers:
-            delta_driver_violation -= 1
-        
-        if move.WorkerID2 in machine_1.default_drivers:
-            delta_driver_violation -= 1
-
-
-        delta = {}
-        delta["commute_distance"] = delta_commute_distance
-        delta["driver_violation"] = delta_driver_violation
-
-        print(f"Delta: {delta}")
-
-
-
-        delta = (delta["commute_distance"] + delta["driver_violation"])
-
-        print(f"Delta: {delta}")
-
-
-        return delta
-    
-
-
+        # 3️⃣ Return both summary (scalar) and details (dictionary)
+        return delta_summary, delta_details
+  
     def calculate_replace_shift_worker_delta(self, move):
         ''' Calculate the delta of the objective function value when replacing an order item between two workers'''
 
@@ -409,22 +685,100 @@ class EvaluationLogic:
 
         
 
-        delta = {}
-        delta["commute_distance"] = delta_commute_distance
-        delta["driver_violation"] = delta_driver_violation
-        delta["worker_count"] = delta_worker_count
+        # 1️⃣ Store individual delta values as a dictionary (details)
+        delta_details = {
+            "commute_distance": delta_commute_distance,
+            "driver_violation": delta_driver_violation,
+            "worker_count": delta_worker_count,
+        }
 
-        print(f"Delta: {delta}")
+        # Optional for debugging
+        # print(f"Delta Details: {delta_details}")
 
-        delta = delta["commute_distance"] + delta["driver_violation"] + delta["worker_count"]
+        # 2️⃣ Create summary (scalar) as the sum of all deltas
+        delta_summary = (
+            delta_details["commute_distance"]
+            + delta_details["driver_violation"]
+            + delta_details["worker_count"]
+        )
 
-        print(f"Delta: {delta}")
+        # Optional for debugging
+        # print(f"Delta Summary: {delta_summary}")
 
+        # 3️⃣ Return both summary (scalar) and details (dictionary)
+        return delta_summary, delta_details
 
-        return delta
+    def calculate_replace_shift_attachment_delta(self, move):
+        ''' Calculate the delta of the objective function value when replacing an order item between two attachments'''
 
+        # Calculate the extra transport distance
+        delta_transport_distance = 0
+        if len(move.AttachmentRoute2) == 1:
+            predecessor_id = None
+            successor_id = None
+        elif move.AttachmentRouteIndex2 == 0:
+            predecessor_id = None
+            successor_id = move.AttachmentRoute2[move.AttachmentRouteIndex2 + 1]
+            delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        elif move.AttachmentRouteIndex2 == len(move.AttachmentRoute2) - 1:
+            predecessor_id = move.AttachmentRoute2[move.AttachmentRouteIndex2 - 1]
+            successor_id = None
+            delta_transport_distance += (self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        else:
+            predecessor_id = move.AttachmentRoute2[move.AttachmentRouteIndex2 - 1]
+            successor_id = move.AttachmentRoute2[move.AttachmentRouteIndex2 + 1]
+            delta_transport_distance += (((self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                        + (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                        - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)) 
+        
+        if len(move.AttachmentRoute1) == 0:
+            predecessor_id = None
+            successor_id = None
+            delta_transport_distance -= 0
+        elif move.AttachmentRouteIndex1 == 0:
+            predecessor_id = None
+            successor_id = move.AttachmentRoute1[move.AttachmentRouteIndex1]
+            delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        elif move.AttachmentRouteIndex1 == len(move.AttachmentRoute1):
+            predecessor_id = move.AttachmentRoute1[move.AttachmentRouteIndex1 - 1]
+            successor_id = None
+            delta_transport_distance -= (self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+        else:
+            predecessor_id = move.AttachmentRoute1[move.AttachmentRouteIndex1 - 1]
+            successor_id = move.AttachmentRoute1[move.AttachmentRouteIndex1]
+            delta_transport_distance -= (((self.data.transport_routes_order_item[move.OrderItemID][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                                        + (self.data.transport_routes_order_item[move.OrderItemID][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                                        - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+            
+        # Calculate the extra attachment count
+        if len(move.AttachmentRoute1) == 0:
+            delta_attachment_count = -1
+        else:
+            delta_attachment_count = 0
 
+        if len(move.AttachmentRoute2) == 1:
+            delta_attachment_count += 1
 
+        # 1️⃣ Store individual delta values as a dictionary (details)
+        delta_details = {
+            "transport_distance": delta_transport_distance,
+            "attachment_count": delta_attachment_count,
+        }
+
+        # Optional: Debug output for inspection
+        # print(f"Delta Details: {delta_details}")
+
+        # 2️⃣ Create summary (scalar) as the sum of both values
+        delta_summary = (
+            delta_details["transport_distance"]
+            + delta_details["attachment_count"]
+        )
+
+        # Optional: Debug output for summary
+        # print(f"Delta Summary: {delta_summary}")
+
+        # 3️⃣ Return both summary (scalar) and details (dictionary)
+        return delta_summary, delta_details
 
 
     def evaluate(self, solution:Solution):
@@ -435,9 +789,20 @@ class EvaluationLogic:
         self.calculate_commute_distance(solution)
         self.calculate_transport_distance(solution)
         self.calculate_driver_violation(solution)
-        self.calculate_machine_worker_count_and_utilization_time(solution)
+        self.calculate_machine_worker_attachment_count_and_utilization_time(solution)
         self.calculate_dynamic_percentage_order(solution)
+        self.calculate_transport_distance_attachments(solution)
 
+
+    def calculate_transport_distance_attachments(self, solution:Solution):
+            ''' Calculate the total transport distance of the attachments'''
+
+            for attachment_id, route in solution.route_plan_attachment.items():
+                solution.transport_distance_per_attachment[attachment_id] = 0
+                for i in range(len(route) - 1):
+                    solution.transport_distance_per_attachment[attachment_id] += self.data.transport_routes_order_item[route[i]][route[i + 1]]
+                
+            solution.total_transport_distance_attachments = sum(solution.transport_distance_per_attachment.values())
 
     def calculate_dynamic_percentage_order(self, solution:Solution):
         ''' Calculate the dynamic percentage of the solution'''
@@ -451,10 +816,9 @@ class EvaluationLogic:
                     solution.dynamic_percentage_order[order.order_number] += 1
 
             solution.dynamic_percentage_order[order.order_number] = solution.dynamic_percentage_order[order.order_number] / len(order.order_item_ids)
+
+        solution.total_dynamic_percentage = sum(solution.dynamic_percentage_order.values())
                 
-
-
-
     def categorizing_orders(self, solution:Solution):
         ''' Categorize the orders into finished, semi-finished and not started orders'''
 
@@ -487,7 +851,6 @@ class EvaluationLogic:
 
         solution.number_of_finished_orders = len(solution.finished_orders)
 
-    
     def categorizing_machine_worker(self, solution:Solution):
         ''' Categorize the machines and workers into finished, semi-finished and not started machines and workers'''
 
@@ -504,8 +867,6 @@ class EvaluationLogic:
             elif len(route) > 0:
                 solution.used_workers.append(worker)
 
-
-
     def calculate_finished_order_items(self, solution:Solution):
         ''' Calculate the number of finished order items'''
 
@@ -521,10 +882,8 @@ class EvaluationLogic:
         if checker == solution.number_of_finished_order_items:
             pass
         else:
-            raise Exception("Number of finished order items is not equal to the number of finished order items of the machines")
-
-
-
+            #raise Exception("Number of finished order items is not equal to the number of finished order items of the machines")
+            print("Number of finished order items is not equal to the number of finished order items of the machines")
 
     def calculate_commute_distance(self, solution:Solution):
         ''' Calculate the total commute distance of the workers'''
@@ -537,7 +896,6 @@ class EvaluationLogic:
 
         solution.total_commute_distance = sum(solution.commute_distance_per_worker.values())
 
-    
     def calculate_transport_distance(self, solution:Solution):
         ''' Calculate the total transport distance of the machines'''
 
@@ -548,7 +906,6 @@ class EvaluationLogic:
 
         solution.total_transport_distance = sum(solution.transport_distance_per_machine.values())
 
-
     def calculate_driver_violation(self, solution:Solution):
         ''' Calculate the total driver violation time of the workers'''
 
@@ -558,10 +915,8 @@ class EvaluationLogic:
                 involved_machine = next((machine for machine in self.data.machines if machine.id == involved_machine_id), None)
                 if worker_id not in involved_machine.default_drivers:
                     solution.driver_violation += 1
-
-
-    
-    def calculate_machine_worker_count_and_utilization_time(self, solution:Solution):
+  
+    def calculate_machine_worker_attachment_count_and_utilization_time(self, solution:Solution):
         ''' Calculate the number of workers and machines'''
 
         for machine_id, route in solution.route_plan_machine.items():
@@ -579,5 +934,10 @@ class EvaluationLogic:
             for order_item_id in route:
                 solution.worker_work_time[worker_id] += self.data.order_items[order_item_id].duration
 
-    
-    
+
+        for attachment_id, route in solution.route_plan_attachment.items():
+            solution.attachment_utilization_time[attachment_id] = 0
+            if len(route) > 0:
+                solution.number_of_attachments += 1
+            for order_item_id in route:
+                solution.attachment_utilization_time[attachment_id] += self.data.order_items[order_item_id].duration

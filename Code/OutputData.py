@@ -4,16 +4,19 @@ import pandas as pd
 import plotly.express as px
 import os
 from datetime import timedelta
+from collections import Counter
+
 
 
 class Solution:
 
-    def __init__(self, route_plan_worker:dict, route_plan_machine:dict, data:InputData):
+    def __init__(self, route_plan_worker:dict, route_plan_machine:dict, route_plan_attachment:dict, data:InputData):
         ''' Define the attributes for solution'''
 
         self.data = data
         self.route_plan_worker = route_plan_worker
         self.route_plan_machine = route_plan_machine
+        self.route_plan_attachment = route_plan_attachment
         
         self.finished_orders = []
         self.semifinished_orders = []
@@ -29,18 +32,25 @@ class Solution:
         self.used_workers = []
         self.unused_machines = []
         self.unused_workers = []
+        self.used_attachments = []
+        self.unused_attachments = []
 
         self.transport_distance_per_machine = {}
         self.total_transport_distance = -0
         self.commute_distance_per_worker = {}
         self.total_commute_distance = -0
+        self.transport_distance_per_attachment = {}
+        self.total_transport_distance_attachments = -0
         self.number_of_workers = -0
         self.number_of_machines = -0
+        self.number_of_attachments = -0
         self.driver_violation = -0
         self.worker_work_time = {}
         self.machine_utilization_time = {}
+        self.attachment_utilization_time = {}
 
         self.dynamic_percentage_order = {}
+        self.total_dynamic_percentage = -0
 
 
 
@@ -50,13 +60,15 @@ class Solution:
                 f"Number of finished orders: {self.number_of_finished_orders}\n"
                 f"Number of semi-finished orders: {len(self.semifinished_orders)}\n"
                 f"Number of not started orders: {len(self.not_started_orders)}\n"
-                #f"Dynamic percentage: {self.dynamic_percentage_order}\n"
+                f"Dynamic percentage: {self.total_dynamic_percentage}\n"
                 f"Number of finished order items: {self.number_of_finished_order_items}\n"
                 f"Driver violation: {self.driver_violation}\n"
                 f"Commute distance: {round(self.total_commute_distance, 2)}\n"
                 f"Transport distance: {round(self.total_transport_distance, 2)}\n"
+                f"Transport distance attachment: {round(self.total_transport_distance_attachments, 2)}\n"
                 f"Number of workers: {self.number_of_workers}\n"
-                f"Number of machines: {self.number_of_machines}\n")
+                f"Number of machines: {self.number_of_machines}\n"
+                f"Number of attachments: {self.number_of_attachments}\n")
     
 
     def repair_solution(self):
@@ -113,14 +125,248 @@ class Solution:
 
         print(f"Solution saved to: {output_file_path}")
 
-        
+    def feasibility_check(self, verbose=False, allverbose=False):
+        """
+        Check the feasibility of the solution.
+        This function verifies that the assignment of order items to the machine, worker, and attachment routes
+        meets all constraints.
+        """
+        if allverbose:
+            print("\nChecking the feasibility of the solution...")
+
+        # ========================
+        # 1. Order Item Feasibility
+        # ========================
+        if verbose:
+            print("\nChecking that the assigned order items are present in both route plans...")
+
+        # Check that every order item in the machine routes is present in the worker routes
+        for machine_route_order_items in self.route_plan_machine.values():
+            for order_item in machine_route_order_items:
+                if not any(order_item in worker_route for worker_route in self.route_plan_worker.values()):
+                    print(f"Order item {order_item} is not present in the worker route.")
+                    return False
+
+        # Check that every order item in the worker routes is present in the machine routes
+        for worker_route in self.route_plan_worker.values():
+            for order_item in worker_route:
+                if not any(order_item in machine_route for machine_route in self.route_plan_machine.values()):
+                    print(f"Order item {order_item} is not present in the machine route.")
+                    return False
+
+        # Check 1: No duplicates within each worker's route
+        for worker_id, route in self.route_plan_worker.items():
+            if len(route) != len(set(route)):
+                print(f"Worker {worker_id} has duplicate order items in their route: {route}")
+                return False
+
+        # Check 2: Each order item appears only in one worker's route overall
+        all_worker_order_items = [order_item for route in self.route_plan_worker.values() for order_item in route]
+        if len(all_worker_order_items) != len(set(all_worker_order_items)):
+            print("An order item has been assigned to more than one worker.")
+            return False
+
+        # Check 1: No duplicates within each machine's route
+        for machine_id, route in self.route_plan_machine.items():
+            if len(route) != len(set(route)):
+                print(f"Machine {machine_id} has duplicate order items in its route: {route}")
+                return False
+
+        # Check 2: Each order item appears only in one machine's route overall
+        all_machine_order_items = [order_item for route in self.route_plan_machine.values() for order_item in route]
+        if len(all_machine_order_items) != len(set(all_machine_order_items)):
+            print("An order item has been assigned to more than one machine.")
+            return False
+
+        # Check: No duplicates within each attachment's route
+        # (An order item may appear in different attachment routes but not more than once in the same route)
+        for attachment_id, route in self.route_plan_attachment.items():
+            if len(route) != len(set(route)):
+                print(f"Attachment {attachment_id} has duplicate order items in its route: {route}")
+                return False
+
+        # Check that each order item is assigned to the needed attachments with the correct counts
+        for machine_route_order_items in self.route_plan_machine.values():
+            for order_item_id in machine_route_order_items:
+                order_item_object = next((o for o in self.data.order_items if o.id == order_item_id), None)
+                if order_item_object is None:
+                    print(f"Order Item {order_item_id} was not found in the data.")
+                    return False
+                if order_item_object.equipment_types:
+                    assigned_types = []
+                    for attachment_id, route in self.route_plan_attachment.items():
+                        if order_item_id in route:
+                            attachment_object = self.data.attachments[int(attachment_id)]
+                            assigned_types.append(attachment_object.type)
+
+                    required_counts = Counter(order_item_object.equipment_types)
+                    assigned_counts = Counter(assigned_types)
+
+                    # Check for too few attachments for each required equipment type
+                    for equipment_type, required_count in required_counts.items():
+                        if assigned_counts[equipment_type] < required_count:
+                            print(f"Order Item {order_item_id} needs {required_count}x Equipment-Type {equipment_type}, "
+                                f"but there are only {assigned_counts[equipment_type]} assigned.")
+                            return False
+
+                    # Check for too many attachments or attachments that are not needed
+                    for equipment_type, assigned_count in assigned_counts.items():
+                        if assigned_count > required_counts.get(equipment_type, 0):
+                            print(f"Order Item {order_item_id} has {assigned_count}x Equipment-Type {equipment_type} assigned, "
+                                f"but only {required_counts.get(equipment_type, 0)} are needed.")
+                            return False
+
+        if verbose:
+            print("The assigned order items are present in both route plans.")
+
+        # ========================
+        # 2. Machine Route Feasibility
+        # ========================
+        for machine_name, route in self.route_plan_machine.items():
+            if verbose:
+                print(f"\nChecking route for machine {machine_name}...")
+
+            machine_object = next((m for m in self.data.machines if m.id == machine_name), None)
+            order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
+
+            # Check if the machine type is correct for the order items in the route
+            for order_item in order_item_objects:
+                if machine_object.type != order_item.machine_type:
+                    print(f"Machine {machine_name} is not correctly assigned to order item {order_item.id}.")
+                    return False
+
+            # Check the sequence of the order items (using index-based iteration for clarity)
+            for i in range(len(order_item_objects) - 1):
+                order_item_i = order_item_objects[i]
+                order_item_j = order_item_objects[i + 1]
+                order_i = next((order for order in self.data.orders 
+                                if int(order_item_i.id) in [int(item) for item in order.order_item_ids]), None)
+                order_j = next((order for order in self.data.orders 
+                                if int(order_item_j.id) in [int(item) for item in order.order_item_ids]), None)
+                distance = self.data.transport_routes[order_i.site_number][order_j.site_number]
+                travel_time_double = distance / self.data._transport_speed_kmh
+                travel_time = timedelta(hours=travel_time_double)
+                if order_item_i.end_time + travel_time >= order_item_j.start_time:
+                    print(f"In machine route: {machine_name}, Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
+                    return False
+
+            if verbose:
+                print(f"Route for machine {machine_name} is feasible.")
+    
+        # ========================
+        # 3. Worker Route Feasibility
+        # ========================
+        for worker_id, route in self.route_plan_worker.items():
+            if verbose:
+                print(f"\nChecking route for worker {worker_id}...")
+
+            worker_object = next((w for w in self.data.workers if w.personal_number == worker_id), None)
+            order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
+
+            # Check if the worker's qualifications meet the requirements of the order items
+            for order_item in order_item_objects:
+                if order_item.worker_qualifications:
+                    if not set(order_item.worker_qualifications).issubset(set(worker_object.qualifications)):
+                        print(f"Worker {worker_id} (Qualifications: {worker_object.qualifications}) does not have the correct qualifications for order item {order_item.id} (Required: {order_item.worker_qualifications}).")
+                        return False
+
+            # Check the sequence of order items using start/end times and break times
+            for i in range(len(order_item_objects) - 1):
+                order_item_i = order_item_objects[i]
+                order_item_j = order_item_objects[i + 1]
+                break_time_double = self.data._hours_between_shifts
+                break_time = timedelta(hours=break_time_double)
+                if order_item_i.end_time + break_time >= order_item_j.start_time:
+                    print(f"In worker route: {worker_id}, Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
+                    return False
+
+            # Check that the worker does not work more than the maximum allowed consecutive night shifts
+            checked_indices = set()
+            for i, order_item_i in enumerate(order_item_objects):
+                if i in checked_indices:
+                    continue
+                if order_item_i.start_time.hour >= self.data._day_and_night_shift_boundary:
+                    night_shifts = 1
+                    for j in range(i + 1, len(order_item_objects)):
+                        order_item_j = order_item_objects[j]
+                        time_difference = (order_item_j.start_time - order_item_i.start_time).days
+                        if time_difference == night_shifts:
+                            if order_item_j.start_time.hour >= self.data._day_and_night_shift_boundary:
+                                night_shifts += 1
+                                checked_indices.add(j)
+                            else:
+                                break
+                        else:
+                            break
+                    if night_shifts > self.data._max_consecutive_night_shifts:
+                        print(f"Worker {worker_id} has more than {self.data._max_consecutive_night_shifts} consecutive night shifts ({night_shifts}).")
+                        return False
+                    checked_indices.add(i)
+
+            # Check that the worker does not work more than the allowed number of shifts in a given period
+            for i, order_item_i in enumerate(order_item_objects):
+                window_start = order_item_i.start_time.date()
+                window_end = window_start + self.data._time_period_for_max_shifts
+                shift_count = sum(1 for order_item_j in order_item_objects if window_start <= order_item_j.start_time.date() < window_end)
+                if shift_count > self.data._max_shifts_in_time_period:
+                    print(f"Worker {worker_id} has more than {self.data._max_shifts_in_time_period} shifts ({shift_count}) within the {self.data._time_period_for_max_shifts}-day period starting on {window_start}.")
+                    return False
+
+            # Check that the worker does not work more than the maximum allowed total working hours
+            total_duration_hours = sum(order_item.duration for order_item in order_item_objects)
+            if total_duration_hours > self.data._max_working_hours:
+                print(f"Worker {worker_id} exceeds the maximum allowed total working hours ({self.data._max_working_hours} hours) with {total_duration_hours:.2f} hours.")
+                return False
+
+            if verbose:
+                print(f"Route for worker {worker_id} is feasible.")
+
+        # ========================
+        # 4. Attachment Route Feasibility
+        # ========================
+        for attachment_id, route in self.route_plan_attachment.items():
+            if verbose:
+                print(f"\nChecking route for attachment {attachment_id}...")
+
+            attachment_object = next((a for a in self.data.attachments if a.id == attachment_id), None)
+            order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
+
+            # Check if the attachment's type is valid for the order items in the route
+            for order_item in order_item_objects:
+                if attachment_object.type not in order_item.equipment_types:
+                    print(f"Attachment {attachment_id} is not correctly assigned to order item {order_item.id}.")
+                    return False
+
+            # Check the sequence of order items using start/end times and travel times
+            for i in range(len(order_item_objects) - 1):
+                order_item_i = order_item_objects[i]
+                order_item_j = order_item_objects[i + 1]
+                order_i = next((order for order in self.data.orders 
+                                if int(order_item_i.id) in [int(item) for item in order.order_item_ids]), None)
+                order_j = next((order for order in self.data.orders 
+                                if int(order_item_j.id) in [int(item) for item in order.order_item_ids]), None)
+                distance = self.data.transport_routes[order_i.site_number][order_j.site_number]
+                travel_time_double = distance / self.data._transport_speed_kmh
+                travel_time = timedelta(hours=travel_time_double)
+                if order_item_i.end_time + travel_time >= order_item_j.start_time:
+                    print(f"Route {route}")
+                    print(f"In attachment {attachment_id} route: Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
+                    return False
+
+            if verbose:
+                print(f"Route for attachment {attachment_id} is feasible.")
+
+        if allverbose:
+            print("\nFeasibility check completed. Solution is feasible.")
+        return True    
 
     
-
+    # Old Version of Feasibility Check
+    '''
     def feasibility_check(self, verbose=False):
-        ''' Check the feasibility of the solution'''
+        Check the feasibility of the solution.
         print("\nChecking the feasibility of the solution...")
-
+        
         # ========================
         # 1. Order Item Feasibility
         # ========================
@@ -141,20 +387,68 @@ class Solution:
                     print(f"Order item {order_item} is not present in the machine route.")
                     return False
 
-        # Check that no order item is assigned to more than one worker
+        # 1. Check: No duplicates within each worker's route
         for worker_id, route in self.route_plan_worker.items():
-            for order_item in route:
-                if sum(order_item in worker_route for worker_route in self.route_plan_worker.values()) > 1:
-                    print(f"Order item {order_item} is assigned to more than one worker.")
-                    return False
+            if len(route) != len(set(route)):
+                print(f"Worker {worker_id} has duplicate order items in their route: {route}")
+                return False
 
-        # Check that no order item is assigned to more than one machine
+        # 2. Check: Each order item appears only in one worker's route overall
+        all_worker_order_items = [order_item for route in self.route_plan_worker.values() for order_item in route]
+        if len(all_worker_order_items) != len(set(all_worker_order_items)):
+            print("An order item has been assigned to more than one worker.")
+            return False
+
+        # 1. Check: No duplicates within each machine's route
         for machine_id, route in self.route_plan_machine.items():
-            for order_item in route:
-                if sum(order_item in machine_route for machine_route in self.route_plan_machine.values()) > 1:
-                    print(f"Order item {order_item} is assigned to more than one machine.")
-                    return False
+            if len(route) != len(set(route)):
+                print(f"Machine {machine_id} has duplicate order items in its route: {route}")
+                return False
 
+        # 2. Check: Each order item appears only in one machine's route overall
+        all_machine_order_items = [order_item for route in self.route_plan_machine.values() for order_item in route]
+        if len(all_machine_order_items) != len(set(all_machine_order_items)):
+            print("An order item has been assigned to more than one machine.")
+            return False
+
+        # 1. Check: No duplicates within each attachment's route
+        for attachment_id, route in self.route_plan_attachment.items():
+            if len(route) != len(set(route)):
+                print(f"Attachment {attachment_id} has duplicate order items in its route: {route}")
+                return False
+                
+        # Check that all order items are assigned to the needed attachments with the correct counts
+        for machine_route_order_items in self.route_plan_machine.values():
+            for order_item_id in machine_route_order_items:
+                order_item_object = next((o for o in self.data.order_items if o.id == order_item_id), None)
+                if order_item_object is None:
+                    print(f"Order Item {order_item_id} was not found in the data.")
+                    return False 
+                if order_item_object.equipment_types:
+                    assigned_types = []
+                    for attachment_id, route in self.route_plan_attachment.items():
+                        if order_item_id in route:
+                            attachment_object = self.data.attachments[int(attachment_id)]
+                            assigned_types.append(attachment_object.type)
+
+                    required_counts = Counter(order_item_object.equipment_types)
+                    assigned_counts = Counter(assigned_types)
+
+                    # Check for too few attachments for each required equipment type
+                    for equipment_type, required_count in required_counts.items():
+                        if assigned_counts[equipment_type] < required_count:
+                            print(f"Order Item {order_item_id} needs {required_count}x Equipment-Type {equipment_type}, "
+                                f"but there are only {assigned_counts[equipment_type]} assigned.")
+                            return False
+
+                    # Check for too many attachments or attachments that are not needed
+                    for equipment_type, assigned_count in assigned_counts.items():
+                        # If the equipment type isn't required at all or is over-assigned:
+                        if assigned_count > required_counts.get(equipment_type, 0):
+                            print(f"Order Item {order_item_id} has {assigned_count}x Equipment-Type {equipment_type} assigned, "
+                                f"but only {required_counts.get(equipment_type, 0)} are needed.")
+                            return False
+                        
         if verbose:
             print("The assigned order items are present in both route plans.")
 
@@ -265,30 +559,260 @@ class Solution:
             if verbose:
                 print(f"Route for worker {worker_id} is feasible.")
 
+                
+        # ========================
+        # 4. Attachment Route Feasibility
+        # ========================
+
+        for attachment_id, route in self.route_plan_attachment.items():
+            if verbose:
+                print(f"\nChecking route for attachment {attachment_id}...")
+
+            attachment_object = next((a for a in self.data.attachments if a.id == attachment_id), None)
+            order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
+ 
+            # Check if the attachment type is correct for the order items in the route
+            for order_item in order_item_objects:
+                if attachment_object.type not in order_item.equipment_types:
+                    print(f"Attachment {attachment_id} is not correctly assigned to order item {order_item.id}.")
+                    return False
+
+            # Check if the sequence of the order items is correct with start, end and travel times
+            for order_item_i in order_item_objects:
+                for order_item_j in order_item_objects:
+                    order_item_i_index = order_item_objects.index(order_item_i)
+                    order_item_j_index = order_item_objects.index(order_item_j)
+                    if order_item_i_index + 1 == order_item_j_index:
+                        order_i = next((order for order in self.data.orders if int(order_item_i.id) in [int(item) for item in order.order_item_ids]), None)
+                        order_j = next((order for order in self.data.orders if int(order_item_j.id) in [int(item) for item in order.order_item_ids]), None)
+                        distance = self.data.transport_routes[order_i.site_number][order_j.site_number]
+                        travel_time_double = (distance / self.data._transport_speed_kmh)
+                        travel_time = timedelta(hours=travel_time_double)
+                        if order_item_i.end_time + travel_time >= order_item_j.start_time:
+                            print(f"Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
+                            return False
+                        
+            if verbose:
+                print(f"Route for attachment {attachment_id} is feasible.")
+
+
         print("\nFeasibility check completed. Solution is feasible.")
         return True
 
-
+        '''
        
 
-class SolutionPool:
+class ParetoSolutions:
     ''' Class for creating lits objects containing solution objects'''
 
     def __init__(self):
         ''' Create an empty list for the solutions'''
-        self.Solutions = []
+        self.ParetoFront = []
+
+    def PurgeParetoFront(self):
+        """
+        Iterates over all solutions in the Pareto Front (self.ParetoFront) and removes any solution 
+        that is dominated by another solution in the list, or that is completely identical in all objectives.
+        
+        The function CompareSolutions(solution_a, solution_b) is available:
+        - Returns 1 if solution_a dominates solution_b.
+        - Returns -1 if solution_b dominates solution_a.
+        - Returns 0 if neither dominates the other.
+        
+        After execution, self.ParetoFront contains only non-dominated, unique solutions.
+        """
+        non_dominated = []
+        seen_objective_tuples = set()
+        
+        for i, sol in enumerate(self.ParetoFront):
+            dominated = False
+            
+            # Create a tuple of objective values. Adjust the order if necessary.
+            obj_tuple = (
+                sol.total_dynamic_percentage,
+                sol.total_commute_distance,
+                sol.total_transport_distance,
+                sol.total_transport_distance_attachments,
+                sol.driver_violation,
+                sol.number_of_workers,
+                sol.number_of_machines,
+                sol.number_of_attachments
+            )
+            
+            # If an identical solution has already been seen, mark this solution as dominated.
+            if obj_tuple in seen_objective_tuples:
+                dominated = True
+            else:
+                seen_objective_tuples.add(obj_tuple)
+            
+            # Compare with all other solutions in the Pareto Front.
+            for j, other_sol in enumerate(self.ParetoFront):
+                if i != j:
+                    if self.CompareSolutions(other_sol, sol) == -1:
+                        dominated = True
+                        break
+            
+            if not dominated:
+                non_dominated.append(sol)
+        
+        self.ParetoFront = non_dominated
+
+    def CountDominatingSolutions(self, new_solution: Solution) -> int:
+        """
+        Zählt, wie viele Lösungen aus der Pareto-Front die new_solution dominieren.
+
+        Args:
+        pareto_front (list): Liste der Lösungen, die zur Pareto-Front gehören.
+        new_solution (Solution): Die neue Lösung, die überprüft wird.
+
+        Returns:
+        int: Anzahl der Lösungen aus der Pareto-Front, die die new_solution dominieren.
+        """
+        count = 0
+        for solution in self.ParetoFront:
+            if self.CompareSolutions(solution, new_solution) == -1:  # -1 bedeutet, dass die Lösung die neue Lösung dominiert
+                count += 1
+        return count
+    
+    def UpdateParetoFront(self, new_solution: Solution) -> bool:
+        """
+        Compares new_solution with all solutions in the Pareto Front.
+        
+        If new_solution is dominated by any solution in the Pareto Front,
+        it is not added and the function returns False.
+        
+        Otherwise, it removes all solutions that are dominated by new_solution,
+        adds new_solution to the Pareto Front, and returns True.
+        
+        For total_dynamic_percentage: higher is better.
+        For all other objectives: lower is better.
+        
+        Returns:
+        True if new_solution can be added to the Pareto Front,
+        False if it is dominated by an existing solution.
+        """
+        # First, check if any solution in the Pareto Front dominates new_solution.
+        for current_solution in list(self.ParetoFront):
+            # CompareSolutions returns:
+            #   1  if new_solution dominates current_solution,
+            #  -1  if current_solution dominates new_solution,
+            #   0  if neither dominates the other.
+            # 100  if both solutions are identical.
+            if self.CompareSolutions(current_solution, new_solution) == -1:
+                # new_solution is dominated by current_solution.
+                return False
+            if self.CompareSolutions(current_solution, new_solution) == 100:
+                # new_solution is identical to current_solution.
+                return False
+            if self.CompareSolutions(current_solution, new_solution) == 1:
+                # current_solution is dominated by new_solution.
+                self.ParetoFront.remove(current_solution)
+            if self.CompareSolutions(current_solution, new_solution) == 0:
+                # current_solution and new_solution are not dominated by each other.
+                continue
+
+        # Add new_solution to the Pareto Front.
+        self.ParetoFront.append(new_solution)
+        return True
+    
+
+    def CompareSolutions(self, current_solution: Solution, new_solution: Solution) -> int:
+        """
+        Compares current_solution and new_solution.
+        
+        Returns:
+        1  if new_solution dominates current_solution,
+        -1 if current_solution dominates new_solution,
+        0  if neither dominates the other.
+        100 if both solutions are identical.
+        
+        For total_dynamic_percentage: higher is better.
+        For all other objectives: lower is better.
+        
+        A solution dominates another if it is not worse in any objective and is strictly better in at least one.
+        """
+        objectives = [
+            ("total_dynamic_percentage", "max"),
+            ("total_commute_distance", "min"),
+            ("total_transport_distance", "min"),
+            ("total_transport_distance_attachments", "min"),
+            ("driver_violation", "min"),
+            ("number_of_workers", "min"),
+            ("number_of_machines", "min"),
+            ("number_of_attachments", "min")
+        ]
+        
+        new_better_count = 0  # Anzahl der Ziele, in denen new_solution besser ist
+        current_better_count = 0  # Anzahl der Ziele, in denen current_solution besser ist
+        identical_count = 0  # Anzahl der identischen Werte
+
+        for attr, goal in objectives:
+            new_val = getattr(new_solution, attr)
+            curr_val = getattr(current_solution, attr)
+            
+            if new_val == curr_val:
+                identical_count += 1
+            elif goal == "max":
+                if new_val > curr_val:
+                    new_better_count += 1
+                else:
+                    current_better_count += 1
+            else:  # goal == "min"
+                if new_val < curr_val:
+                    new_better_count += 1
+                else:
+                    current_better_count += 1
+
+        # Falls alle Werte identisch sind, return 100
+        if identical_count == len(objectives):
+            return 100
+
+        # new_solution dominiert current_solution
+        if current_better_count == 0 and new_better_count > 0:
+            return 1
+
+        # current_solution dominiert new_solution
+        if new_better_count == 0 and current_better_count > 0:
+            return -1
+
+        return 0  # Keine Dominanz
+
+    def ShowFront(self):
+        ''' Show the Pareto Front as a DataFrame'''
+
+        # Create a DataFrame from the Pareto Front
+
+        # Create a list of dictionaries for the solutions
+        solutions = []
+        for solution in self.ParetoFront:
+            solutions.append({
+                "Finished Orders": solution.number_of_finished_orders,
+                "Dynamic Percentage": solution.total_dynamic_percentage,
+                "Driver Violation": solution.driver_violation,
+                "Commute Distance": solution.total_commute_distance,
+                "Transport Machines": solution.total_transport_distance,
+                "Transport Attachments": solution.total_transport_distance_attachments,
+                "Machines": solution.number_of_machines,
+                "Workers": solution.number_of_workers,
+                "Attachments": solution.number_of_attachments
+            })
+
+        # Create a DataFrame from the list of dictionaries
+        df = pd.DataFrame(solutions)
+
+        # Sort according to the total_dynamic_percentage (higher is better), then sort by the other objectives
+        df = df.sort_values(by=["Finished Orders" ,"Dynamic Percentage", "Driver Violation", "Commute Distance",
+                                "Transport Machines", "Transport Attachments",
+                                "Machines", "Workers", "Attachments"],
+                            ascending=[False, False, True, True, True, True, True, True, True])
         
 
-    def AddSolution(self, newSolution:Solution) -> None:
-        ''' Add a new solution to the solution pool'''
-        self.Solutions.append(newSolution)
+        # Show the DataFrame
+        print(df)
 
-    
-    
-    def GetBestSolution(self) -> Solution:
-        ''' Get the best solution from the solution pool'''
-        # Solution with the most finished order items
-        return max(self.Solutions, key=lambda solution: solution.number_of_finished_order_items)
+
+
+
 
 
 
