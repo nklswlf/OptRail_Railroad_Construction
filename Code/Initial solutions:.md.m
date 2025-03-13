@@ -3,6 +3,7 @@ Instance: a10_o107_m5_an57_ar12
 Number of finished orders: 8
 Number of semi-finished orders: 1
 Number of not started orders: 1
+Dynamic percentage: 8.05
 Number of finished order items: 56
 Driver violation: 35
 Commute distance: 5314.19
@@ -29,6 +30,35 @@ Number of machines: 5
 Number of attachments: 6
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+Initial solution: 
+Instance: a10_o144_m6_an53_ar12
+Number of finished orders: 6
+Number of semi-finished orders: 2
+Number of not started orders: 2
+Dynamic percentage: 6.833333333333333
+Number of finished order items: 61
+Driver violation: 30
+Commute distance: 7703.3
+Transport distance: 701.44
+Transport distance attachment: 0
+Number of workers: 7
+Number of machines: 5
+Number of attachments: 0
+
+
+
 Initial solution: 
 Instance: a15_o170_m9_an80_ar18
 Number of finished orders: 12
@@ -44,11 +74,23 @@ Number of machines: 8
 Number of attachments: 9
 
 
+
+
+
+
+
+
+
+
+
+
+
 Initial solution: 
 Instance: a20_o236_m12_an106_ar24
 Number of finished orders: 12
 Number of semi-finished orders: 3
 Number of not started orders: 5
+Dynamic percentage: 13.495454545454544
 Number of finished order items: 92
 Driver violation: 68
 Commute distance: 10115.13
@@ -57,6 +99,18 @@ Transport distance attachment: 551.85
 Number of workers: 14
 Number of machines: 5
 Number of attachments: 15
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 Initial solution: 

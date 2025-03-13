@@ -946,7 +946,7 @@ class Machine:
         return self._type
 
     @property
-    def default_drivers(self) -> List[str]:
+    def default_drivers(self) -> List[int]:
         return self._default_drivers
     
     @property

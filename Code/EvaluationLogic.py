@@ -203,10 +203,10 @@ class EvaluationLogic:
         machine_old = self.data.machines[move.MachineIDInt]
 
         delta_driver_violation = 0
-        if move.WorkerID not in machine_new.default_drivers:
-            delta_driver_violation += 1
-        if move.WorkerID in machine_old.default_drivers:
+        if move.WorkerID in machine_new.default_drivers:
             delta_driver_violation -= 1
+        if move.WorkerID in machine_old.default_drivers:
+            delta_driver_violation += 1
 
 
         # Calculate the extra transport distance of the attachments
@@ -282,7 +282,7 @@ class EvaluationLogic:
 
         # 1️⃣ Store individual delta values as a dictionary (details)
         delta_details = {
-            "dynamic_percentage_order": delta_dynamic_percentage_order,
+            "dynamic_percentage_order": -delta_dynamic_percentage_order,
             "commute_distance": delta_commute_distance,
             "transport_distance": delta_transport_distance,
             "transport_distance_attachments": delta_transport_distance_attachments,
@@ -305,6 +305,7 @@ class EvaluationLogic:
             + delta_details["transport_distance_attachments"],
         ]
 
+        #print(f"Delta Summary: {delta_summary[0]}")
         #print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (list) and details (dictionary)
@@ -421,6 +422,7 @@ class EvaluationLogic:
         # 2️⃣ Create the summary (scalar value = sum of both deltas)
         delta_summary = delta_details["transport_distance"] + delta_details["driver_violation"]
 
+
         print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (scalar) and details (dictionary)
@@ -435,7 +437,7 @@ class EvaluationLogic:
                                  - ((2*self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID1] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
                                  - ((2*self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID2] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
                                   
-        if delta_commute_distance > -1**-2 and delta_commute_distance < 0:
+        if abs(delta_commute_distance) < 0.000000001:
             delta_commute_distance = 0
 
 
@@ -467,6 +469,7 @@ class EvaluationLogic:
 
         # 2️⃣ Create the summary (scalar value as the sum of both)
         delta_summary = delta_details["commute_distance"] + delta_details["driver_violation"]
+
 
         print(f"Delta Summary: {delta_summary}")
 
