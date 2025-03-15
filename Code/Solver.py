@@ -15,7 +15,7 @@ class Solver:
         self.Seed = seed
         self.RNG = numpy.random.default_rng(self.Seed)
         self.EvaluationLogic = EvaluationLogic(inputData)
-        self.ParetoSolutions = ParetoSolutions()
+        self.ParetoSolutions = ParetoSolutions(inputData)
         self.runTime = {}
         
         self.ConstructiveHeuristic = ConstructiveHeuristics(paretoSolutions=self.ParetoSolutions, evaluationLogic=self.EvaluationLogic)

@@ -69,7 +69,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-instances = ["Construction_a50_o578_m28_an276_ar66.json"]
+instances = ["Construction_a10_o144_m6_an53_ar12.json"]
 
 
 
@@ -111,6 +111,19 @@ objectives = ["commute_distance", "transport_distance", "attachment_distance",
               "dynamic_percentage", "driver_violation"]
 
 
+
+types_and_objectives = {"dynamic_percentage_order": ["Insert_Shift", "Swap_Shift_External"],
+                        "driver_violation": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Machine', 'Swap_Shift_Worker', 'Replace_Shift_Worker', 'Replace_Shift_Machine'],
+                        "commute_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Worker', 'Replace_Shift_Worker'],
+                        "transport_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Machine', 'Replace_Shift_Machine'],
+                        "attachment_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Attachment', 'Replace_Shift_Attachment'],
+                        "machine_count": ["Insert_Shift", "Swap_Shift_External", 'Replace_Shift_Machine'],
+                        "worker_count": ["Insert_Shift", 'Replace_Shift_Worker'],
+                        "attachment_count": ["Insert_Shift", "Swap_Shift_External", 'Replace_Shift_Attachment']}
+
+                        
+
+
 only_constructive = False
 
 def main():
@@ -126,10 +139,10 @@ def main():
                                             neighborhoodTypes=neighboorhood_types_local_search)
 
         simulated_annealing_local_search = SimulatedAnnealingLocalSearch(inputData=data,
-                                                                        start_temp=10,
+                                                                        start_temp=5,
                                                                         min_temp=0.1,
                                                                         cooling_rate=0.95,
-                                                                        max_iterations= 500,
+                                                                        max_iterations= 20,
                                                                         neighborhoodTypesSA=neighboorhood_types_simulated_annealing,
                                                                         neighborhoodTypesLS=neighboorhood_types_local_search)
 

@@ -245,6 +245,11 @@ class InsertShiftMove(BaseMove):
         else:
             self.NumberOfAttachments = 0
 
+
+    def __str__(self):
+        return f"Machine: {self.MachineID} \nMachine Route: {self.MachineRoute} \nMachine Route Index: {self.MachineRouteIndex} \nWorker: {self.WorkerID} \nWorker Route: {self.WorkerRoute} \nWorker Route Index: {self.WorkerRouteIndex} \nOrder Item ID: {self.OrderItemID} \nDynamic Percentage: {self.DynamicPercentage} \nNumber of Attachments: {self.NumberOfAttachments}"
+
+
 class InsertShiftNeighborhood(OutputNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
 
@@ -712,6 +717,11 @@ class SwapShiftExternalMove(BaseMove):
 
         else:
             self.NumberOfAttachmentsInt = 0
+
+
+    def __str__(self):
+        return f"Worker: {self.WorkerID} \nWorker Route: {self.WorkerRoute} \nWorker Route Index: {self.WorkerRouteIndex} \nMachine ID Internal: {self.MachineIDInt} \nMachine ID External: {self.MachineIDExt} \nMachine Route Internal: {self.MachineRouteInt} \nMachine Route External: {self.MachineRouteExt} \nMachine Route Index Internal: {self.MachineRouteIndexInt} \nMachine Route Index External: {self.MachineRouteIndexExt} \nOrder Item ID Internal: {self.OrderItemIDInt} \nOrder Item ID External: {self.OrderItemIDExt} \nDynamic Percentage Internal: {self.DynamicPercentageInt} \nDynamic Percentage External: {self.DynamicPercentageExt} \nNumber of Attachments Internal: {self.NumberOfAttachmentsInt} \nNumber of Attachments External: {self.NumberOfAttachmentsExt}"
+
 
 class SwapShiftExternalNeighborhood(OutputNeighborhood):
     
@@ -1513,6 +1523,10 @@ class SwapShiftAttachmentMove(BaseMove):
 
         self.AttachmentRoute1.remove(self.OrderItemID1)
         self.AttachmentRoute2.remove(self.OrderItemID2)
+
+
+    def __str__(self):
+        return f'Attachment Route 1: {self.AttachmentRoute1}\nAttachment Route 2: {self.AttachmentRoute2} \n Attachment Route Index 1: {self.AttachmentRouteIndex1} \n Attachment Route Index 2: {self.AttachmentRouteIndex2} \n Order Item ID 1: {self.OrderItemID1} \n Order Item ID 2: {self.OrderItemID2} \n Attachment ID 1: {self.AttachmentID1} \n Attachment ID 2: {self.AttachmentID2}'
 
 class SwapShiftAttachmentNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
