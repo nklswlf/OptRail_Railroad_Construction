@@ -605,7 +605,8 @@ class Solution:
 class ParetoSolutions:
     ''' Class for creating lits objects containing solution objects'''
 
-    def __init__(self):
+    def __init__(self, data:InputData):
+        self.data = data
         ''' Create an empty list for the solutions'''
         self.ParetoFront = []
 
@@ -789,6 +790,7 @@ class ParetoSolutions:
             key=lambda x: (
                 -x.number_of_finished_orders,
                 -x.total_dynamic_percentage,
+                -x.number_of_finished_order_items,
                 x.driver_violation,
                 x.total_commute_distance,
                 x.total_transport_distance,
@@ -806,6 +808,7 @@ class ParetoSolutions:
             solutions.append({
                 "Finished Orders": solution.number_of_finished_orders,
                 "Dynamic Percentage": solution.total_dynamic_percentage,
+                "Order Items": solution.number_of_finished_order_items,
                 "Driver Violation": solution.driver_violation,
                 "Commute Distance": solution.total_commute_distance,
                 "Transport Machines": solution.total_transport_distance,
@@ -833,6 +836,7 @@ class ParetoSolutions:
             solutions.append({
                 "Finished Orders": solution.number_of_finished_orders,
                 "Dynamic Percentage": solution.total_dynamic_percentage,
+                "Order Items": solution.number_of_finished_order_items,
                 "Driver Violation": solution.driver_violation,
                 "Commute Distance": solution.total_commute_distance,
                 "Transport Machines": solution.total_transport_distance,
@@ -846,18 +850,61 @@ class ParetoSolutions:
         df = pd.DataFrame(solutions)
 
         # Sort according to the total_dynamic_percentage (higher is better), then sort by the other objectives
-        df = df.sort_values(by=["Finished Orders" ,"Dynamic Percentage", "Driver Violation", "Commute Distance",
+        df = df.sort_values(by=["Finished Orders" ,"Dynamic Percentage", "Order Items", "Driver Violation", "Commute Distance",
                                 "Transport Machines", "Transport Attachments",
                                 "Machines", "Workers", "Attachments"],
-                            ascending=[False, False, True, True, True, True, True, True, True])
+                            ascending=[False, False, False, True, True, True, True, True, True, True])
         
 
         # Show the DataFrame
         print(df)
+        # Write the DataFrame to a CSV file
+        df.to_csv("ParetoFront.csv", index=False)
+
+
+    def DeleteUnfinishedSites(self):
+        ''' Delete all solutions from the Pareto Front that have unfinished sites'''
+
+        # Create a list of solutions that have finished all sites
+        finished_solutions = [
+                solution
+                for solution in self.ParetoFront
+                if solution.semifinished_orders == []
+            ]
+           
+
+        # Update the Pareto Front
+        self.ParetoFront = finished_solutions
+
+
+        if len(self.ParetoFront) == 0:
+            print("Deleted all solutions from the Pareto Front because all of them had unfinished sites.")
+        else:
+            print(f"\nPareto Front with solutions that incorporate only finished sites:")
+            self.ShowFront()
+        
 
 
 
+    def CalculateAverageDynamicPercentage(self):
 
+        average_dynamic_percentage = {}
+
+        for order in self.data.orders:
+            average_dynamic_percentage[order.order_number] = 0
+
+
+        for solution in self.ParetoFront:
+            for order in self.data.orders:
+                average_dynamic_percentage[order.order_number] += solution.dynamic_percentage_order[order.order_number]
+
+        for order in self.data.orders:
+            average_dynamic_percentage[order.order_number] = average_dynamic_percentage[order.order_number] / len(self.ParetoFront)
+
+
+        return average_dynamic_percentage
+
+            
 
 
 
