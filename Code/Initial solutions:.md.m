@@ -190,6 +190,21 @@ Number of attachments: 34
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Initial solution: 
 Instance: a50_o578_m28_an276_ar66
 Number of finished orders: 38

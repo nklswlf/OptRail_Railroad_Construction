@@ -714,7 +714,8 @@ class ParetoSolutions:
         # Add new_solution to the Pareto Front.
         self.ParetoFront.append(new_solution)
         return True
-    
+
+
 
     def CompareSolutions(self, current_solution: Solution, new_solution: Solution) -> int:
         """
@@ -776,6 +777,50 @@ class ParetoSolutions:
             return -1
 
         return 0  # Keine Dominanz
+
+
+    def SortParetoFront(self):
+        ''' Sort the Pareto Front according to the total_dynamic_percentage (higher is better), then sort by the other objectives'''
+
+        # Sort the Pareto Front
+        # # Number of sites and dynamic percentage are the higher the better, all other objectives are the lower the better
+        self.ParetoFront = sorted(
+            self.ParetoFront,
+            key=lambda x: (
+                -x.number_of_finished_orders,
+                -x.total_dynamic_percentage,
+                x.driver_violation,
+                x.total_commute_distance,
+                x.total_transport_distance,
+                x.total_transport_distance_attachments,
+                x.number_of_machines,
+                x.number_of_workers,
+                x.number_of_attachments
+            )
+        )
+
+        # print the Pareto front as an df without using the ShowFront function
+        # Create a list of dictionaries for the solutions
+        solutions = []
+        for solution in self.ParetoFront:
+            solutions.append({
+                "Finished Orders": solution.number_of_finished_orders,
+                "Dynamic Percentage": solution.total_dynamic_percentage,
+                "Driver Violation": solution.driver_violation,
+                "Commute Distance": solution.total_commute_distance,
+                "Transport Machines": solution.total_transport_distance,
+                "Transport Attachments": solution.total_transport_distance_attachments,
+                "Machines": solution.number_of_machines,
+                "Workers": solution.number_of_workers,
+                "Attachments": solution.number_of_attachments
+            })
+
+        # Create a DataFrame from the list of dictionaries
+        df = pd.DataFrame(solutions)
+
+        print(df)
+
+    
 
     def ShowFront(self):
         ''' Show the Pareto Front as a DataFrame'''
