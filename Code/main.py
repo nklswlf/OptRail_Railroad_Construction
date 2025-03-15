@@ -69,7 +69,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-instances = ["Construction_a30_o355_m18_an148_ar42.json"]
+instances = ["Construction_a50_o578_m28_an276_ar66.json"]
 
 
 
@@ -126,10 +126,10 @@ def main():
                                             neighborhoodTypes=neighboorhood_types_local_search)
 
         simulated_annealing_local_search = SimulatedAnnealingLocalSearch(inputData=data,
-                                                                        start_temp=100,
+                                                                        start_temp=10,
                                                                         min_temp=0.1,
                                                                         cooling_rate=0.95,
-                                                                        max_iterations= 30,
+                                                                        max_iterations= 500,
                                                                         neighborhoodTypesSA=neighboorhood_types_simulated_annealing,
                                                                         neighborhoodTypesLS=neighboorhood_types_local_search)
 

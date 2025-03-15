@@ -239,6 +239,8 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
 
         currentSolution = deepcopy(solution)
 
+        print(f"Attachment Route Plan: {currentSolution.route_plan_attachment}")
+
 
         currentTemperature = self.StartTemperature
 
@@ -247,6 +249,7 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
         count['dominated'] = 0
         count['non-dominated'] = 0
         count['none'] = 0
+        count['number_accepted'] = 0
 
         fallback_counter = 0
         fallback = True
@@ -279,11 +282,14 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                     pass
                 elif value > 0:
                     count['dominated'] += 1
-                    prob = math.exp(-value / currentTemperature)
+                    prob = math.exp(-value * 30/ currentTemperature)
                     random_number = self.RNG.random()
+                    print(f"Comparison: {random_number} <=> {prob}")
 
                     if prob < random_number:
                         continue
+                    else:
+                        count['number_accepted'] += 1
 
 
                 worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
@@ -298,19 +304,20 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
 
                 if not added:
                     fallback_counter += 1
-                    if fallback_counter % 100 == 0 and fallback:
+                    if fallback_counter % 10 == 0 and fallback:
                         print("Fallback")
                         fallbacks += 1
-                        #self.ParetoSolutions.PurgeParetoFront()
+                        self.ParetoSolutions.SortParetoFront()
 
 
-                        #currentSolution = self.RNG.choice(self.ParetoSolutions.ParetoFront)
+                        currentSolution = self.ParetoSolutions.ParetoFront[0]
 
             currentTemperature *= self.CoolingRate
 
         print(f"Number of dominates: {count['dominates']}")
         print(f"Number of dominated: {count['dominated']}")
         print(f"Number of non-dominated: {count['non-dominated']}")
+        print(f"Number of accepted: {count['number_accepted']}")
         print(f"Number of none: {count['none']}")
 
 
