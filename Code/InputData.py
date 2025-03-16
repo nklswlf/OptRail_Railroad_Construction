@@ -92,6 +92,14 @@ class InputData:
             self.planned_shifts_machine[order] = list()
 
 
+
+
+    def upper_bound_dynamic_percentage(self, order: Order):
+        pass
+
+
+
+
     
     def connect_order_item_to_order(self):
         '''

@@ -69,8 +69,12 @@ def main():
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
     
+    instances = ["Construction_a25_o306_m13_an127_ar31.json"]
+    
     objective_strategies = ["costs", "weighted", "hierarchical", "hierarchical_tolerance"]
+    objective_strategies = ["construction_fulfillment"]
     number_of_objectives = [6, 3, 4, 5]
+    number_of_objectives = [1]
     
     
 
