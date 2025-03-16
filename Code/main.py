@@ -139,10 +139,10 @@ def main():
                                             neighborhoodTypes=neighboorhood_types_local_search)
 
         simulated_annealing_local_search = SimulatedAnnealingLocalSearch(inputData=data,
-                                                                        start_temp=5,
+                                                                        start_temp=50,
                                                                         min_temp=0.1,
                                                                         cooling_rate=0.95,
-                                                                        max_iterations= 20,
+                                                                        max_iterations= 100,
                                                                         neighborhoodTypesSA=neighboorhood_types_simulated_annealing,
                                                                         neighborhoodTypesLS=neighboorhood_types_local_search)
 
