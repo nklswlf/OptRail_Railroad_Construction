@@ -94,8 +94,7 @@ class InputData:
 
 
 
-    def upper_bound_dynamic_percentage(self, order: Order):
-        pass
+
 
 
 

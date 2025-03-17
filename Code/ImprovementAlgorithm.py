@@ -252,99 +252,13 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                         "worker_count": ["Insert_Shift", 'Replace_Shift_Worker'],
                         "attachment_count": ["Insert_Shift", "Swap_Shift_External", 'Replace_Shift_Attachment']}
         
-        enough_full_solutions = False
-
-        while not enough_full_solutions:
-
-            for objective, types in types_and_objectives.items():
-                
-                print(f"START {objective}")
-
-                currentTemperature = self.StartTemperature
-
-                count = dict()
-                count['dominates'] = 0
-                count['dominated'] = 0
-                count['non-dominated'] = 0
-                count['none'] = 0
-                count['number_accepted'] = 0
-
-                fallback_counter = 0
-                fallback = True
-                fallbacks = 0
-
-                while currentTemperature > self.MinTemperature:
-                    
-                    if local_search_on:
-                        currentSolution = local_search.Run(deepcopy(currentSolution))
-
-                    for i in range(self.MaxIterations):
-
-                        neighborhoodType = self.RNG.choice(types)
-                        neighborhood = self.Neighborhoods[neighborhoodType]
-
-                        move = neighborhood.SingleMove(currentSolution)
-
-                        if move is None:
-                            count['none'] += 1
-                            continue
-                        
-                        print(f"Move Delta Details: {move.DeltaDetails}")
-                        value = move.DeltaDetails[objective]
-
-                        if value < 0:
-                            count['dominates'] += 1
-                            pass
-                        elif value > 0:
-                            count['dominated'] += 1
-                            prob = math.exp(-value * 30/ currentTemperature)
-                            random_number = self.RNG.random()
-                            print(f"Comparison: {random_number} <=> {prob}")
-
-                            if prob < random_number:
-                                continue
-                            else:
-                                count['number_accepted'] += 1
 
 
-                        worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
-                        currentSolution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
-                        self.EvaluationLogic.evaluate(currentSolution)
-                        print(f"New solution: {currentSolution}")
-                        feasible = currentSolution.feasibility_check()
-                        if not feasible:
-                            print(f"Solution Machine Route Plan: {currentSolution.route_plan_machine}")
-                            print(f"Solution Worker Route Plan: {currentSolution.route_plan_worker}")
-                            print(f"Solution Attachment Route Plan: {currentSolution.route_plan_attachment}")
-
-                            print(f"Move Information: {move}")
-
-                            raise Exception(f"Solution is not feasible after neighborhood {neighborhoodType}")
-                        
-                        added = self.ParetoSolutions.UpdateParetoFront(currentSolution)
-
-                        if not added:
-                            fallback_counter += 1
-                            if fallback_counter % 10 == 0 and fallback:
-                                print("Fallback")
-                                fallbacks += 1
-                                self.ParetoSolutions.SortParetoFront()
 
 
-                                currentSolution = self.ParetoSolutions.ParetoFront[0]
-
-                    currentTemperature *= self.CoolingRate
-
-
-                print(f"END {objective}")
-
-                print(f"Number of dominates: {count['dominates']}")
-                print(f"Number of dominated: {count['dominated']}")
-                print(f"Number of non-dominated: {count['non-dominated']}")
-                print(f"Number of accepted: {count['number_accepted']}")
-                print(f"Number of none: {count['none']}")
-
-
+        for objective, types in types_and_objectives.items():
+            
+            print(f"START {objective}")
 
             currentTemperature = self.StartTemperature
 
@@ -359,12 +273,19 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
             fallback = True
             fallbacks = 0
 
-
             while currentTemperature > self.MinTemperature:
-                    
-                for i in range(self.MaxIterations):
+
+                consecutive_none_moves = 0
                 
-                    dominating_count_current = self.ParetoSolutions.CountDominatingSolutions(currentSolution)
+                if local_search_on:
+                    currentSolution = local_search.Run(deepcopy(currentSolution))
+
+                for i in range(self.MaxIterations):
+
+                    if consecutive_none_moves > 5:
+                        print("MOVING TO NEXT TEMPERATURE STAGE")
+                        currentTemperature *= self.CoolingRate
+                        break
 
 
                     neighborhoodType = self.RNG.choice(types)
@@ -372,30 +293,37 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
 
                     move = neighborhood.SingleMove(currentSolution)
 
+
                     if move is None:
+                        consecutive_none_moves += 1
                         count['none'] += 1
                         continue
+                    else:
+                        consecutive_none_moves = 0
 
-                    worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
-                    new_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
-                    self.EvaluationLogic.evaluate(new_solution)
-                    dominating_count_new = self.ParetoSolutions.CountDominatingSolutions(new_solution)
+                    
+                    
+                    print(f"Move Delta Details: {move.DeltaDetails}")
+                    value = move.DeltaDetails[objective]
 
-                    overall_difference = dominating_count_new - dominating_count_current
-
-                    if overall_difference > 0:
-
-                        prob =  math.exp(-overall_difference / currentTemperature)
+                    if value < 0:
+                        count['dominates'] += 1
+                        pass
+                    elif value > 0:
+                        count['dominated'] += 1
+                        prob = math.exp(-value * 30/ currentTemperature)
                         random_number = self.RNG.random()
                         print(f"Comparison: {random_number} <=> {prob}")
 
                         if prob < random_number:
-                            print("Random number is greater than probability")
                             continue
+                        else:
+                            count['number_accepted'] += 1
 
-                    
-                    currentSolution = deepcopy(new_solution)
 
+                    worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
+                    currentSolution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                    self.EvaluationLogic.evaluate(currentSolution)
                     print(f"New solution: {currentSolution}")
                     feasible = currentSolution.feasibility_check()
                     if not feasible:
@@ -404,6 +332,7 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                         print(f"Solution Attachment Route Plan: {currentSolution.route_plan_attachment}")
 
                         print(f"Move Information: {move}")
+
                         raise Exception(f"Solution is not feasible after neighborhood {neighborhoodType}")
                     
                     added = self.ParetoSolutions.UpdateParetoFront(currentSolution)
@@ -415,36 +344,112 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                             fallbacks += 1
                             self.ParetoSolutions.SortParetoFront()
 
+
                             currentSolution = self.ParetoSolutions.ParetoFront[0]
 
                 currentTemperature *= self.CoolingRate
 
-            print(f"Number of dominates: {count['dominates']}")
 
+            print(f"END {objective}")
+
+            print(f"Number of dominates: {count['dominates']}")
             print(f"Number of dominated: {count['dominated']}")
             print(f"Number of non-dominated: {count['non-dominated']}")
-            print(f"Number of none: {count['none']}")
             print(f"Number of accepted: {count['number_accepted']}")
-            print(f"Number of fallbacks: {fallbacks}")
-            self.ParetoSolutions.PurgeParetoFront()
-            print(f"Number of Pareto solutions: {len(self.ParetoSolutions.ParetoFront)}")
+            print(f"Number of none: {count['none']}")
 
 
-            finished_solutions = [
-                solution
-                for solution in self.ParetoSolutions.ParetoFront
-                if solution.semifinished_orders == []
-            ]
 
-            if len(finished_solutions) > 10:
+        currentTemperature = self.StartTemperature
 
-                enough_full_solutions = True
+        count = dict()
+        count['dominates'] = 0
+        count['dominated'] = 0
+        count['non-dominated'] = 0
+        count['none'] = 0
+        count['number_accepted'] = 0
 
-            else:
-                enough_full_solutions = True         
-                average_dynamic_percentage = self.ParetoSolutions.CalculateAverageDynamicPercentage()
+        fallback_counter = 0
+        fallback = True
+        fallbacks = 0
 
-                print(f"Average dynamic percentage: {average_dynamic_percentage}")
+
+        while currentTemperature > self.MinTemperature:
+                
+            for i in range(self.MaxIterations):
+            
+                dominating_count_current = self.ParetoSolutions.CountDominatingSolutions(currentSolution)
+
+
+                neighborhoodType = self.RNG.choice(types)
+                neighborhood = self.Neighborhoods[neighborhoodType]
+
+                move = neighborhood.SingleMove(currentSolution)
+
+                if move is None:
+                    count['none'] += 1
+                    continue
+
+                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
+                new_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                self.EvaluationLogic.evaluate(new_solution)
+                dominating_count_new = self.ParetoSolutions.CountDominatingSolutions(new_solution)
+
+                overall_difference = dominating_count_new - dominating_count_current
+
+                if overall_difference > 0:
+
+                    prob =  math.exp(-overall_difference / currentTemperature)
+                    random_number = self.RNG.random()
+                    print(f"Comparison: {random_number} <=> {prob}")
+
+                    if prob < random_number:
+                        print("Random number is greater than probability")
+                        continue
+
+                
+                currentSolution = deepcopy(new_solution)
+
+                print(f"New solution: {currentSolution}")
+                feasible = currentSolution.feasibility_check()
+                if not feasible:
+                    print(f"Solution Machine Route Plan: {currentSolution.route_plan_machine}")
+                    print(f"Solution Worker Route Plan: {currentSolution.route_plan_worker}")
+                    print(f"Solution Attachment Route Plan: {currentSolution.route_plan_attachment}")
+
+                    print(f"Move Information: {move}")
+                    raise Exception(f"Solution is not feasible after neighborhood {neighborhoodType}")
+                
+                added = self.ParetoSolutions.UpdateParetoFront(currentSolution)
+
+                if not added:
+                    fallback_counter += 1
+                    if fallback_counter % 10 == 0 and fallback:
+                        print("Fallback")
+                        fallbacks += 1
+                        self.ParetoSolutions.SortParetoFront()
+
+                        currentSolution = self.ParetoSolutions.ParetoFront[0]
+
+            currentTemperature *= self.CoolingRate
+
+        print(f"Number of dominates: {count['dominates']}")
+
+        print(f"Number of dominated: {count['dominated']}")
+        print(f"Number of non-dominated: {count['non-dominated']}")
+        print(f"Number of none: {count['none']}")
+        print(f"Number of accepted: {count['number_accepted']}")
+        print(f"Number of fallbacks: {fallbacks}")
+        self.ParetoSolutions.PurgeParetoFront()
+        print(f"Number of Pareto solutions: {len(self.ParetoSolutions.ParetoFront)}")
+
+                
+                
+
+        average_dynamic_percentage = self.ParetoSolutions.CalculateAverageDynamicPercentage()
+
+        print(f"Average dynamic percentage: {average_dynamic_percentage}")
+        
 
         self.ParetoSolutions.ShowFront()
 
@@ -455,7 +460,6 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
 
 '''
 
-Average dynamic percentage: {0: 0.5655201342281876, 1: 0.29636973764490476, 2: 1.0, 3: 0.9149888143176713, 4: 1.0, 5: 0.7306114839671883, 6: 0.47184936614466805, 7: 0.9911912751677853, 8: 0.9997203579418343, 9: 0.9865771812080545}
 
 
                 all_less_equal_zero = all(v <= 0 for v in values)
