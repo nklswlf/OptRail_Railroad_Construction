@@ -719,10 +719,6 @@ class SwapShiftExternalMove(BaseMove):
             self.NumberOfAttachmentsInt = 0
 
 
-    def __str__(self):
-        return f"Worker: {self.WorkerID} \nWorker Route: {self.WorkerRoute} \nWorker Route Index: {self.WorkerRouteIndex} \nMachine ID Internal: {self.MachineIDInt} \nMachine ID External: {self.MachineIDExt} \nMachine Route Internal: {self.MachineRouteInt} \nMachine Route External: {self.MachineRouteExt} \nMachine Route Index Internal: {self.MachineRouteIndexInt} \nMachine Route Index External: {self.MachineRouteIndexExt} \nOrder Item ID Internal: {self.OrderItemIDInt} \nOrder Item ID External: {self.OrderItemIDExt} \nDynamic Percentage Internal: {self.DynamicPercentageInt} \nDynamic Percentage External: {self.DynamicPercentageExt} \nNumber of Attachments Internal: {self.NumberOfAttachmentsInt} \nNumber of Attachments External: {self.NumberOfAttachmentsExt}"
-
-
 class SwapShiftExternalNeighborhood(OutputNeighborhood):
     
     def __init__(self, inputData: InputData, evaluationLogic: EvaluationLogic, paretoSolutions: ParetoSolutions, rng):

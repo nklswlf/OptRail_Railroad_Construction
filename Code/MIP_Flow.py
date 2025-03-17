@@ -552,97 +552,6 @@ class FlowFormulation:
         # ========================
         # 3. Add Constraints
         # ========================
-        if not self.objective_strategy == "construction_fulfillment":
-            # Machine flow balance constraints
-            for m in self.M:
-                for i in self.N_m[m]:
-                    self.model.addConstr(
-                        gp.quicksum(x[m, j, i] for j in self.P_mn[m, i]) ==
-                        gp.quicksum(x[m, i, j] for j in self.S_mn[m, i]),
-                        name=f"machine_flow_balance_{m}_{i}"
-                    )
-
-
-            # Start and end node constraints for machines
-            for m in self.M:
-                if (m, self.start) in self.S_mn:
-                    self.model.addConstr(
-                        gp.quicksum(x[m, self.start, j] for j in self.S_mn[m, self.start]) == 1,
-                        name=f"machine_start_constraint_{m}"
-                    )
-
-            # Regular driver constraints
-            for m in self.M:
-                for i in self.N_m[m]:
-                    self.model.addConstr(
-                        gp.quicksum(x[m, i, j] for j in self.S_mn[m, i]) <=
-                        gp.quicksum(y[w, i, j] for w in self.W_m[m] if (w, i) in self.S_wn for j in self.S_wn[w, i]) + r[i],
-                        name=f"regular_driver_constraint_{m}_{i}"
-                )
-                    
-            # Worker flow balance constraints
-            for w in self.W:
-                for i in self.N_w[w]:
-                    self.model.addConstr(
-                        gp.quicksum(y[w, j, i] for j in self.P_wn[w, i]) ==
-                        gp.quicksum(y[w, i, j] for j in self.S_wn[w, i]),
-                        name=f"worker_flow_balance_{w}_{i}"
-                    )
-
-            # Start and end node constraints for workers
-            for w in self.W:
-                if (w, self.start) in self.S_wn:
-                    self.model.addConstr(
-                        gp.quicksum(y[w, self.start, j] for j in self.S_wn[w, self.start]) == 1,
-                        name=f"worker_start_constraint_{w}"
-                    )
-
-            
-            # Night shift constraints
-            for w in self.W:
-                for t in self.T_range:
-                    if t <= self.T - self.S_Nmax:
-                        self.model.addConstr(
-                            gp.quicksum(
-                                y[w, i, j] for t_ in range(t, t + self.S_Nmax + 1) if t_ in self.N_r for j in self.N_r[t_]
-                                if (w, j) in self.P_wn for i in self.P_wn[w, j]
-                            ) <= self.S_Nmax,
-                            name=f"night_shift_constraint_{w}_t{t}"
-                        )
-
-            # Shift count constraints
-            for w in self.W:
-                for t in self.T_range:
-                    if t <= self.T - self.T_Smax:
-                        self.model.addConstr(
-                            gp.quicksum(
-                                y[w, i, j] for t_ in range(t, t + self.T_Smax) if t_ in self.A_r for j in self.A_r[t_]
-                                if (w, j) in self.P_wn for i in self.P_wn[w, j]
-                            ) <= self.S_max,
-                            name=f"shift_number_constraint_{w}_t{t}"
-                        )
-
-
-            # Total working time constraints
-            for w in self.W:
-                self.model.addConstr(
-                    gp.quicksum(self.t_o[i] * y[w, i, j] for i in self.N_w[w] for j in self.S_wn[w, i]) <= self.T_Wmax,
-                    name=f"work_time_constraint_{w}"
-                )
-
-
-        # Site completion constraints
-        for c in self.C:
-            for i in self.N_c[c]:
-                self.model.addConstr(
-                    gp.quicksum(x[m, i, j] for m in self.M if (m, i) in self.S_mn for j in self.S_mn[m, i]) == u[c],
-                    name=f"machine_site_fulfillment_site{c}_order{i}"
-                )
-                self.model.addConstr(
-                    gp.quicksum(y[w, i, j] for w in self.W if (w, i) in self.S_wn for j in self.S_wn[w, i]) == u[c],
-                    name=f"worker_site_fulfillment_site{c}_order{i}"
-                )
-
 
         # Machine flow balance constraints
         for m in self.M:
@@ -660,6 +569,79 @@ class FlowFormulation:
                 self.model.addConstr(
                     gp.quicksum(x[m, self.start, j] for j in self.S_mn[m, self.start]) == 1,
                     name=f"machine_start_constraint_{m}"
+                )
+
+
+        # Regular driver constraints
+        for m in self.M:
+            for i in self.N_m[m]:
+                self.model.addConstr(
+                    gp.quicksum(x[m, i, j] for j in self.S_mn[m, i]) <=
+                    gp.quicksum(y[w, i, j] for w in self.W_m[m] if (w, i) in self.S_wn for j in self.S_wn[w, i]) + r[i],
+                    name=f"regular_driver_constraint_{m}_{i}"
+            )
+                
+        # Worker flow balance constraints
+        for w in self.W:
+            for i in self.N_w[w]:
+                self.model.addConstr(
+                    gp.quicksum(y[w, j, i] for j in self.P_wn[w, i]) ==
+                    gp.quicksum(y[w, i, j] for j in self.S_wn[w, i]),
+                    name=f"worker_flow_balance_{w}_{i}"
+                )
+
+        # Start and end node constraints for workers
+        for w in self.W:
+            if (w, self.start) in self.S_wn:
+                self.model.addConstr(
+                    gp.quicksum(y[w, self.start, j] for j in self.S_wn[w, self.start]) == 1,
+                    name=f"worker_start_constraint_{w}"
+                )
+
+        
+        # Night shift constraints
+        for w in self.W:
+            for t in self.T_range:
+                if t <= self.T - self.S_Nmax:
+                    self.model.addConstr(
+                        gp.quicksum(
+                            y[w, i, j] for t_ in range(t, t + self.S_Nmax + 1) if t_ in self.N_r for j in self.N_r[t_]
+                            if (w, j) in self.P_wn for i in self.P_wn[w, j]
+                        ) <= self.S_Nmax,
+                        name=f"night_shift_constraint_{w}_t{t}"
+                    )
+
+        # Shift count constraints
+        for w in self.W:
+            for t in self.T_range:
+                if t <= self.T - self.T_Smax:
+                    self.model.addConstr(
+                        gp.quicksum(
+                            y[w, i, j] for t_ in range(t, t + self.T_Smax) if t_ in self.A_r for j in self.A_r[t_]
+                            if (w, j) in self.P_wn for i in self.P_wn[w, j]
+                        ) <= self.S_max,
+                        name=f"shift_number_constraint_{w}_t{t}"
+                    )
+
+
+        # Total working time constraints
+        for w in self.W:
+            self.model.addConstr(
+                gp.quicksum(self.t_o[i] * y[w, i, j] for i in self.N_w[w] for j in self.S_wn[w, i]) <= self.T_Wmax,
+                name=f"work_time_constraint_{w}"
+            )
+
+
+        # Site completion constraints
+        for c in self.C:
+            for i in self.N_c[c]:
+                self.model.addConstr(
+                    gp.quicksum(x[m, i, j] for m in self.M if (m, i) in self.S_mn for j in self.S_mn[m, i]) == u[c],
+                    name=f"machine_site_fulfillment_site{c}_order{i}"
+                )
+                self.model.addConstr(
+                    gp.quicksum(y[w, i, j] for w in self.W if (w, i) in self.S_wn for j in self.S_wn[w, i]) == u[c],
+                    name=f"worker_site_fulfillment_site{c}_order{i}"
                 )
 
 
