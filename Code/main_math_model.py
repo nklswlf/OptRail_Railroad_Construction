@@ -70,7 +70,7 @@ def upper_bound():
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
     
-    instances = ["Construction_a50_o578_m28_an276_ar66.json"]
+    instances = ["Construction_a10_o107_m5_an57_ar12.json"]
     
     for instance in instances:
 
@@ -106,8 +106,10 @@ def main():
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
     
+    instances = ["Construction_a10_o107_m5_an57_ar12.json"]
     
-    objective_strategies = ["costs", "weighted", "hierarchical", "hierarchical_tolerance"]
+    
+    objective_strategies = ["hierarchical", "hierarchical_tolerance"]
     number_of_objectives = [6, 3, 4, 5]
 
     
