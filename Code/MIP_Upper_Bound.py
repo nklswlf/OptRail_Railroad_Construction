@@ -407,12 +407,36 @@ class UpperBound:
                     name=f"work_time_constraint_{w}"
                 )
 
+            # Night shift constraints
+            for w in self.W:
+                for t in self.T_range:
+                    if t <= self.T - self.S_Nmax:
+                        self.model.addConstr(
+                            gp.quicksum(
+                                y[w, i, j] for t_ in range(t, t + self.S_Nmax + 1) if t_ in self.N_r for j in self.N_r[t_]
+                                if (w, j) in self.P_wn for i in self.P_wn[w, j]
+                            ) <= self.S_Nmax,
+                            name=f"night_shift_constraint_{w}_t{t}"
+                        )
+
+            # Shift count constraints
+            for w in self.W:
+                for t in self.T_range:
+                    if t <= self.T - self.T_Smax:
+                        self.model.addConstr(
+                            gp.quicksum(
+                                y[w, i, j] for t_ in range(t, t + self.T_Smax) if t_ in self.A_r for j in self.A_r[t_]
+                                if (w, j) in self.P_wn for i in self.P_wn[w, j]
+                            ) <= self.S_max,
+                            name=f"shift_number_constraint_{w}_t{t}"
+                        )
+
+
 
 
 
         # Site completion constraints
-        if self.upper_bound == 'machine' or self.upper_bound == "both":
-
+        if self.upper_bound == 'machine':
             for c in self.C:
                 for i in self.N_c[c]:
                     self.model.addConstr(
@@ -420,10 +444,21 @@ class UpperBound:
                         name=f"machine_site_fulfillment_site{c}_order{i}"
                     )
 
-        if self.upper_bound == 'worker' or self.upper_bound == "both":
-                
+        if self.upper_bound == 'worker':         
             for c in self.C:
                 for i in self.N_c[c]:
+                    self.model.addConstr(
+                        gp.quicksum(y[w, i, j] for w in self.W if (w, i) in self.S_wn for j in self.S_wn[w, i]) == u[c],
+                        name=f"worker_site_fulfillment_site{c}_order{i}"
+                    )
+
+        if self.upper_bound == 'both':
+            for c in self.C:
+                for i in self.N_c[c]:
+                    self.model.addConstr(
+                        gp.quicksum(x[m, i, j] for m in self.M if (m, i) in self.S_mn for j in self.S_mn[m, i]) == u[c],
+                        name=f"machine_site_fulfillment_site{c}_order{i}"
+                    )
                     self.model.addConstr(
                         gp.quicksum(y[w, i, j] for w in self.W if (w, i) in self.S_wn for j in self.S_wn[w, i]) == u[c],
                         name=f"worker_site_fulfillment_site{c}_order{i}"
@@ -614,26 +649,15 @@ class UpperBound:
         self.create_optimization_model()
         feasible = self.solve_model()
 
-    
-
-
-        if feasible == "time_limit_exceeded":
-            print("Time limit exceeded.")
-            self.time_limit_exceeded("time_limit_exceeded")
-            return None, None
-        
-        if feasible == "solution_with_gap":
-            print("Solution found within time limit but with a gap.")
-            self.time_limit_exceeded("solution_with_gap")
-
-
         if not feasible:
             print("Model is infeasible.")
             return None, None
         
-        self.postprocess_results()
+        #self.postprocess_results()
+
+        objective_value = self.model.objVal
+        return objective_value
 
 
-        return self.site_fulfillment
 
         

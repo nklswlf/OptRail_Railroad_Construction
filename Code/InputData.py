@@ -83,6 +83,11 @@ class InputData:
 
         self.create_priorities_orders()
         self.connect_order_item_to_order()
+        self.reduce_input_data(22)
+        for order in self.orders:
+            print(f"Order priority borda AHP: {order._priority['borda_count_ahp']}")
+            #print(f"Order priority borda: {order._priority['borda_count']}")
+            print(f"Order priority order_item_count: {order._priority['order_item_count']}")
 
         # Dynamic dictionary for planned shifts for greedy algorithm
         self.planned_shifts_worker = dict()
@@ -93,11 +98,23 @@ class InputData:
 
 
 
+    def reduce_input_data(self, number_of_orders):
+        '''
+        Reduce the input data to a smaller number of orders.
+
+        :param number_of_orders: Number of orders to keep.
+        '''
+        
+        for order in self.orders:
+            if order.priority['borda_count_ahp'] > number_of_orders:
+                order.status = False
+                for order_item in order.order_items:
+                    order_item.status = False
 
 
+        
 
-
-
+        
 
     
     def connect_order_item_to_order(self):
@@ -310,6 +327,11 @@ class InputData:
 
 
 
+
+
+
+
+
     def _load_data(self) -> None:
         ''' Load data from the JSON file and initialize lists of objects. '''
         with open(self._data_path, 'r', encoding='utf-8') as json_file:
@@ -322,7 +344,9 @@ class InputData:
 
             # Load each data category part 1
             self._orders = [Order(order) for order in data.get("Auftraege", [])]
+            self._excluded_orders = list()
             self._order_items = [OrderItem(item) for item in data.get("Bestellpositionen", [])]
+            self._excluded_order_items = list()
             self._attachments = [Attachment(attachment) for attachment in data.get("Anbaugeraete", [])]
             self._workers = [Worker(worker) for worker in data.get("Arbeiter", [])]
             self._machines = [Machine(machine) for machine in data.get("Maschinen", [])]
@@ -504,6 +528,14 @@ class InputData:
     def max_dynamic_precentage_change(self) -> float:
         return self._max_dynamic_precentage_change
     
+    @property
+    def excluded_orders(self) -> List['Order']:
+        return self._excluded_orders
+    
+    @property
+    def excluded_order_items(self) -> List['OrderItem']:
+        return self._excluded_order_items
+    
     
     
 
@@ -518,6 +550,7 @@ class Order:
         self._location = json_data.get("Standort", {"Item1": 0.0, "Item2": 0.0})
         self._priority = {}
         self.dynamic_percentage = 0
+        self.status = True
 
 
 
@@ -573,6 +606,7 @@ class OrderItem:
         self._worker_qualifications = json_data.get("ArbeiterQualifikationen", [])
         self._assigned_machine = json_data.get("zugewieseneMaschine", None)
         self._type = int(json_data.get("Typ", 0))
+        self.status = True
     
 
 
