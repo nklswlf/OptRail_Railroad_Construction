@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List, Tuple, Optional
 from datetime import datetime,timedelta
 import itertools
+from MIP_Upper_Bound import *
 
 
 class InputData:
@@ -83,7 +84,14 @@ class InputData:
 
         self.create_priorities_orders()
         self.connect_order_item_to_order()
-        self.reduce_input_data(22)
+
+
+
+        optimizer = UpperBound(self, "both")
+        site_fulfillment = optimizer.execute()
+        site_fulfillment = int(site_fulfillment) - 3
+        self.reduce_input_data(site_fulfillment)
+
         for order in self.orders:
             print(f"Order priority borda AHP: {order._priority['borda_count_ahp']}")
             #print(f"Order priority borda: {order._priority['borda_count']}")

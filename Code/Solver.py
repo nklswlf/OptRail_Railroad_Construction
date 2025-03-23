@@ -33,6 +33,13 @@ class Solver:
         endtime = time.time()
         self.RunTime = endtime - starttime
 
+        for order in self.InputData.orders:
+            print(f"Order id {order.order_number} has status {order.status}")
+            print(f"Order Dynamic Percentage {order.dynamic_percentage}")
+            print("\n")
+
+
+
         return start_solutuion
 
 

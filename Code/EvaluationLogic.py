@@ -826,30 +826,44 @@ class EvaluationLogic:
 
         for order_item in self.data.order_items:
             if order_item.id not in all_planned_order_item_ids:
-                solution.not_started_order_item_ids.append(order_item.id)
+                if order_item.status == True:
+                    solution.not_started_order_item_ids.append(order_item.id)
+                elif order_item.status == False:
+                    solution.not_recognized_order_item_ids.append(order_item.id)
         
 
         for order in self.data.orders:
-            solution.finished_orders.append(order)
-            solution.not_started_orders.append(order)
+            if order.status == True:
+                solution.finished_orders.append(order)
+                solution.not_started_orders.append(order)
+            elif order.status == False:
+                solution.not_recognized_orders.append(order)
 
         for order in self.data.orders:
+            if order.status == False:
+                continue
             for order_item_id in order.order_item_ids:
                 if order_item_id not in all_planned_order_item_ids:
                     solution.finished_orders.remove(order)
                     break
 
         for order in self.data.orders:
+            if order.status == False:
+                continue
             for order_item_id in order.order_item_ids:
                 if order_item_id in all_planned_order_item_ids:
                     solution.not_started_orders.remove(order)
                     break
 
-        solution.semifinished_orders = [order for order in self.data.orders if order not in solution.finished_orders and order not in solution.not_started_orders]
+        solution.semifinished_orders = [order for order in self.data.orders if order not in solution.finished_orders and order not in solution.not_started_orders and order not in solution.not_recognized_orders]
 
         solution.share_finished_orders = len(solution.finished_orders) / len(self.data.orders) * 100
 
         solution.number_of_finished_orders = len(solution.finished_orders)
+
+        solution.number_of_unrecognized_orders = len(solution.not_recognized_orders)
+
+
 
     def categorizing_machine_worker(self, solution:Solution):
         ''' Categorize the machines and workers into finished, semi-finished and not started machines and workers'''
