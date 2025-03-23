@@ -1,4 +1,4 @@
-from InputData import *
+import InputData
 import json
 import pandas as pd
 import plotly.express as px
@@ -21,12 +21,15 @@ class Solution:
         self.finished_orders = []
         self.semifinished_orders = []
         self.not_started_orders = []
+        self.not_recognized_orders = []
 
         self.not_started_order_item_ids = []
+        self.not_recognized_order_item_ids = []
 
         self.share_finished_orders = -0
         self.number_of_finished_orders = -0
         self.number_of_finished_order_items = -0
+        self.number_of_unrecognized_orders = -0
 
         self.used_machines = []
         self.used_workers = []
@@ -60,6 +63,7 @@ class Solution:
                 f"Number of finished orders: {self.number_of_finished_orders}\n"
                 f"Number of semi-finished orders: {len(self.semifinished_orders)}\n"
                 f"Number of not started orders: {len(self.not_started_orders)}\n"
+                f"Number of unrecognized orders: {self.number_of_unrecognized_orders}\n"
                 f"Dynamic percentage: {self.total_dynamic_percentage}\n"
                 f"Number of finished order items: {self.number_of_finished_order_items}\n"
                 f"Driver violation: {self.driver_violation}\n"
