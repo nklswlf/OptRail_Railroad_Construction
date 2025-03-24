@@ -89,8 +89,8 @@ class InputData:
 
         optimizer = UpperBound(self, "both")
         site_fulfillment = optimizer.execute()
-        site_fulfillment = int(site_fulfillment) - 3
-        self.reduce_input_data(site_fulfillment)
+        self.site_fulfillment = int(site_fulfillment)
+        self.reduce_input_data(self.site_fulfillment)
 
         for order in self.orders:
             print(f"Order priority borda AHP: {order._priority['borda_count_ahp']}")
@@ -114,7 +114,7 @@ class InputData:
         '''
         
         for order in self.orders:
-            if order.priority['borda_count_ahp'] > number_of_orders:
+            if order.priority['order_item_count'] > number_of_orders:
                 order.status = False
                 for order_item in order.order_items:
                     order_item.status = False
