@@ -244,13 +244,11 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
 
 
         types_and_objectives = {
-                        "commute_distance": ['Swap_Shift_Worker', 'Replace_Shift_Worker'],
-                        "transport_distance": ['Swap_Shift_Machine', 'Replace_Shift_Machine'],
-                        "driver_violation": ['Swap_Shift_Machine', 'Swap_Shift_Worker', 'Replace_Shift_Worker', 'Replace_Shift_Machine'],
-                        "attachment_distance": ['Swap_Shift_Attachment', 'Replace_Shift_Attachment'],
-                        "machine_count": ['Replace_Shift_Machine'],
-                        "worker_count": ["Insert_Shift", 'Replace_Shift_Worker'],
-                        "attachment_count": ['Replace_Shift_Attachment']}
+                        "commute_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Worker', 'Replace_Shift_Worker'],
+                        "transport_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Machine', 'Replace_Shift_Machine'],
+                        "attachment_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Attachment', 'Replace_Shift_Attachment'],
+                        }
+
         
 
         solution_stacked = False
