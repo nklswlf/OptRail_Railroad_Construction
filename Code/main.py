@@ -156,7 +156,7 @@ def main():
         else:
             # Run the algorithm
             solver.RunAlgorithm(
-                order_item_attractiveness_technique="balanced_greedy",
+                order_item_attractiveness_technique="time_difference_importance",
                 machine_attractiveness_technique="balanced_greedy",
                 algorithm=simulated_annealing_local_search
             )
