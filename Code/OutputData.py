@@ -609,8 +609,9 @@ class Solution:
 class ParetoSolutions:
     ''' Class for creating lits objects containing solution objects'''
 
-    def __init__(self, data:InputData):
+    def __init__(self, data:InputData, rng = None):
         self.data = data
+        self.RNG = rng
         ''' Create an empty list for the solutions'''
         self.ParetoFront = []
 
@@ -784,29 +785,48 @@ class ParetoSolutions:
         return 0  # Keine Dominanz
 
 
-    def SortParetoFront(self):
-        ''' Sort the Pareto Front according to the total_dynamic_percentage (higher is better), then sort by the other objectives'''
+    def SortParetoFront(self, criteria: str = None):
+        '''
+        Sorts the Pareto front:
+        - Always starts with: finished_orders, dynamic_percentage, order_items
+        - Then: given `criteria` (if any), moved forward in original order
+        - Then: all remaining objectives in original order
+        '''
 
-        # Sort the Pareto Front
-        # # Number of sites and dynamic percentage are the higher the better, all other objectives are the lower the better
-        self.ParetoFront = sorted(
-            self.ParetoFront,
-            key=lambda x: (
+        # Feste Reihenfolge der sekundären Ziele (wird nicht verändert)
+        ordered_objectives = [
+            ("driver_violation", lambda x: x.driver_violation),
+            ("commute_distance", lambda x: x.total_commute_distance),
+            ("transport_distance", lambda x: x.total_transport_distance),
+            ("attachment_distance", lambda x: x.total_transport_distance_attachments),
+            ("machines", lambda x: x.number_of_machines),
+            ("workers", lambda x: x.number_of_workers),
+            ("attachments", lambda x: x.number_of_attachments)
+        ]
+
+        def sort_key(x):
+            key = [
                 -x.number_of_finished_orders,
                 -x.total_dynamic_percentage,
-                -x.number_of_finished_order_items,
-                x.driver_violation,
-                x.total_commute_distance,
-                x.total_transport_distance,
-                x.total_transport_distance_attachments,
-                x.number_of_machines,
-                x.number_of_workers,
-                x.number_of_attachments
-            )
-        )
+                -x.number_of_finished_order_items
+            ]
 
-        # print the Pareto front as an df without using the ShowFront function
-        # Create a list of dictionaries for the solutions
+            # Falls ein Kriterium angegeben ist → nach vorne
+            if criteria:
+                for name, func in ordered_objectives:
+                    if name == criteria:
+                        key.append(func(x))  # zuerst das gewünschte Kriterium
+
+            # Dann alle restlichen (in ursprünglicher Reihenfolge, außer dem schon verwendeten)
+            for name, func in ordered_objectives:
+                if name != criteria:
+                    key.append(func(x))
+
+            return tuple(key)
+
+        self.ParetoFront = sorted(self.ParetoFront, key=sort_key)
+
+        # Ausgabe als Tabelle
         solutions = []
         for solution in self.ParetoFront:
             solutions.append({
@@ -822,12 +842,48 @@ class ParetoSolutions:
                 "Attachments": solution.number_of_attachments
             })
 
-        # Create a DataFrame from the list of dictionaries
         df = pd.DataFrame(solutions)
-
         print(df)
-
     
+    def SelectRandomBestSolution(self):
+        """
+        Sammelt aus der Pareto-Front für jedes Zielkriterium (Minimierungsziele)
+        die jeweils besten Lösungen (mit minimalem Wert), 
+        kombiniert diese und wählt daraus zufällig eine Lösung mit self.RNG.
+        """
+
+        # Zielkriterien und ihre Zugriffs-Funktionen
+        objective_map = {
+            "driver_violation": lambda x: x.driver_violation,
+            "commute_distance": lambda x: x.total_commute_distance,
+            "transport_distance": lambda x: x.total_transport_distance,
+            "attachment_distance": lambda x: x.total_transport_distance_attachments,
+            "machines": lambda x: x.number_of_machines,
+            "workers": lambda x: x.number_of_workers,
+            "attachments": lambda x: x.number_of_attachments
+        }
+
+        # Set zur Sammlung aller "Bestlösungen" (vermeidet Duplikate)
+        best_solutions_set = set()
+
+        # Für jedes Zielkriterium → beste Lösungen bestimmen
+        for key, func in objective_map.items():
+            try:
+                best_value = min(func(sol) for sol in self.ParetoFront)
+                best_solutions = [sol for sol in self.ParetoFront if func(sol) == best_value]
+                best_solutions_set.update(best_solutions)
+            except ValueError:
+                # Falls ParetoFront leer ist oder andere Fehler → ignoriere dieses Ziel
+                continue
+
+        # Falls keine gefunden → Fallback: ganze Front
+        if not best_solutions_set:
+            raise ValueError("No best solutions found for any objective.")
+            return self.RNG.choice(self.ParetoFront)
+
+        # Zufällige Auswahl aus den gesammelten besten Lösungen
+        return self.RNG.choice(list(best_solutions_set))
+
 
     def ShowFront(self):
         ''' Show the Pareto Front as a DataFrame'''
