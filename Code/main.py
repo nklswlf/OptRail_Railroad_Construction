@@ -1,4 +1,4 @@
-from InputData import *
+from InputData import InputData
 import OutputData
 from ConstructiveHeuristic import *
 import pandas as pd
@@ -89,21 +89,8 @@ neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace
                        'Swap_Shift_Worker', 'Swap_Shift_Machine', 'Swap_Shift_Attachment',
                        'Swap_Shift_External', 'Insert_Shift']
 
-neighboorhood_types_simulated_annealing = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 
-                                           'Swap_Shift_Worker', 'Swap_Shift_Machine', 
-                                           'Replace_Shift_Attachment', 'Swap_Shift_Attachment', 
-                                           'Swap_Shift_External', 'Insert_Shift']
+neighboorhood_types_local_search = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace_Shift_Attachment']
 
-neighboorhood_types_local_search = ['Swap_Shift_External', 'Insert_Shift']
-
-neighboorhood_types_simulated_annealing = ['Replace_Shift_Worker',"Replace_Shift_Machine",
-                                           'Swap_Shift_Worker', 'Swap_Shift_Machine'
-                                           ]
-
-
-neighboorhood_types_local_search = ['Replace_Shift_Worker',"Replace_Shift_Machine",
-                                           'Swap_Shift_Worker', 'Swap_Shift_Machine'
-                                           ]
 
 
 objectives = ["commute_distance", "transport_distance", "attachment_distance",
@@ -121,6 +108,32 @@ types_and_objectives = {"dynamic_percentage_order": ["Insert_Shift", "Swap_Shift
                         "worker_count": ["Insert_Shift", 'Replace_Shift_Worker'],
                         "attachment_count": ["Insert_Shift", "Swap_Shift_External", 'Replace_Shift_Attachment']}
 
+
+
+building_types_and_objectives = {"dynamic_percentage_order": ["Insert_Shift", "Swap_Shift_External"],
+                        "commute_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Worker', 'Replace_Shift_Worker'],
+                        "transport_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Machine', 'Replace_Shift_Machine'],
+                        "attachment_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Attachment', 'Replace_Shift_Attachment']}
+
+
+
+improve_types_and_objectives = {
+                        "driver_violation": ['Swap_Shift_Machine', 'Swap_Shift_Worker', 'Replace_Shift_Worker', 'Replace_Shift_Machine'],
+                        "commute_distance": ['Swap_Shift_Worker', 'Replace_Shift_Worker'],
+                        "transport_distance": ['Swap_Shift_Machine', 'Replace_Shift_Machine'],
+                        "attachment_distance": ['Swap_Shift_Attachment', 'Replace_Shift_Attachment'],
+                        "machine_count": ['Replace_Shift_Machine'],
+                        "worker_count": ['Replace_Shift_Worker'],
+                        "attachment_count": ['Replace_Shift_Attachment']}
+
+
+energy_dominance_neighborhoods = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
+                                    'Replace_Shift_Machine': ['driver_violation', 'transport_distance', 'machine_count'],
+                                    'Replace_Shift_Attachment': ['attachment_distance', 'attachment_count'],
+                                    'Swap_Shift_Worker': ['driver_violation', 'commute_distance'],
+                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance'],
+                                    'Swap_Shift_Attachment': ['attachment_distance']}
+
                         
 
 
@@ -132,33 +145,40 @@ def main():
         data = InputData(i)
         print(f"Instance: {data.instance}")
 
-        solver = Solver(data, 3)
+        solver = Solver(data, 1)
 
 
         local_search = IterativeImprovement(inputData=data,
                                             neighborhoodTypes=neighboorhood_types_local_search)
 
-        simulated_annealing_local_search = SimulatedAnnealingLocalSearch(inputData=data,
-                                                                        start_temp=5,
+        pareto_simulated_annealing = ParetoSimulatedAnnealing(inputData=data,
+                                                                        start_temp=30,
                                                                         min_temp=0.1,
                                                                         cooling_rate=0.95,
-                                                                        max_iterations= 20,
-                                                                        neighborhoodTypesSA=neighboorhood_types_simulated_annealing,
-                                                                        neighborhoodTypesLS=neighboorhood_types_local_search)
+                                                                        max_iterations= 50,
+                                                                        fallback_threshold=50,
+                                                                        scaling_energy= 30,
+                                                                        neighborhoodTypes=neighboorhood_types,
+                                                                        energyDominanceNeighborhoods=energy_dominance_neighborhoods,
+                                                                        buildingTypesObjectives=building_types_and_objectives,
+                                                                        improveTypesObjectives=improve_types_and_objectives,
+                                                                        improveIndividualStrategy="successive")
+
+
 
 
         if only_constructive:
             # Run ONLY the constructive heuristic
             solver.ConstructionPhase(
-                order_item_attractiveness_technique="balanced_greedy",
+                order_item_attractiveness_technique="time_difference_importance",
                 machine_attractiveness_technique="balanced_greedy"
             )
         else:
             # Run the algorithm
             solver.RunAlgorithm(
-                order_item_attractiveness_technique="time_difference_importance",
+                order_item_attractiveness_technique="balanced_greedy",
                 machine_attractiveness_technique="balanced_greedy",
-                algorithm=simulated_annealing_local_search
+                algorithm=pareto_simulated_annealing
             )
 
 

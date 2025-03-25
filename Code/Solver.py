@@ -1,10 +1,7 @@
 from InputData import *
-from OutputData import *
 from ConstructiveHeuristic import *
 from ImprovementAlgorithm import *
 from EvaluationLogic import *
-
-import random
 import time
 
 class Solver:
@@ -15,7 +12,7 @@ class Solver:
         self.Seed = seed
         self.RNG = numpy.random.default_rng(self.Seed)
         self.EvaluationLogic = EvaluationLogic(inputData)
-        self.ParetoSolutions = ParetoSolutions(inputData)
+        self.ParetoSolutions = ParetoSolutions(inputData, self.RNG)
         self.runTime = {}
         
         self.ConstructiveHeuristic = ConstructiveHeuristics(paretoSolutions=self.ParetoSolutions, evaluationLogic=self.EvaluationLogic)

@@ -5,7 +5,6 @@ from datetime import datetime,timedelta
 import itertools
 from MIP_Upper_Bound import *
 
-
 class InputData:
     '''Class for creating Data objects based on formatted JSON Files containing the information of orders, machines, workers, attachments, and routes'''
 
