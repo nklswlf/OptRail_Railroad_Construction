@@ -69,7 +69,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-instances = ["Construction_a25_o306_m13_an127_ar31.json"]
+instances = ["Construction_a30_o355_m18_an148_ar42.json"]
 
 
 
@@ -155,14 +155,14 @@ def main():
                                                                         start_temp=30,
                                                                         min_temp=0.1,
                                                                         cooling_rate=0.95,
-                                                                        max_iterations= 50,
+                                                                        max_iterations= 100,
                                                                         fallback_threshold=50,
                                                                         scaling_energy= 30,
                                                                         neighborhoodTypes=neighboorhood_types,
                                                                         energyDominanceNeighborhoods=energy_dominance_neighborhoods,
                                                                         buildingTypesObjectives=building_types_and_objectives,
                                                                         improveTypesObjectives=improve_types_and_objectives,
-                                                                        improveIndividualStrategy="successive")
+                                                                        improveIndividualStrategy="parallel")
 
 
 
@@ -176,7 +176,7 @@ def main():
         else:
             # Run the algorithm
             solver.RunAlgorithm(
-                order_item_attractiveness_technique="balanced_greedy",
+                order_item_attractiveness_technique="time_difference_importance",
                 machine_attractiveness_technique="balanced_greedy",
                 algorithm=pareto_simulated_annealing
             )
