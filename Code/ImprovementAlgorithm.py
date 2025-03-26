@@ -3,7 +3,8 @@ import math
 from copy import deepcopy
 import numpy as np
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
+
 
 class ImprovementAlgorithm:
     """ Base class for several types of improvement algorithms. """ 
@@ -239,14 +240,14 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         fallback_counter = 0
         current_temperature = self.StartTemperature
+        local_pareto_solutions = ParetoSolutions(self.InputData)
 
         while current_temperature > self.MinTemperature:
 
             for i in range(self.MaxIterations):
 
                 if solution.total_dynamic_percentage == self.InputData.site_fulfillment:
-                    self.ParetoSolutions.DeleteUnfinishedSites()
-                    self.ParetoSolutions.PurgeParetoFront()
+                    self.ParetoSolutions.ParetoFront.append(solution)
                     self.ParetoSolutions.ShowFront()
                     return solution, True
 
@@ -262,7 +263,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
                 value = move.DeltaDetails[random_objective]
 
-                if value < 0:
+                if value <= 0:
                     pass
                 elif value > 0:
                     prob = math.exp(-value * self.ScalingEnergy/ current_temperature)
@@ -278,20 +279,21 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 print(f"New solution: {solution}")
                 print(f"Unfinished Order Items {solution.not_started_order_item_ids}")
 
-                added = self.ParetoSolutions.UpdateParetoFront(solution)
+                added = local_pareto_solutions.UpdateParetoFront(solution)
 
                 if not added:
                     fallback_counter += 1
                     if fallback_counter >= self.FallbackThreshold:
-                        self.ParetoSolutions.SortParetoFront()
-                        solution = self.ParetoSolutions.ParetoFront[0]
+                        local_pareto_solutions.SortParetoFront()
+                        solution = local_pareto_solutions.ParetoFront[0]
                 else:
                     fallback_counter = 0
 
             current_temperature *= self.CoolingRate
 
-        solution = deepcopy(self.ParetoSolutions.ParetoFront[0])
-        self.ParetoSolutions.DeleteUnfinishedSites()
+        solution = deepcopy(local_pareto_solutions.ParetoFront[0])
+        self.ParetoSolutions.UpdateParetoFront(solution)
+        self.ParetoSolutions.ShowFront()
         return solution, False
     
         # Introduce a perturbation to escape local optima!!!
@@ -319,7 +321,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
                 value = move.DeltaDetails[objective]
 
-                if value < 0:
+                if value <= 0:
                     pass
                 elif value > 0:
                     prob = math.exp(-value * self.ScalingEnergy / current_temperature)
@@ -350,22 +352,24 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         return local_pareto_solutions
 
 
+    def ParallelImproveIndividuals(self, solution: Solution) -> None:
+        tasks = []
+        with ProcessPoolExecutor() as executor:
+            for obj in self.ImproveTypesObjectives.keys():
+                local_solution = deepcopy(solution)
+                tasks.append(executor.submit(self.ImproveIndividuals, local_solution, obj))
 
+            results = [task.result() for task in tasks]
 
-    def ParallelImproveIndividuals(self, solution:Solution) -> None:
-            
-            with ThreadPoolExecutor() as executor:
-                results = executor.map(self.ImproveIndividuals, solution, self.ImproveTypesObjectives.keys())
+        combined_pareto_front = []
+        for local_pareto in results:
+            combined_pareto_front.extend(local_pareto.ParetoFront)
 
-            # Combine all local Pareto fronts into the global Pareto front
-            combined_pareto_front = []
-            for local_pareto in results:
-                combined_pareto_front.extend(local_pareto.ParetoFront)
+        self.ParetoSolutions.ParetoFront = combined_pareto_front
+        self.ParetoSolutions.PurgeParetoFront()
+        self.ParetoSolutions.SortParetoFront()
+        self.ParetoSolutions.ShowFront()
 
-            self.ParetoSolutions.ParetoFront = combined_pareto_front
-            self.ParetoSolutions.PurgeParetoFront()
-            self.ParetoSolutions.SortParetoFront()
-            self.ParetoSolutions.ShowFront()
 
     def SuccessiveImproveIndividuals(self, solution:Solution) -> None:
 
@@ -377,8 +381,6 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.ParetoSolutions.PurgeParetoFront()
         self.ParetoSolutions.SortParetoFront()
         self.ParetoSolutions.ShowFront()
-
-        raise Exception("Successive improvement not implemented yet")
 
 
 
@@ -402,33 +404,81 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 if move is None:
                     continue
 
+                not_involved_objectives = ['driver_violation', 'commute_distance', 'transport_distance', 'attachment_distance', 'machine_count', 'worker_count', 'attachment_count']
+                objective_dict = dict()
                 for objective in objectives:
                     value = move.DeltaDetails[objective]
+                    not_involved_objectives.remove(objective)
 
                     if objective == 'driver_violation':
-                        driver_violation_new_solution = solution.total_driver_violation - value
+                        objective_dict[objective] = solution.driver_violation - value
                     elif objective == 'commute_distance':
-                        commute_distance_new_solution = solution.total_commute_distance - value
+                        objective_dict[objective] = solution.total_commute_distance - value
                     elif objective == 'transport_distance':
-                        transport_distance_new_solution = solution.total_transport_distance - value
+                        objective_dict[objective] = solution.total_transport_distance - value
                     elif objective == 'attachment_distance':
-                        attachment_distance_new_solution = solution.total_attachment_distance - value
+                        objective_dict[objective] = solution.total_attachment_distance - value
                     elif objective == 'machine_count':
-                        machine_count_new_solution = solution.total_machine_count - value
+                        objective_dict[objective] = solution.number_of_machines - value
                     elif objective == 'worker_count':
-                        worker_count_new_solution = solution.total_worker_count - value
+                        objective_dict[objective] = solution.number_of_workers - value
                     elif objective == 'attachment_count':
-                        attachment_count_new_solution = solution.total_attachment_count - value
-                    
-                    
+                        objective_dict[objective] = solution.number_of_attachments - value
+                
+                for objective in not_involved_objectives:
+
+                    if objective == 'driver_violation':
+                        objective_dict[objective] = solution.driver_violation
+                    elif objective == 'commute_distance':
+                        objective_dict[objective] = solution.total_commute_distance
+                    elif objective == 'transport_distance':
+                        objective_dict[objective] = solution.total_transport_distance
+                    elif objective == 'attachment_distance':
+                        objective_dict[objective] = solution.total_attachment_distance
+                    elif objective == 'machine_count':
+                        objective_dict[objective] = solution.number_of_machines
+                    elif objective == 'worker_count':
+                        objective_dict[objective] = solution.number_of_workers
+                    elif objective == 'attachment_count':
+                        objective_dict[objective] = solution.number_of_attachments
+
+                # Possible to combine objectives to 3 main topics: distance, ressource count, violation
+
+                dominating_count_new = self.ParetoSolutions.CountDominatingSolutions(objective_dict)
+
+                overall_difference = dominating_count_new - dominating_count_current
+                
+                if overall_difference <= 0:
+                    pass
+                elif overall_difference > 0:
                         
+                        prob =  math.exp(-overall_difference * self.ScalingEnergy / current_temperature)
+                        random_number = self.RNG.random()
+                        if prob < random_number:
+                            continue
+
+
+                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
+                solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                self.EvaluationLogic.evaluate(solution)
+
+                added = self.ParetoSolutions.UpdateParetoFront(solution)
+
+                if not added:
+                    fallback_counter += 1
+                    if fallback_counter >= self.FallbackThreshold:
+                        solution = self.ParetoSolutions.SelectRandomBestSolution()
+                else:
+                    fallback_counter = 0
+
+            current_temperature *= self.CoolingRate
+
+        self.ParetoSolutions.PurgeParetoFront()
+        self.ParetoSolutions.SortParetoFront()
+        self.ParetoSolutions.ShowFront()
+
 
                 
-
-                
-
-
-
 
     
     def Run(self, solution:Solution) -> Solution:
@@ -458,86 +508,22 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         solution = self.ParetoSolutions.SelectRandomBestSolution()
         self.DominanceBasedEnergyImprovement(solution)
 
-        return solution
+        for solution in self.ParetoSolutions.ParetoFront:
+            feasible = solution.feasibility_check()
+            if not feasible:
+                raise Exception('Solution is not feasible after pareto simulated annealing')
+            else:
+                print("SOLID")
 
 
-        while currentTemperature > self.MinTemperature:
-                
-            for i in range(self.MaxIterations):
-            
-                dominating_count_current = self.ParetoSolutions.CountDominatingSolutions(currentSolution)
+        # Visualize individual best solutions for each objective
+        best_solution_set = self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
 
+        self.ParetoSolutions.ParetoFront = []
 
-                neighborhoodType = self.RNG.choice(types)
-                neighborhood = self.Neighborhoods[neighborhoodType]
-
-                move = neighborhood.SingleMove(currentSolution)
-
-                if move is None:
-                    count['none'] += 1
-                    continue
-
-                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
-                new_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
-                self.EvaluationLogic.evaluate(new_solution)
-                dominating_count_new = self.ParetoSolutions.CountDominatingSolutions(new_solution)
-
-                overall_difference = dominating_count_new - dominating_count_current
-
-                if overall_difference > 0:
-
-                    prob =  math.exp(-overall_difference / currentTemperature)
-                    random_number = self.RNG.random()
-                    print(f"Comparison: {random_number} <=> {prob}")
-
-                    if prob < random_number:
-                        print("Random number is greater than probability")
-                        continue
-
-                
-                currentSolution = deepcopy(new_solution)
-
-                print(f"New solution: {currentSolution}")
-                feasible = currentSolution.feasibility_check()
-                if not feasible:
-                    print(f"Solution Machine Route Plan: {currentSolution.route_plan_machine}")
-                    print(f"Solution Worker Route Plan: {currentSolution.route_plan_worker}")
-                    print(f"Solution Attachment Route Plan: {currentSolution.route_plan_attachment}")
-
-                    print(f"Move Information: {move}")
-                    raise Exception(f"Solution is not feasible after neighborhood {neighborhoodType}")
-                
-                added = self.ParetoSolutions.UpdateParetoFront(currentSolution)
-
-                if not added:
-                    fallback_counter += 1
-                    if fallback_counter % 10 == 0 and fallback:
-                        print("Fallback")
-                        fallbacks += 1
-                        self.ParetoSolutions.SortParetoFront()
-
-                        currentSolution = self.ParetoSolutions.ParetoFront[0]
-
-            currentTemperature *= self.CoolingRate
-
-        print(f"Number of dominates: {count['dominates']}")
-
-        print(f"Number of dominated: {count['dominated']}")
-        print(f"Number of non-dominated: {count['non-dominated']}")
-        print(f"Number of none: {count['none']}")
-        print(f"Number of accepted: {count['number_accepted']}")
-        print(f"Number of fallbacks: {fallbacks}")
-        self.ParetoSolutions.PurgeParetoFront()
-        print(f"Number of Pareto solutions: {len(self.ParetoSolutions.ParetoFront)}")
-
-                
-                
-
-        average_dynamic_percentage = self.ParetoSolutions.CalculateAverageDynamicPercentage()
-
-        print(f"Average dynamic percentage: {average_dynamic_percentage}")
-        
-
+        for solution in best_solution_set:
+            self.ParetoSolutions.ParetoFront.append(solution)
+        self.ParetoSolutions.SortParetoFront()
         self.ParetoSolutions.ShowFront()
 
-        return self.ParetoSolutions.DeleteUnfinishedSites()
+

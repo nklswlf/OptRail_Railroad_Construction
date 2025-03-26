@@ -375,7 +375,7 @@ class ConstructiveHeuristics:
         if feasible:
             print("Solution is feasible")
             self.EvaluationLogic.evaluate(start_solution)
-            self.ParetoSolutions.ParetoFront.append(start_solution)
+            #self.ParetoSolutions.ParetoFront.append(start_solution)
             return start_solution
         else:
             raise Exception("Solution is not feasible")

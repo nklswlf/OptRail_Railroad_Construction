@@ -663,23 +663,7 @@ class ParetoSolutions:
         
         self.ParetoFront = non_dominated
 
-    def CountDominatingSolutions(self, new_solution: Solution) -> int:
-        """
-        Zählt, wie viele Lösungen aus der Pareto-Front die new_solution dominieren.
 
-        Args:
-        pareto_front (list): Liste der Lösungen, die zur Pareto-Front gehören.
-        new_solution (Solution): Die neue Lösung, die überprüft wird.
-
-        Returns:
-        int: Anzahl der Lösungen aus der Pareto-Front, die die new_solution dominieren.
-        """
-        count = 0
-        for solution in self.ParetoFront:
-            if self.CompareSolutions(solution, new_solution) == -1:  # -1 bedeutet, dass die Lösung die neue Lösung dominiert
-                count += 1
-        return count
-    
     def UpdateParetoFront(self, new_solution: Solution) -> bool:
         """
         Compares new_solution with all solutions in the Pareto Front.
@@ -720,9 +704,7 @@ class ParetoSolutions:
         # Add new_solution to the Pareto Front.
         self.ParetoFront.append(new_solution)
         return True
-
-
-
+    
     def CompareSolutions(self, current_solution: Solution, new_solution: Solution) -> int:
         """
         Compares current_solution and new_solution.
@@ -785,6 +767,104 @@ class ParetoSolutions:
         return 0  # Keine Dominanz
 
 
+
+
+    def CountDominatingSolutions(self, new_solution) -> int:
+        """
+        Zählt, wie viele Lösungen aus der Pareto-Front die new_solution dominieren.
+
+        Args:
+        pareto_front (list): Liste der Lösungen, die zur Pareto-Front gehören.
+        new_solution (Solution): Die neue Lösung, die überprüft wird.
+
+        Returns:
+        int: Anzahl der Lösungen aus der Pareto-Front, die die new_solution dominieren.
+        """
+        if isinstance(new_solution, Solution):
+            objective_dict = {}
+            objective_dict["driver_violation"] = new_solution.driver_violation
+            objective_dict["commute_distance"] = new_solution.total_commute_distance
+            objective_dict["transport_distance"] = new_solution.total_transport_distance
+            objective_dict["attachment_distance"] = new_solution.total_transport_distance_attachments
+            objective_dict["machine_count"] = new_solution.number_of_machines
+            objective_dict["worker_count"] = new_solution.number_of_workers
+            objective_dict["attachment_count"] = new_solution.number_of_attachments
+        elif isinstance(new_solution, dict):
+            objective_dict = new_solution
+        else:
+            raise ValueError("new_solution must be of type Solution or dict.")
+
+
+        count = 0
+        for solution in self.ParetoFront:
+            if self.ShortCompareSolutions(solution, objective_dict):
+                count += 1
+        return count
+    
+    def ShortCompareSolutions(self, current_solution, objective_dict):
+        """
+        Prüft, ob current_solution die neue Lösung (objective_dict) dominiert.
+        
+        "Dominanz" bedeutet hier:
+        - current_solution ist in jedem Zielwert <= objective_dict (nicht schlechter)
+        - und in mindestens einem Zielwert < objective_dict (strictly better)
+        
+        Rückgabe:
+        True,  wenn current_solution die new_solution dominiert
+        False, sonst
+        """
+
+        # 1. Falls current_solution noch kein Dict ist, wandle es in ein Dict um
+        if isinstance(current_solution, dict):
+            curr_obj = current_solution
+        else:
+            # Falls es ein Solution-Objekt ist
+            curr_obj = {
+                "driver_violation": current_solution.driver_violation,
+                "commute_distance": current_solution.total_commute_distance,
+                "transport_distance": current_solution.total_transport_distance,
+                "attachment_distance": current_solution.total_transport_distance_attachments,
+                "machine_count": current_solution.number_of_machines,
+                "worker_count": current_solution.number_of_workers,
+                "attachment_count": current_solution.number_of_attachments
+            }
+
+        # 2. Bestimme, ob current_solution <= objective_dict für alle Ziele
+        #    und in mindestens einem Ziel < objective_dict
+        is_better_or_equal = True
+        is_strictly_better = False
+
+        # Liste aller Ziele, bei denen "kleiner = besser" gilt
+        objectives = [
+            "driver_violation",
+            "commute_distance",
+            "transport_distance",
+            "attachment_distance",
+            "machine_count",
+            "worker_count",
+            "attachment_count"
+        ]
+
+        for key in objectives:
+            if curr_obj[key] > objective_dict[key]:
+                # current_solution ist schlechter in diesem Ziel
+                is_better_or_equal = False
+                break
+            elif curr_obj[key] < objective_dict[key]:
+                # current_solution ist in diesem Ziel strictly besser
+                is_strictly_better = True
+
+        # 3. Dominanzbedingung: in allen Zielen <= und in mindestens einem < 
+        return is_better_or_equal and is_strictly_better
+
+        
+
+        
+
+
+    
+
+
     def SortParetoFront(self, criteria: str = None):
         '''
         Sorts the Pareto front:
@@ -845,7 +925,7 @@ class ParetoSolutions:
         df = pd.DataFrame(solutions)
         print(df)
     
-    def SelectRandomBestSolution(self):
+    def SelectRandomBestSolution(self, all_values: bool = False):
         """
         Sammelt aus der Pareto-Front für jedes Zielkriterium (Minimierungsziele)
         die jeweils besten Lösungen (mit minimalem Wert), 
@@ -882,7 +962,10 @@ class ParetoSolutions:
             return self.RNG.choice(self.ParetoFront)
 
         # Zufällige Auswahl aus den gesammelten besten Lösungen
-        return self.RNG.choice(list(best_solutions_set))
+        if not all_values:
+            return self.RNG.choice(list(best_solutions_set))
+        else:
+            return list(best_solutions_set)
 
 
     def ShowFront(self):
