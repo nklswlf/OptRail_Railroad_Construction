@@ -290,7 +290,7 @@ class EvaluationLogic:
             "machine_count": delta_machine_count,
             "attachment_count": delta_attachment_count,
         }
-        #print(f"Delta Details: {delta_details}")
+        ##print(f"Delta Details: {delta_details}")
 
         # 2️⃣ Create a summary as a list (summary)
         # First value: dynamic percentage order
@@ -305,8 +305,8 @@ class EvaluationLogic:
             + delta_details["attachment_distance"],
         ]
 
-        #print(f"Delta Summary: {delta_summary[0]}")
-        #print(f"Delta Summary: {delta_summary}")
+        ##print(f"Delta Summary: {delta_summary[0]}")
+        ##print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (list) and details (dictionary)
         return delta_summary, delta_details
@@ -417,13 +417,13 @@ class EvaluationLogic:
             "driver_violation": delta_driver_violation,
         }
 
-        print(f"Delta Details: {delta_details}")
+        #print(f"Delta Details: {delta_details}")
 
         # 2️⃣ Create the summary (scalar value = sum of both deltas)
         delta_summary = delta_details["transport_distance"] + delta_details["driver_violation"]
 
 
-        print(f"Delta Summary: {delta_summary}")
+        #print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (scalar) and details (dictionary)
         return delta_summary, delta_details
@@ -465,13 +465,13 @@ class EvaluationLogic:
             "driver_violation": delta_driver_violation,
         }
 
-        print(f"Delta Details: {delta_details}")
+        #print(f"Delta Details: {delta_details}")
 
         # 2️⃣ Create the summary (scalar value as the sum of both)
         delta_summary = delta_details["commute_distance"] + delta_details["driver_violation"]
 
 
-        print(f"Delta Summary: {delta_summary}")
+        #print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (scalar) and details (dictionary)
         return delta_summary, delta_details
@@ -559,12 +559,12 @@ class EvaluationLogic:
                 "attachment_distance": delta_transport_distance,
             }
 
-            print(f"Delta Details: {delta_details}")
+            ##print(f"Delta Details: {delta_details}")
 
             # 2️⃣ Create summary (scalar) → Since only 1 value, just extract it
             delta_summary = delta_details["attachment_distance"]
 
-            print(f"Delta Summary: {delta_summary}")
+            ##print(f"Delta Summary: {delta_summary}")
 
             # 3️⃣ Return both summary (scalar) and details (dictionary)
             return delta_summary, delta_details
@@ -641,7 +641,7 @@ class EvaluationLogic:
         }
 
         # Optional for debugging
-        # print(f"Delta Details: {delta_details}")
+        # #print(f"Delta Details: {delta_details}")
 
         # 2️⃣ Create the summary (scalar) as the sum of all values
         delta_summary = (
@@ -651,7 +651,7 @@ class EvaluationLogic:
         )
 
         # Optional for debugging
-        # print(f"Delta Summary: {delta_summary}")
+        # #print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (scalar) and details (dictionary)
         return delta_summary, delta_details
@@ -693,7 +693,7 @@ class EvaluationLogic:
         }
 
         # Optional for debugging
-        # print(f"Delta Details: {delta_details}")
+        # #print(f"Delta Details: {delta_details}")
 
         # 2️⃣ Create summary (scalar) as the sum of all deltas
         delta_summary = (
@@ -703,7 +703,7 @@ class EvaluationLogic:
         )
 
         # Optional for debugging
-        # print(f"Delta Summary: {delta_summary}")
+        # #print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (scalar) and details (dictionary)
         return delta_summary, delta_details
@@ -766,7 +766,7 @@ class EvaluationLogic:
         }
 
         # Optional: Debug output for inspection
-        # print(f"Delta Details: {delta_details}")
+        # #print(f"Delta Details: {delta_details}")
 
         # 2️⃣ Create summary (scalar) as the sum of both values
         delta_summary = (
@@ -775,7 +775,7 @@ class EvaluationLogic:
         )
 
         # Optional: Debug output for summary
-        # print(f"Delta Summary: {delta_summary}")
+        # #print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (scalar) and details (dictionary)
         return delta_summary, delta_details

@@ -249,7 +249,11 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             for i in range(self.MaxIterations):
 
                 if solution.total_dynamic_percentage == self.InputData.site_fulfillment:
+                    if len(local_pareto_solutions.ParetoFront) > 0:
+                        print("\nLocal Pareto Front after Building Phase:")
+                        local_pareto_solutions.ShowFront()
                     self.ParetoSolutions.ParetoFront.append(solution)
+                    print("\nSingle Solution added to Global Pareto Front")
                     self.ParetoSolutions.ShowFront()
                     return solution, True
 
@@ -261,6 +265,8 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 move = neighborhood.SingleMove(solution)
 
                 if move is None:
+                    # Count consecutive non-moves for Insert_Shift and Swap_Shift_External
+                    # Break if threshold is reached
                     continue
 
                 value = move.DeltaDetails[random_objective]
@@ -278,9 +284,6 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
                 solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
                 self.EvaluationLogic.evaluate(solution)
-                print(f"New solution: {solution}")
-                print(f"Unfinished Order Items {solution.not_started_order_item_ids}")
-                print(f"Worker Route Plan: {solution.route_plan_worker}")
 
                 added = local_pareto_solutions.UpdateParetoFront(solution)
 
@@ -296,10 +299,11 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         solution = deepcopy(local_pareto_solutions.ParetoFront[0])
         local_pareto_solutions.UpdateParetoFront(solution)
+        print("Single Solution which is not fully fulfilled after Building Phase Iteration:")
         local_pareto_solutions.ShowFront()
         return solution, False
     
-        # Introduce a perturbation to escape local optima!!!
+        # Introduce a perturbation to escape local optima!!! --> Maybe not necessary for building phase
 
 
     def ImproveIndividuals(self, solution:Solution, objective:str) -> ParetoSolutions:
@@ -331,6 +335,8 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                     random_number = self.RNG.random()
 
                     if prob < random_number:
+                        # Rethink structure of the code and Simulated Annealing
+                        # max iterations without improvement should be place here somewhere
                         continue
 
                 worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, local_solution)
@@ -341,6 +347,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
                 if not added:
                     fallback_counter += 1
+                    # Adjust Fallback to break criteria (max iterations without improvement)
                     if fallback_counter >= self.FallbackThreshold:
                         local_pareto_solutions.SortParetoFront(objective)
                         local_solution = local_pareto_solutions.ParetoFront[0]
@@ -371,7 +378,10 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.ParetoSolutions.ParetoFront = combined_pareto_front
         self.ParetoSolutions.PurgeParetoFront()
         self.ParetoSolutions.SortParetoFront()
+        print("\nPareto Front after Parallel Improvement:")
         self.ParetoSolutions.ShowFront()
+
+        # Add an analysis of the Pareto Front to see the improvement up till now
 
 
     def SuccessiveImproveIndividuals(self, solution:Solution) -> None:
@@ -383,6 +393,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         self.ParetoSolutions.PurgeParetoFront()
         self.ParetoSolutions.SortParetoFront()
+        print("\nPareto Front after Successive Improvement:")
         self.ParetoSolutions.ShowFront()
 
 
@@ -478,6 +489,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         self.ParetoSolutions.PurgeParetoFront()
         self.ParetoSolutions.SortParetoFront()
+        print("\nPareto Front after Dominance Based Energy Improvement:")
         self.ParetoSolutions.ShowFront()
 
 
@@ -603,16 +615,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
             if not Found:
                 if exchange_tries < 2: # Change: LOOP could HAPPEN
-                    print(f"Current Solution: {currentSolution}")
-                    print(f"Unfinished Order Items {currentSolution.not_started_order_item_ids}")
-                    for order in self.InputData.orders:
-                        print(f"Order {order.order_number} Status: {order.status}")
                     currentSolution = self.EditSites(currentSolution, True)
-                    print("EDITED")
-                    print(f"Edited Solution: {currentSolution}")
-                    print(f"Unfinished Order Items {currentSolution.not_started_order_item_ids}")
-                    for order in self.InputData.orders:
-                        print(f"Order {order.order_number} Status: {order.status}")
                     feasible = currentSolution.feasibility_check()
                     if not feasible:
                         raise Exception('Solution is not feasible after adding site')
@@ -622,11 +625,23 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
 
 
+
         # Improving each individual objective and keeping Pareto front
         if self.ImproveIndividualStrategy == 'parallel':
             self.ParallelImproveIndividuals(currentSolution)
         elif self.ImproveIndividualStrategy == 'successive':
             self.SuccessiveImproveIndividuals(currentSolution)
+
+        # Visualize individual best solutions for each objective
+        best_solution_set = self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
+
+        best_solution_pareto_front = ParetoSolutions(self.InputData)
+        for solution in best_solution_set:
+            best_solution_pareto_front.ParetoFront.append(solution)
+        best_solution_pareto_front.SortParetoFront()
+        print("\nPareto Front for Best Solutions for each Objective after individual improvement:")
+        best_solution_pareto_front.ShowFront()
+
 
         # Using dominace based energy for simulated annealing
         solution = self.ParetoSolutions.SelectRandomBestSolution()
@@ -641,11 +656,11 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         # Visualize individual best solutions for each objective
         best_solution_set = self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
 
-        self.ParetoSolutions.ParetoFront = []
-
+        best_solution_pareto_front = ParetoSolutions(self.InputData)
         for solution in best_solution_set:
-            self.ParetoSolutions.ParetoFront.append(solution)
-        self.ParetoSolutions.SortParetoFront()
-        self.ParetoSolutions.ShowFront()
+            best_solution_pareto_front.ParetoFront.append(solution)
+        best_solution_pareto_front.SortParetoFront()
+        print("\nPareto Front for Best Solutions for each Objective after dominance based energy improvement:")
+        best_solution_pareto_front.ShowFront()
 
 
