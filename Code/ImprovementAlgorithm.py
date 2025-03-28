@@ -511,7 +511,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                         route.remove(order_item_id)
 
             if add_site:
-                usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable]
+                usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable and order.order_number not in self.DontChangeBackInOrder]
 
                 if usable_orders:
                     new_order = min(usable_orders, key=lambda order: len(order.order_item_ids))
@@ -558,7 +558,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                         route.remove(order_item_id)
 
             if add_site:
-                usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable]
+                usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable and order.order_number not in self.DontChangeBackInOrder]
 
                 for order in usable_orders:
                     print(f"Usable Order: {order.order_number}")
@@ -571,6 +571,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 
                 for order in self.InputData.orders:
                     print(f"Order {order.order_number} Status: {order.status}")
+
 
             self.DontChangeBackInOrder.add(chosen_order.order_number)
             new_solution = Solution(new_route_plan_worker, new_route_plan_machine, new_route_plan_attachment, self.InputData)
@@ -601,7 +602,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             currentSolution, Found = self.BuildingPhase(currentSolution)
 
             if not Found:
-                if exchange_tries < 2: # Change LOOP could HAPPEN
+                if exchange_tries < 2: # Change: LOOP could HAPPEN
                     print(f"Current Solution: {currentSolution}")
                     print(f"Unfinished Order Items {currentSolution.not_started_order_item_ids}")
                     for order in self.InputData.orders:

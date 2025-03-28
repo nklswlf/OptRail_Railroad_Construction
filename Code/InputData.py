@@ -114,7 +114,7 @@ class InputData:
         for order in self.order_ranking:
             if amount_planned_orders == number_of_orders:
                 break
-            
+
             if not all(
                 order_item.machine_type in machine_types and
                 set(order_item.equipment_types).issubset(attachment_types) and
@@ -136,6 +136,7 @@ class InputData:
         for order in self.orders:
             if order.order_number == order_number:
                 order.status = True
+                self.site_fulfillment += 1
                 for order_item in order.order_items:
                     order_item.status = True
                 break
@@ -145,6 +146,7 @@ class InputData:
         for order in self.orders:
             if order.order_number == order_number:
                 order.status = False
+                self.site_fulfillment -= 1
                 for order_item in order.order_items:
                     order_item.status = False
                 break   
