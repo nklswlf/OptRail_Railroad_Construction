@@ -234,6 +234,8 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.ImproveTypesObjectives = improveTypesObjectives
         self.ImproveIndividualStrategy = improveIndividualStrategy
         self.EnergyDominanceNeighborhoods = energyDominanceNeighborhoods
+        
+        self.DontChangeBackInOrder = set()
 
 
     def BuildingPhase(self, solution:Solution) -> Solution:
@@ -278,6 +280,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 self.EvaluationLogic.evaluate(solution)
                 print(f"New solution: {solution}")
                 print(f"Unfinished Order Items {solution.not_started_order_item_ids}")
+                print(f"Worker Route Plan: {solution.route_plan_worker}")
 
                 added = local_pareto_solutions.UpdateParetoFront(solution)
 
@@ -292,8 +295,8 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             current_temperature *= self.CoolingRate
 
         solution = deepcopy(local_pareto_solutions.ParetoFront[0])
-        self.ParetoSolutions.UpdateParetoFront(solution)
-        self.ParetoSolutions.ShowFront()
+        local_pareto_solutions.UpdateParetoFront(solution)
+        local_pareto_solutions.ShowFront()
         return solution, False
     
         # Introduce a perturbation to escape local optima!!!
@@ -478,7 +481,110 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.ParetoSolutions.ShowFront()
 
 
+    def EditSites(self, solution:Solution, add_site:bool) -> Solution:
+
+        amount_not_started_orders = len(solution.not_started_orders)
+
+        if amount_not_started_orders >= 1:
+
+            chosen_order = max(solution.not_started_orders, key=lambda order: len(order.order_item_ids))
+            chosen_order_item_ids = chosen_order.order_item_ids
+            
+            
+            self.InputData.deactivate_order(chosen_order.order_number)
+
+            new_route_plan_worker = deepcopy(solution.route_plan_worker)
+            new_route_plan_machine = deepcopy(solution.route_plan_machine)
+            new_route_plan_attachment = deepcopy(solution.route_plan_attachment)
+
+            for worker, route in new_route_plan_worker.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+            for machine, route in new_route_plan_machine.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+            for attachment, route in new_route_plan_attachment.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+
+            if add_site:
+                usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable]
+
+                if usable_orders:
+                    new_order = min(usable_orders, key=lambda order: len(order.order_item_ids))
+                    self.InputData.activate_order(new_order.order_number)
+                else:
+                    raise Exception("No usable order to add")
+
+            self.DontChangeBackInOrder.add(chosen_order.order_number)
+            new_solution = Solution(new_route_plan_worker, new_route_plan_machine, new_route_plan_attachment, self.InputData)
+            self.EvaluationLogic.evaluate(new_solution)
+
+        
+            return new_solution
+        
+        amount_semifinished_orders = len(solution.semifinished_orders)
+
+        if amount_semifinished_orders >= 1:
+
+            chosen_order = max(solution.semifinished_orders, key=lambda order: len(order.order_item_ids))
+            chosen_order_item_ids = chosen_order.order_item_ids
+
+            print(f"Chosen Order: {chosen_order.order_number}")
+            print(f"Chosen Order Item IDs: {chosen_order_item_ids}")
+
+         
+            self.InputData.deactivate_order(chosen_order.order_number)
+
+            
+            new_route_plan_worker = deepcopy(solution.route_plan_worker)
+            new_route_plan_machine = deepcopy(solution.route_plan_machine)
+            new_route_plan_attachment = deepcopy(solution.route_plan_attachment)
+
+            for worker, route in new_route_plan_worker.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+            for machine, route in new_route_plan_machine.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+            for attachment, route in new_route_plan_attachment.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+
+            if add_site:
+                usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable]
+
+                for order in usable_orders:
+                    print(f"Usable Order: {order.order_number}")
+
+                if usable_orders != []:
+                    new_order = min(usable_orders, key=lambda order: len(order.order_item_ids))
+                    self.InputData.activate_order(new_order.order_number)
+                else:
+                    raise Exception("No usable order to add")
                 
+                for order in self.InputData.orders:
+                    print(f"Order {order.order_number} Status: {order.status}")
+
+            self.DontChangeBackInOrder.add(chosen_order.order_number)
+            new_solution = Solution(new_route_plan_worker, new_route_plan_machine, new_route_plan_attachment, self.InputData)
+            self.EvaluationLogic.evaluate(new_solution)
+
+            return new_solution
+
+
+        raise Exception("No order to delete")
+    
+        
+
+
+
 
     
     def Run(self, solution:Solution) -> Solution:
@@ -490,14 +596,31 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         # Building up after the initial solution
         Found = False
+        exchange_tries = 0
         while not Found:
             currentSolution, Found = self.BuildingPhase(currentSolution)
 
             if not Found:
-                self.ExchangeSites(currentSolution)
-                #or
-                self.DeleteSite(currentSolution)
+                if exchange_tries < 2: # Change LOOP could HAPPEN
+                    print(f"Current Solution: {currentSolution}")
+                    print(f"Unfinished Order Items {currentSolution.not_started_order_item_ids}")
+                    for order in self.InputData.orders:
+                        print(f"Order {order.order_number} Status: {order.status}")
+                    currentSolution = self.EditSites(currentSolution, True)
+                    print("EDITED")
+                    print(f"Edited Solution: {currentSolution}")
+                    print(f"Unfinished Order Items {currentSolution.not_started_order_item_ids}")
+                    for order in self.InputData.orders:
+                        print(f"Order {order.order_number} Status: {order.status}")
+                    feasible = currentSolution.feasibility_check()
+                    if not feasible:
+                        raise Exception('Solution is not feasible after adding site')
+                    exchange_tries += 1
+                else:
+                    currentSolution = self.EditSites(currentSolution, False)
 
+
+        '''
         # Improving each individual objective and keeping Pareto front
         if self.ImproveIndividualStrategy == 'parallel':
             self.ParallelImproveIndividuals(currentSolution)
@@ -525,5 +648,5 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             self.ParetoSolutions.ParetoFront.append(solution)
         self.ParetoSolutions.SortParetoFront()
         self.ParetoSolutions.ShowFront()
-
+        '''
 

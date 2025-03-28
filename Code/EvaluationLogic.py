@@ -807,6 +807,7 @@ class EvaluationLogic:
     def calculate_dynamic_percentage_order(self, solution:Solution):
         ''' Calculate the dynamic percentage of the solution'''
 
+
         finished_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
        
         for order in self.data.orders:
@@ -821,6 +822,14 @@ class EvaluationLogic:
                 
     def categorizing_orders(self, solution:Solution):
         ''' Categorize the orders into finished, semi-finished and not started orders'''
+
+        solution.finished_orders = []
+        solution.not_started_orders = []
+        solution.not_recognized_orders = []
+        solution.semifinished_orders = []
+        solution.not_started_order_item_ids = []
+        solution.not_recognized_order_item_ids = []
+
 
         all_planned_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
 
@@ -868,6 +877,13 @@ class EvaluationLogic:
     def categorizing_machine_worker(self, solution:Solution):
         ''' Categorize the machines and workers into finished, semi-finished and not started machines and workers'''
 
+        solution.used_machines = []
+        solution.unused_machines = []
+        solution.used_workers = []
+        solution.unused_workers = []
+        solution.used_attachments = []
+        solution.unused_attachments = []
+        
         
         for machine, route in solution.route_plan_machine.items():
             if len(route) == 0:
@@ -883,6 +899,9 @@ class EvaluationLogic:
 
     def calculate_finished_order_items(self, solution:Solution):
         ''' Calculate the number of finished order items'''
+
+        solution.number_of_finished_order_items = 0
+
 
         for worker_id, route in solution.route_plan_worker.items():
             for i in range(len(route)):
@@ -901,6 +920,7 @@ class EvaluationLogic:
 
     def calculate_commute_distance(self, solution:Solution):
         ''' Calculate the total commute distance of the workers'''
+
 
         for worker_id, route in solution.route_plan_worker.items():
             solution.commute_distance_per_worker[worker_id] = 0
@@ -922,6 +942,8 @@ class EvaluationLogic:
 
     def calculate_driver_violation(self, solution:Solution):
         ''' Calculate the total driver violation time of the workers'''
+
+        solution.driver_violation = 0
 
         for worker_id, route in solution.route_plan_worker.items():
             for i in range(len(route)):

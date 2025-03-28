@@ -91,10 +91,6 @@ class InputData:
         self.site_fulfillment = int(site_fulfillment)
         self.reduce_input_data(self.site_fulfillment)
 
-        for order in self.orders:
-            print(f"Order priority borda AHP: {order._priority['borda_count_ahp']}")
-            #print(f"Order priority borda: {order._priority['borda_count']}")
-            print(f"Order priority order_item_count: {order._priority['order_item_count']}")
 
         # Dynamic dictionary for planned shifts for greedy algorithm
         self.planned_shifts_worker = dict()
@@ -111,15 +107,48 @@ class InputData:
 
         :param number_of_orders: Number of orders to keep.
         '''
-        
+        machine_types = {machine.type for machine in self.machines}
+        attachment_types = {attachment.type for attachment in self.attachments}
+        amount_planned_orders = 0
+
+        for order in self.order_ranking:
+            if amount_planned_orders == number_of_orders:
+                break
+            
+            if not all(
+                order_item.machine_type in machine_types and
+                set(order_item.equipment_types).issubset(attachment_types) and
+                any(set(order_item.worker_qualifications).issubset(worker.qualifications) for worker in self.workers)
+                for order_item in order.order_items
+            ):
+                order.unuseable = True
+                continue
+
+            order.status = True
+            amount_planned_orders += 1
+
+            for order_item in order.order_items:
+                order_item.status = True
+
+                
+    def activate_order(self, order_number: int) -> None:
+        """Aktiviert eine Order und alle zugehörigen OrderItems."""
         for order in self.orders:
-            if order.priority['order_item_count'] > number_of_orders:
+            if order.order_number == order_number:
+                order.status = True
+                for order_item in order.order_items:
+                    order_item.status = True
+                break
+
+    def deactivate_order(self, order_number: int) -> None:
+        """Deaktiviert eine Order und alle zugehörigen OrderItems."""
+        for order in self.orders:
+            if order.order_number == order_number:
                 order.status = False
                 for order_item in order.order_items:
                     order_item.status = False
+                break   
 
-
-        
 
         
 
@@ -314,6 +343,8 @@ class InputData:
                 last_value = value
             order._priority[rank_name] = current_rank
 
+        if rank_name == 'order_item_count':
+            self.order_ranking = sorted_orders
 
         
 
@@ -557,7 +588,8 @@ class Order:
         self._location = json_data.get("Standort", {"Item1": 0.0, "Item2": 0.0})
         self._priority = {}
         self.dynamic_percentage = 0
-        self.status = True
+        self.status = False
+        self.unuseable = False
 
 
 
@@ -613,7 +645,7 @@ class OrderItem:
         self._worker_qualifications = json_data.get("ArbeiterQualifikationen", [])
         self._assigned_machine = json_data.get("zugewieseneMaschine", None)
         self._type = int(json_data.get("Typ", 0))
-        self.status = True
+        self.status = False
     
 
 
