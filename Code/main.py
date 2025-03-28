@@ -61,6 +61,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a10_o107_m5_an57_ar12.json",
                 "Construction_a10_o114_m6_an57_ar11.json",
                 "Construction_a10_o128_m6_an51_ar13.json", # UB not reached!!! because not enough worker with qualification (q = 9,4) are available for shifts at the same time
+                                                            # Reached after Edit Sites
                 "Construction_a10_o144_m6_an53_ar12.json",
                 "Construction_a15_o170_m9_an80_ar18.json",
                 "Construction_a20_o236_m12_an106_ar24.json", # UB not reached!!! because not enough attachment types (type = 8) are available for shifts at the same time
@@ -68,9 +69,10 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a25_o306_m13_an127_ar31.json",
                 "Construction_a30_o355_m18_an148_ar42.json",
                 "Construction_a40_o476_m22_an215_ar51.json", # UB not reached!!! because not machine type 2 does not exist for a machine in the instance
+                                                            # Reached after pre-processing in InputData
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-instances = ["Construction_a40_o476_m22_an215_ar51.json"]
+instances = ["Construction_a10_o107_m5_an57_ar12.json"]
 
 
 
@@ -156,7 +158,7 @@ def main():
                                                                         start_temp=10,
                                                                         min_temp=0.1,
                                                                         cooling_rate=0.96,
-                                                                        max_iterations= 20,
+                                                                        max_iterations= 100,
                                                                         fallback_threshold=10,
                                                                         scaling_energy= 30,
                                                                         neighborhoodTypes=neighboorhood_types,

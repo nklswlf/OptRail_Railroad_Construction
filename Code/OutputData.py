@@ -927,12 +927,11 @@ class ParetoSolutions:
     
     def SelectRandomBestSolution(self, all_values: bool = False):
         """
-        Sammelt aus der Pareto-Front für jedes Zielkriterium (Minimierungsziele)
-        die jeweils besten Lösungen (mit minimalem Wert), 
-        kombiniert diese und wählt daraus zufällig eine Lösung mit self.RNG.
+        Für jedes Zielkriterium (Minimierungsziele):
+        - Wähle nur **eine** Lösung mit dem besten Wert für dieses Kriterium.
+        - Falls mehrere Lösungen gleich gut: Normalisiere alle anderen Ziele (Min-Max), 
+        bilde den Gesamtscore, wähle die beste.
         """
-
-        # Zielkriterien und ihre Zugriffs-Funktionen
         objective_map = {
             "driver_violation": lambda x: x.driver_violation,
             "commute_distance": lambda x: x.total_commute_distance,
@@ -943,29 +942,44 @@ class ParetoSolutions:
             "attachments": lambda x: x.number_of_attachments
         }
 
-        # Set zur Sammlung aller "Bestlösungen" (vermeidet Duplikate)
-        best_solutions_set = set()
+        selected_solutions = []
 
-        # Für jedes Zielkriterium → beste Lösungen bestimmen
         for key, func in objective_map.items():
             try:
                 best_value = min(func(sol) for sol in self.ParetoFront)
-                best_solutions = [sol for sol in self.ParetoFront if func(sol) == best_value]
-                best_solutions_set.update(best_solutions)
+                candidate_solutions = [sol for sol in self.ParetoFront if func(sol) == best_value]
+
+                if len(candidate_solutions) == 1:
+                    selected_solutions.append(candidate_solutions[0])
+                    continue
+
+                normalized_scores = []
+                for sol in candidate_solutions:
+                    score = 0.0
+                    for sub_key, sub_func in objective_map.items():
+                        if sub_key == key:
+                            continue
+                        values = [sub_func(s) for s in candidate_solutions]
+                        v_min = min(values)
+                        v_max = max(values)
+                        val = sub_func(sol)
+                        norm = (val - v_min) / (v_max - v_min) if v_max != v_min else 0.0
+                        score += norm
+                    normalized_scores.append((score, sol))
+
+                best_sol = min(normalized_scores, key=lambda x: x[0])[1]
+                selected_solutions.append(best_sol)
+
             except ValueError:
-                # Falls ParetoFront leer ist oder andere Fehler → ignoriere dieses Ziel
                 continue
 
-        # Falls keine gefunden → Fallback: ganze Front
-        if not best_solutions_set:
-            raise ValueError("No best solutions found for any objective.")
-            return self.RNG.choice(self.ParetoFront)
+        if all_values:
+            return selected_solutions
+        
+        if not selected_solutions:
+            raise KeyError("No solutions found.")
 
-        # Zufällige Auswahl aus den gesammelten besten Lösungen
-        if not all_values:
-            return self.RNG.choice(list(best_solutions_set))
-        else:
-            return list(best_solutions_set)
+        return self.RNG.choice(selected_solutions)
 
 
     def ShowFront(self):
