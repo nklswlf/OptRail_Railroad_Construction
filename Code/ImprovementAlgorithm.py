@@ -621,7 +621,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                     currentSolution = self.EditSites(currentSolution, False)
 
 
-        '''
+
         # Improving each individual objective and keeping Pareto front
         if self.ImproveIndividualStrategy == 'parallel':
             self.ParallelImproveIndividuals(currentSolution)
@@ -636,8 +636,6 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             feasible = solution.feasibility_check()
             if not feasible:
                 raise Exception('Solution is not feasible after pareto simulated annealing')
-            else:
-                print("SOLID")
 
 
         # Visualize individual best solutions for each objective
@@ -649,5 +647,5 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             self.ParetoSolutions.ParetoFront.append(solution)
         self.ParetoSolutions.SortParetoFront()
         self.ParetoSolutions.ShowFront()
-        '''
+
 
