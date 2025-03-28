@@ -167,16 +167,16 @@ class OutputNeighborhood(BaseNeighborhood):
                 bestNeighborhoodSolution = Solution(worker_route, machine_route, attachement_route, self.data)
                 self.evaluationLogic.evaluate(bestNeighborhoodSolution)
 
-                print(bestNeighborhoodSolution)
+                #print(bestNeighborhoodSolution)
 
-                print(bestNeighborhoodMove.DeltaDetails)
+                #print(bestNeighborhoodMove.DeltaDetails)
 
                 #self.solutionPool.AddSolution(bestNeighborhoodSolution)
 
                 #print(f"Best Neighborhood Solution: \n{bestNeighborhoodSolution}")
 
             else:
-                print(f"\nNo better solution found in iteration {iterator}")
+                #print(f"\nNo better solution found in iteration {iterator}")
                 hasSolutionImproved = False
 
             iterator += 1
@@ -195,7 +195,7 @@ class OutputNeighborhood(BaseNeighborhood):
             self.EvaluateMove(move)
             return move
         else:
-            print(f'No moves found in SingleMove() for neighborhood {self.Type}.')
+            #print(f'No moves found in SingleMove() for neighborhood {self.Type}.')
             return None
     
 
@@ -1348,7 +1348,7 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
         worker_route_plan = deepcopy(solution.route_plan_worker)
         attachement_route_plan = deepcopy(solution.route_plan_attachment)
 
-        print("\n")
+        #print("\n")
 
         worker_route_plan[move.WorkerID] = move.WorkerRoute
 
@@ -1430,7 +1430,7 @@ class TimeNeighborhood(BaseNeighborhood):
         hasSolutionImproved = True
         bestNeighborhoodSolution = deepcopy(solution)
 
-        print(f"\nInitial Worker Route: \n{bestNeighborhoodSolution.route_plan_worker}")
+        #print(f"\nInitial Worker Route: \n{bestNeighborhoodSolution.route_plan_worker}")
 
         iterator = 1
         while hasSolutionImproved:
@@ -1452,26 +1452,20 @@ class TimeNeighborhood(BaseNeighborhood):
 
                 #self.solutionPool.AddSolution(bestNeighborhoodSolution)
 
-                print(f"\nIteration: {iterator}")
-                if self.Type == 'Swap_Shift_Worker':
-                    print(f"Best Neighborhood Move Items: \n{bestNeighborhoodMove.WorkerID1}: {bestNeighborhoodMove.WorkerRoute1} New Order Item: {bestNeighborhoodMove.OrderItemID2} \n{bestNeighborhoodMove.WorkerID2}: {bestNeighborhoodMove.WorkerRoute2} New Order Item: {bestNeighborhoodMove.OrderItemID1}")
-                    print(f"Best Neighborhood Move Delta: {bestNeighborhoodMove.Delta}")
-                elif self.Type == 'Replace_Shift_Worker':
-                    print(f"Best Neighborhood Move Items: \n{bestNeighborhoodMove.WorkerID1}: {bestNeighborhoodMove.WorkerRoute1} \n{bestNeighborhoodMove.WorkerID2}: {bestNeighborhoodMove.WorkerRoute2} New Order Item: {bestNeighborhoodMove.OrderItemID}")
-
+            
             else:
-                print(f"\nNo better solution found in iteration {iterator}")
+                #print(f"\nNo better solution found in iteration {iterator}")
                 hasSolutionImproved = False
 
             feasbile = bestNeighborhoodSolution.feasibility_check()
             if not feasbile:
-                print(f"Feasibility Check failed in iteration {iterator}")
+                raise KeyError(f"Feasibility Check failed in iteration {iterator}")
 
             iterator += 1
 
             #print(f"\nBest Current Solution: \n{bestNeighborhoodSolution}")
 
-        print(f"\nBest Worker Route: \n{bestNeighborhoodSolution.route_plan_worker}")
+        #print(f"\nBest Worker Route: \n{bestNeighborhoodSolution.route_plan_worker}")
 
         return bestNeighborhoodSolution
     
@@ -1487,7 +1481,8 @@ class TimeNeighborhood(BaseNeighborhood):
             self.EvaluateMove(move)
             return move
         else:
-            print(f'No moves found in SingleMove() for neighborhood {self.Type}.')
+            pass
+            #print(f'No moves found in SingleMove() for neighborhood {self.Type}.')
 
 
 

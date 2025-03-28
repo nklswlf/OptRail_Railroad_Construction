@@ -155,17 +155,17 @@ def main():
                                             neighborhoodTypes=neighboorhood_types_local_search)
 
         pareto_simulated_annealing = ParetoSimulatedAnnealing(inputData=data,
-                                                                        start_temp=10,
+                                                                        start_temp=40,
                                                                         min_temp=0.1,
-                                                                        cooling_rate=0.96,
-                                                                        max_iterations= 100,
-                                                                        fallback_threshold=10,
+                                                                        cooling_rate=0.95,
+                                                                        max_iterations= 50,
+                                                                        fallback_threshold=25,
                                                                         scaling_energy= 30,
                                                                         neighborhoodTypes=neighboorhood_types,
                                                                         energyDominanceNeighborhoods=energy_dominance_neighborhoods,
                                                                         buildingTypesObjectives=building_types_and_objectives,
                                                                         improveTypesObjectives=improve_types_and_objectives,
-                                                                        improveIndividualStrategy="parallel")
+                                                                        improveIndividualStrategy="successive",)
 
 
 

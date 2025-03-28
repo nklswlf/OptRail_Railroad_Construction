@@ -70,8 +70,8 @@ class Solution:
                 f"Commute distance: {round(self.total_commute_distance, 2)}\n"
                 f"Transport distance: {round(self.total_transport_distance, 2)}\n"
                 f"Transport distance attachment: {round(self.total_transport_distance_attachments, 2)}\n"
-                f"Number of workers: {self.number_of_workers}\n"
                 f"Number of machines: {self.number_of_machines}\n"
+                f"Number of workers: {self.number_of_workers}\n"
                 f"Number of attachments: {self.number_of_attachments}\n")
     
 
@@ -923,7 +923,6 @@ class ParetoSolutions:
             })
 
         df = pd.DataFrame(solutions)
-        print(df)
     
     def SelectRandomBestSolution(self, all_values: bool = False):
         """
