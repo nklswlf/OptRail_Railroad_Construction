@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import List, Tuple, Optional
 from datetime import datetime,timedelta
 import itertools
-from MIP_Upper_Bound import *
 
 class InputData:
     '''Class for creating Data objects based on formatted JSON Files containing the information of orders, machines, workers, attachments, and routes'''
@@ -14,9 +13,15 @@ class InputData:
 
         :param instance_filename: Name of the JSON file containing the data.
         '''
+        
+
         self.instance_filename = instance_filename
         self.instance = instance_filename.split('Construction_')[1].split('.json')[0]
         self._data_path, self._parent_folder = self._find_instance_file()
+        self.site_fulfillment = 0
+
+        print(f"\nInstance: {self.instance}")
+        print(f"\nLoading data from '{instance_filename}'...")
 
         # AHP weights for the different criteria
         self._ahp_weights = {"order_item_count": 0.54437184,
@@ -86,10 +91,7 @@ class InputData:
 
 
 
-        optimizer = UpperBound(self, "both")
-        site_fulfillment = optimizer.execute()
-        self.site_fulfillment = int(site_fulfillment)
-        self.reduce_input_data(self.site_fulfillment)
+        
 
 
         # Dynamic dictionary for planned shifts for greedy algorithm
@@ -124,6 +126,7 @@ class InputData:
                 order.unuseable = True
                 continue
 
+
             order.status = True
             amount_planned_orders += 1
 
@@ -151,7 +154,14 @@ class InputData:
                     order_item.status = False
                 break   
 
-
+    def unuseable_order(self, order_number: int) -> None:
+        """Markiert eine Order als unbrauchbar."""
+        for order in self.orders:
+            if order.order_number == order_number:
+                order.unuseable = True
+                for order_item in order.order_items:
+                    order_item.status = False
+                break
         
 
     

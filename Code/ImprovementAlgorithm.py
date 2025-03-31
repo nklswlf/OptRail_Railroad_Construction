@@ -236,9 +236,14 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.EnergyDominanceNeighborhoods = energyDominanceNeighborhoods
         
         self.DontChangeBackInOrder = set()
+        self.BuildingIteration = 0
 
 
     def BuildingPhase(self, solution:Solution) -> Solution:
+
+        ''' Building phase to find a fully staffed solution'''
+        self.BuildingIteration += 1
+        print(f"\nStarting Building Phase Iteration {self.BuildingIteration}...")
 
         fallback_counter = 0
         current_temperature = self.StartTemperature
@@ -248,13 +253,14 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
             for i in range(self.MaxIterations):
 
+
                 if solution.total_dynamic_percentage == self.InputData.site_fulfillment:
                     if len(local_pareto_solutions.ParetoFront) > 0:
                         print("\nLocal Pareto Front after Building Phase:")
                         local_pareto_solutions.ShowFront()
                     self.ParetoSolutions.ParetoFront.append(solution)
-                    print("\nSingle Solution added to Global Pareto Front")
-                    self.ParetoSolutions.ShowFront()
+                    print("\nSingle Solution added to Global Pareto Front:")
+                    print(solution)
                     return solution, True
 
 
@@ -298,9 +304,10 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             current_temperature *= self.CoolingRate
 
         solution = deepcopy(local_pareto_solutions.ParetoFront[0])
-        local_pareto_solutions.UpdateParetoFront(solution)
-        print("Single Solution which is not fully fulfilled after Building Phase Iteration:")
-        local_pareto_solutions.ShowFront()
+        #local_pareto_solutions.UpdateParetoFront(solution)
+        print("\nDid not find fully staffed solution after Building Phase iteration")
+        print(f"\nSingle Solution which is not fully fulfilled after Building Phase iteration:")
+        print(solution)
         return solution, False
     
         # Introduce a perturbation to escape local optima!!! --> Maybe not necessary for building phase
@@ -363,6 +370,10 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
 
     def ParallelImproveIndividuals(self, solution: Solution) -> None:
+        ''' Improve individuals with simulated annealing algorithm in parallel'''
+
+        print("\nStarting Parallel Improvement of individual objectives...")
+
         tasks = []
         with ProcessPoolExecutor() as executor:
             for obj in self.ImproveTypesObjectives.keys():
@@ -386,6 +397,10 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
     def SuccessiveImproveIndividuals(self, solution:Solution) -> None:
 
+        ''' Improve individuals with simulated annealing algorithm in successive order'''
+
+        print("\nStarting Successive Improvement of individual objectives...")
+
         for objective in self.ImproveTypesObjectives.keys():
             local_pareto_solutions = self.ImproveIndividuals(solution, objective)
             self.ParetoSolutions.ParetoFront.extend(local_pareto_solutions.ParetoFront)
@@ -399,6 +414,10 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
 
     def DominanceBasedEnergyImprovement(self, solution:Solution) -> None:
+
+        ''' Simulated annealing algorithm with energy dominance neighborhood'''
+
+        print("\nStarting Dominance Based Energy Improvement...")
         
         fallback_counter = 0
         current_temperature = self.StartTemperature
@@ -535,7 +554,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             new_solution = Solution(new_route_plan_worker, new_route_plan_machine, new_route_plan_attachment, self.InputData)
             self.EvaluationLogic.evaluate(new_solution)
 
-        
+            
             return new_solution
         
         amount_semifinished_orders = len(solution.semifinished_orders)
@@ -545,8 +564,6 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             chosen_order = max(solution.semifinished_orders, key=lambda order: len(order.order_item_ids))
             chosen_order_item_ids = chosen_order.order_item_ids
 
-            print(f"Chosen Order: {chosen_order.order_number}")
-            print(f"Chosen Order Item IDs: {chosen_order_item_ids}")
 
          
             self.InputData.deactivate_order(chosen_order.order_number)
@@ -572,8 +589,6 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             if add_site:
                 usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable and order.order_number not in self.DontChangeBackInOrder]
 
-                for order in usable_orders:
-                    print(f"Usable Order: {order.order_number}")
 
                 if usable_orders != []:
                     new_order = min(usable_orders, key=lambda order: len(order.order_item_ids))
@@ -581,8 +596,6 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 else:
                     raise Exception("No usable order to add")
                 
-                for order in self.InputData.orders:
-                    print(f"Order {order.order_number} Status: {order.status}")
 
 
             self.DontChangeBackInOrder.add(chosen_order.order_number)
@@ -597,8 +610,6 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         
 
 
-
-
     
     def Run(self, solution:Solution) -> Solution:
         ''' Run simulated annealing algorithm with given solutions and parameters'''
@@ -610,27 +621,35 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         # Building up after the initial solution
         Found = False
         exchange_tries = 0
+        print(f"\nStarting Building Phase to find a fully staffed solution...")
         while not Found:
             currentSolution, Found = self.BuildingPhase(currentSolution)
 
             if not Found:
                 if exchange_tries < 2: # Change: LOOP could HAPPEN
+                    print(f"\nSwapping sites to find a fully staffed solution...")
                     currentSolution = self.EditSites(currentSolution, True)
                     feasible = currentSolution.feasibility_check()
                     if not feasible:
                         raise Exception('Solution is not feasible after adding site')
                     exchange_tries += 1
+                    print("Sites have been swapped")
                 else:
+                    print(f"\nDeleting sites to find a fully staffed solution...")
                     currentSolution = self.EditSites(currentSolution, False)
+                    print("Site has been deleted")
 
-
-
+        self.ParetoSolutions.SetReferencePoint(currentSolution)
 
         # Improving each individual objective and keeping Pareto front
         if self.ImproveIndividualStrategy == 'parallel':
             self.ParallelImproveIndividuals(currentSolution)
         elif self.ImproveIndividualStrategy == 'successive':
             self.SuccessiveImproveIndividuals(currentSolution)
+
+            
+        hypervolume = self.ParetoSolutions.CalculateHypervolume()
+        print(f"Hypervolume of Pareto Front after individual improvement: {round(hypervolume, 2)}")
 
         # Visualize individual best solutions for each objective
         best_solution_set = self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
@@ -646,6 +665,9 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         # Using dominace based energy for simulated annealing
         solution = self.ParetoSolutions.SelectRandomBestSolution()
         self.DominanceBasedEnergyImprovement(solution)
+
+        hypervolume = self.ParetoSolutions.CalculateHypervolume()
+        print(f"Hypervolume of Pareto Front after dominance based energy improvement: {round(hypervolume, 2)}")
 
         for solution in self.ParetoSolutions.ParetoFront:
             feasible = solution.feasibility_check()

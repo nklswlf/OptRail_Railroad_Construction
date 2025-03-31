@@ -25,7 +25,7 @@ class ConstructiveHeuristics:
 
     def Greedy(self):
         
-        print("Greedy")
+        print(f"\nCalculating Greedy solution with {self.order_item_attractiveness_technique} and {self.machine_attractiveness_technique}...\n")
 
         '''
         Greedy with potential GRASPS elements
@@ -373,7 +373,6 @@ class ConstructiveHeuristics:
         feasible = start_solution.feasibility_check()
 
         if feasible:
-            print("Solution is feasible")
             self.EvaluationLogic.evaluate(start_solution)
             #self.ParetoSolutions.ParetoFront.append(start_solution)
             return start_solution

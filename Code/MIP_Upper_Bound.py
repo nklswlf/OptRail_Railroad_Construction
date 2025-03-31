@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 from InputData import *
 from OutputData import *
-from time import time
+import time
 from itertools import groupby
 
 
@@ -80,8 +80,8 @@ class UpperBound:
         
     def preprocess_data(self):
         """Preprocess the input data for optimization."""
-        print("\nPreprocessing data...")
-        current_time = time()
+        print("\nPreprocessing data for LP-Relaxation...")
+        current_time = time.time()
         
         # ========================
         # 1. Process Machines
@@ -266,49 +266,28 @@ class UpperBound:
         self.T_range = list(range(day_difference.days + 1))
         self.T = day_difference.days + 1
         
-        '''
-        end_date_adjusted = self.start_date
-        for orderItem in self.data.order_items:
-            if end_date_adjusted < orderItem.start_time:
-                end_date_adjusted = orderItem.start_time
-        self.T = (end_date_adjusted - self.start_date).days + 1
-        '''
+
 
         # ========================
         # 8. Order Item Durations
         # ========================
         self.t_o = [orderItem.duration for orderItem in self.data.order_items]
 
-        elapsed_time = time() - current_time
-        print("Data preprocessed successfully.")
-        print(f"Time elapsed: {elapsed_time:.2f} seconds")
+        elapsed_time = time.time() - current_time
+        print(f"Data preprocessed successfully after {elapsed_time:.2f} seconds")
 
 
     def create_optimization_model(self):
         """Create and configure the Gurobi optimization model."""
 
-        self.time_limit = 10800
-        thread_limit = 16
 
-
-        current_time = time()
-        print("\nCreating optimization model...")
+        current_time = time.time()
+        print("\nCreating LP-Relaxation...")
         self.model = gp.Model("Flow_Formulation")
 
         
-        #self.model.setParam('NodefileStart', 0)  # Nutze die Festplatte, wenn mehr als 0.5 GB Speicher benötigt werden
-        #self.model.setParam('NodefileDir', '//Volumes/Daten/Gurobi')  # Verzeichnis für temporäre Dateien
-        #self.model.setParam('Threads', 1)  # Reduziere die Anzahl der Threads, um Speicheranforderungen zu minimieren
-        #self.model.setParam('MIPFocus', 1)  # Beispiel für zusätzlichen Parameter
-        #self.model.setParam('TimeLimit', 300)  # Maximale Rechenzeit auf 300 Sekunden begrenzen
-        
-
-        parent_folder = self.data._parent_folder
-        solution_path = Path.cwd().parent / "Data" / "Upper_Bound" / parent_folder / self.data.instance / self.upper_bound
-        solution_path.mkdir(parents=True, exist_ok=True)
-        
-
-        self.model.setParam("Threads", thread_limit)
+    
+        self.model.setParam('OutputFlag', 0)
 
 
 
@@ -466,179 +445,19 @@ class UpperBound:
 
         
         
-        elapsed_time = time() - current_time
-        print("Optimization model created successfully.")
-        print(f"Time elapsed: {elapsed_time:.2f} seconds")
+        elapsed_time = time.time() - current_time
+        print(f"Model created successfully after {elapsed_time:.2f} seconds")
 
 
     def solve_model(self):
         """Solve the optimization model."""
-        print("\nSolving the model...")
+        print("\nSolving LP-Relaxation...")
         self.model.optimize()
 
-        print("Time elapsed: {:.2f} seconds".format(self.model.Runtime))
-
-
-        if self.model.status == GRB.INFEASIBLE:
-            return False
-        elif self.model.status == GRB.OPTIMAL:
-            return True
-        elif self.model.status == GRB.TIME_LIMIT:
-            if self.model.SolCount > 0:
-                return "solution_with_gap"
-            else:
-                return "time_limit_exceeded"
+        print("LP-Relaxation solved after {:.2f} seconds".format(self.model.Runtime))
    
             
-
-
-    def postprocess_results(self):
-        """Extract and display results after model optimization."""
-        print("\nPostprocessing results...")
-
-
-
-        # ========================
-        # 1. Site Fulfillment Results
-        # ========================
-        self.site_fulfillment = {}
-        for c in self.C:
-            self.site_fulfillment[c] = False
-            if self.model.getVarByName(f"u[{c}]").x > 0.5:
-                self.site_fulfillment[c] = True
-
-        self.sum_finished_sites = round(sum(self.model.getVarByName(f"u[{c}]").x for c in self.C))
-        self.sum_total_sites = len(self.C)
-        if self.upper_bound == 'machine' or self.upper_bound == "both":
-            self.sum_finished_order_items = round(sum(self.model.getVarByName(f"x[{m},{i},{j}]").x for m in self.M for i in self.N_m[m] for j in self.N_m[m]) + sum(self.model.getVarByName(f"x[{m},{i},{self.end}]").x for m in self.M for i in self.N_m[m]))
-        if self.upper_bound == 'worker' or self.upper_bound == "both":
-            self.sum_finished_order_items = round(sum(self.model.getVarByName(f"y[{w},{i},{j}]").x for w in self.W for i in self.N_w[w] for j in self.N_w[w]) + sum(self.model.getVarByName(f"y[{w},{i},end]").x for w in self.W for i in self.N_w[w]))
         
-        self.sum_order_items = len(self.N)
-
-
-        # ========================
-        # 3. Worker and Machine Utilization
-        # ========================
-        
-        if self.upper_bound == 'machine' or self.upper_bound == "both":
-
-
-            number_of_machines = len(self.M)
-
-            self.number_of_used_machines = round(sum(self.model.getVarByName(f"x[{m},{self.start},{j}]").x for m in self.M for j in self.N_m[m]))
-
-            self.distance_machine = {}
-            for m in self.M:
-                self.distance_machine[m] = {"Distance": 0, "Utilization": False}
-                for i in self.N_m[m]:
-                    for j in self.N_m[m]:
-                        if i != j and self.model.getVarByName(f"x[{m},{i},{j}]").x > 0.5:
-                            self.distance_machine[m]["Distance"] += self.d_ij[i][j]
-                            self.distance_machine[m]["Utilization"] = True
-
-
-            self.total_distance_machine = sum(self.distance_machine[m]["Distance"] for m in self.M)
-        
-
-        if self.upper_bound == 'worker' or self.upper_bound == "both":
-
-            number_of_workers = len(self.W)
-            self.number_of_used_worker = round(sum(self.model.getVarByName(f"y[{w},{self.start},{j}]").x for w in self.W for j in self.N_w[w]))
-            
-            self.distance_worker = {}
-            for w in self.W:
-                self.distance_worker[w] = 0
-                for i in self.N_w[w]:
-                    for j in self.N_w[w]:
-                        if i != j and self.model.getVarByName(f"y[{w},{i},{j}]").x > 0.5:
-                            self.distance_worker[w] += 2 * self.d_wi[w][i]
-                    if self.model.getVarByName(f"y[{w},{i},end]").x > 0.5:
-                        self.distance_worker[w] += 2 * self.d_wi[w][i]
-
-            self.total_distance_worker = sum(self.distance_worker.values())
-
-
-        # ========================
-        # 4. Working Hours of Workers
-        # ========================
-
-            self.working_hours = {}
-            for w in self.W:
-                self.working_hours[w] = 0
-                for i in self.N_w[w]:
-                    for j in self.N_w[w]:
-                        if i != j and self.model.getVarByName(f"y[{w},{i},{j}]").x > 0.5:
-                            self.working_hours[w] += self.t_o[i]
-
-                    if self.model.getVarByName(f"y[{w},{i},end]").x > 0.5:
-                        self.working_hours[w] += self.t_o[i]
-                        
-
-            self.total_working_hours = sum(self.working_hours.values())
-
-
-
-        # ========================
-        # 5. Create DataFrames
-        # ========================
-        df_site = pd.DataFrame.from_dict(self.site_fulfillment, columns=["Fulfilled"], orient="index")
-
-        if self.upper_bound == 'machine' or self.upper_bound == "both":
-            df_transport = pd.DataFrame.from_dict(self.distance_machine, orient="index")
-        
-        if self.upper_bound == 'worker' or self.upper_bound == "both":
-            df_worker_transport = pd.DataFrame.from_dict(self.distance_worker, columns=["Distance"], orient="index")
-            df_working_hours = pd.DataFrame.from_dict(self.working_hours, columns=["Working Hours"], orient="index")
-
-        # ========================
-        # 6. Display Results
-        # ========================
-
-        if self.upper_bound == 'machine' or self.upper_bound == "both":
-
-            print("\nTransport Distance:")
-            print(df_transport)
-            print(f"Total Transport Distance: {self.total_distance_machine}")
-            print(f"\nNumber of used machines: {int(self.number_of_used_machines)} / {number_of_machines}")
-        if self.upper_bound == 'worker' or self.upper_bound == "both":
-            print("\nWork Distance:")
-            print(df_worker_transport)
-            print(f"Total Work Distance: {self.total_distance_worker}")
-            print("\nWorking Hours:")
-            print(df_working_hours)
-            print(f"Total Working Hours: {self.total_working_hours}")
-            print(f"Number of used workers: {int(self.number_of_used_worker)} / {number_of_workers}\n")
-        
-        print("\nSite Fulfillment:")
-        print(df_site)
-        print(f"\nNumber of fulfilled sites: {int(self.sum_finished_sites)} / {self.sum_total_sites}")
-        print(f"Number of fulfilled order items: {int(self.sum_finished_order_items)} / {self.sum_order_items}")
-
-
-        
-        
-
-
-
-    def time_limit_exceeded(self, reason):
-        # ========================
-        # 1. Save a file that indicates that the time limit was exceeded
-        # ========================
-
-        parent_folder = self.data._parent_folder
-        solution_path = Path.cwd().parent / "Data" / "Solution_math_model" / parent_folder / self.data.instance / f"{self.number_of_objectives}_Objectives" / self.objective_strategy
-        solution_path.mkdir(parents=True, exist_ok=True)
-        
-        if reason == "time_limit_exceeded":
-            output_filename = solution_path / f"TIME_{self.data.instance_filename}"
-            with open(output_filename, "w") as output_file:
-                output_file.write(f"No solution found within the time limit of {self.time_limit} seconds.")
-
-        elif reason == "solution_with_gap":           
-            output_filename = solution_path / f"GAP_{self.data.instance_filename}"
-            with open(output_filename, "w") as output_file:
-                output_file.write(f"Solution found within the time limit of {self.time_limit} seconds, but with a gap.")
 
 
     def execute(self):
@@ -647,15 +466,11 @@ class UpperBound:
 
         self.preprocess_data()
         self.create_optimization_model()
-        feasible = self.solve_model()
+        self.solve_model()
 
-        if not feasible:
-            print("Model is infeasible.")
-            return None, None
-        
-        #self.postprocess_results()
 
         objective_value = self.model.objVal
+
         return objective_value
 
 
