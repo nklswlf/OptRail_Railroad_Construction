@@ -1,10 +1,13 @@
-import InputData
+from InputData import InputData
 import json
 import pandas as pd
 import plotly.express as px
 import os
 from datetime import timedelta
 from collections import Counter
+import numpy as np
+import pygmo as pg
+import math
 
 
 
@@ -72,7 +75,7 @@ class Solution:
                 f"Transport distance attachment: {round(self.total_transport_distance_attachments, 2)}\n"
                 f"Number of machines: {self.number_of_machines}\n"
                 f"Number of workers: {self.number_of_workers}\n"
-                f"Number of attachments: {self.number_of_attachments}\n")
+                f"Number of attachments: {self.number_of_attachments}")
     
 
     def repair_solution(self):
@@ -663,6 +666,119 @@ class ParetoSolutions:
         
         self.ParetoFront = non_dominated
 
+    '''
+    def SetReferencePointFromParetoFront(self):
+        """
+        Automatically sets a valid reference point based on the worst (max) values
+        of each objective across the current Pareto front.
+        """
+        if not self.ParetoFront:
+            raise ValueError("ParetoFront is empty.")
+
+        # Extract objectives from Pareto front
+        epsilon = 1.2
+        driver = max(sol.driver_violation for sol in self.ParetoFront) * epsilon
+        commute = max(sol.total_commute_distance for sol in self.ParetoFront) * epsilon
+        transport = max(sol.total_transport_distance for sol in self.ParetoFront) * epsilon
+        attachments = max(sol.total_transport_distance_attachments for sol in self.ParetoFront) * epsilon
+        workers = max(sol.number_of_workers for sol in self.ParetoFront) * epsilon
+        machines = max(sol.number_of_machines for sol in self.ParetoFront) * epsilon
+        attach_count = max(sol.number_of_attachments for sol in self.ParetoFront) * epsilon
+
+        epsilon = 1e-6  # Small value to avoid numerical issues
+        self.ReferencePoint = np.array([
+            driver + epsilon,
+            commute + epsilon,
+            transport + epsilon,
+            attachments + epsilon,
+            workers + epsilon,
+            machines + epsilon,
+            attach_count + epsilon
+        ])
+    '''
+
+    def SetReferencePoint(self, solution: Solution):
+        """
+        Sets the reference point for hypervolume calculation based on a given solution.
+        
+        Args:
+            solution (Solution): A solution object containing the objectives.
+        
+        Raises:
+            ValueError: If the solution is None or if the objectives are not set.
+        """
+        if solution is None:
+            raise ValueError("Solution cannot be None.")
+        
+        epsilon = 2
+        driver = solution.driver_violation * epsilon
+        commute = solution.total_commute_distance * epsilon
+        transport = solution.total_transport_distance * epsilon
+        attachments = solution.total_transport_distance_attachments * epsilon
+        workers = solution.number_of_workers * epsilon
+        machines = solution.number_of_machines * epsilon
+        attach_count = solution.number_of_attachments * epsilon
+
+        epsilon = 1e-6  # Small value to avoid numerical issues
+        self.ReferencePoint = np.array([
+            driver + epsilon,
+            commute + epsilon,
+            transport + epsilon,
+            attachments + epsilon,
+            workers + epsilon,
+            machines + epsilon,
+            attach_count + epsilon
+        ])
+
+
+    def CalculateHypervolume(self) -> float:
+        """
+        Calculates the hypervolume of the Pareto Front using pygmo.
+        
+        Assumptions:
+        - The Pareto Front is stored in self.ParetoFront.
+        - Each solution in the Pareto Front has the following attributes:
+            driver_violation,
+            total_commute_distance,
+            total_transport_distance,
+            total_transport_distance_attachments,
+            number_of_workers,
+            number_of_machines,
+            number_of_attachments.
+        - The reference point is set via SetReferencePoint and stored in self.ReferencePoint
+            as a NumPy array with the same order of objectives.
+        
+        Returns:
+            float: The computed hypervolume.
+        """
+
+        objs = []
+        for sol in self.ParetoFront:
+            objs.append([
+                sol.driver_violation,
+                sol.total_commute_distance,
+                sol.total_transport_distance,
+                sol.total_transport_distance_attachments,
+                sol.number_of_workers,
+                sol.number_of_machines,
+                sol.number_of_attachments
+            ])
+        objs = np.array(objs)
+        
+        # Create a Hypervolume object with the objectives
+        hv = pg.hypervolume(objs)
+        
+        # Calculate the hypervolume using the reference point
+        hv_value = hv.compute(self.ReferencePoint)
+
+        # Adjust hypervolume for comparison
+        hv_log = math.log10(hv_value) * 10
+        hv_sqrt = math.sqrt(hv_value)
+        
+        return hv_sqrt
+        
+
+
 
     def UpdateParetoFront(self, new_solution: Solution) -> bool:
         """
@@ -906,23 +1022,6 @@ class ParetoSolutions:
 
         self.ParetoFront = sorted(self.ParetoFront, key=sort_key)
 
-        # Ausgabe als Tabelle
-        solutions = []
-        for solution in self.ParetoFront:
-            solutions.append({
-                "Finished Orders": solution.number_of_finished_orders,
-                "Dynamic Percentage": solution.total_dynamic_percentage,
-                "Order Items": solution.number_of_finished_order_items,
-                "Driver Violation": solution.driver_violation,
-                "Commute Distance": solution.total_commute_distance,
-                "Transport Machines": solution.total_transport_distance,
-                "Transport Attachments": solution.total_transport_distance_attachments,
-                "Machines": solution.number_of_machines,
-                "Workers": solution.number_of_workers,
-                "Attachments": solution.number_of_attachments
-            })
-
-        df = pd.DataFrame(solutions)
     
     def SelectRandomBestSolution(self, all_values: bool = False):
         """
@@ -1034,7 +1133,7 @@ class ParetoSolutions:
 
 
         if len(self.ParetoFront) == 0:
-            print("Deleted all solutions from the Pareto Front because all of them had unfinished sites.")
+            print(f"\nDeleted all solutions from the Pareto Front because all of them had unfinished sites.")
         else:
             print(f"\nPareto Front with solutions that incorporate only finished sites:")
             self.ShowFront()

@@ -72,7 +72,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                                                             # Reached after pre-processing in InputData
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-instances = ["Construction_a10_o107_m5_an57_ar12.json"]
+instances = ["Construction_a10_o128_m6_an51_ar13.json"]
 
 
 
@@ -145,9 +145,9 @@ only_constructive = False
 def main():
 
     for i in instances:
+        
         data = InputData(i)
-        print(f"Instance: {data.instance}")
-
+        
         solver = Solver(data, 1)
 
 
@@ -155,7 +155,7 @@ def main():
                                             neighborhoodTypes=neighboorhood_types_local_search)
 
         pareto_simulated_annealing = ParetoSimulatedAnnealing(inputData=data,
-                                                                        start_temp=40,
+                                                                        start_temp=10,
                                                                         min_temp=0.1,
                                                                         cooling_rate=0.95,
                                                                         max_iterations= 50,
@@ -174,7 +174,7 @@ def main():
         if only_constructive:
             # Run ONLY the constructive heuristic
             solver.ConstructionPhase(
-                order_item_attractiveness_technique="time_difference_importance",
+                order_item_attractiveness_technique="balanced_greedy",
                 machine_attractiveness_technique="balanced_greedy"
             )
         else:

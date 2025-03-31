@@ -1,8 +1,9 @@
-from InputData import *
+from InputData import InputData
 from ConstructiveHeuristic import *
 from ImprovementAlgorithm import *
 from EvaluationLogic import *
 import time
+from MIP_Upper_Bound import *
 
 class Solver:
     ''' Orchestrates all single pieces to form one strong algorithm to solve flowshop problems
@@ -24,7 +25,7 @@ class Solver:
 
         starttime = time.time()
         start_solutuion = self.ConstructiveHeuristic.Run(self.InputData, order_item_attractiveness_technique, machine_attractiveness_technique)
-        print("Constructive solution found.")
+        print("Constructive solution found:")
         print(start_solutuion)
 
         endtime = time.time()
@@ -34,7 +35,6 @@ class Solver:
         return start_solutuion
 
 
-
     def ImprovementPhase(self, startSolution:Solution, algorithm:ImprovementAlgorithm) -> Solution:
         ''' Start the improvement phase by choosing a algorithm'''
 
@@ -42,6 +42,17 @@ class Solver:
         bestSolution = algorithm.Run(startSolution)
 
         return bestSolution
+    
+    def UpperBound(self):
+        ''' Calculate the upper bound for the problem instance'''
+
+        optimizer = UpperBound(self.InputData, "both")
+        site_fulfillment = optimizer.execute()
+        self.InputData.site_fulfillment = int(site_fulfillment)
+
+        self.InputData.reduce_input_data(self.InputData.site_fulfillment)
+        
+        print(f"Upper Bound = {round(site_fulfillment, 2)}")
 
 
 
@@ -49,14 +60,16 @@ class Solver:
         ''' Run local search with chosen algorithm and neighborhoods'''
 
         starttime = time.time()
+
+        self.UpperBound()
+
         startSolution = self.ConstructionPhase(order_item_attractiveness_technique, machine_attractiveness_technique)
 
-        bestSolution = self.ImprovementPhase(startSolution, algorithm)
+        self.ImprovementPhase(startSolution, algorithm)
 
-
-        print("Best found Solution.")
-        print(bestSolution)
 
         endtime = time.time()
         self.RunTime = endtime - starttime
+
+        print("Total run time algorithm: ", round(self.RunTime, 2), " seconds")
 
