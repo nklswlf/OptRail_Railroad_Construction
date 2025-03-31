@@ -80,7 +80,7 @@ class UpperBound:
         
     def preprocess_data(self):
         """Preprocess the input data for optimization."""
-        print("\nPreprocessing data for LP-Relaxation...")
+        print("\n Preprocessing data for LP-Relaxation...")
         current_time = time.time()
         
         # ========================
@@ -274,7 +274,7 @@ class UpperBound:
         self.t_o = [orderItem.duration for orderItem in self.data.order_items]
 
         elapsed_time = time.time() - current_time
-        print(f"Data preprocessed successfully after {elapsed_time:.2f} seconds")
+        print(f" Data preprocessed successfully after {elapsed_time:.2f} seconds")
 
 
     def create_optimization_model(self):
@@ -282,7 +282,7 @@ class UpperBound:
 
 
         current_time = time.time()
-        print("\nCreating LP-Relaxation...")
+        print("\n Creating LP-Relaxation...")
         self.model = gp.Model("Flow_Formulation")
 
         
@@ -446,15 +446,15 @@ class UpperBound:
         
         
         elapsed_time = time.time() - current_time
-        print(f"Model created successfully after {elapsed_time:.2f} seconds")
+        print(f" Model created successfully after {elapsed_time:.2f} seconds")
 
 
     def solve_model(self):
         """Solve the optimization model."""
-        print("\nSolving LP-Relaxation...")
+        print("\n Solving LP-Relaxation...")
         self.model.optimize()
 
-        print("LP-Relaxation solved after {:.2f} seconds".format(self.model.Runtime))
+        print(" LP-Relaxation solved after {:.2f} seconds".format(self.model.Runtime))
    
             
         
