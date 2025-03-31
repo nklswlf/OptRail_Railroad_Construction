@@ -25,11 +25,11 @@ class Solver:
 
         starttime = time.time()
         start_solutuion = self.ConstructiveHeuristic.Run(self.InputData, order_item_attractiveness_technique, machine_attractiveness_technique)
-        print("Constructive solution found:")
+        print("Constructive solution found after:", round(time.time() - starttime, 2), "seconds")
         print(start_solutuion)
 
         endtime = time.time()
-        self.RunTime = endtime - starttime
+        self.ConstructionTime = endtime - starttime
 
 
         return start_solutuion
@@ -38,38 +38,47 @@ class Solver:
     def ImprovementPhase(self, startSolution:Solution, algorithm:ImprovementAlgorithm) -> Solution:
         ''' Start the improvement phase by choosing a algorithm'''
 
+        print("\nImprovement Phase started...")
+        start_time = time.time()
+
         algorithm.Initialize(self.EvaluationLogic, self.ParetoSolutions, self.RNG)
         bestSolution = algorithm.Run(startSolution)
+
+        print("\nImprovement Phase finished after:", round(time.time() - start_time, 2), "seconds")
 
         return bestSolution
     
     def UpperBound(self):
         ''' Calculate the upper bound for the problem instance'''
 
+        print("\nCalculating Upper Bound...")
+
+        start_time = time.time()
         optimizer = UpperBound(self.InputData, "both")
         site_fulfillment = optimizer.execute()
         self.InputData.site_fulfillment = int(site_fulfillment)
 
         self.InputData.reduce_input_data(self.InputData.site_fulfillment)
         
-        print(f"Upper Bound = {round(site_fulfillment, 2)}")
+        self.UpperBoundTime = time.time() - start_time
+        print("\nUpper Bound calculated after:", round(self.UpperBoundTime, 2), "seconds")
+        print(f"UB = {round(site_fulfillment, 2)}")
 
 
 
     def RunAlgorithm(self, order_item_attractiveness_technique, machine_attractiveness_technique, algorithm:ImprovementAlgorithm):
         ''' Run local search with chosen algorithm and neighborhoods'''
 
-        starttime = time.time()
-
         self.UpperBound()
+
+        starttime = time.time()
 
         startSolution = self.ConstructionPhase(order_item_attractiveness_technique, machine_attractiveness_technique)
 
-        self.ImprovementPhase(startSolution, algorithm)
-
+        building_time, individual_time, dominance_time, feasibility_check_time = self.ImprovementPhase(startSolution, algorithm)
 
         endtime = time.time()
         self.RunTime = endtime - starttime
 
-        print("Total run time algorithm: ", round(self.RunTime, 2), " seconds")
+        return self.UpperBoundTime, self.ConstructionTime, building_time, individual_time, dominance_time, feasibility_check_time, self.RunTime
 

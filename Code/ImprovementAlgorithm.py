@@ -4,6 +4,7 @@ from copy import deepcopy
 import numpy as np
 import time
 from concurrent.futures import ProcessPoolExecutor
+import pandas as pd
 
 
 class ImprovementAlgorithm:
@@ -216,6 +217,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                  max_iterations:int,
                  fallback_threshold:int,
                  scaling_energy:int,
+                 max_building_iterations_without_improvement:int = None,
                  neighborhoodTypes:list[str] = None,
                  energyDominanceNeighborhoods:dict[str, list[str]] = None,
                  buildingTypesObjectives:dict[str, list[str]] = None,
@@ -234,7 +236,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.ImproveTypesObjectives = improveTypesObjectives
         self.ImproveIndividualStrategy = improveIndividualStrategy
         self.EnergyDominanceNeighborhoods = energyDominanceNeighborhoods
-        
+        self.MaxBuildingIterationsWithoutImprovement = max_building_iterations_without_improvement
         self.DontChangeBackInOrder = set()
         self.BuildingIteration = 0
 
@@ -243,13 +245,18 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         ''' Building phase to find a fully staffed solution'''
         self.BuildingIteration += 1
-        print(f"\nStarting Building Phase Iteration {self.BuildingIteration}...")
+        print(f"\nBuilding Phase Iteration {self.BuildingIteration}...")
 
         fallback_counter = 0
         current_temperature = self.StartTemperature
         local_pareto_solutions = ParetoSolutions(self.InputData)
+        break_counter = 0
+        break_flag = False
 
         while current_temperature > self.MinTemperature:
+
+            if break_flag:
+                break
 
             for i in range(self.MaxIterations):
 
@@ -273,6 +280,12 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 if move is None:
                     # Count consecutive non-moves for Insert_Shift and Swap_Shift_External
                     # Break if threshold is reached
+                    if random_type in ['Insert_Shift', 'Swap_Shift_External']:
+                        break_counter += 1
+                    if break_counter >= self.MaxBuildingIterationsWithoutImprovement:
+                        break_flag = True
+                        break
+                    
                     continue
 
                 value = move.DeltaDetails[random_objective]
@@ -622,6 +635,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         Found = False
         exchange_tries = 0
         print(f"\nStarting Building Phase to find a fully staffed solution...")
+        current_time = time.time()
         while not Found:
             currentSolution, Found = self.BuildingPhase(currentSolution)
 
@@ -638,51 +652,51 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                     print(f"\nDeleting sites to find a fully staffed solution...")
                     currentSolution = self.EditSites(currentSolution, False)
                     print("Site has been deleted")
+        self.BuildingPhaseTime = time.time() - current_time
+        print(f"Building Phase finished after: {round(self.BuildingPhaseTime, 2)} seconds")
 
         self.ParetoSolutions.SetReferencePoint(currentSolution)
 
+        current_time = time.time()
         # Improving each individual objective and keeping Pareto front
         if self.ImproveIndividualStrategy == 'parallel':
             self.ParallelImproveIndividuals(currentSolution)
         elif self.ImproveIndividualStrategy == 'successive':
             self.SuccessiveImproveIndividuals(currentSolution)
-
+        
             
         hypervolume = self.ParetoSolutions.CalculateHypervolume()
-        print(f"Hypervolume of Pareto Front after individual improvement: {round(hypervolume, 2)}")
+        print(f"\nHypervolume of Pareto Front after individual {self.ImproveIndividualStrategy} improvement: {round(hypervolume, 2)}")
 
-        # Visualize individual best solutions for each objective
-        best_solution_set = self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
+        self.IndividualPhaseTime = time.time() - current_time
+        print(f"\nIndividual Phase finished after: {round(self.IndividualPhaseTime, 2)} seconds")
 
-        best_solution_pareto_front = ParetoSolutions(self.InputData)
-        for solution in best_solution_set:
-            best_solution_pareto_front.ParetoFront.append(solution)
-        best_solution_pareto_front.SortParetoFront()
-        print("\nPareto Front for Best Solutions for each Objective after individual improvement:")
-        best_solution_pareto_front.ShowFront()
+        # Show individual best solutions for each objective
+        self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
 
-
+        current_time = time.time()
         # Using dominace based energy for simulated annealing
         solution = self.ParetoSolutions.SelectRandomBestSolution()
         self.DominanceBasedEnergyImprovement(solution)
-
+        
         hypervolume = self.ParetoSolutions.CalculateHypervolume()
-        print(f"Hypervolume of Pareto Front after dominance based energy improvement: {round(hypervolume, 2)}")
-
+        print(f"\nHypervolume of Pareto Front after dominance based energy improvement: {round(hypervolume, 2)}")
+        self.DominanceBasedEnergyImprovementTime = time.time() - current_time
+        print(f"\nDominance Based Energy Improvement finished after: {round(self.DominanceBasedEnergyImprovementTime, 2)} seconds")
+        
+        current_time = time.time()
         for solution in self.ParetoSolutions.ParetoFront:
             feasible = solution.feasibility_check()
             if not feasible:
                 raise Exception('Solution is not feasible after pareto simulated annealing')
 
+        self.FeasibilityCheckTime = time.time() - current_time
 
-        # Visualize individual best solutions for each objective
-        best_solution_set = self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
+        # Show individual best solutions for each objective
+        self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
 
-        best_solution_pareto_front = ParetoSolutions(self.InputData)
-        for solution in best_solution_set:
-            best_solution_pareto_front.ParetoFront.append(solution)
-        best_solution_pareto_front.SortParetoFront()
-        print("\nPareto Front for Best Solutions for each Objective after dominance based energy improvement:")
-        best_solution_pareto_front.ShowFront()
+        return self.BuildingPhaseTime, self.IndividualPhaseTime, self.DominanceBasedEnergyImprovementTime, self.FeasibilityCheckTime
+
+        
 
 

@@ -711,10 +711,11 @@ class ParetoSolutions:
             raise ValueError("Solution cannot be None.")
         
         epsilon = 2
+        epsilon_2 = 4
         driver = solution.driver_violation * epsilon
-        commute = solution.total_commute_distance * epsilon
-        transport = solution.total_transport_distance * epsilon
-        attachments = solution.total_transport_distance_attachments * epsilon
+        commute = solution.total_commute_distance * epsilon_2
+        transport = solution.total_transport_distance * epsilon_2
+        attachments = solution.total_transport_distance_attachments * epsilon_2
         workers = solution.number_of_workers * epsilon
         machines = solution.number_of_machines * epsilon
         attach_count = solution.number_of_attachments * epsilon
@@ -1041,10 +1042,12 @@ class ParetoSolutions:
         }
 
         selected_solutions = []
+        best_value_dict = {}
 
         for key, func in objective_map.items():
             try:
                 best_value = min(func(sol) for sol in self.ParetoFront)
+                best_value_dict[key] = round(best_value, 2)
                 candidate_solutions = [sol for sol in self.ParetoFront if func(sol) == best_value]
 
                 if len(candidate_solutions) == 1:
@@ -1072,7 +1075,10 @@ class ParetoSolutions:
                 continue
 
         if all_values:
-            return selected_solutions
+            df = pd.DataFrame(best_value_dict.items(), columns=["Objective", "Best Value"])
+            print("\nBest individual values:")
+            print(df.to_string(index=False))
+            return None
         
         if not selected_solutions:
             raise KeyError("No solutions found.")
@@ -1090,12 +1096,12 @@ class ParetoSolutions:
         for solution in self.ParetoFront:
             solutions.append({
                 "Finished Orders": solution.number_of_finished_orders,
-                "Dynamic Percentage": solution.total_dynamic_percentage,
+                "Dynamic Percentage": round(solution.total_dynamic_percentage, 2),
                 "Order Items": solution.number_of_finished_order_items,
                 "Driver Violation": solution.driver_violation,
-                "Commute Distance": solution.total_commute_distance,
-                "Transport Machines": solution.total_transport_distance,
-                "Transport Attachments": solution.total_transport_distance_attachments,
+                "Commute Distance": round(solution.total_commute_distance, 2),
+                "Transport Machines": round(solution.total_transport_distance, 2),
+                "Transport Attachments": round(solution.total_transport_distance_attachments, 2),
                 "Machines": solution.number_of_machines,
                 "Workers": solution.number_of_workers,
                 "Attachments": solution.number_of_attachments
