@@ -165,7 +165,8 @@ def main():
                                                                         energyDominanceNeighborhoods=energy_dominance_neighborhoods,
                                                                         buildingTypesObjectives=building_types_and_objectives,
                                                                         improveTypesObjectives=improve_types_and_objectives,
-                                                                        improveIndividualStrategy="successive",)
+                                                                        #improveIndividualStrategy="successive")
+                                                                        improveIndividualStrategy="parallel")
 
 
 
