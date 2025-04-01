@@ -665,8 +665,9 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             self.SuccessiveImproveIndividuals(currentSolution)
         
             
-        hypervolume = self.ParetoSolutions.CalculateHypervolume()
-        print(f"\nHypervolume of Pareto Front after individual {self.ImproveIndividualStrategy} improvement: {round(hypervolume, 2)}")
+        hv_sqrt, hv_log = self.ParetoSolutions.CalculateHypervolume()
+        print(f"\nHypervolume squareroot of Pareto Front after individual {self.ImproveIndividualStrategy} improvement: {round(hv_sqrt, 2)}")
+        print(f"\nHypervolume log of Pareto Front after individual {self.ImproveIndividualStrategy} improvement: {round(hv_log, 2)}")
 
         self.IndividualPhaseTime = time.time() - current_time
         print(f"\nIndividual Phase finished after: {round(self.IndividualPhaseTime, 2)} seconds")
@@ -679,8 +680,10 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         solution = self.ParetoSolutions.SelectRandomBestSolution()
         self.DominanceBasedEnergyImprovement(solution)
         
-        hypervolume = self.ParetoSolutions.CalculateHypervolume()
-        print(f"\nHypervolume of Pareto Front after dominance based energy improvement: {round(hypervolume, 2)}")
+        hv_sqrt, hv_log = self.ParetoSolutions.CalculateHypervolume()
+        print(f"\nHypervolume squareroot of Pareto Front after dominance based energy improvement: {round(hv_sqrt, 2)}")
+        print(f"\nHypervolume log of Pareto Front after dominance based energy improvement: {round(hv_log, 2)}")
+        
         self.DominanceBasedEnergyImprovementTime = time.time() - current_time
         print(f"\nDominance Based Energy Improvement finished after: {round(self.DominanceBasedEnergyImprovementTime, 2)} seconds")
         

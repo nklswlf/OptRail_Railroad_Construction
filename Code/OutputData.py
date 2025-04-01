@@ -776,7 +776,7 @@ class ParetoSolutions:
         hv_log = math.log10(hv_value) * 10
         hv_sqrt = math.sqrt(hv_value)
         
-        return hv_sqrt
+        return hv_sqrt, hv_log
         
 
 

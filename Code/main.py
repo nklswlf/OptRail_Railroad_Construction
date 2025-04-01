@@ -72,7 +72,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                                                             # Reached after pre-processing in InputData
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-instances = ["Construction_a10_o107_m5_an57_ar12.json"]
+instances = ["Construction_a20_o236_m12_an106_ar24.json"]
 
 
 
@@ -157,13 +157,13 @@ def main():
                                             neighborhoodTypes=neighboorhood_types_local_search)
 
         pareto_simulated_annealing = ParetoSimulatedAnnealing(inputData=data,
-                                                                        start_temp=200,
+                                                                        start_temp=20,
                                                                         min_temp=0.1,
                                                                         cooling_rate=0.95,
-                                                                        max_iterations= 300,
+                                                                        max_iterations= 100,
                                                                         fallback_threshold=25,
                                                                         scaling_energy= 30,
-                                                                        max_building_iterations_without_improvement=200,
+                                                                        max_building_iterations_without_improvement=20000,
                                                                         neighborhoodTypes=neighboorhood_types,
                                                                         energyDominanceNeighborhoods=energy_dominance_neighborhoods,
                                                                         buildingTypesObjectives=building_types_and_objectives,
@@ -221,8 +221,8 @@ def main():
 
         df = pd.DataFrame(time_entries[1:], columns=time_entries[0])
 
-
         print("\n")
+        print("Time Statistics:")
         print(df.to_string(index=False))
         print("\n")
 
