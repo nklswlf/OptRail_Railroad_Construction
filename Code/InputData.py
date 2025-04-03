@@ -884,6 +884,19 @@ class Worker:
 
                     break_time = input_data._hours_between_shifts / 24
 
+                    # Transportzeit berechnen
+                    transport_distance = input_data._transport_routes_order_item[order_item_1.id][order_item_2.id]
+                    transport_time = transport_distance / input_data._transport_speed_kmh
+                    transport_time = transport_time / 24
+
+                    if max(break_time, transport_time) == transport_time:
+                        raise Exception(f"Transport time {transport_time} is greater than break time {break_time} for order items {order_item_1.id} and {order_item_2.id}.")
+
+
+                    #break_time = max(break_time, transport_time)
+
+
+
                     # Vorgänger und Nachfolger bestimmen
                     if start_time_order_item_1 >= end_time_order_item_2 + break_time:
                         self._predecessors[order_item_1].append(order_item_2)
