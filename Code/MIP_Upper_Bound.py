@@ -19,12 +19,16 @@ class UpperBound:
         # ========================
         # 1. Sets
         # ========================
-        if self.upper_bound == 'machine' or self.upper_bound == "both":
+        if self.upper_bound == 'machine' or self.upper_bound == "both" or self.upper_bound == 'all':
             self.M = []  # List of machine IDs
             self.N_m = {}  # Dictionary: Machine -> Order items
-        if self.upper_bound == 'worker' or self.upper_bound == "both":
+        if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
             self.W = []  # List of worker IDs
             self.N_w = {}  # Dictionary: Worker -> Order items
+        if self.upper_bound == 'attachment' or self.upper_bound == "all":
+            self.A = [] # List of attachment IDs
+            self.N_a = {} # Dictionary: Attachment -> Order items
+            self.K = set() # Set of all attachment types
         
         self.N = []  # List of order item IDs
         self.C = []  # List of site IDs
@@ -51,8 +55,11 @@ class UpperBound:
         self.S_mn = {}  # Successors for machine order items
         self.P_wn = {}  # Predecessors for worker order items
         self.S_wn = {}  # Successors for worker order items
+        self.P_an = {}  # Predecessors for attachment order items
+        self.S_an = {}  # Successors for attachment order items
         self.d_ij = []  # Distance matrix for machines (transport routes)
         self.d_wi = []  # Distance matrix for workers (work routes)
+        self.q_ok = {}  # Dictionary: Order item -> Attachment types
 
         # ========================
         # 4. Time and Range
@@ -86,7 +93,7 @@ class UpperBound:
         # ========================
         # 1. Process Machines
         # ========================
-        if self.upper_bound == 'machine' or self.upper_bound == "both":
+        if self.upper_bound == 'machine' or self.upper_bound == "both" or self.upper_bound == 'all':
 
             for machine in self.data.machines:
                 self.M.append(machine.name)
@@ -99,7 +106,7 @@ class UpperBound:
         # 2. Process Workers
         # ========================
 
-        if self.upper_bound == 'worker' or self.upper_bound == "both":
+        if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
 
             for worker in self.data.workers:
                 self.W.append(worker.personal_number)
@@ -109,6 +116,19 @@ class UpperBound:
                         self.N_w[worker.personal_number].append(orderItem.id)
                     elif set(orderItem.worker_qualifications).issubset(set(worker.qualifications)):  # Qualifikationen sind abgedeckt
                         self.N_w[worker.personal_number].append(orderItem.id)
+
+        # ========================
+        # 3. Process Attachments
+        # ========================
+        
+        if self.upper_bound == 'attachment' or self.upper_bound == 'all':
+            
+            for attachment in self.data.attachments:
+                self.A.append(attachment.id)
+                self.N_a[attachment.id] = []
+                for orderItem in self.data.order_items:
+                    if attachment.type in orderItem.equipment_types:
+                        self.N_a[attachment.id].append(orderItem.id)
 
         # ========================
         # 3. Process Orders
@@ -147,7 +167,7 @@ class UpperBound:
             self.O_t_end_inverted[orderID] = t_end
 
 
-        if self.upper_bound == 'worker' or self.upper_bound == "both":
+        if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
 
             for orderItem in self.data.order_items:
 
@@ -172,14 +192,26 @@ class UpperBound:
                 if t_start_int not in self.A_r:
                     self.A_r[t_start_int] = []
                 self.A_r[t_start_int].append(orderID)
+        
+        # Order items and attachment types
+        if self.upper_bound == 'attachment' or self.upper_bound == 'all':
+            for order_item in self.data.order_items:
+                self.q_ok[order_item.id] = dict()
+                for equipment in order_item.equipment_types:
+                    if equipment not in self.q_ok[order_item.id]:
+                        self.q_ok[order_item.id][equipment] = 0
+                    self.q_ok[order_item.id][equipment] += 1
 
+                    
+                    self.K.add(equipment)
+            
                 
-
+                
         # ========================
         # 5. Process Transport Routes
         # ========================
 
-        if self.upper_bound == 'machine' or self.upper_bound == "both":
+        if self.upper_bound == 'machine' or self.upper_bound == "both" or self.upper_bound == 'all':
             for i in self.data.order_items:
                 row = []
                 for j in self.data.order_items:
@@ -188,7 +220,7 @@ class UpperBound:
                     row.append(self.data.transport_routes[a][b])
                 self.d_ij.append(row)
 
-        if self.upper_bound == 'worker' or self.upper_bound == "both":
+        if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
             for i in self.data.workers:
                 row = []
                 for j in self.data.order_items:
@@ -203,7 +235,7 @@ class UpperBound:
         # 6. Calculate Predecessors and Successors
         # ========================
 
-        if self.upper_bound == 'machine' or self.upper_bound == "both":
+        if self.upper_bound == 'machine' or self.upper_bound == "both" or self.upper_bound == 'all':
             for m in self.M:
                 for n in self.N_m[m]:
                     if (m, self.start) not in self.P_mn:
@@ -231,7 +263,36 @@ class UpperBound:
                             if start_time_i > end_time_n + self.d_ij[n][i] / self.TRANSPORT_SPEED:
                                 self.S_mn[m, n].append(i)
 
-        if self.upper_bound == 'worker' or self.upper_bound == "both":
+        if self.upper_bound == 'attachment' or self.upper_bound == "all":
+            for a in self.A:
+                for n in self.N_a[a]:
+                    if (a, self.start) not in self.P_an:
+                        self.P_an[a, self.start] = []
+                        self.S_an[a, self.start] = [self.end]
+                    if (a, self.end) not in self.P_an:
+                        self.P_an[a, self.end] = []
+                        self.S_an[a, self.end] = [self.start]
+
+                    self.P_an[a, n] = [self.start]
+                    self.S_an[a, self.start].append(n)
+                    self.P_an[a, self.end].append(n)
+                    self.S_an[a, n] = [self.end]
+
+                    for i in self.N_a[a]:
+                        if n != i:
+                            start_time_n = self.O_t_start_inverted[n]
+                            end_time_n = self.O_t_end_inverted[n]
+                            start_time_i = self.O_t_start_inverted[i]
+                            end_time_i = self.O_t_end_inverted[i]
+
+                            if start_time_n >= end_time_i + self.d_ij[i][n] / self.TRANSPORT_SPEED:
+                                self.P_an[a, n].append(i)
+
+                            if start_time_i > end_time_n + self.d_ij[n][i] / self.TRANSPORT_SPEED:
+                                self.S_an[a, n].append(i)
+        
+
+        if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
             for w in self.W:
                 for n in self.N_w[w]:
                     if (w, self.start) not in self.P_wn:
@@ -297,7 +358,7 @@ class UpperBound:
         # 1. Create Variables
         # ========================
 
-        if self.upper_bound == 'machine' or self.upper_bound == "both":
+        if self.upper_bound == 'machine' or self.upper_bound == "both" or self.upper_bound == 'all':
 
             # Machine flow variabless
             indices_1 = [(m, i, j) for m in self.M for i in self.N_m[m] for j in self.N_m[m]]  # (m, i, j)
@@ -307,7 +368,7 @@ class UpperBound:
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
             x = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="x")
 
-        if self.upper_bound == 'worker' or self.upper_bound == "both":
+        if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
 
             # Worker flow variables
             indices_1 = [(w, i, j) for w in self.W for i in self.N_w[w] for j in self.N_w[w]]  # (w, i, j)
@@ -317,6 +378,15 @@ class UpperBound:
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
             y = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="y")
 
+        if self.upper_bound == 'attachment' or self.upper_bound == "all":
+
+            # Attachment flow variables
+            indices_1 = [(a, i, j) for a in self.A for i in self.N_a[a] for j in self.N_a[a]]
+            indices_2 = [(a, self.start, j) for a in self.A for j in self.N_a[a]]
+            indices_3 = [(a, i, self.end) for a in self.A for i in self.N_a[a]]
+            indices_4 = [(a, self.start, self.end) for a in self.A]
+            all_indices = indices_1 + indices_2 + indices_3 + indices_4
+            z = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="z")
 
         # Site completion variables
         u = self.model.addVars(self.C, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="u")
@@ -338,7 +408,7 @@ class UpperBound:
         # ========================
         # 3. Add Constraints
         # ========================
-        if self.upper_bound == 'machine' or self.upper_bound == "both":
+        if self.upper_bound == 'machine' or self.upper_bound == "both" or self.upper_bound == 'all':
             # Machine flow balance constraints
             for m in self.M:
                 for i in self.N_m[m]:
@@ -358,8 +428,26 @@ class UpperBound:
                     )
 
 
-        if self.upper_bound == 'worker' or self.upper_bound == "both":
-   
+        if self.upper_bound == 'attachment' or self.upper_bound == "all":
+            # Attachment flow balance constraints
+            for a in self.A:
+                for i in self.N_a[a]:
+                    self.model.addConstr(
+                        gp.quicksum(z[a, j, i] for j in self.P_an[a, i]) ==
+                        gp.quicksum(z[a, i, j] for j in self.S_an[a, i]),
+                        name=f"attachment_flow_balance_{a}_{i}"
+                    )
+
+            # Start and end node constraints for attachments
+            for a in self.A:
+                if (a, self.start) in self.S_an:
+                    self.model.addConstr(
+                        gp.quicksum(z[a, self.start, j] for j in self.S_an[a, self.start]) == 1,
+                        name=f"attachment_start_constraint_{a}"
+                    )
+
+
+        if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
             # Worker flow balance constraints
             for w in self.W:
                 for i in self.N_w[w]:
@@ -411,9 +499,6 @@ class UpperBound:
                         )
 
 
-
-
-
         # Site completion constraints
         if self.upper_bound == 'machine':
             for c in self.C:
@@ -431,6 +516,17 @@ class UpperBound:
                         name=f"worker_site_fulfillment_site{c}_order{i}"
                     )
 
+        if self.upper_bound == 'attachment':
+            for c in self.C:
+                for i in self.N_c[c]:
+                    for k in self.K:
+                        if k in self.q_ok[i]:
+                            self.model.addConstr(
+                                gp.quicksum(z[a, i, j] for a in self.A if (a, i) in self.S_an for j in self.S_an[a, i]) == self.q_ok[i][k] * u[c],
+                                name=f"attachment_site_fulfillment_site{c}_order{i}_type{k}"
+                            )
+
+
         if self.upper_bound == 'both':
             for c in self.C:
                 for i in self.N_c[c]:
@@ -443,6 +539,25 @@ class UpperBound:
                         name=f"worker_site_fulfillment_site{c}_order{i}"
                     )
 
+
+        if self.upper_bound == 'all':
+            for c in self.C:
+                for i in self.N_c[c]:
+                    self.model.addConstr(
+                        gp.quicksum(x[m, i, j] for m in self.M if (m, i) in self.S_mn for j in self.S_mn[m, i]) == u[c],
+                        name=f"machine_site_fulfillment_site{c}_order{i}"
+                    )
+                    self.model.addConstr(
+                        gp.quicksum(y[w, i, j] for w in self.W if (w, i) in self.S_wn for j in self.S_wn[w, i]) == u[c],
+                        name=f"worker_site_fulfillment_site{c}_order{i}"
+                    )
+                    for k in self.K:
+                        if k in self.q_ok[i]:
+                            self.model.addConstr(
+                                gp.quicksum(z[a, i, j] for a in self.A if (a, i) in self.S_an for j in self.S_an[a, i]) == self.q_ok[i][k] * u[c],
+                                name=f"attachment_site_fulfillment_site{c}_order{i}_type{k}"
+                            )
+            
         
         
         elapsed_time = time.time() - current_time

@@ -15,6 +15,8 @@ class Solver:
         self.EvaluationLogic = EvaluationLogic(inputData)
         self.ParetoSolutions = ParetoSolutions(inputData, self.RNG)
         self.runTime = {}
+
+        self.UB_technique = "MIP" # "MIP" or "Greedy"
         
         self.ConstructiveHeuristic = ConstructiveHeuristics(paretoSolutions=self.ParetoSolutions, evaluationLogic=self.EvaluationLogic)
 
@@ -48,13 +50,13 @@ class Solver:
 
         return bestSolution
     
-    def UpperBound(self):
+    def UpperBound(self, UB_technique):
         ''' Calculate the upper bound for the problem instance'''
 
         print("\nCalculating Upper Bound...")
 
         start_time = time.time()
-        optimizer = UpperBound(self.InputData, "both")
+        optimizer = UpperBound(self.InputData, UB_technique)
         site_fulfillment = optimizer.execute()
         self.InputData.site_fulfillment = int(site_fulfillment)
 
@@ -66,10 +68,10 @@ class Solver:
 
 
 
-    def RunAlgorithm(self, order_item_attractiveness_technique, machine_attractiveness_technique, algorithm:ImprovementAlgorithm):
+    def RunAlgorithm(self, UB_technique, order_item_attractiveness_technique, machine_attractiveness_technique, algorithm:ImprovementAlgorithm):
         ''' Run local search with chosen algorithm and neighborhoods'''
 
-        self.UpperBound()
+        self.UpperBound(UB_technique)
 
         starttime = time.time()
 
