@@ -90,10 +90,6 @@ class InputData:
         self.connect_order_item_to_order()
 
 
-
-        
-
-
         # Dynamic dictionary for planned shifts for greedy algorithm
         self.planned_shifts_worker = dict()
         self.planned_shifts_machine = dict()
@@ -263,6 +259,9 @@ class InputData:
             lambda order: len(worker_qualifications[order.order_number]), 
             "worker_qualification_count"
         )
+
+        # 7. Calculate rank for attachment_count fewer attachments are better
+
 
         # Print current priorities for each order and the ahp weights
         #print("Order priorities calculated with different criteria:")
