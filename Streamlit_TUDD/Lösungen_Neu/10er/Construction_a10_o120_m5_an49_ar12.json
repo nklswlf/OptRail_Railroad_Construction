@@ -1,0 +1,2968 @@
+{
+  "EnthaeltDauern": false,
+  "ID": 0,
+  "Name": "Construction_a10_o120_m5_an49_ar12",
+  "Start": "2024-08-01T00:00:00",
+  "Ende": "2024-08-31T00:00:00",
+  "Maschinen": [
+    {
+      "ID": 0,
+      "Baujahr": 0,
+      "Name": "ZWB_Liebherr_A922_Rail0",
+      "Typ": "zwB_Liebherr_A922_Rail",
+      "StammfahrerStrings": [
+        "10",
+        "6",
+        "5"
+      ]
+    },
+    {
+      "ID": 1,
+      "Baujahr": 0,
+      "Name": "ZWB_Liebherr_A922_Rail1",
+      "Typ": "zwB_Liebherr_A922_Rail",
+      "StammfahrerStrings": [
+        "7",
+        "4",
+        "1"
+      ]
+    },
+    {
+      "ID": 2,
+      "Baujahr": 0,
+      "Name": "ZWB_Liebherr_A922_Rail2",
+      "Typ": "zwB_Liebherr_A922_Rail",
+      "StammfahrerStrings": [
+        "5",
+        "3"
+      ]
+    },
+    {
+      "ID": 3,
+      "Baujahr": 0,
+      "Name": "ZWB_Liebherr_A922_Rail3",
+      "Typ": "zwB_Liebherr_A922_Rail",
+      "StammfahrerStrings": [
+        "2",
+        "6"
+      ]
+    },
+    {
+      "ID": 4,
+      "Baujahr": 0,
+      "Name": "ZWB_Liebherr_A922_Rail4",
+      "Typ": "zwB_Liebherr_A922_Rail",
+      "StammfahrerStrings": [
+        "7",
+        "3"
+      ]
+    }
+  ],
+  "Arbeiter": [
+    {
+      "Personalnummer": 0,
+      "Name": "Arbeiter_0",
+      "Qualifikationen": [
+        "dB_Tauglichkeit"
+      ],
+      "Wohnort": {
+        "Item1": 42.805259508455755,
+        "Item2": 14.628865157546878
+      }
+    },
+    {
+      "Personalnummer": 1,
+      "Name": "Arbeiter_1",
+      "Qualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "Wohnort": {
+        "Item1": 11.809988697902295,
+        "Item2": 77.66219832825577
+      }
+    },
+    {
+      "Personalnummer": 2,
+      "Name": "Arbeiter_2",
+      "Qualifikationen": [],
+      "Wohnort": {
+        "Item1": 74.32965164740088,
+        "Item2": 25.17410489971475
+      }
+    },
+    {
+      "Personalnummer": 3,
+      "Name": "Arbeiter_3",
+      "Qualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "Wohnort": {
+        "Item1": 83.972667988377,
+        "Item2": 20.87003747973127
+      }
+    },
+    {
+      "Personalnummer": 4,
+      "Name": "Arbeiter_4",
+      "Qualifikationen": [],
+      "Wohnort": {
+        "Item1": 69.45644685507587,
+        "Item2": 26.681805135068394
+      }
+    },
+    {
+      "Personalnummer": 5,
+      "Name": "Arbeiter_5",
+      "Qualifikationen": [],
+      "Wohnort": {
+        "Item1": 38.057234807897935,
+        "Item2": 50.84710491394955
+      }
+    },
+    {
+      "Personalnummer": 6,
+      "Name": "Arbeiter_6",
+      "Qualifikationen": [
+        "caT_M323_F",
+        "dB_Tauglichkeit",
+        "zusatzbescheinigung"
+      ],
+      "Wohnort": {
+        "Item1": 26.134131302188212,
+        "Item2": 39.922979306393756
+      }
+    },
+    {
+      "Personalnummer": 7,
+      "Name": "Arbeiter_7",
+      "Qualifikationen": [
+        "dB_Tauglichkeit"
+      ],
+      "Wohnort": {
+        "Item1": 4.411811243934468,
+        "Item2": 37.8946284008653
+      }
+    },
+    {
+      "Personalnummer": 8,
+      "Name": "Arbeiter_8",
+      "Qualifikationen": [
+        "dB_Tauglichkeit"
+      ],
+      "Wohnort": {
+        "Item1": 3.0973011176554954,
+        "Item2": 61.19614618886082
+      }
+    },
+    {
+      "Personalnummer": 9,
+      "Name": "Arbeiter_9",
+      "Qualifikationen": [
+        "caT_M323_F",
+        "dB_Tauglichkeit",
+        "zusatzbescheinigung"
+      ],
+      "Wohnort": {
+        "Item1": 82.13140539924214,
+        "Item2": 28.749352660379067
+      }
+    },
+    {
+      "Personalnummer": 10,
+      "Name": "Arbeiter_10",
+      "Qualifikationen": [
+        "dB_Tauglichkeit"
+      ],
+      "Wohnort": {
+        "Item1": 38.65711127345316,
+        "Item2": 89.62294021138128
+      }
+    },
+    {
+      "Personalnummer": 11,
+      "Name": "Arbeiter_11",
+      "Qualifikationen": [
+        "dB_Tauglichkeit"
+      ],
+      "Wohnort": {
+        "Item1": 79.78038046498801,
+        "Item2": 7.905384762168575
+      }
+    }
+  ],
+  "Anbaugeraete": [
+    {
+      "ID": 0,
+      "Baujahr": 2000,
+      "Typ": "palettengabel",
+      "TypString": null
+    },
+    {
+      "ID": 4,
+      "Baujahr": 2004,
+      "Typ": "grabgreifer",
+      "TypString": null
+    },
+    {
+      "ID": 8,
+      "Baujahr": 2009,
+      "Typ": "grabgreifer",
+      "TypString": null
+    },
+    {
+      "ID": 11,
+      "Baujahr": 2001,
+      "Typ": "palettengabel",
+      "TypString": null
+    },
+    {
+      "ID": 12,
+      "Baujahr": 2004,
+      "Typ": "tieflöffel",
+      "TypString": null
+    },
+    {
+      "ID": 15,
+      "Baujahr": 2002,
+      "Typ": "tieflöffel",
+      "TypString": null
+    },
+    {
+      "ID": 16,
+      "Baujahr": 2003,
+      "Typ": "grabgreifer",
+      "TypString": null
+    },
+    {
+      "ID": 23,
+      "Baujahr": 2016,
+      "Typ": "seitengrifframme",
+      "TypString": null
+    },
+    {
+      "ID": 24,
+      "Baujahr": 2003,
+      "Typ": "tieflöffel",
+      "TypString": null
+    },
+    {
+      "ID": 31,
+      "Baujahr": 2010,
+      "Typ": "tieflöffel",
+      "TypString": null
+    },
+    {
+      "ID": 32,
+      "Baujahr": 2009,
+      "Typ": "tieflöffel",
+      "TypString": null
+    },
+    {
+      "ID": 34,
+      "Baujahr": 2002,
+      "Typ": "grabgreifer",
+      "TypString": null
+    },
+    {
+      "ID": 35,
+      "Baujahr": 2013,
+      "Typ": "verdichter",
+      "TypString": null
+    },
+    {
+      "ID": 36,
+      "Baujahr": 2009,
+      "Typ": "tieflöffel",
+      "TypString": null
+    },
+    {
+      "ID": 37,
+      "Baujahr": 2009,
+      "Typ": "verdichter",
+      "TypString": null
+    },
+    {
+      "ID": 38,
+      "Baujahr": 2017,
+      "Typ": "hydraulikhammer",
+      "TypString": null
+    },
+    {
+      "ID": 40,
+      "Baujahr": 2002,
+      "Typ": "palettengabel",
+      "TypString": null
+    },
+    {
+      "ID": 47,
+      "Baujahr": 2000,
+      "Typ": "hydraulikhammer",
+      "TypString": null
+    }
+  ],
+  "Auftraege": [
+    {
+      "Auftragsnummer": "0",
+      "Baustellennummer": 0,
+      "Start": "2024-08-17T00:00:00",
+      "Ende": "2024-08-27T00:00:00",
+      "BestellpositionenStrings": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "Standort": {
+        "Item1": 49.0,
+        "Item2": 31.0
+      }
+    },
+    {
+      "Auftragsnummer": "1",
+      "Baustellennummer": 1,
+      "Start": "2024-08-27T00:00:00",
+      "Ende": "2024-08-30T00:00:00",
+      "BestellpositionenStrings": [
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25"
+      ],
+      "Standort": {
+        "Item1": 98.0,
+        "Item2": 34.0
+      }
+    },
+    {
+      "Auftragsnummer": "2",
+      "Baustellennummer": 2,
+      "Start": "2024-08-15T00:00:00",
+      "Ende": "2024-08-19T00:00:00",
+      "BestellpositionenStrings": [
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33"
+      ],
+      "Standort": {
+        "Item1": 46.0,
+        "Item2": 76.0
+      }
+    },
+    {
+      "Auftragsnummer": "3",
+      "Baustellennummer": 3,
+      "Start": "2024-08-15T00:00:00",
+      "Ende": "2024-08-18T00:00:00",
+      "BestellpositionenStrings": [
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39"
+      ],
+      "Standort": {
+        "Item1": 78.0,
+        "Item2": 93.0
+      }
+    },
+    {
+      "Auftragsnummer": "4",
+      "Baustellennummer": 4,
+      "Start": "2024-08-14T00:00:00",
+      "Ende": "2024-08-26T00:00:00",
+      "BestellpositionenStrings": [
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51"
+      ],
+      "Standort": {
+        "Item1": 31.0,
+        "Item2": 86.0
+      }
+    },
+    {
+      "Auftragsnummer": "5",
+      "Baustellennummer": 5,
+      "Start": "2024-08-16T00:00:00",
+      "Ende": "2024-08-18T00:00:00",
+      "BestellpositionenStrings": [
+        "52",
+        "53",
+        "54",
+        "55"
+      ],
+      "Standort": {
+        "Item1": 26.0,
+        "Item2": 23.0
+      }
+    },
+    {
+      "Auftragsnummer": "6",
+      "Baustellennummer": 6,
+      "Start": "2024-08-04T00:00:00",
+      "Ende": "2024-08-16T00:00:00",
+      "BestellpositionenStrings": [
+        "56",
+        "57",
+        "58",
+        "59",
+        "60",
+        "61",
+        "62",
+        "63",
+        "64",
+        "65",
+        "66",
+        "67",
+        "68",
+        "69",
+        "70",
+        "71",
+        "72",
+        "73",
+        "74",
+        "75",
+        "76",
+        "77",
+        "78",
+        "79"
+      ],
+      "Standort": {
+        "Item1": 34.0,
+        "Item2": 32.0
+      }
+    },
+    {
+      "Auftragsnummer": "7",
+      "Baustellennummer": 7,
+      "Start": "2024-08-05T00:00:00",
+      "Ende": "2024-08-20T00:00:00",
+      "BestellpositionenStrings": [
+        "80",
+        "81",
+        "82",
+        "83",
+        "84",
+        "85",
+        "86",
+        "87",
+        "88",
+        "89",
+        "90",
+        "91",
+        "92",
+        "93",
+        "94"
+      ],
+      "Standort": {
+        "Item1": 77.0,
+        "Item2": 24.0
+      }
+    },
+    {
+      "Auftragsnummer": "8",
+      "Baustellennummer": 8,
+      "Start": "2024-08-24T00:00:00",
+      "Ende": "2024-08-29T00:00:00",
+      "BestellpositionenStrings": [
+        "95",
+        "96",
+        "97",
+        "98",
+        "99",
+        "100",
+        "101",
+        "102",
+        "103",
+        "104"
+      ],
+      "Standort": {
+        "Item1": 12.0,
+        "Item2": 68.0
+      }
+    },
+    {
+      "Auftragsnummer": "9",
+      "Baustellennummer": 9,
+      "Start": "2024-08-10T00:00:00",
+      "Ende": "2024-08-25T00:00:00",
+      "BestellpositionenStrings": [
+        "105",
+        "106",
+        "107",
+        "108",
+        "109",
+        "110",
+        "111",
+        "112",
+        "113",
+        "114",
+        "115",
+        "116",
+        "117",
+        "118",
+        "119"
+      ],
+      "Standort": {
+        "Item1": 32.0,
+        "Item2": 76.0
+      }
+    }
+  ],
+  "Bestellpositionen": [
+    {
+      "ID": 0,
+      "Start": "2024-08-17T07:00:00",
+      "Ende": "2024-08-17T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 1,
+      "Start": "2024-08-17T19:00:00",
+      "Ende": "2024-08-18T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 2,
+      "Start": "2024-08-18T07:00:00",
+      "Ende": "2024-08-18T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 3,
+      "Start": "2024-08-18T19:00:00",
+      "Ende": "2024-08-19T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 4,
+      "Start": "2024-08-19T07:00:00",
+      "Ende": "2024-08-19T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 5,
+      "Start": "2024-08-19T19:00:00",
+      "Ende": "2024-08-20T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 6,
+      "Start": "2024-08-20T07:00:00",
+      "Ende": "2024-08-20T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 7,
+      "Start": "2024-08-20T19:00:00",
+      "Ende": "2024-08-21T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 8,
+      "Start": "2024-08-21T07:00:00",
+      "Ende": "2024-08-21T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 9,
+      "Start": "2024-08-21T19:00:00",
+      "Ende": "2024-08-22T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 10,
+      "Start": "2024-08-22T07:00:00",
+      "Ende": "2024-08-22T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 11,
+      "Start": "2024-08-22T19:00:00",
+      "Ende": "2024-08-23T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 12,
+      "Start": "2024-08-23T07:00:00",
+      "Ende": "2024-08-23T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 13,
+      "Start": "2024-08-23T19:00:00",
+      "Ende": "2024-08-24T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 14,
+      "Start": "2024-08-24T07:00:00",
+      "Ende": "2024-08-24T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 15,
+      "Start": "2024-08-24T19:00:00",
+      "Ende": "2024-08-25T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 16,
+      "Start": "2024-08-25T07:00:00",
+      "Ende": "2024-08-25T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 17,
+      "Start": "2024-08-25T19:00:00",
+      "Ende": "2024-08-26T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 18,
+      "Start": "2024-08-26T07:00:00",
+      "Ende": "2024-08-26T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 19,
+      "Start": "2024-08-26T19:00:00",
+      "Ende": "2024-08-27T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "0",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 20,
+      "Start": "2024-08-27T07:00:00",
+      "Ende": "2024-08-27T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "1",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 21,
+      "Start": "2024-08-27T19:00:00",
+      "Ende": "2024-08-28T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "1",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 22,
+      "Start": "2024-08-28T07:00:00",
+      "Ende": "2024-08-28T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "1",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 23,
+      "Start": "2024-08-28T19:00:00",
+      "Ende": "2024-08-29T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "1",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 24,
+      "Start": "2024-08-29T07:00:00",
+      "Ende": "2024-08-29T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "1",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 25,
+      "Start": "2024-08-29T19:00:00",
+      "Ende": "2024-08-30T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "1",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 26,
+      "Start": "2024-08-15T07:00:00",
+      "Ende": "2024-08-15T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "2",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 27,
+      "Start": "2024-08-15T19:00:00",
+      "Ende": "2024-08-16T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "2",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 28,
+      "Start": "2024-08-16T07:00:00",
+      "Ende": "2024-08-16T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "2",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [
+        "palettengabel",
+        "tieflöffel",
+        "verdichter",
+        "seitengrifframme",
+        "hydraulikhammer"
+      ],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 29,
+      "Start": "2024-08-16T19:00:00",
+      "Ende": "2024-08-17T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "2",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 30,
+      "Start": "2024-08-17T07:00:00",
+      "Ende": "2024-08-17T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "2",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 31,
+      "Start": "2024-08-17T19:00:00",
+      "Ende": "2024-08-18T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "2",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 32,
+      "Start": "2024-08-18T07:00:00",
+      "Ende": "2024-08-18T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "2",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 33,
+      "Start": "2024-08-18T19:00:00",
+      "Ende": "2024-08-19T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "2",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 34,
+      "Start": "2024-08-15T07:00:00",
+      "Ende": "2024-08-15T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "3",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 35,
+      "Start": "2024-08-15T19:00:00",
+      "Ende": "2024-08-16T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "3",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 36,
+      "Start": "2024-08-16T07:00:00",
+      "Ende": "2024-08-16T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "3",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 37,
+      "Start": "2024-08-16T19:00:00",
+      "Ende": "2024-08-17T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "3",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 38,
+      "Start": "2024-08-17T07:00:00",
+      "Ende": "2024-08-17T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "3",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [
+        "seitengrifframme"
+      ],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 39,
+      "Start": "2024-08-17T19:00:00",
+      "Ende": "2024-08-18T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "3",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 40,
+      "Start": "2024-08-14T19:00:00",
+      "Ende": "2024-08-15T05:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "4",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 41,
+      "Start": "2024-08-15T19:00:00",
+      "Ende": "2024-08-16T05:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "4",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 42,
+      "Start": "2024-08-16T19:00:00",
+      "Ende": "2024-08-17T05:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "4",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 43,
+      "Start": "2024-08-17T19:00:00",
+      "Ende": "2024-08-18T05:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "4",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 44,
+      "Start": "2024-08-18T19:00:00",
+      "Ende": "2024-08-19T05:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "4",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 45,
+      "Start": "2024-08-19T19:00:00",
+      "Ende": "2024-08-20T05:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "4",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 46,
+      "Start": "2024-08-20T19:00:00",
+      "Ende": "2024-08-21T05:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "4",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 47,
+      "Start": "2024-08-21T19:00:00",
+      "Ende": "2024-08-22T05:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "4",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 48,
+      "Start": "2024-08-22T19:00:00",
+      "Ende": "2024-08-23T05:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "4",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 49,
+      "Start": "2024-08-23T19:00:00",
+      "Ende": "2024-08-24T05:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "4",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 50,
+      "Start": "2024-08-24T19:00:00",
+      "Ende": "2024-08-25T05:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "4",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 51,
+      "Start": "2024-08-25T19:00:00",
+      "Ende": "2024-08-26T05:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "4",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 52,
+      "Start": "2024-08-16T07:00:00",
+      "Ende": "2024-08-16T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "5",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [
+        "grabgreifer",
+        "rotator"
+      ],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 53,
+      "Start": "2024-08-16T19:00:00",
+      "Ende": "2024-08-17T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "5",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 54,
+      "Start": "2024-08-17T07:00:00",
+      "Ende": "2024-08-17T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "5",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 55,
+      "Start": "2024-08-17T19:00:00",
+      "Ende": "2024-08-18T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "5",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 56,
+      "Start": "2024-08-04T07:00:00",
+      "Ende": "2024-08-04T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 57,
+      "Start": "2024-08-04T19:00:00",
+      "Ende": "2024-08-05T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 58,
+      "Start": "2024-08-05T07:00:00",
+      "Ende": "2024-08-05T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 59,
+      "Start": "2024-08-05T19:00:00",
+      "Ende": "2024-08-06T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 60,
+      "Start": "2024-08-06T07:00:00",
+      "Ende": "2024-08-06T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 61,
+      "Start": "2024-08-06T19:00:00",
+      "Ende": "2024-08-07T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 62,
+      "Start": "2024-08-07T07:00:00",
+      "Ende": "2024-08-07T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 63,
+      "Start": "2024-08-07T19:00:00",
+      "Ende": "2024-08-08T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 64,
+      "Start": "2024-08-08T07:00:00",
+      "Ende": "2024-08-08T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 65,
+      "Start": "2024-08-08T19:00:00",
+      "Ende": "2024-08-09T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 66,
+      "Start": "2024-08-09T07:00:00",
+      "Ende": "2024-08-09T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 67,
+      "Start": "2024-08-09T19:00:00",
+      "Ende": "2024-08-10T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 68,
+      "Start": "2024-08-10T07:00:00",
+      "Ende": "2024-08-10T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 69,
+      "Start": "2024-08-10T19:00:00",
+      "Ende": "2024-08-11T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 70,
+      "Start": "2024-08-11T07:00:00",
+      "Ende": "2024-08-11T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 71,
+      "Start": "2024-08-11T19:00:00",
+      "Ende": "2024-08-12T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 72,
+      "Start": "2024-08-12T07:00:00",
+      "Ende": "2024-08-12T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 73,
+      "Start": "2024-08-12T19:00:00",
+      "Ende": "2024-08-13T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 74,
+      "Start": "2024-08-13T07:00:00",
+      "Ende": "2024-08-13T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 75,
+      "Start": "2024-08-13T19:00:00",
+      "Ende": "2024-08-14T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 76,
+      "Start": "2024-08-14T07:00:00",
+      "Ende": "2024-08-14T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 77,
+      "Start": "2024-08-14T19:00:00",
+      "Ende": "2024-08-15T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 78,
+      "Start": "2024-08-15T07:00:00",
+      "Ende": "2024-08-15T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 79,
+      "Start": "2024-08-15T19:00:00",
+      "Ende": "2024-08-16T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "6",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 80,
+      "Start": "2024-08-05T06:00:00",
+      "Ende": "2024-08-05T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 81,
+      "Start": "2024-08-06T06:00:00",
+      "Ende": "2024-08-06T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 82,
+      "Start": "2024-08-07T06:00:00",
+      "Ende": "2024-08-07T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 83,
+      "Start": "2024-08-11T06:00:00",
+      "Ende": "2024-08-11T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 84,
+      "Start": "2024-08-12T06:00:00",
+      "Ende": "2024-08-12T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 85,
+      "Start": "2024-08-13T06:00:00",
+      "Ende": "2024-08-13T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 86,
+      "Start": "2024-08-14T06:00:00",
+      "Ende": "2024-08-14T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 87,
+      "Start": "2024-08-15T06:00:00",
+      "Ende": "2024-08-15T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 88,
+      "Start": "2024-08-16T06:00:00",
+      "Ende": "2024-08-16T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 89,
+      "Start": "2024-08-17T06:00:00",
+      "Ende": "2024-08-17T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 90,
+      "Start": "2024-08-18T06:00:00",
+      "Ende": "2024-08-18T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 91,
+      "Start": "2024-08-19T06:00:00",
+      "Ende": "2024-08-19T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 92,
+      "Start": "2024-08-20T06:00:00",
+      "Ende": "2024-08-20T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 93,
+      "Start": "2024-08-21T06:00:00",
+      "Ende": "2024-08-21T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 94,
+      "Start": "2024-08-22T06:00:00",
+      "Ende": "2024-08-22T16:00:00",
+      "Dauer": 10,
+      "Auftragsnummer": "7",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 95,
+      "Start": "2024-08-24T07:00:00",
+      "Ende": "2024-08-24T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "8",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 96,
+      "Start": "2024-08-24T19:00:00",
+      "Ende": "2024-08-25T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "8",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 97,
+      "Start": "2024-08-25T07:00:00",
+      "Ende": "2024-08-25T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "8",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 98,
+      "Start": "2024-08-25T19:00:00",
+      "Ende": "2024-08-26T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "8",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 99,
+      "Start": "2024-08-26T07:00:00",
+      "Ende": "2024-08-26T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "8",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 100,
+      "Start": "2024-08-26T19:00:00",
+      "Ende": "2024-08-27T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "8",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 101,
+      "Start": "2024-08-27T07:00:00",
+      "Ende": "2024-08-27T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "8",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 102,
+      "Start": "2024-08-27T19:00:00",
+      "Ende": "2024-08-28T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "8",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 103,
+      "Start": "2024-08-28T07:00:00",
+      "Ende": "2024-08-28T18:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "8",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 104,
+      "Start": "2024-08-28T19:00:00",
+      "Ende": "2024-08-29T06:00:00",
+      "Dauer": 11,
+      "Auftragsnummer": "8",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 105,
+      "Start": "2024-08-10T19:00:00",
+      "Ende": "2024-08-11T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 106,
+      "Start": "2024-08-11T19:00:00",
+      "Ende": "2024-08-12T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 107,
+      "Start": "2024-08-12T19:00:00",
+      "Ende": "2024-08-13T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 108,
+      "Start": "2024-08-13T19:00:00",
+      "Ende": "2024-08-14T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 109,
+      "Start": "2024-08-14T19:00:00",
+      "Ende": "2024-08-15T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 110,
+      "Start": "2024-08-15T19:00:00",
+      "Ende": "2024-08-16T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 111,
+      "Start": "2024-08-16T19:00:00",
+      "Ende": "2024-08-17T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 112,
+      "Start": "2024-08-17T19:00:00",
+      "Ende": "2024-08-18T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 113,
+      "Start": "2024-08-18T19:00:00",
+      "Ende": "2024-08-19T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 114,
+      "Start": "2024-08-19T19:00:00",
+      "Ende": "2024-08-20T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 115,
+      "Start": "2024-08-20T19:00:00",
+      "Ende": "2024-08-21T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 116,
+      "Start": "2024-08-21T19:00:00",
+      "Ende": "2024-08-22T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 117,
+      "Start": "2024-08-22T19:00:00",
+      "Ende": "2024-08-23T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 118,
+      "Start": "2024-08-23T19:00:00",
+      "Ende": "2024-08-24T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    },
+    {
+      "ID": 119,
+      "Start": "2024-08-24T19:00:00",
+      "Ende": "2024-08-25T04:00:00",
+      "Dauer": 9,
+      "Auftragsnummer": "9",
+      "MaschinenTyp": "zwB_Liebherr_A922_Rail",
+      "AnbaugeraeteTypen": [],
+      "ArbeiterQualifikationen": [
+        "zusatzbescheinigung",
+        "dB_Tauglichkeit"
+      ],
+      "zugewieseneMaschine": null,
+      "Typ": "schicht"
+    }
+  ],
+  "Baustellen": {
+    "0": [
+      {
+        "Auftragsnummer": "0",
+        "Baustellennummer": 0,
+        "Start": "2024-08-17T00:00:00",
+        "Ende": "2024-08-27T00:00:00",
+        "BestellpositionenStrings": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19"
+        ],
+        "Standort": {
+          "Item1": 49.0,
+          "Item2": 31.0
+        }
+      }
+    ],
+    "1": [
+      {
+        "Auftragsnummer": "1",
+        "Baustellennummer": 1,
+        "Start": "2024-08-27T00:00:00",
+        "Ende": "2024-08-30T00:00:00",
+        "BestellpositionenStrings": [
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25"
+        ],
+        "Standort": {
+          "Item1": 98.0,
+          "Item2": 34.0
+        }
+      }
+    ],
+    "2": [
+      {
+        "Auftragsnummer": "2",
+        "Baustellennummer": 2,
+        "Start": "2024-08-15T00:00:00",
+        "Ende": "2024-08-19T00:00:00",
+        "BestellpositionenStrings": [
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31",
+          "32",
+          "33"
+        ],
+        "Standort": {
+          "Item1": 46.0,
+          "Item2": 76.0
+        }
+      }
+    ],
+    "3": [
+      {
+        "Auftragsnummer": "3",
+        "Baustellennummer": 3,
+        "Start": "2024-08-15T00:00:00",
+        "Ende": "2024-08-18T00:00:00",
+        "BestellpositionenStrings": [
+          "34",
+          "35",
+          "36",
+          "37",
+          "38",
+          "39"
+        ],
+        "Standort": {
+          "Item1": 78.0,
+          "Item2": 93.0
+        }
+      }
+    ],
+    "4": [
+      {
+        "Auftragsnummer": "4",
+        "Baustellennummer": 4,
+        "Start": "2024-08-14T00:00:00",
+        "Ende": "2024-08-26T00:00:00",
+        "BestellpositionenStrings": [
+          "40",
+          "41",
+          "42",
+          "43",
+          "44",
+          "45",
+          "46",
+          "47",
+          "48",
+          "49",
+          "50",
+          "51"
+        ],
+        "Standort": {
+          "Item1": 31.0,
+          "Item2": 86.0
+        }
+      }
+    ],
+    "5": [
+      {
+        "Auftragsnummer": "5",
+        "Baustellennummer": 5,
+        "Start": "2024-08-16T00:00:00",
+        "Ende": "2024-08-18T00:00:00",
+        "BestellpositionenStrings": [
+          "52",
+          "53",
+          "54",
+          "55"
+        ],
+        "Standort": {
+          "Item1": 26.0,
+          "Item2": 23.0
+        }
+      }
+    ],
+    "6": [
+      {
+        "Auftragsnummer": "6",
+        "Baustellennummer": 6,
+        "Start": "2024-08-04T00:00:00",
+        "Ende": "2024-08-16T00:00:00",
+        "BestellpositionenStrings": [
+          "56",
+          "57",
+          "58",
+          "59",
+          "60",
+          "61",
+          "62",
+          "63",
+          "64",
+          "65",
+          "66",
+          "67",
+          "68",
+          "69",
+          "70",
+          "71",
+          "72",
+          "73",
+          "74",
+          "75",
+          "76",
+          "77",
+          "78",
+          "79"
+        ],
+        "Standort": {
+          "Item1": 34.0,
+          "Item2": 32.0
+        }
+      }
+    ],
+    "7": [
+      {
+        "Auftragsnummer": "7",
+        "Baustellennummer": 7,
+        "Start": "2024-08-05T00:00:00",
+        "Ende": "2024-08-20T00:00:00",
+        "BestellpositionenStrings": [
+          "80",
+          "81",
+          "82",
+          "83",
+          "84",
+          "85",
+          "86",
+          "87",
+          "88",
+          "89",
+          "90",
+          "91",
+          "92",
+          "93",
+          "94"
+        ],
+        "Standort": {
+          "Item1": 77.0,
+          "Item2": 24.0
+        }
+      }
+    ],
+    "8": [
+      {
+        "Auftragsnummer": "8",
+        "Baustellennummer": 8,
+        "Start": "2024-08-24T00:00:00",
+        "Ende": "2024-08-29T00:00:00",
+        "BestellpositionenStrings": [
+          "95",
+          "96",
+          "97",
+          "98",
+          "99",
+          "100",
+          "101",
+          "102",
+          "103",
+          "104"
+        ],
+        "Standort": {
+          "Item1": 12.0,
+          "Item2": 68.0
+        }
+      }
+    ],
+    "9": [
+      {
+        "Auftragsnummer": "9",
+        "Baustellennummer": 9,
+        "Start": "2024-08-10T00:00:00",
+        "Ende": "2024-08-25T00:00:00",
+        "BestellpositionenStrings": [
+          "105",
+          "106",
+          "107",
+          "108",
+          "109",
+          "110",
+          "111",
+          "112",
+          "113",
+          "114",
+          "115",
+          "116",
+          "117",
+          "118",
+          "119"
+        ],
+        "Standort": {
+          "Item1": 32.0,
+          "Item2": 76.0
+        }
+      }
+    ]
+  },
+  "ArbeitswegeString": {
+    "0": {
+      "0": 17.50396714426077,
+      "1": 58.4953010336165,
+      "2": 61.454231413783674,
+      "3": 85.911026851977,
+      "4": 72.3408808403769,
+      "5": 18.77478750071689,
+      "6": 19.47534135069112,
+      "7": 35.45558412323078,
+      "8": 61.62338880453279,
+      "9": 62.31508505085777
+    },
+    "1": {
+      "0": 59.66957091747544,
+      "1": 96.61835028146398,
+      "2": 34.23039257911053,
+      "3": 67.94384266652558,
+      "4": 20.923084631382117,
+      "5": 56.473997085660834,
+      "6": 50.768424810665415,
+      "7": 84.43559144690515,
+      "8": 9.664066474806217,
+      "9": 20.25831828314703
+    },
+    "2": {
+      "0": 25.991004334157726,
+      "1": 25.26226069564304,
+      "2": 58.18797792678728,
+      "3": 67.9251316022599,
+      "4": 74.68097633692274,
+      "5": 48.378527886595336,
+      "6": 40.90322292828284,
+      "7": 2.917067472610638,
+      "8": 75.62435299311313,
+      "9": 66.14431964526892
+    },
+    "3": {
+      "0": 36.41021349686511,
+      "1": 19.213587878060803,
+      "2": 66.94203673060558,
+      "3": 72.37682126257519,
+      "4": 83.95246018848067,
+      "5": 58.01178306196372,
+      "6": 51.19710550000992,
+      "7": 7.642955204266495,
+      "8": 86.03079858124696,
+      "9": 75.76589592498925
+    },
+    "4": {
+      "0": 20.90724814092149,
+      "1": 29.466767759939664,
+      "2": 54.61217120569704,
+      "3": 66.86624911330964,
+      "4": 70.69332745564657,
+      "5": 43.6121366401676,
+      "6": 35.85307267457288,
+      "7": 8.006077243742654,
+      "8": 70.77030812499419,
+      "9": 61.92955478398411
+    },
+    "5": {
+      "0": 22.663885004888307,
+      "1": 62.26523944270275,
+      "2": 26.377180480611056,
+      "3": 58.071430629242954,
+      "4": 35.854296758752305,
+      "5": 30.345315343579784,
+      "6": 19.278861945764326,
+      "7": 47.30016916531917,
+      "8": 31.196174375506068,
+      "9": 25.871958270062805
+    },
+    "6": {
+      "0": 24.545213606890858,
+      "1": 72.10953312534406,
+      "2": 41.18499922599965,
+      "3": 74.21077052212945,
+      "4": 46.33323336637928,
+      "5": 16.923510859477652,
+      "6": 11.164474526853423,
+      "7": 53.299886194764746,
+      "8": 31.433942780005978,
+      "9": 36.55078436513861
+    },
+    "7": {
+      "0": 45.1180947883723,
+      "1": 93.66919026564594,
+      "2": 56.40564500755467,
+      "3": 91.93379957054452,
+      "4": 54.96415703000461,
+      "5": 26.227844916564866,
+      "6": 30.169646299697494,
+      "7": 73.90606095094185,
+      "8": 31.046964549206184,
+      "9": 47.043889120144414
+    },
+    "8": {
+      "0": 54.94419905087565,
+      "1": 98.72260441600416,
+      "2": 45.38497173129784,
+      "3": 81.37505402209872,
+      "4": 37.33352071266722,
+      "5": 44.5362683638422,
+      "6": 42.51343023674035,
+      "7": 82.7354953656385,
+      "8": 11.204930792872002,
+      "9": 32.473375099380384
+    },
+    "9": {
+      "0": 33.20776170078727,
+      "1": 16.714711845804278,
+      "2": 59.481947934962676,
+      "3": 64.38333786107417,
+      "4": 76.75973709508973,
+      "5": 56.42508066549376,
+      "6": 48.24104988319367,
+      "7": 6.9919719724853815,
+      "8": 80.3680741330296,
+      "9": 68.88963261127462
+    },
+    "10": {
+      "0": 59.528350105113056,
+      "1": 81.33566204421167,
+      "2": 15.475868791551497,
+      "3": 39.48756039774237,
+      "4": 8.470953242067088,
+      "5": 67.81459008353482,
+      "6": 57.810828778160115,
+      "7": 76.00360121654023,
+      "8": 34.324235240282235,
+      "9": 15.162507395216865
+    },
+    "11": {
+      "0": 38.48107423855123,
+      "1": 31.825830396252893,
+      "2": 76.01309577137118,
+      "3": 85.11323808359474,
+      "4": 92.07765444153058,
+      "5": 55.858542159073906,
+      "6": 51.73387399932654,
+      "7": 16.33300814865169,
+      "8": 90.58445096461936,
+      "9": 83.1855839780386
+    }
+  },
+  "TransportwegeString": {
+    "0": {
+      "0": 0.0,
+      "1": 49.09175083453431,
+      "2": 45.09988913511872,
+      "3": 68.4470598345904,
+      "4": 57.87054518492115,
+      "5": 24.351591323771842,
+      "6": 15.033296378372908,
+      "7": 28.861739379323623,
+      "8": 52.32590180780452,
+      "9": 48.104053883222775
+    },
+    "1": {
+      "0": 49.09175083453431,
+      "1": 0.0,
+      "2": 66.84309986827361,
+      "3": 62.297672508690084,
+      "4": 84.81155581640984,
+      "5": 72.83543093852057,
+      "6": 64.03124237432849,
+      "7": 23.259406699226016,
+      "8": 92.47702417357513,
+      "9": 78.23042886243178
+    },
+    "2": {
+      "0": 45.09988913511872,
+      "1": 66.84309986827361,
+      "2": 0.0,
+      "3": 36.235341863986875,
+      "4": 18.027756377319946,
+      "5": 56.64803615307419,
+      "6": 45.60701700396552,
+      "7": 60.53924347066124,
+      "8": 34.92849839314596,
+      "9": 14.0
+    },
+    "3": {
+      "0": 68.4470598345904,
+      "1": 62.297672508690084,
+      "2": 36.235341863986875,
+      "3": 0.0,
+      "4": 47.51841748206689,
+      "5": 87.20091742636656,
+      "6": 75.21303078589507,
+      "7": 69.00724599634447,
+      "8": 70.57619995437555,
+      "9": 49.040799340956916
+    },
+    "4": {
+      "0": 57.87054518492115,
+      "1": 84.81155581640984,
+      "2": 18.027756377319946,
+      "3": 47.51841748206689,
+      "4": 0.0,
+      "5": 63.198101237299845,
+      "6": 54.08326913195984,
+      "7": 77.20103626247513,
+      "8": 26.1725046566048,
+      "9": 10.04987562112089
+    },
+    "5": {
+      "0": 24.351591323771842,
+      "1": 72.83543093852057,
+      "2": 56.64803615307419,
+      "3": 87.20091742636656,
+      "4": 63.198101237299845,
+      "5": 0.0,
+      "6": 12.041594578792296,
+      "7": 51.0098029794274,
+      "8": 47.12748667179272,
+      "9": 53.33854141237835
+    },
+    "6": {
+      "0": 15.033296378372908,
+      "1": 64.03124237432849,
+      "2": 45.60701700396552,
+      "3": 75.21303078589507,
+      "4": 54.08326913195984,
+      "5": 12.041594578792296,
+      "6": 0.0,
+      "7": 43.73785545725808,
+      "8": 42.190046219457976,
+      "9": 44.04543109109048
+    },
+    "7": {
+      "0": 28.861739379323623,
+      "1": 23.259406699226016,
+      "2": 60.53924347066124,
+      "3": 69.00724599634447,
+      "4": 77.20103626247513,
+      "5": 51.0098029794274,
+      "6": 43.73785545725808,
+      "7": 0.0,
+      "8": 78.49203781276162,
+      "9": 68.76772498781678
+    },
+    "8": {
+      "0": 52.32590180780452,
+      "1": 92.47702417357513,
+      "2": 34.92849839314596,
+      "3": 70.57619995437555,
+      "4": 26.1725046566048,
+      "5": 47.12748667179272,
+      "6": 42.190046219457976,
+      "7": 78.49203781276162,
+      "8": 0.0,
+      "9": 21.540659228538015
+    },
+    "9": {
+      "0": 48.104053883222775,
+      "1": 78.23042886243178,
+      "2": 14.0,
+      "3": 49.040799340956916,
+      "4": 10.04987562112089,
+      "5": 53.33854141237835,
+      "6": 44.04543109109048,
+      "7": 68.76772498781678,
+      "8": 21.540659228538015,
+      "9": 0.0
+    }
+  },
+  "KostenJeAuftragAnzahlFixiert": {
+    "6": {
+      "MinStammfahrer": 0.0,
+      "MaxStammfahrer": 5900.0,
+      "MinFixkosten": 0.0,
+      "MaxFixkosten": 52950.0,
+      "MinFixkostenMaschinen": 0.0,
+      "MaxFixkostenMaschinen": 4800.0,
+      "MinFixkostenAnbau": 0.0,
+      "MaxFixkostenAnbau": 150.0,
+      "MinFixkostenArbeiter": 0.0,
+      "MaxFixkostenArbeiter": 48000.0,
+      "MinTransportkosten": 0.0,
+      "MaxTransportkosten": 3457.912779084429,
+      "MinTransportkostenMaschinen": 0.0,
+      "MaxTransportkostenMaschinen": 70.57619995437555,
+      "MinTransportkostenAnbau": 0.0,
+      "MaxTransportkostenAnbau": 0.0,
+      "MinArbeitswege": 0.0,
+      "MaxArbeitswegeKosten": 3387.3365791300535
+    },
+    "5": {
+      "MinStammfahrer": 0.0,
+      "MaxStammfahrer": 5900.0,
+      "MinFixkosten": 0.0,
+      "MaxFixkosten": 52950.0,
+      "MinFixkostenMaschinen": 0.0,
+      "MaxFixkostenMaschinen": 4800.0,
+      "MinFixkostenAnbau": 0.0,
+      "MaxFixkostenAnbau": 150.0,
+      "MinFixkostenArbeiter": 0.0,
+      "MaxFixkostenArbeiter": 48000.0,
+      "MinTransportkosten": 0.0,
+      "MaxTransportkosten": 3457.912779084429,
+      "MinTransportkostenMaschinen": 0.0,
+      "MaxTransportkostenMaschinen": 70.57619995437555,
+      "MinTransportkostenAnbau": 0.0,
+      "MaxTransportkostenAnbau": 0.0,
+      "MinArbeitswege": 0.0,
+      "MaxArbeitswegeKosten": 3387.3365791300535
+    },
+    "4": {
+      "MinStammfahrer": 0.0,
+      "MaxStammfahrer": 5900.0,
+      "MinFixkosten": 0.0,
+      "MaxFixkosten": 52950.0,
+      "MinFixkostenMaschinen": 0.0,
+      "MaxFixkostenMaschinen": 4800.0,
+      "MinFixkostenAnbau": 0.0,
+      "MaxFixkostenAnbau": 150.0,
+      "MinFixkostenArbeiter": 0.0,
+      "MaxFixkostenArbeiter": 48000.0,
+      "MinTransportkosten": 0.0,
+      "MaxTransportkosten": 3457.912779084429,
+      "MinTransportkostenMaschinen": 0.0,
+      "MaxTransportkostenMaschinen": 70.57619995437555,
+      "MinTransportkostenAnbau": 0.0,
+      "MaxTransportkostenAnbau": 0.0,
+      "MinArbeitswege": 0.0,
+      "MaxArbeitswegeKosten": 3387.3365791300535
+    }
+  },
+  "KostenJeAuftragAuftragFixiert": {
+    "6": {
+      "MinStammfahrer": 0.0,
+      "MaxStammfahrer": 5900.0,
+      "MinFixkosten": 0.0,
+      "MaxFixkosten": 52950.0,
+      "MinFixkostenMaschinen": 0.0,
+      "MaxFixkostenMaschinen": 4800.0,
+      "MinFixkostenAnbau": 0.0,
+      "MaxFixkostenAnbau": 150.0,
+      "MinFixkostenArbeiter": 0.0,
+      "MaxFixkostenArbeiter": 48000.0,
+      "MinTransportkosten": 0.0,
+      "MaxTransportkosten": 3457.912779084429,
+      "MinTransportkostenMaschinen": 0.0,
+      "MaxTransportkostenMaschinen": 70.57619995437555,
+      "MinTransportkostenAnbau": 0.0,
+      "MaxTransportkostenAnbau": 0.0,
+      "MinArbeitswege": 0.0,
+      "MaxArbeitswegeKosten": 3387.3365791300535
+    }
+  },
+  "ErgebnisseJeAuftragAnzahlFixiert": {
+    "6": {
+      "instanzekosten": null,
+      "MinAnzahlStammfahrer": 13,
+      "MaxAnzahlStammfahrer": 59,
+      "MinAnzahlRessourcen": 10,
+      "MaxAnzahlRessourcen": 35,
+      "MinAnzahlMaschinen": 3,
+      "MaxAnzahlMaschinen": 5,
+      "MinAnzahlArbeiter": 6,
+      "MaxAnzahlArbeiter": 10,
+      "MinAnzahlAnbau": 0,
+      "MaxAnzahlAnbau": 1,
+      "MinTransportkosten": 1522.4863494049562,
+      "MaxTransportkosten": 3457.912779084429,
+      "MinTransportkostenMaschinen": 15.033296378372908,
+      "MaxTransportkostenMaschinen": 70.57619995437555,
+      "MinTransportkostenAnbau": 0.0,
+      "MaxTransportkostenAnbau": 0.0,
+      "MinArbeitswege": 1462.9916008417433,
+      "MaxArbeitswegeKosten": 3387.3365791300535,
+      "AuftragIDErfüllt": null
+    },
+    "5": {
+      "instanzekosten": null,
+      "MinAnzahlStammfahrer": 8,
+      "MaxAnzahlStammfahrer": 59,
+      "MinAnzahlRessourcen": 8,
+      "MaxAnzahlRessourcen": 16,
+      "MinAnzahlMaschinen": 3,
+      "MaxAnzahlMaschinen": 5,
+      "MinAnzahlArbeiter": 4,
+      "MaxAnzahlArbeiter": 10,
+      "MinAnzahlAnbau": 0,
+      "MaxAnzahlAnbau": 1,
+      "MinTransportkosten": 1052.7111234707954,
+      "MaxTransportkosten": 3457.912779084429,
+      "MinTransportkostenMaschinen": 0.0,
+      "MaxTransportkostenMaschinen": 70.57619995437555,
+      "MinTransportkostenAnbau": 0.0,
+      "MaxTransportkostenAnbau": 0.0,
+      "MinArbeitswege": 1052.7111234707954,
+      "MaxArbeitswegeKosten": 3387.3365791300535,
+      "AuftragIDErfüllt": null
+    },
+    "4": {
+      "instanzekosten": null,
+      "MinAnzahlStammfahrer": 8,
+      "MaxAnzahlStammfahrer": 59,
+      "MinAnzahlRessourcen": 8,
+      "MaxAnzahlRessourcen": 16,
+      "MinAnzahlMaschinen": 3,
+      "MaxAnzahlMaschinen": 5,
+      "MinAnzahlArbeiter": 4,
+      "MaxAnzahlArbeiter": 10,
+      "MinAnzahlAnbau": 0,
+      "MaxAnzahlAnbau": 1,
+      "MinTransportkosten": 1052.7111234707954,
+      "MaxTransportkosten": 3457.912779084429,
+      "MinTransportkostenMaschinen": 0.0,
+      "MaxTransportkostenMaschinen": 70.57619995437555,
+      "MinTransportkostenAnbau": 0.0,
+      "MaxTransportkostenAnbau": 0.0,
+      "MinArbeitswege": 1052.7111234707954,
+      "MaxArbeitswegeKosten": 3387.3365791300535,
+      "AuftragIDErfüllt": null
+    }
+  },
+  "ErgebnisseJeAuftragFixiert": {
+    "6": {
+      "instanzekosten": null,
+      "MinAnzahlStammfahrer": 14,
+      "MaxAnzahlStammfahrer": 59,
+      "MinAnzahlRessourcen": 11,
+      "MaxAnzahlRessourcen": 35,
+      "MinAnzahlMaschinen": 4,
+      "MaxAnzahlMaschinen": 5,
+      "MinAnzahlArbeiter": 6,
+      "MaxAnzahlArbeiter": 10,
+      "MinAnzahlAnbau": 1,
+      "MaxAnzahlAnbau": 1,
+      "MinTransportkosten": 1679.4068594932285,
+      "MaxTransportkosten": 3457.912779084429,
+      "MinTransportkostenMaschinen": 23.259406699226016,
+      "MaxTransportkostenMaschinen": 70.57619995437555,
+      "MinTransportkostenAnbau": 0.0,
+      "MaxTransportkostenAnbau": 0.0,
+      "MinArbeitswege": 1656.1474527940024,
+      "MaxArbeitswegeKosten": 3387.3365791300535,
+      "AuftragIDErfüllt": {
+        "0": true,
+        "1": true,
+        "3": true,
+        "4": true,
+        "7": true,
+        "8": true
+      }
+    }
+  }
+}

@@ -70,7 +70,7 @@ class EvaluationLogic:
 
         
         # Calculate the extra transport distance of the attachments
-        delta_transport_distance_attachments = 0
+        delta_attachment_distance = 0
         for i in range(move.NumberOfAttachments):
             if len(getattr(move, f"AttachmentRoute_{i}")) == 1:
                 predecessor_id = None
@@ -78,15 +78,15 @@ class EvaluationLogic:
             elif getattr(move, f"AttachmentRouteIndex_{i}") == 0:
                 predecessor_id = None
                 successor_id = getattr(move, f"AttachmentRoute_{i}")[getattr(move, f"AttachmentRouteIndex_{i}") + 1]
-                delta_transport_distance_attachments += (self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                delta_attachment_distance += (self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
             elif getattr(move, f"AttachmentRouteIndex_{i}") == len(getattr(move, f"AttachmentRoute_{i}")) - 1:
                 predecessor_id = getattr(move, f"AttachmentRoute_{i}")[getattr(move, f"AttachmentRouteIndex_{i}") - 1]
                 successor_id = None
-                delta_transport_distance_attachments += (self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                delta_attachment_distance += (self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
             else:
                 predecessor_id = getattr(move, f"AttachmentRoute_{i}")[getattr(move, f"AttachmentRouteIndex_{i}") - 1]
                 successor_id = getattr(move, f"AttachmentRoute_{i}")[getattr(move, f"AttachmentRouteIndex_{i}") + 1]
-                delta_transport_distance_attachments += (((self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                delta_attachment_distance += (((self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
                                             + (self.data.transport_routes_order_item[getattr(move, f"AttachmentID_{i}")][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
                                             - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
                 
@@ -99,7 +99,7 @@ class EvaluationLogic:
             "dynamic_percentage_order": -delta_dynamic_percentage_order,
             "commute_distance": delta_commute_distance,
             "transport_distance": delta_transport_distance,
-            "transport_distance_attachments": delta_transport_distance_attachments,
+            "attachment_distance": delta_attachment_distance,
             "driver_violation": delta_driver_violation,
             "machine_count": delta_machine_count,
             "worker_count": delta_worker_count,
@@ -116,7 +116,7 @@ class EvaluationLogic:
             + delta_details["machine_count"]
             + delta_details["worker_count"]
             + delta_details["attachment_count"]
-            + delta_details["transport_distance_attachments"],
+            + delta_details["attachment_distance"],
         ]
 
 
@@ -210,7 +210,7 @@ class EvaluationLogic:
 
 
         # Calculate the extra transport distance of the attachments
-        delta_transport_distance_attachments = 0
+        delta_attachment_distance = 0
         for i in range(move.NumberOfAttachmentsExt):
             if len(getattr(move, f"AttachmentRouteExt_{i}")) == 1:
                 predecessor_id = None
@@ -218,15 +218,15 @@ class EvaluationLogic:
             elif getattr(move, f"AttachmentRouteIndexExt_{i}") == 0:
                 predecessor_id = None
                 successor_id = getattr(move, f"AttachmentRouteExt_{i}")[getattr(move, f"AttachmentRouteIndexExt_{i}") + 1]
-                delta_transport_distance_attachments += (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                delta_attachment_distance += (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
             elif getattr(move, f"AttachmentRouteIndexExt_{i}") == len(getattr(move, f"AttachmentRouteExt_{i}")) - 1:
                 predecessor_id = getattr(move, f"AttachmentRouteExt_{i}")[getattr(move, f"AttachmentRouteIndexExt_{i}") - 1]
                 successor_id = None
-                delta_transport_distance_attachments += (self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                delta_attachment_distance += (self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
             else:
                 predecessor_id = getattr(move, f"AttachmentRouteExt_{i}")[getattr(move, f"AttachmentRouteIndexExt_{i}") - 1]
                 successor_id = getattr(move, f"AttachmentRouteExt_{i}")[getattr(move, f"AttachmentRouteIndexExt_{i}") + 1]
-                delta_transport_distance_attachments += (((self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                delta_attachment_distance += (((self.data.transport_routes_order_item[move.OrderItemIDExt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
                                             + (self.data.transport_routes_order_item[move.OrderItemIDExt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
                                             - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
                 
@@ -237,15 +237,15 @@ class EvaluationLogic:
             elif getattr(move, f"AttachmentRouteIndexInt_{i}") == 0:
                 predecessor_id = None
                 successor_id = getattr(move, f"AttachmentRouteInt_{i}")[getattr(move, f"AttachmentRouteIndexInt_{i}")]
-                delta_transport_distance_attachments -= (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                delta_attachment_distance -= (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
             elif getattr(move, f"AttachmentRouteIndexInt_{i}") == len(getattr(move, f"AttachmentRouteInt_{i}")):
                 predecessor_id = getattr(move, f"AttachmentRouteInt_{i}")[getattr(move, f"AttachmentRouteIndexInt_{i}") - 1]
                 successor_id = None
-                delta_transport_distance_attachments -= (self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
+                delta_attachment_distance -= (self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
             else:
                 predecessor_id = getattr(move, f"AttachmentRouteInt_{i}")[getattr(move, f"AttachmentRouteIndexInt_{i}") - 1]
                 successor_id = getattr(move, f"AttachmentRouteInt_{i}")[getattr(move, f"AttachmentRouteIndexInt_{i}")]
-                delta_transport_distance_attachments -= (((self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
+                delta_attachment_distance -= (((self.data.transport_routes_order_item[move.OrderItemIDInt][predecessor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
                                             + (self.data.transport_routes_order_item[move.OrderItemIDInt][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance)
                                             - (self.data.transport_routes_order_item[predecessor_id][successor_id] - self.data.min_transport_distance) / (self.data.max_transport_distance - self.data.min_transport_distance))
                 
@@ -285,12 +285,12 @@ class EvaluationLogic:
             "dynamic_percentage_order": -delta_dynamic_percentage_order,
             "commute_distance": delta_commute_distance,
             "transport_distance": delta_transport_distance,
-            "transport_distance_attachments": delta_transport_distance_attachments,
+            "attachment_distance": delta_attachment_distance,
             "driver_violation": delta_driver_violation,
             "machine_count": delta_machine_count,
             "attachment_count": delta_attachment_count,
         }
-        #print(f"Delta Details: {delta_details}")
+        ##print(f"Delta Details: {delta_details}")
 
         # 2️⃣ Create a summary as a list (summary)
         # First value: dynamic percentage order
@@ -302,11 +302,11 @@ class EvaluationLogic:
             + delta_details["driver_violation"]
             + delta_details["machine_count"]
             + delta_details["attachment_count"]
-            + delta_details["transport_distance_attachments"],
+            + delta_details["attachment_distance"],
         ]
 
-        #print(f"Delta Summary: {delta_summary[0]}")
-        #print(f"Delta Summary: {delta_summary}")
+        ##print(f"Delta Summary: {delta_summary[0]}")
+        ##print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (list) and details (dictionary)
         return delta_summary, delta_details
@@ -417,13 +417,13 @@ class EvaluationLogic:
             "driver_violation": delta_driver_violation,
         }
 
-        print(f"Delta Details: {delta_details}")
+        #print(f"Delta Details: {delta_details}")
 
         # 2️⃣ Create the summary (scalar value = sum of both deltas)
         delta_summary = delta_details["transport_distance"] + delta_details["driver_violation"]
 
 
-        print(f"Delta Summary: {delta_summary}")
+        #print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (scalar) and details (dictionary)
         return delta_summary, delta_details
@@ -465,13 +465,13 @@ class EvaluationLogic:
             "driver_violation": delta_driver_violation,
         }
 
-        print(f"Delta Details: {delta_details}")
+        #print(f"Delta Details: {delta_details}")
 
         # 2️⃣ Create the summary (scalar value as the sum of both)
         delta_summary = delta_details["commute_distance"] + delta_details["driver_violation"]
 
 
-        print(f"Delta Summary: {delta_summary}")
+        #print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (scalar) and details (dictionary)
         return delta_summary, delta_details
@@ -556,15 +556,15 @@ class EvaluationLogic:
                 
             # 1️⃣ Store individual delta values as a dictionary (details)
             delta_details = {
-                "transport_distance": delta_transport_distance,
+                "attachment_distance": delta_transport_distance,
             }
 
-            print(f"Delta Details: {delta_details}")
+            ##print(f"Delta Details: {delta_details}")
 
             # 2️⃣ Create summary (scalar) → Since only 1 value, just extract it
-            delta_summary = delta_details["transport_distance"]
+            delta_summary = delta_details["attachment_distance"]
 
-            print(f"Delta Summary: {delta_summary}")
+            ##print(f"Delta Summary: {delta_summary}")
 
             # 3️⃣ Return both summary (scalar) and details (dictionary)
             return delta_summary, delta_details
@@ -641,7 +641,7 @@ class EvaluationLogic:
         }
 
         # Optional for debugging
-        # print(f"Delta Details: {delta_details}")
+        # #print(f"Delta Details: {delta_details}")
 
         # 2️⃣ Create the summary (scalar) as the sum of all values
         delta_summary = (
@@ -651,7 +651,7 @@ class EvaluationLogic:
         )
 
         # Optional for debugging
-        # print(f"Delta Summary: {delta_summary}")
+        # #print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (scalar) and details (dictionary)
         return delta_summary, delta_details
@@ -693,7 +693,7 @@ class EvaluationLogic:
         }
 
         # Optional for debugging
-        # print(f"Delta Details: {delta_details}")
+        # #print(f"Delta Details: {delta_details}")
 
         # 2️⃣ Create summary (scalar) as the sum of all deltas
         delta_summary = (
@@ -703,7 +703,7 @@ class EvaluationLogic:
         )
 
         # Optional for debugging
-        # print(f"Delta Summary: {delta_summary}")
+        # #print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (scalar) and details (dictionary)
         return delta_summary, delta_details
@@ -761,21 +761,21 @@ class EvaluationLogic:
 
         # 1️⃣ Store individual delta values as a dictionary (details)
         delta_details = {
-            "transport_distance": delta_transport_distance,
+            "attachment_distance": delta_transport_distance,
             "attachment_count": delta_attachment_count,
         }
 
         # Optional: Debug output for inspection
-        # print(f"Delta Details: {delta_details}")
+        # #print(f"Delta Details: {delta_details}")
 
         # 2️⃣ Create summary (scalar) as the sum of both values
         delta_summary = (
-            delta_details["transport_distance"]
+            delta_details["attachment_distance"]
             + delta_details["attachment_count"]
         )
 
         # Optional: Debug output for summary
-        # print(f"Delta Summary: {delta_summary}")
+        # #print(f"Delta Summary: {delta_summary}")
 
         # 3️⃣ Return both summary (scalar) and details (dictionary)
         return delta_summary, delta_details
@@ -791,10 +791,10 @@ class EvaluationLogic:
         self.calculate_driver_violation(solution)
         self.calculate_machine_worker_attachment_count_and_utilization_time(solution)
         self.calculate_dynamic_percentage_order(solution)
-        self.calculate_transport_distance_attachments(solution)
+        self.calculate_attachment_distance(solution)
 
 
-    def calculate_transport_distance_attachments(self, solution:Solution):
+    def calculate_attachment_distance(self, solution:Solution):
             ''' Calculate the total transport distance of the attachments'''
 
             for attachment_id, route in solution.route_plan_attachment.items():
@@ -802,10 +802,11 @@ class EvaluationLogic:
                 for i in range(len(route) - 1):
                     solution.transport_distance_per_attachment[attachment_id] += self.data.transport_routes_order_item[route[i]][route[i + 1]]
                 
-            solution.total_transport_distance_attachments = sum(solution.transport_distance_per_attachment.values())
+            solution.total_attachment_distance = sum(solution.transport_distance_per_attachment.values())
 
     def calculate_dynamic_percentage_order(self, solution:Solution):
         ''' Calculate the dynamic percentage of the solution'''
+
 
         finished_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
        
@@ -822,38 +823,67 @@ class EvaluationLogic:
     def categorizing_orders(self, solution:Solution):
         ''' Categorize the orders into finished, semi-finished and not started orders'''
 
+        solution.finished_orders = []
+        solution.not_started_orders = []
+        solution.not_recognized_orders = []
+        solution.semifinished_orders = []
+        solution.not_started_order_item_ids = []
+        solution.not_recognized_order_item_ids = []
+
+
         all_planned_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
 
         for order_item in self.data.order_items:
             if order_item.id not in all_planned_order_item_ids:
-                solution.not_started_order_item_ids.append(order_item.id)
+                if order_item.status == True:
+                    solution.not_started_order_item_ids.append(order_item.id)
+                elif order_item.status == False:
+                    solution.not_recognized_order_item_ids.append(order_item.id)
         
 
         for order in self.data.orders:
-            solution.finished_orders.append(order)
-            solution.not_started_orders.append(order)
+            if order.status == True:
+                solution.finished_orders.append(order)
+                solution.not_started_orders.append(order)
+            elif order.status == False:
+                solution.not_recognized_orders.append(order)
 
         for order in self.data.orders:
+            if order.status == False:
+                continue
             for order_item_id in order.order_item_ids:
                 if order_item_id not in all_planned_order_item_ids:
                     solution.finished_orders.remove(order)
                     break
 
         for order in self.data.orders:
+            if order.status == False:
+                continue
             for order_item_id in order.order_item_ids:
                 if order_item_id in all_planned_order_item_ids:
                     solution.not_started_orders.remove(order)
                     break
 
-        solution.semifinished_orders = [order for order in self.data.orders if order not in solution.finished_orders and order not in solution.not_started_orders]
+        solution.semifinished_orders = [order for order in self.data.orders if order not in solution.finished_orders and order not in solution.not_started_orders and order not in solution.not_recognized_orders]
 
         solution.share_finished_orders = len(solution.finished_orders) / len(self.data.orders) * 100
 
         solution.number_of_finished_orders = len(solution.finished_orders)
 
+        solution.number_of_unrecognized_orders = len(solution.not_recognized_orders)
+
+
+
     def categorizing_machine_worker(self, solution:Solution):
         ''' Categorize the machines and workers into finished, semi-finished and not started machines and workers'''
 
+        solution.used_machines = []
+        solution.unused_machines = []
+        solution.used_workers = []
+        solution.unused_workers = []
+        solution.used_attachments = []
+        solution.unused_attachments = []
+        
         
         for machine, route in solution.route_plan_machine.items():
             if len(route) == 0:
@@ -869,6 +899,9 @@ class EvaluationLogic:
 
     def calculate_finished_order_items(self, solution:Solution):
         ''' Calculate the number of finished order items'''
+
+        solution.number_of_finished_order_items = 0
+
 
         for worker_id, route in solution.route_plan_worker.items():
             for i in range(len(route)):
@@ -887,6 +920,7 @@ class EvaluationLogic:
 
     def calculate_commute_distance(self, solution:Solution):
         ''' Calculate the total commute distance of the workers'''
+
 
         for worker_id, route in solution.route_plan_worker.items():
             solution.commute_distance_per_worker[worker_id] = 0
@@ -908,6 +942,8 @@ class EvaluationLogic:
 
     def calculate_driver_violation(self, solution:Solution):
         ''' Calculate the total driver violation time of the workers'''
+
+        solution.driver_violation = 0
 
         for worker_id, route in solution.route_plan_worker.items():
             for i in range(len(route)):

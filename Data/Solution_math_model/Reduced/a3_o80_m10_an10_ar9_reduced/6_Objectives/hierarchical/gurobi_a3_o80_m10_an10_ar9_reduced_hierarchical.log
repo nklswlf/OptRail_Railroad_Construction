@@ -548,3 +548,98 @@ Best objective 8.000000000000e+00, best bound 8.000000000000e+00, gap 0.0000%
 ---------------------------------------------------------------------------
 Multi-objectives: solved in 1296.71 seconds (2065.67 work units), solution count 10
 
+
+Gurobi 10.0.3 (mac64[arm]) logging started Thu Mar 20 16:09:45 2025
+
+Set parameter LogFile to value "/Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Data/Solution_math_model/Reduced/a3_o80_m10_an10_ar9_reduced/6_Objectives/hierarchical/gurobi_a3_o80_m10_an10_ar9_reduced_hierarchical.log"
+Gurobi Optimizer version 10.0.3 build v10.0.3rc0 (mac64[arm])
+
+CPU model: Apple M1 Pro
+Thread count: 8 physical cores, 8 logical processors, using up to 16 threads
+
+Warning: Thread count (16) is larger than processor count (8)
+         Reduce the value of the Threads parameter to improve performance
+
+
+Optimize a model with 1625 rows, 72262 columns and 549291 nonzeros
+Model fingerprint: 0x2fc8f9e6
+Variable types: 0 continuous, 72262 integer (72262 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+01]
+  Objective range  [1e+00, 2e+02]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+02]
+
+---------------------------------------------------------------------------
+Multi-objectives: starting optimization with 6 objectives ... 
+---------------------------------------------------------------------------
+
+Multi-objectives: applying initial presolve ...
+---------------------------------------------------------------------------
+
+Presolve removed 154 rows and 1 columns
+Presolve time: 0.29s
+Presolved: 1471 rows and 72261 columns
+---------------------------------------------------------------------------
+
+Multi-objectives: optimize objective 1 () ...
+---------------------------------------------------------------------------
+
+Found heuristic solution: objective 0.0000000
+Presolve removed 162 rows and 37449 columns
+Presolve time: 0.30s
+Presolved: 1309 rows, 34812 columns, 389174 nonzeros
+Variable types: 0 continuous, 34812 integer (34812 binary)
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing first log only...
+
+Concurrent spin time: 0.00s
+
+Solved with dual simplex
+
+Use crossover to convert LP symmetric solution to basic solution...
+
+Root relaxation: objective -3.000000e+00, 1601 iterations, 0.11 seconds (0.26 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+*    0     0               0      -3.0000000   -3.00000  0.00%     -    1s
+
+Explored 1 nodes (14530 simplex iterations) in 1.19 seconds (3.96 work units)
+Thread count was 16 (of 8 available processors)
+
+Solution count 2: -3 0 
+No other solutions better than -3
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective -3.000000000000e+00, best bound -3.000000000000e+00, gap 0.0000%
+---------------------------------------------------------------------------
+
+Multi-objectives: optimize objective 2 () ...
+---------------------------------------------------------------------------
+
+
+Loaded user MIP start with objective 80
+
+Presolve removed 2 rows and 37371 columns
+Presolve time: 0.26s
+Presolved: 1470 rows, 34890 columns, 404147 nonzeros
+Variable types: 0 continuous, 34890 integer (34890 binary)
+Found heuristic solution: objective 67.0000000
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing first log only...
+
+
+Solved with primal simplex
+
+Use crossover to convert LP symmetric solution to basic solution...
+
+Root relaxation: objective 2.100000e+01, 4269 iterations, 0.15 seconds (0.33 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   21.00000    0  180   67.00000   21.00000  68.7%     -    4s
+H    0     0                      64.0000000   21.00000  67.2%     -    4s
+     0     0   22.00000    0  536   64.00000   22.00000  65.6%     -    5s

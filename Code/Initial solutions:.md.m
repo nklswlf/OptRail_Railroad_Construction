@@ -44,7 +44,20 @@ Number of attachments: 6
 
 
 
-
+Best found Solution.
+Instance: a10_o128_m6_an51_ar13
+Number of finished orders: 7
+Number of semi-finished orders: 2
+Number of not started orders: 1
+Dynamic percentage: 8.029411764705882
+Number of finished order items: 85
+Driver violation: 20
+Commute distance: 7500.57
+Transport distance: 672.01
+Transport distance attachment: 74.15
+Number of workers: 9
+Number of machines: 6
+Number of attachments: 6
 
 
 
@@ -72,16 +85,20 @@ Number of attachments: 0
 
 
 
+
+
+
 Initial solution: 
 Instance: a15_o170_m9_an80_ar18
 Number of finished orders: 12
 Number of semi-finished orders: 2
 Number of not started orders: 1
+Dynamic percentage: 12.65909090909091
 Number of finished order items: 108
 Driver violation: 62
 Commute distance: 12728.47
 Transport distance: 2671.04
-Transport distance attachment: 138.58
+Transport distance attachment: 0
 Number of workers: 15
 Number of machines: 8
 Number of attachments: 9
@@ -118,6 +135,22 @@ Number of attachments: 15
 
 
 
+Initial solution: 
+Instance: a25_o306_m13_an127_ar31
+Number of finished orders: 19
+Number of semi-finished orders: 4
+Number of not started orders: 2
+Dynamic percentage: 20.60990338164251
+Number of finished order items: 198
+Driver violation: 138
+Commute distance: 18404.62
+Transport distance: 5207.96
+Transport distance attachment: 0
+Number of workers: 21
+Number of machines: 9
+Number of attachments: 12
+
+
 
 
 
@@ -142,6 +175,25 @@ Number of attachments: 12
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Initial solution: 
 Instance: a40_o476_m22_an215_ar51
 Number of finished orders: 32
@@ -158,16 +210,32 @@ Number of attachments: 34
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Initial solution: 
 Instance: a50_o578_m28_an276_ar66
 Number of finished orders: 38
 Number of semi-finished orders: 5
 Number of not started orders: 7
+Dynamic percentage: 39.60281385281385
 Number of finished order items: 363
 Driver violation: 271
 Commute distance: 34472.51
 Transport distance: 11872.78
-Transport distance attachment: 708.84
+Transport distance attachment: 0
 Number of workers: 37
 Number of machines: 14
 Number of attachments: 25

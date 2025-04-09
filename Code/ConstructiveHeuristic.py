@@ -25,7 +25,7 @@ class ConstructiveHeuristics:
 
     def Greedy(self):
         
-        print("Greedy")
+        print(f"\nCalculating Greedy solution with {self.order_item_attractiveness_technique} and {self.machine_attractiveness_technique}...\n")
 
         '''
         Greedy with potential GRASPS elements
@@ -50,7 +50,8 @@ class ConstructiveHeuristics:
         # Create Order and Order Item dictionary
         greedy_order_items = dict()
         for order in self.data.orders:
-            greedy_order_items[order] = [order_item for order_item in self.data.order_items if order_item.order_number == order.order_number]
+            if order.status == True:
+                greedy_order_items[order] = [order_item for order_item in self.data.order_items if order_item.order_number == order.order_number]
 
         # Initialize route plan for workers and machines
         route_plan_worker = dict()
@@ -189,7 +190,7 @@ class ConstructiveHeuristics:
 
                                 # Check predecerssor and successor of the order item
                                 while not attachment_task_assigned:
-                                    current_order_item = next((order_item for order_item in self.data.order_items if order_item.id == route_plan_attachment[best_attachment.id][order_item_index_attachment_route]))
+                                    current_order_item = next((order_item for order_item in self.data.order_items if order_item.status == True and order_item.id == route_plan_attachment[best_attachment.id][order_item_index_attachment_route]))
 
                                     # If the best order item is not a successor or predecessor of the current order item it can not be assigned to the attachment
                                     # Continue to next attachment in attachment_attractiveness
@@ -277,7 +278,7 @@ class ConstructiveHeuristics:
                         
                         # Check predecerssor and successor of the order item
                         while not machine_task_assigned:
-                            current_order_item = next((order_item for order_item in self.data.order_items if order_item.id == route_plan_machine[best_machine.id][order_item_index_machine_route]))
+                            current_order_item = next((order_item for order_item in self.data.order_items if order_item.status == True and order_item.id == route_plan_machine[best_machine.id][order_item_index_machine_route]))
                             
                             # If the best order item is not a successor or predecessor of the current order item it can not be assigned to the machine
                             # Continue to next machine in machine_attractiveness
@@ -357,10 +358,12 @@ class ConstructiveHeuristics:
         # Caluclate sum of planned shifts in comparison to all order items
         sum_of_planned_shifts = 0
         for order in self.data.orders:
-            sum_of_planned_shifts += len(self.data.planned_shifts_worker[order])
+            if order.status == True:
+                sum_of_planned_shifts += len(self.data.planned_shifts_worker[order])
         sum_of_order_items = 0
         for order in self.data.orders:
-            sum_of_order_items += len(greedy_order_items[order])
+            if order.status == True:
+                sum_of_order_items += len(greedy_order_items[order])
         
 
 
@@ -370,9 +373,8 @@ class ConstructiveHeuristics:
         feasible = start_solution.feasibility_check()
 
         if feasible:
-            print("Solution is feasible")
             self.EvaluationLogic.evaluate(start_solution)
-            self.ParetoSolutions.ParetoFront.append(start_solution)
+            #self.ParetoSolutions.ParetoFront.append(start_solution)
             return start_solution
         else:
             raise Exception("Solution is not feasible")

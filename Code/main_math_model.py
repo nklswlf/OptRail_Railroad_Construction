@@ -3,6 +3,7 @@ import OutputData
 import MIP_Flow
 import pandas as pd
 from pathlib import Path
+import MIP_Upper_Bound
 
 
 
@@ -54,6 +55,42 @@ Construction_a50_o578_m28_an276_ar66.json
 
 
 
+def upper_bound():
+
+    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
+                "Construction_a5_o96_m10_an10_ar10_reduced.json",
+                "Construction_a10_o107_m5_an57_ar12.json",
+                "Construction_a10_o114_m6_an57_ar11.json",
+                "Construction_a10_o128_m6_an51_ar13.json",
+                "Construction_a10_o144_m6_an53_ar12.json",
+                "Construction_a15_o170_m9_an80_ar18.json",
+                "Construction_a20_o236_m12_an106_ar24.json",
+                "Construction_a25_o306_m13_an127_ar31.json",
+                "Construction_a30_o355_m18_an148_ar42.json",
+                "Construction_a40_o476_m22_an215_ar51.json",
+                "Construction_a50_o578_m28_an276_ar66.json"]
+    
+    instances = ["Construction_a25_o306_m13_an127_ar31.json"]
+    
+    for instance in instances:
+
+        upper_bound = "worker"
+        upper_bound = "machine"
+        upper_bound = "both"
+        
+        data = InputData.InputData(instance)
+
+        optimizer = MIP_Upper_Bound.UpperBound(data, upper_bound)
+
+        site_fulfillment = optimizer.execute()
+
+        print(f"Site fulfillment for instance {instance} and upper bound {upper_bound}:")
+        print(site_fulfillment)
+        print(instance)
+
+    
+
+
 
 def main():
     instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
@@ -69,9 +106,12 @@ def main():
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
     
-    objective_strategies = ["costs", "weighted", "hierarchical", "hierarchical_tolerance"]
-    number_of_objectives = [6, 3, 4, 5]
+    instances = ["Construction_a10_o107_m5_an57_ar12.json"]
     
+    
+    objective_strategies = ["hierarchical", "hierarchical_tolerance"]
+    number_of_objectives = [6, 3, 4, 5]
+
     
 
 
@@ -103,7 +143,8 @@ def main():
 if __name__ == "__main__":
     #TestInputData()
     #pareto()
-    main()
+    #main()
+    upper_bound()
 
 
 
