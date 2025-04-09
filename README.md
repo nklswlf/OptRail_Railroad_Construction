@@ -21,7 +21,24 @@ The optimization process considers the following eight objectives:
 
 ## 🧠 Methods Used
 
-- **Heuristic Approaches**: Simulated Annealing, NSGA-II  
 - **Mathematical Solver**: Gurobi (for MIP baseline)
+- **Heuristic Approaches**: Constructive Greedy --> Pareto Simulated Annealing 
 - **Visualization**: Streamlit-based comparison tool
 - **Evaluation**: Pareto front analysis for trade-off comparison
+
+## 📁 Project Files Overview
+
+| File                         | Description                                                                 |
+|------------------------------|-----------------------------------------------------------------------------|
+| `Solver.py`                 | Main entry point to coordinate the entire optimization process              |
+| `main_math_model.py`        | Defines the Mixed-Integer Programming (MIP) model using Gurobi              |
+| `MIP_Flow.py`, `MIP_Upper_Bound.py` | Variants and extensions of the base MIP formulation                 |
+| `ConstructiveHeuristic.py`  | Builds initial feasible solutions using greedy heuristics                   |
+| `ImprovementAlgorithm.py`   | Applies metaheuristics (e.g., Simulated Annealing) to improve solutions     |
+| `Neighborhood.py`           | Defines neighborhood operators for local search and metaheuristics           |
+| `EvaluationLogic.py`        | Computes objective values for each solution                                 |
+| `InputData.py`              | Handles data import and preprocessing                                       |
+| `OutputData.py`             | Writes solutions, objective values, and keeps pareto archive                |
+| `main.py`                   | Script to manually launch optimization and log experiments                  |
+
+> 🛠 Note: This repository is currently private and contains anonymized data and experimental code structures used during thesis development.
