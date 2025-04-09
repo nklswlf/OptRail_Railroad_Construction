@@ -31,7 +31,6 @@ The optimization model aims to balance and improve multiple competing objectives
 | File                         | Description                                                                 |
 |------------------------------|-----------------------------------------------------------------------------|
 | `Solver.py`                 | Main entry point to coordinate the entire optimization process              |
-| `main_math_model.py`        | Defines the Mixed-Integer Programming (MIP) model using Gurobi              |
 | `MIP_Flow.py`, `MIP_Upper_Bound.py` | Variants and extensions of the base MIP formulation                 |
 | `ConstructiveHeuristic.py`  | Builds initial feasible solutions using greedy heuristics                   |
 | `ImprovementAlgorithm.py`   | Applies metaheuristics (e.g., Simulated Annealing) to improve solutions     |
@@ -39,6 +38,7 @@ The optimization model aims to balance and improve multiple competing objectives
 | `EvaluationLogic.py`        | Computes objective values for each solution                                 |
 | `InputData.py`              | Handles data import and preprocessing                                       |
 | `OutputData.py`             | Writes solutions, objective values, and keeps pareto archive                |
-| `main.py`                   | Script to manually launch optimization and log experiments                  |
+| `main_math_model.py`        | Script to manually launch mathematical solver                               |
+| `main.py`                   | Script to manually launch metaheuristic optimization and log experiments    |
 
 > 🛠 Note: This repository is currently private and contains anonymized data and experimental code structures used during thesis development.
