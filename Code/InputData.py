@@ -4,7 +4,6 @@ from typing import List, Tuple, Optional
 from datetime import datetime,timedelta
 import itertools
 
-
 class InputData:
     '''Class for creating Data objects based on formatted JSON Files containing the information of orders, machines, workers, attachments, and routes'''
 
@@ -14,9 +13,15 @@ class InputData:
 
         :param instance_filename: Name of the JSON file containing the data.
         '''
+        
+
         self.instance_filename = instance_filename
         self.instance = instance_filename.split('Construction_')[1].split('.json')[0]
         self._data_path, self._parent_folder = self._find_instance_file()
+        self.site_fulfillment = 0
+
+        print(f"\nInstance: {self.instance}")
+        print(f"\nLoading data from '{instance_filename}'...")
 
         # AHP weights for the different criteria
         self._ahp_weights = {"order_item_count": 0.54437184,
@@ -84,6 +89,7 @@ class InputData:
         self.create_priorities_orders()
         self.connect_order_item_to_order()
 
+
         # Dynamic dictionary for planned shifts for greedy algorithm
         self.planned_shifts_worker = dict()
         self.planned_shifts_machine = dict()
@@ -91,6 +97,68 @@ class InputData:
             self.planned_shifts_worker[order] = list()
             self.planned_shifts_machine[order] = list()
 
+
+
+    def reduce_input_data(self, number_of_orders):
+        '''
+        Reduce the input data to a smaller number of orders.
+
+        :param number_of_orders: Number of orders to keep.
+        '''
+        machine_types = {machine.type for machine in self.machines}
+        attachment_types = {attachment.type for attachment in self.attachments}
+        amount_planned_orders = 0
+
+        for order in self.order_ranking:
+            if amount_planned_orders == number_of_orders:
+                break
+
+            if not all(
+                order_item.machine_type in machine_types and
+                set(order_item.equipment_types).issubset(attachment_types) and
+                any(set(order_item.worker_qualifications).issubset(worker.qualifications) for worker in self.workers)
+                for order_item in order.order_items
+            ):
+                order.unuseable = True
+                continue
+
+
+            order.status = True
+            amount_planned_orders += 1
+
+            for order_item in order.order_items:
+                order_item.status = True
+
+                
+    def activate_order(self, order_number: int) -> None:
+        """Aktiviert eine Order und alle zugehörigen OrderItems."""
+        for order in self.orders:
+            if order.order_number == order_number:
+                order.status = True
+                self.site_fulfillment += 1
+                for order_item in order.order_items:
+                    order_item.status = True
+                break
+
+    def deactivate_order(self, order_number: int) -> None:
+        """Deaktiviert eine Order und alle zugehörigen OrderItems."""
+        for order in self.orders:
+            if order.order_number == order_number:
+                order.status = False
+                self.site_fulfillment -= 1
+                for order_item in order.order_items:
+                    order_item.status = False
+                break   
+
+    def unuseable_order(self, order_number: int) -> None:
+        """Markiert eine Order als unbrauchbar."""
+        for order in self.orders:
+            if order.order_number == order_number:
+                order.unuseable = True
+                for order_item in order.order_items:
+                    order_item.status = False
+                break
+        
 
     
     def connect_order_item_to_order(self):
@@ -192,6 +260,9 @@ class InputData:
             "worker_qualification_count"
         )
 
+        # 7. Calculate rank for attachment_count fewer attachments are better
+
+
         # Print current priorities for each order and the ahp weights
         #print("Order priorities calculated with different criteria:")
         #for order in self.orders:
@@ -283,6 +354,8 @@ class InputData:
                 last_value = value
             order._priority[rank_name] = current_rank
 
+        if rank_name == 'order_item_count':
+            self.order_ranking = sorted_orders
 
         
 
@@ -303,6 +376,11 @@ class InputData:
 
 
 
+
+
+
+
+
     def _load_data(self) -> None:
         ''' Load data from the JSON file and initialize lists of objects. '''
         with open(self._data_path, 'r', encoding='utf-8') as json_file:
@@ -315,7 +393,9 @@ class InputData:
 
             # Load each data category part 1
             self._orders = [Order(order) for order in data.get("Auftraege", [])]
+            self._excluded_orders = list()
             self._order_items = [OrderItem(item) for item in data.get("Bestellpositionen", [])]
+            self._excluded_order_items = list()
             self._attachments = [Attachment(attachment) for attachment in data.get("Anbaugeraete", [])]
             self._workers = [Worker(worker) for worker in data.get("Arbeiter", [])]
             self._machines = [Machine(machine) for machine in data.get("Maschinen", [])]
@@ -497,6 +577,14 @@ class InputData:
     def max_dynamic_precentage_change(self) -> float:
         return self._max_dynamic_precentage_change
     
+    @property
+    def excluded_orders(self) -> List['Order']:
+        return self._excluded_orders
+    
+    @property
+    def excluded_order_items(self) -> List['OrderItem']:
+        return self._excluded_order_items
+    
     
     
 
@@ -511,6 +599,8 @@ class Order:
         self._location = json_data.get("Standort", {"Item1": 0.0, "Item2": 0.0})
         self._priority = {}
         self.dynamic_percentage = 0
+        self.status = False
+        self.unuseable = False
 
 
 
@@ -566,6 +656,7 @@ class OrderItem:
         self._worker_qualifications = json_data.get("ArbeiterQualifikationen", [])
         self._assigned_machine = json_data.get("zugewieseneMaschine", None)
         self._type = int(json_data.get("Typ", 0))
+        self.status = False
     
 
 
@@ -791,6 +882,19 @@ class Worker:
                     end_time_order_item_2 = (order_item_2.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
 
                     break_time = input_data._hours_between_shifts / 24
+
+                    # Transportzeit berechnen
+                    transport_distance = input_data._transport_routes_order_item[order_item_1.id][order_item_2.id]
+                    transport_time = transport_distance / input_data._transport_speed_kmh
+                    transport_time = transport_time / 24
+
+                    if max(break_time, transport_time) == transport_time:
+                        raise Exception(f"Transport time {transport_time} is greater than break time {break_time} for order items {order_item_1.id} and {order_item_2.id}.")
+
+
+                    #break_time = max(break_time, transport_time)
+
+
 
                     # Vorgänger und Nachfolger bestimmen
                     if start_time_order_item_1 >= end_time_order_item_2 + break_time:

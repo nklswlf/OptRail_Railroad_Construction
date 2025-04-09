@@ -1,10 +1,13 @@
-from InputData import *
+from InputData import InputData
 import json
 import pandas as pd
 import plotly.express as px
 import os
 from datetime import timedelta
 from collections import Counter
+import numpy as np
+import pygmo as pg
+import math
 
 
 
@@ -21,12 +24,15 @@ class Solution:
         self.finished_orders = []
         self.semifinished_orders = []
         self.not_started_orders = []
+        self.not_recognized_orders = []
 
         self.not_started_order_item_ids = []
+        self.not_recognized_order_item_ids = []
 
         self.share_finished_orders = -0
         self.number_of_finished_orders = -0
         self.number_of_finished_order_items = -0
+        self.number_of_unrecognized_orders = -0
 
         self.used_machines = []
         self.used_workers = []
@@ -60,15 +66,16 @@ class Solution:
                 f"Number of finished orders: {self.number_of_finished_orders}\n"
                 f"Number of semi-finished orders: {len(self.semifinished_orders)}\n"
                 f"Number of not started orders: {len(self.not_started_orders)}\n"
+                f"Number of unrecognized orders: {self.number_of_unrecognized_orders}\n"
                 f"Dynamic percentage: {self.total_dynamic_percentage}\n"
                 f"Number of finished order items: {self.number_of_finished_order_items}\n"
                 f"Driver violation: {self.driver_violation}\n"
                 f"Commute distance: {round(self.total_commute_distance, 2)}\n"
                 f"Transport distance: {round(self.total_transport_distance, 2)}\n"
                 f"Transport distance attachment: {round(self.total_transport_distance_attachments, 2)}\n"
-                f"Number of workers: {self.number_of_workers}\n"
                 f"Number of machines: {self.number_of_machines}\n"
-                f"Number of attachments: {self.number_of_attachments}\n")
+                f"Number of workers: {self.number_of_workers}\n"
+                f"Number of attachments: {self.number_of_attachments}")
     
 
     def repair_solution(self):
@@ -605,7 +612,9 @@ class Solution:
 class ParetoSolutions:
     ''' Class for creating lits objects containing solution objects'''
 
-    def __init__(self):
+    def __init__(self, data:InputData, rng = None):
+        self.data = data
+        self.RNG = rng
         ''' Create an empty list for the solutions'''
         self.ParetoFront = []
 
@@ -657,23 +666,121 @@ class ParetoSolutions:
         
         self.ParetoFront = non_dominated
 
-    def CountDominatingSolutions(self, new_solution: Solution) -> int:
+    '''
+    def SetReferencePointFromParetoFront(self):
         """
-        Zählt, wie viele Lösungen aus der Pareto-Front die new_solution dominieren.
+        Automatically sets a valid reference point based on the worst (max) values
+        of each objective across the current Pareto front.
+        """
+        if not self.ParetoFront:
+            raise ValueError("ParetoFront is empty.")
 
+        # Extract objectives from Pareto front
+        epsilon = 1.2
+        driver = max(sol.driver_violation for sol in self.ParetoFront) * epsilon
+        commute = max(sol.total_commute_distance for sol in self.ParetoFront) * epsilon
+        transport = max(sol.total_transport_distance for sol in self.ParetoFront) * epsilon
+        attachments = max(sol.total_transport_distance_attachments for sol in self.ParetoFront) * epsilon
+        workers = max(sol.number_of_workers for sol in self.ParetoFront) * epsilon
+        machines = max(sol.number_of_machines for sol in self.ParetoFront) * epsilon
+        attach_count = max(sol.number_of_attachments for sol in self.ParetoFront) * epsilon
+
+        epsilon = 1e-6  # Small value to avoid numerical issues
+        self.ReferencePoint = np.array([
+            driver + epsilon,
+            commute + epsilon,
+            transport + epsilon,
+            attachments + epsilon,
+            workers + epsilon,
+            machines + epsilon,
+            attach_count + epsilon
+        ])
+    '''
+
+    def SetReferencePoint(self, solution: Solution):
+        """
+        Sets the reference point for hypervolume calculation based on a given solution.
+        
         Args:
-        pareto_front (list): Liste der Lösungen, die zur Pareto-Front gehören.
-        new_solution (Solution): Die neue Lösung, die überprüft wird.
-
-        Returns:
-        int: Anzahl der Lösungen aus der Pareto-Front, die die new_solution dominieren.
+            solution (Solution): A solution object containing the objectives.
+        
+        Raises:
+            ValueError: If the solution is None or if the objectives are not set.
         """
-        count = 0
-        for solution in self.ParetoFront:
-            if self.CompareSolutions(solution, new_solution) == -1:  # -1 bedeutet, dass die Lösung die neue Lösung dominiert
-                count += 1
-        return count
-    
+        if solution is None:
+            raise ValueError("Solution cannot be None.")
+        
+        epsilon = 2
+        epsilon_2 = 4
+        driver = solution.driver_violation * epsilon
+        commute = solution.total_commute_distance * epsilon_2
+        transport = solution.total_transport_distance * epsilon_2
+        attachments = solution.total_transport_distance_attachments * epsilon_2
+        workers = solution.number_of_workers * epsilon
+        machines = solution.number_of_machines * epsilon
+        attach_count = solution.number_of_attachments * epsilon
+
+        epsilon = 1e-6  # Small value to avoid numerical issues
+        self.ReferencePoint = np.array([
+            driver + epsilon,
+            commute + epsilon,
+            transport + epsilon,
+            attachments + epsilon,
+            workers + epsilon,
+            machines + epsilon,
+            attach_count + epsilon
+        ])
+
+
+    def CalculateHypervolume(self) -> float:
+        """
+        Calculates the hypervolume of the Pareto Front using pygmo.
+        
+        Assumptions:
+        - The Pareto Front is stored in self.ParetoFront.
+        - Each solution in the Pareto Front has the following attributes:
+            driver_violation,
+            total_commute_distance,
+            total_transport_distance,
+            total_transport_distance_attachments,
+            number_of_workers,
+            number_of_machines,
+            number_of_attachments.
+        - The reference point is set via SetReferencePoint and stored in self.ReferencePoint
+            as a NumPy array with the same order of objectives.
+        
+        Returns:
+            float: The computed hypervolume.
+        """
+
+        objs = []
+        for sol in self.ParetoFront:
+            objs.append([
+                sol.driver_violation,
+                sol.total_commute_distance,
+                sol.total_transport_distance,
+                sol.total_transport_distance_attachments,
+                sol.number_of_workers,
+                sol.number_of_machines,
+                sol.number_of_attachments
+            ])
+        objs = np.array(objs)
+        
+        # Create a Hypervolume object with the objectives
+        hv = pg.hypervolume(objs)
+        
+        # Calculate the hypervolume using the reference point
+        hv_value = hv.compute(self.ReferencePoint)
+
+        # Adjust hypervolume for comparison
+        hv_log = math.log10(hv_value) * 10
+        hv_sqrt = math.sqrt(hv_value)
+        
+        return hv_sqrt, hv_log
+        
+
+
+
     def UpdateParetoFront(self, new_solution: Solution) -> bool:
         """
         Compares new_solution with all solutions in the Pareto Front.
@@ -715,7 +822,6 @@ class ParetoSolutions:
         self.ParetoFront.append(new_solution)
         return True
     
-
     def CompareSolutions(self, current_solution: Solution, new_solution: Solution) -> int:
         """
         Compares current_solution and new_solution.
@@ -777,6 +883,209 @@ class ParetoSolutions:
 
         return 0  # Keine Dominanz
 
+
+
+
+    def CountDominatingSolutions(self, new_solution) -> int:
+        """
+        Zählt, wie viele Lösungen aus der Pareto-Front die new_solution dominieren.
+
+        Args:
+        pareto_front (list): Liste der Lösungen, die zur Pareto-Front gehören.
+        new_solution (Solution): Die neue Lösung, die überprüft wird.
+
+        Returns:
+        int: Anzahl der Lösungen aus der Pareto-Front, die die new_solution dominieren.
+        """
+        if isinstance(new_solution, Solution):
+            objective_dict = {}
+            objective_dict["driver_violation"] = new_solution.driver_violation
+            objective_dict["commute_distance"] = new_solution.total_commute_distance
+            objective_dict["transport_distance"] = new_solution.total_transport_distance
+            objective_dict["attachment_distance"] = new_solution.total_transport_distance_attachments
+            objective_dict["machine_count"] = new_solution.number_of_machines
+            objective_dict["worker_count"] = new_solution.number_of_workers
+            objective_dict["attachment_count"] = new_solution.number_of_attachments
+        elif isinstance(new_solution, dict):
+            objective_dict = new_solution
+        else:
+            raise ValueError("new_solution must be of type Solution or dict.")
+
+
+        count = 0
+        for solution in self.ParetoFront:
+            if self.ShortCompareSolutions(solution, objective_dict):
+                count += 1
+        return count
+    
+    def ShortCompareSolutions(self, current_solution, objective_dict):
+        """
+        Prüft, ob current_solution die neue Lösung (objective_dict) dominiert.
+        
+        "Dominanz" bedeutet hier:
+        - current_solution ist in jedem Zielwert <= objective_dict (nicht schlechter)
+        - und in mindestens einem Zielwert < objective_dict (strictly better)
+        
+        Rückgabe:
+        True,  wenn current_solution die new_solution dominiert
+        False, sonst
+        """
+
+        # 1. Falls current_solution noch kein Dict ist, wandle es in ein Dict um
+        if isinstance(current_solution, dict):
+            curr_obj = current_solution
+        else:
+            # Falls es ein Solution-Objekt ist
+            curr_obj = {
+                "driver_violation": current_solution.driver_violation,
+                "commute_distance": current_solution.total_commute_distance,
+                "transport_distance": current_solution.total_transport_distance,
+                "attachment_distance": current_solution.total_transport_distance_attachments,
+                "machine_count": current_solution.number_of_machines,
+                "worker_count": current_solution.number_of_workers,
+                "attachment_count": current_solution.number_of_attachments
+            }
+
+        # 2. Bestimme, ob current_solution <= objective_dict für alle Ziele
+        #    und in mindestens einem Ziel < objective_dict
+        is_better_or_equal = True
+        is_strictly_better = False
+
+        # Liste aller Ziele, bei denen "kleiner = besser" gilt
+        objectives = [
+            "driver_violation",
+            "commute_distance",
+            "transport_distance",
+            "attachment_distance",
+            "machine_count",
+            "worker_count",
+            "attachment_count"
+        ]
+
+        for key in objectives:
+            if curr_obj[key] > objective_dict[key]:
+                # current_solution ist schlechter in diesem Ziel
+                is_better_or_equal = False
+                break
+            elif curr_obj[key] < objective_dict[key]:
+                # current_solution ist in diesem Ziel strictly besser
+                is_strictly_better = True
+
+        # 3. Dominanzbedingung: in allen Zielen <= und in mindestens einem < 
+        return is_better_or_equal and is_strictly_better
+
+        
+
+        
+
+
+    
+
+
+    def SortParetoFront(self, criteria: str = None):
+        '''
+        Sorts the Pareto front:
+        - Always starts with: finished_orders, dynamic_percentage, order_items
+        - Then: given `criteria` (if any), moved forward in original order
+        - Then: all remaining objectives in original order
+        '''
+
+        # Feste Reihenfolge der sekundären Ziele (wird nicht verändert)
+        ordered_objectives = [
+            ("driver_violation", lambda x: x.driver_violation),
+            ("commute_distance", lambda x: x.total_commute_distance),
+            ("transport_distance", lambda x: x.total_transport_distance),
+            ("attachment_distance", lambda x: x.total_transport_distance_attachments),
+            ("machines", lambda x: x.number_of_machines),
+            ("workers", lambda x: x.number_of_workers),
+            ("attachments", lambda x: x.number_of_attachments)
+        ]
+
+        def sort_key(x):
+            key = [
+                -x.number_of_finished_orders,
+                -x.total_dynamic_percentage,
+                -x.number_of_finished_order_items
+            ]
+
+            # Falls ein Kriterium angegeben ist → nach vorne
+            if criteria:
+                for name, func in ordered_objectives:
+                    if name == criteria:
+                        key.append(func(x))  # zuerst das gewünschte Kriterium
+
+            # Dann alle restlichen (in ursprünglicher Reihenfolge, außer dem schon verwendeten)
+            for name, func in ordered_objectives:
+                if name != criteria:
+                    key.append(func(x))
+
+            return tuple(key)
+
+        self.ParetoFront = sorted(self.ParetoFront, key=sort_key)
+
+    
+    def SelectRandomBestSolution(self, all_values: bool = False):
+        """
+        Für jedes Zielkriterium (Minimierungsziele):
+        - Wähle nur **eine** Lösung mit dem besten Wert für dieses Kriterium.
+        - Falls mehrere Lösungen gleich gut: Normalisiere alle anderen Ziele (Min-Max), 
+        bilde den Gesamtscore, wähle die beste.
+        """
+        objective_map = {
+            "driver_violation": lambda x: x.driver_violation,
+            "commute_distance": lambda x: x.total_commute_distance,
+            "transport_distance": lambda x: x.total_transport_distance,
+            "attachment_distance": lambda x: x.total_transport_distance_attachments,
+            "machines": lambda x: x.number_of_machines,
+            "workers": lambda x: x.number_of_workers,
+            "attachments": lambda x: x.number_of_attachments
+        }
+
+        selected_solutions = []
+        best_value_dict = {}
+
+        for key, func in objective_map.items():
+            try:
+                best_value = min(func(sol) for sol in self.ParetoFront)
+                best_value_dict[key] = round(best_value, 2)
+                candidate_solutions = [sol for sol in self.ParetoFront if func(sol) == best_value]
+
+                if len(candidate_solutions) == 1:
+                    selected_solutions.append(candidate_solutions[0])
+                    continue
+
+                normalized_scores = []
+                for sol in candidate_solutions:
+                    score = 0.0
+                    for sub_key, sub_func in objective_map.items():
+                        if sub_key == key:
+                            continue
+                        values = [sub_func(s) for s in candidate_solutions]
+                        v_min = min(values)
+                        v_max = max(values)
+                        val = sub_func(sol)
+                        norm = (val - v_min) / (v_max - v_min) if v_max != v_min else 0.0
+                        score += norm
+                    normalized_scores.append((score, sol))
+
+                best_sol = min(normalized_scores, key=lambda x: x[0])[1]
+                selected_solutions.append(best_sol)
+
+            except ValueError:
+                continue
+
+        if all_values:
+            df = pd.DataFrame(best_value_dict.items(), columns=["Objective", "Best Value"])
+            print("\nBest individual values:")
+            print(df.to_string(index=False))
+            return None
+        
+        if not selected_solutions:
+            raise KeyError("No solutions found.")
+
+        return self.RNG.choice(selected_solutions)
+
+
     def ShowFront(self):
         ''' Show the Pareto Front as a DataFrame'''
 
@@ -787,11 +1096,12 @@ class ParetoSolutions:
         for solution in self.ParetoFront:
             solutions.append({
                 "Finished Orders": solution.number_of_finished_orders,
-                "Dynamic Percentage": solution.total_dynamic_percentage,
+                "Dynamic Percentage": round(solution.total_dynamic_percentage, 2),
+                "Order Items": solution.number_of_finished_order_items,
                 "Driver Violation": solution.driver_violation,
-                "Commute Distance": solution.total_commute_distance,
-                "Transport Machines": solution.total_transport_distance,
-                "Transport Attachments": solution.total_transport_distance_attachments,
+                "Commute Distance": round(solution.total_commute_distance, 2),
+                "Transport Machines": round(solution.total_transport_distance, 2),
+                "Transport Attachments": round(solution.total_transport_distance_attachments, 2),
                 "Machines": solution.number_of_machines,
                 "Workers": solution.number_of_workers,
                 "Attachments": solution.number_of_attachments
@@ -801,18 +1111,61 @@ class ParetoSolutions:
         df = pd.DataFrame(solutions)
 
         # Sort according to the total_dynamic_percentage (higher is better), then sort by the other objectives
-        df = df.sort_values(by=["Finished Orders" ,"Dynamic Percentage", "Driver Violation", "Commute Distance",
+        df = df.sort_values(by=["Finished Orders" ,"Dynamic Percentage", "Order Items", "Driver Violation", "Commute Distance",
                                 "Transport Machines", "Transport Attachments",
                                 "Machines", "Workers", "Attachments"],
-                            ascending=[False, False, True, True, True, True, True, True, True])
+                            ascending=[False, False, False, True, True, True, True, True, True, True])
         
 
         # Show the DataFrame
         print(df)
+        # Write the DataFrame to a CSV file
+        df.to_csv("ParetoFront.csv", index=False)
+
+
+    def DeleteUnfinishedSites(self):
+        ''' Delete all solutions from the Pareto Front that have unfinished sites'''
+
+        # Create a list of solutions that have finished all sites
+        finished_solutions = [
+                solution
+                for solution in self.ParetoFront
+                if solution.semifinished_orders == []
+            ]
+           
+
+        # Update the Pareto Front
+        self.ParetoFront = finished_solutions
+
+
+        if len(self.ParetoFront) == 0:
+            print(f"\nDeleted all solutions from the Pareto Front because all of them had unfinished sites.")
+        else:
+            print(f"\nPareto Front with solutions that incorporate only finished sites:")
+            self.ShowFront()
+        
 
 
 
+    def CalculateAverageDynamicPercentage(self):
 
+        average_dynamic_percentage = {}
+
+        for order in self.data.orders:
+            average_dynamic_percentage[order.order_number] = 0
+
+
+        for solution in self.ParetoFront:
+            for order in self.data.orders:
+                average_dynamic_percentage[order.order_number] += solution.dynamic_percentage_order[order.order_number]
+
+        for order in self.data.orders:
+            average_dynamic_percentage[order.order_number] = average_dynamic_percentage[order.order_number] / len(self.ParetoFront)
+
+
+        return average_dynamic_percentage
+
+            
 
 
 

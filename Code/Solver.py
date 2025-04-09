@@ -1,11 +1,9 @@
-from InputData import *
-from OutputData import *
+from InputData import InputData
 from ConstructiveHeuristic import *
 from ImprovementAlgorithm import *
 from EvaluationLogic import *
-
-import random
 import time
+from MIP_Upper_Bound import *
 
 class Solver:
     ''' Orchestrates all single pieces to form one strong algorithm to solve flowshop problems
@@ -15,8 +13,10 @@ class Solver:
         self.Seed = seed
         self.RNG = numpy.random.default_rng(self.Seed)
         self.EvaluationLogic = EvaluationLogic(inputData)
-        self.ParetoSolutions = ParetoSolutions()
+        self.ParetoSolutions = ParetoSolutions(inputData, self.RNG)
         self.runTime = {}
+
+        self.UB_technique = "MIP" # "MIP" or "Greedy"
         
         self.ConstructiveHeuristic = ConstructiveHeuristics(paretoSolutions=self.ParetoSolutions, evaluationLogic=self.EvaluationLogic)
 
@@ -27,38 +27,60 @@ class Solver:
 
         starttime = time.time()
         start_solutuion = self.ConstructiveHeuristic.Run(self.InputData, order_item_attractiveness_technique, machine_attractiveness_technique)
-        print("Constructive solution found.")
+        print("Constructive solution found after:", round(time.time() - starttime, 2), "seconds")
         print(start_solutuion)
 
         endtime = time.time()
-        self.RunTime = endtime - starttime
+        self.ConstructionTime = endtime - starttime
+
 
         return start_solutuion
-
 
 
     def ImprovementPhase(self, startSolution:Solution, algorithm:ImprovementAlgorithm) -> Solution:
         ''' Start the improvement phase by choosing a algorithm'''
 
+        print("\nImprovement Phase started...")
+        start_time = time.time()
+
         algorithm.Initialize(self.EvaluationLogic, self.ParetoSolutions, self.RNG)
         bestSolution = algorithm.Run(startSolution)
 
+        print("\nImprovement Phase finished after:", round(time.time() - start_time, 2), "seconds")
+
         return bestSolution
+    
+    def UpperBound(self, UB_technique):
+        ''' Calculate the upper bound for the problem instance'''
+
+        print("\nCalculating Upper Bound...")
+
+        start_time = time.time()
+        optimizer = UpperBound(self.InputData, UB_technique)
+        site_fulfillment = optimizer.execute()
+        self.InputData.site_fulfillment = int(site_fulfillment)
+
+        self.InputData.reduce_input_data(self.InputData.site_fulfillment)
+        
+        self.UpperBoundTime = time.time() - start_time
+        print("\nUpper Bound calculated after:", round(self.UpperBoundTime, 2), "seconds")
+        print(f"UB = {round(site_fulfillment, 2)}")
 
 
 
-    def RunAlgorithm(self, order_item_attractiveness_technique, machine_attractiveness_technique, algorithm:ImprovementAlgorithm):
+    def RunAlgorithm(self, UB_technique, order_item_attractiveness_technique, machine_attractiveness_technique, algorithm:ImprovementAlgorithm):
         ''' Run local search with chosen algorithm and neighborhoods'''
 
+        self.UpperBound(UB_technique)
+
         starttime = time.time()
+
         startSolution = self.ConstructionPhase(order_item_attractiveness_technique, machine_attractiveness_technique)
 
-        bestSolution = self.ImprovementPhase(startSolution, algorithm)
-
-
-        print("Best found Solution.")
-        print(bestSolution)
+        building_time, individual_time, dominance_time, feasibility_check_time = self.ImprovementPhase(startSolution, algorithm)
 
         endtime = time.time()
         self.RunTime = endtime - starttime
+
+        return self.UpperBoundTime, self.ConstructionTime, building_time, individual_time, dominance_time, feasibility_check_time, self.RunTime
 

@@ -3,6 +3,9 @@ import math
 from copy import deepcopy
 import numpy as np
 import time
+from concurrent.futures import ProcessPoolExecutor
+import pandas as pd
+
 
 class ImprovementAlgorithm:
     """ Base class for several types of improvement algorithms. """ 
@@ -204,7 +207,7 @@ class IterativeImprovement(ImprovementAlgorithm):
 
 
 
-class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
+class ParetoSimulatedAnnealing(ImprovementAlgorithm):
     """ Simulated Annealing algorithm with perturbation to escape local optima. """
 
     def __init__(self, inputData:InputData,
@@ -212,160 +215,491 @@ class SimulatedAnnealingLocalSearch(ImprovementAlgorithm):
                  min_temp:int,
                  cooling_rate:float,
                  max_iterations:int,
-                 neighborhoodTypesSA:list[str] = ['Swap'],
-                neighborhoodTypesLS:list[str] = ['Insert']):
+                 fallback_threshold:int,
+                 scaling_energy:int,
+                 max_building_iterations_without_improvement:int = None,
+                 neighborhoodTypes:list[str] = None,
+                 energyDominanceNeighborhoods:dict[str, list[str]] = None,
+                 buildingTypesObjectives:dict[str, list[str]] = None,
+                 improveTypesObjectives:dict[str, list[str]] = None,
+                 improveIndividualStrategy:str = None):
         super().__init__(inputData)
 
         self.StartTemperature = start_temp
         self.MinTemperature = min_temp
         self.CoolingRate = cooling_rate
         self.MaxIterations = max_iterations
-        self.NeighborhoodTypes = neighborhoodTypesSA
-        self.NeighborhoodTypesLS = neighborhoodTypesLS
+        self.FallbackThreshold = fallback_threshold
+        self.ScalingEnergy = scaling_energy
+        self.NeighborhoodTypes = neighborhoodTypes
+        self.BuildingTypesObjectives = buildingTypesObjectives
+        self.ImproveTypesObjectives = improveTypesObjectives
+        self.ImproveIndividualStrategy = improveIndividualStrategy
+        self.EnergyDominanceNeighborhoods = energyDominanceNeighborhoods
+        self.MaxBuildingIterationsWithoutImprovement = max_building_iterations_without_improvement
+        self.DontChangeBackInOrder = set()
+        self.BuildingIteration = 0
+
+
+    def BuildingPhase(self, solution:Solution) -> Solution:
+
+        ''' Building phase to find a fully staffed solution'''
+        self.BuildingIteration += 1
+        print(f"\nBuilding Phase Iteration {self.BuildingIteration}...")
+
+        fallback_counter = 0
+        current_temperature = self.StartTemperature
+        local_pareto_solutions = ParetoSolutions(self.InputData)
+        break_counter = 0
+        break_flag = False
+
+        while current_temperature > self.MinTemperature:
+
+            if break_flag:
+                break
+
+            for i in range(self.MaxIterations):
+
+
+                if solution.total_dynamic_percentage == self.InputData.site_fulfillment:
+                    if len(local_pareto_solutions.ParetoFront) > 0:
+                        print("\nLocal Pareto Front after Building Phase:")
+                        local_pareto_solutions.ShowFront()
+                    self.ParetoSolutions.ParetoFront.append(solution)
+                    print("\nSingle Solution added to Global Pareto Front:")
+                    print(solution)
+                    return solution, True
+
+
+                random_objective = self.RNG.choice(list(self.BuildingTypesObjectives.keys()))
+                types = self.BuildingTypesObjectives[random_objective]
+                random_type = self.RNG.choice(types)
+                neighborhood = self.Neighborhoods[random_type]
+                move = neighborhood.SingleMove(solution)
+
+                if move is None:
+                    # Count consecutive non-moves for Insert_Shift and Swap_Shift_External
+                    # Break if threshold is reached
+                    if random_type in ['Insert_Shift', 'Swap_Shift_External']:
+                        break_counter += 1
+                    if break_counter >= self.MaxBuildingIterationsWithoutImprovement:
+                        break_flag = True
+                        break
+                    
+                    continue
+
+                value = move.DeltaDetails[random_objective]
+
+                if value <= 0:
+                    pass
+                elif value > 0:
+                    prob = math.exp(-value * self.ScalingEnergy/ current_temperature)
+                    random_number = self.RNG.random()
+
+                    if prob < random_number:
+                        continue
+
+                
+                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
+                solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                self.EvaluationLogic.evaluate(solution)
+
+                added = local_pareto_solutions.UpdateParetoFront(solution)
+
+                if not added:
+                    fallback_counter += 1
+                    if fallback_counter >= self.FallbackThreshold:
+                        local_pareto_solutions.SortParetoFront()
+                        solution = local_pareto_solutions.ParetoFront[0]
+                else:
+                    fallback_counter = 0
+
+            current_temperature *= self.CoolingRate
+
+        solution = deepcopy(local_pareto_solutions.ParetoFront[0])
+        #local_pareto_solutions.UpdateParetoFront(solution)
+        print("\nDid not find fully staffed solution after Building Phase iteration")
+        print(f"\nSingle Solution which is not fully fulfilled after Building Phase iteration:")
+        print(solution)
+        return solution, False
+    
+        # Introduce a perturbation to escape local optima!!! --> Maybe not necessary for building phase
+
+
+    def ImproveIndividuals(self, solution:Solution, objective:str) -> ParetoSolutions:
+        ''' Improve individuals with simulated annealing algorithm'''
+
+        current_temperature = self.StartTemperature
+        local_solution = deepcopy(solution)
+        local_pareto_solutions = ParetoSolutions(self.InputData)
+        fallback_counter = 0
+
+        while current_temperature > self.MinTemperature:
+
+            for i in range(self.MaxIterations):
+
+                types = self.ImproveTypesObjectives[objective]
+                random_type = self.RNG.choice(types)
+                neighborhood = self.Neighborhoods[random_type]
+                move = neighborhood.SingleMove(local_solution)
+
+                if move is None:
+                    continue
+
+                value = move.DeltaDetails[objective]
+
+                if value <= 0:
+                    pass
+                elif value > 0:
+                    prob = math.exp(-value * self.ScalingEnergy / current_temperature)
+                    random_number = self.RNG.random()
+
+                    if prob < random_number:
+                        # Rethink structure of the code and Simulated Annealing
+                        # max iterations without improvement should be place here somewhere
+                        continue
+
+                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, local_solution)
+                local_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                self.EvaluationLogic.evaluate(local_solution)
+
+                added = local_pareto_solutions.UpdateParetoFront(local_solution)
+
+                if not added:
+                    fallback_counter += 1
+                    # Adjust Fallback to break criteria (max iterations without improvement)
+                    if fallback_counter >= self.FallbackThreshold:
+                        local_pareto_solutions.SortParetoFront(objective)
+                        local_solution = local_pareto_solutions.ParetoFront[0]
+                else:
+                    fallback_counter = 0
+
+
+            current_temperature *= self.CoolingRate
+
+            # Introduce a perturbation to escape local optima!!!
+
+        return local_pareto_solutions
+
+
+    def ParallelImproveIndividuals(self, solution: Solution) -> None:
+        ''' Improve individuals with simulated annealing algorithm in parallel'''
+
+        print("\nStarting Parallel Improvement of individual objectives...")
+
+        tasks = []
+        with ProcessPoolExecutor() as executor:
+            for obj in self.ImproveTypesObjectives.keys():
+                local_solution = deepcopy(solution)
+                tasks.append(executor.submit(self.ImproveIndividuals, local_solution, obj))
+
+            results = [task.result() for task in tasks]
+
+        combined_pareto_front = []
+        for local_pareto in results:
+            combined_pareto_front.extend(local_pareto.ParetoFront)
+
+        self.ParetoSolutions.ParetoFront = combined_pareto_front
+        self.ParetoSolutions.PurgeParetoFront()
+        self.ParetoSolutions.SortParetoFront()
+        print("\nPareto Front after Parallel Improvement:")
+        self.ParetoSolutions.ShowFront()
+
+        # Add an analysis of the Pareto Front to see the improvement up till now
+
+
+    def SuccessiveImproveIndividuals(self, solution:Solution) -> None:
+
+        ''' Improve individuals with simulated annealing algorithm in successive order'''
+
+        print("\nStarting Successive Improvement of individual objectives...")
+
+        for objective in self.ImproveTypesObjectives.keys():
+            local_pareto_solutions = self.ImproveIndividuals(solution, objective)
+            self.ParetoSolutions.ParetoFront.extend(local_pareto_solutions.ParetoFront)
+
+
+        self.ParetoSolutions.PurgeParetoFront()
+        self.ParetoSolutions.SortParetoFront()
+        print("\nPareto Front after Successive Improvement:")
+        self.ParetoSolutions.ShowFront()
+
+
+
+    def DominanceBasedEnergyImprovement(self, solution:Solution) -> None:
+
+        ''' Simulated annealing algorithm with energy dominance neighborhood'''
+
+        print("\nStarting Dominance Based Energy Improvement...")
+        
+        fallback_counter = 0
+        current_temperature = self.StartTemperature
+
+        while current_temperature > self.MinTemperature:
+
+            for i in range(self.MaxIterations):
+
+                dominating_count_current = self.ParetoSolutions.CountDominatingSolutions(solution)
+
+                neighborhoodType = self.RNG.choice(list(self.EnergyDominanceNeighborhoods.keys()))
+                neighborhood = self.Neighborhoods[neighborhoodType]
+                objectives = self.EnergyDominanceNeighborhoods[neighborhoodType]
+
+                move = neighborhood.SingleMove(solution)
+
+                if move is None:
+                    continue
+
+                not_involved_objectives = ['driver_violation', 'commute_distance', 'transport_distance', 'attachment_distance', 'machine_count', 'worker_count', 'attachment_count']
+                objective_dict = dict()
+                for objective in objectives:
+                    value = move.DeltaDetails[objective]
+                    not_involved_objectives.remove(objective)
+
+                    if objective == 'driver_violation':
+                        objective_dict[objective] = solution.driver_violation - value
+                    elif objective == 'commute_distance':
+                        objective_dict[objective] = solution.total_commute_distance - value
+                    elif objective == 'transport_distance':
+                        objective_dict[objective] = solution.total_transport_distance - value
+                    elif objective == 'attachment_distance':
+                        objective_dict[objective] = solution.total_attachment_distance - value
+                    elif objective == 'machine_count':
+                        objective_dict[objective] = solution.number_of_machines - value
+                    elif objective == 'worker_count':
+                        objective_dict[objective] = solution.number_of_workers - value
+                    elif objective == 'attachment_count':
+                        objective_dict[objective] = solution.number_of_attachments - value
+                
+                for objective in not_involved_objectives:
+
+                    if objective == 'driver_violation':
+                        objective_dict[objective] = solution.driver_violation
+                    elif objective == 'commute_distance':
+                        objective_dict[objective] = solution.total_commute_distance
+                    elif objective == 'transport_distance':
+                        objective_dict[objective] = solution.total_transport_distance
+                    elif objective == 'attachment_distance':
+                        objective_dict[objective] = solution.total_attachment_distance
+                    elif objective == 'machine_count':
+                        objective_dict[objective] = solution.number_of_machines
+                    elif objective == 'worker_count':
+                        objective_dict[objective] = solution.number_of_workers
+                    elif objective == 'attachment_count':
+                        objective_dict[objective] = solution.number_of_attachments
+
+                # Possible to combine objectives to 3 main topics: distance, ressource count, violation
+
+                dominating_count_new = self.ParetoSolutions.CountDominatingSolutions(objective_dict)
+
+                overall_difference = dominating_count_new - dominating_count_current
+                
+                if overall_difference <= 0:
+                    pass
+                elif overall_difference > 0:
+                        
+                        prob =  math.exp(-overall_difference * self.ScalingEnergy / current_temperature)
+                        random_number = self.RNG.random()
+                        if prob < random_number:
+                            continue
+
+
+                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
+                solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                self.EvaluationLogic.evaluate(solution)
+
+                added = self.ParetoSolutions.UpdateParetoFront(solution)
+
+                if not added:
+                    fallback_counter += 1
+                    if fallback_counter >= self.FallbackThreshold:
+                        solution = self.ParetoSolutions.SelectRandomBestSolution()
+                else:
+                    fallback_counter = 0
+
+            current_temperature *= self.CoolingRate
+
+        self.ParetoSolutions.PurgeParetoFront()
+        self.ParetoSolutions.SortParetoFront()
+        print("\nPareto Front after Dominance Based Energy Improvement:")
+        self.ParetoSolutions.ShowFront()
+
+
+    def EditSites(self, solution:Solution, add_site:bool) -> Solution:
+
+        amount_not_started_orders = len(solution.not_started_orders)
+
+        if amount_not_started_orders >= 1:
+
+            chosen_order = max(solution.not_started_orders, key=lambda order: len(order.order_item_ids))
+            chosen_order_item_ids = chosen_order.order_item_ids
+            
+            
+            self.InputData.deactivate_order(chosen_order.order_number)
+
+            new_route_plan_worker = deepcopy(solution.route_plan_worker)
+            new_route_plan_machine = deepcopy(solution.route_plan_machine)
+            new_route_plan_attachment = deepcopy(solution.route_plan_attachment)
+
+            for worker, route in new_route_plan_worker.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+            for machine, route in new_route_plan_machine.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+            for attachment, route in new_route_plan_attachment.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+
+            if add_site:
+                usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable and order.order_number not in self.DontChangeBackInOrder]
+
+                if usable_orders:
+                    new_order = min(usable_orders, key=lambda order: len(order.order_item_ids))
+                    self.InputData.activate_order(new_order.order_number)
+                else:
+                    raise Exception("No usable order to add")
+
+            self.DontChangeBackInOrder.add(chosen_order.order_number)
+            new_solution = Solution(new_route_plan_worker, new_route_plan_machine, new_route_plan_attachment, self.InputData)
+            self.EvaluationLogic.evaluate(new_solution)
+
+            
+            return new_solution
+        
+        amount_semifinished_orders = len(solution.semifinished_orders)
+
+        if amount_semifinished_orders >= 1:
+
+            chosen_order = max(solution.semifinished_orders, key=lambda order: len(order.order_item_ids))
+            chosen_order_item_ids = chosen_order.order_item_ids
+
+
+         
+            self.InputData.deactivate_order(chosen_order.order_number)
+
+            
+            new_route_plan_worker = deepcopy(solution.route_plan_worker)
+            new_route_plan_machine = deepcopy(solution.route_plan_machine)
+            new_route_plan_attachment = deepcopy(solution.route_plan_attachment)
+
+            for worker, route in new_route_plan_worker.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+            for machine, route in new_route_plan_machine.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+            for attachment, route in new_route_plan_attachment.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+
+            if add_site:
+                usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable and order.order_number not in self.DontChangeBackInOrder]
+
+
+                if usable_orders != []:
+                    new_order = min(usable_orders, key=lambda order: len(order.order_item_ids))
+                    self.InputData.activate_order(new_order.order_number)
+                else:
+                    raise Exception("No usable order to add")
+                
+
+
+            self.DontChangeBackInOrder.add(chosen_order.order_number)
+            new_solution = Solution(new_route_plan_worker, new_route_plan_machine, new_route_plan_attachment, self.InputData)
+            self.EvaluationLogic.evaluate(new_solution)
+
+            return new_solution
+
+
+        raise Exception("No order to delete")
+    
+        
 
 
     
     def Run(self, solution:Solution) -> Solution:
         ''' Run simulated annealing algorithm with given solutions and parameters'''
 
+        # Initialize Model
         self.InitializeNeighborhoods()
-
-        print(f'\nInitial solution: \n{solution}')
-
-        local_search_on = False
-        if local_search_on:
-            local_search = IterativeImprovement(self.InputData, self.NeighborhoodEvaluationStrategy, self.NeighborhoodTypesLS)
-            local_search.Initialize(self.EvaluationLogic, self.ParetoSolutions, self.RNG)
-
         currentSolution = deepcopy(solution)
 
+        # Building up after the initial solution
+        Found = False
+        exchange_tries = 0
+        print(f"\nStarting Building Phase to find a fully staffed solution...")
+        current_time = time.time()
+        while not Found:
+            currentSolution, Found = self.BuildingPhase(currentSolution)
 
-        currentTemperature = self.StartTemperature
-
-        count = dict()
-        count['dominates'] = 0
-        count['dominated'] = 0
-        count['non-dominated'] = 0
-        count['none'] = 0
-
-        fallback_counter = 0
-        fallback = True
-        fallbacks = 0
-
-        energy_strategy = 'deltas'
-
-        while currentTemperature > self.MinTemperature:
-            
-            if local_search_on:
-                currentSolution = local_search.Run(deepcopy(currentSolution))
-
-            for i in range(self.MaxIterations):
-
-
-                neighborhoodType = self.RNG.choice(self.NeighborhoodTypes)
-                neighborhood = self.Neighborhoods[neighborhoodType]
-
-                move = neighborhood.SingleMove(currentSolution)
-
-                if move is None:
-                    count['none'] += 1
-                    continue
-
-                values = list(move.DeltaDetails.values())
-
-                all_less_equal_zero = all(v <= 0 for v in values)
-                all_greater_equal_zero = all(v >= 0 for v in values)
-
-                any_less_than_zero = any(v < 0 for v in values)
-                any_greater_than_zero = any(v > 0 for v in values)
-
-                if all_less_equal_zero and any_less_than_zero:
-                    count['dominates'] += 1
-                    print("dominates")
-                elif all_greater_equal_zero and any_greater_than_zero:
-                    count['dominated'] += 1
-                    print("dominated")
-
-                    
-                    if energy_strategy == 'deltas':
-                        overall_delta = 0
-                        for v in values:
-                            if v > 0:
-                                overall_delta += v
-
-                        prob =  math.exp(-overall_delta / currentTemperature)
-                        random_number = self.RNG.random()
-                        print(f"Comparison: {random_number} <=> {prob}")
-
-                        if prob < random_number:
-                            print("Random number is greater than probability")
-                            continue
-
-                    elif energy_strategy == 'pareto':
-                        overall_difference = 0
-                        dominating_count_current = self.ParetoSolutions.CountDominatingSolutions(currentSolution)
-
-                        worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
-                        new_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
-                        self.EvaluationLogic.evaluate(new_solution)
-                        dominating_count_new = self.ParetoSolutions.CountDominatingSolutions(new_solution)
-
-                        overall_difference = dominating_count_new - dominating_count_current
-
-                        prob =  math.exp(-overall_difference / currentTemperature)
-                        random_number = self.RNG.random()
-                        print(f"Comparison: {random_number} <=> {prob}")
-
-                        if prob < random_number:
-                            print("Random number is greater than probability")
-                            continue
-
-                    
+            if not Found:
+                if exchange_tries < 2: # Change: LOOP could HAPPEN
+                    print(f"\nSwapping sites to find a fully staffed solution...")
+                    currentSolution = self.EditSites(currentSolution, True)
+                    feasible = currentSolution.feasibility_check()
+                    if not feasible:
+                        raise Exception('Solution is not feasible after adding site')
+                    exchange_tries += 1
+                    print("Sites have been swapped")
                 else:
-                    count['non-dominated'] += 1
-                    print(f"Delta: {move.Delta}")
-                    print(f"Delta Details: {move.DeltaDetails}")
-                    print("non-dominated")
+                    print(f"\nDeleting sites to find a fully staffed solution...")
+                    currentSolution = self.EditSites(currentSolution, False)
+                    print("Site has been deleted")
+        self.BuildingPhaseTime = time.time() - current_time
+        print(f"Building Phase finished after: {round(self.BuildingPhaseTime, 2)} seconds")
 
-  
-                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, currentSolution)
-                currentSolution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
-                self.EvaluationLogic.evaluate(currentSolution)
-                print(f"New solution: {currentSolution}")
-                feasible = currentSolution.feasibility_check()
-                if not feasible:
-                    raise Exception(f"Solution is not feasible after neighborhood {neighborhoodType}")
-                
-                added = self.ParetoSolutions.UpdateParetoFront(currentSolution)
+        self.ParetoSolutions.SetReferencePoint(currentSolution)
 
+        current_time = time.time()
+        # Improving each individual objective and keeping Pareto front
+        if self.ImproveIndividualStrategy == 'parallel':
+            self.ParallelImproveIndividuals(currentSolution)
+        elif self.ImproveIndividualStrategy == 'successive':
+            self.SuccessiveImproveIndividuals(currentSolution)
+        
+            
+        hv_sqrt, hv_log = self.ParetoSolutions.CalculateHypervolume()
+        print(f"\nHypervolume squareroot of Pareto Front after individual {self.ImproveIndividualStrategy} improvement: {round(hv_sqrt, 2)}")
+        print(f"\nHypervolume log of Pareto Front after individual {self.ImproveIndividualStrategy} improvement: {round(hv_log, 2)}")
 
-                if not added:
-                    fallback_counter += 1
-                    if fallback_counter % 10 == 0 and fallback:
-                        print("Fallback")
-                        fallbacks += 1
-                        #self.ParetoSolutions.PurgeParetoFront()
+        self.IndividualPhaseTime = time.time() - current_time
+        print(f"\nIndividual Phase finished after: {round(self.IndividualPhaseTime, 2)} seconds")
 
+        # Show individual best solutions for each objective
+        self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
 
-                        currentSolution = self.RNG.choice(self.ParetoSolutions.ParetoFront)
+        current_time = time.time()
+        # Using dominace based energy for simulated annealing
+        solution = self.ParetoSolutions.SelectRandomBestSolution()
+        self.DominanceBasedEnergyImprovement(solution)
+        
+        hv_sqrt, hv_log = self.ParetoSolutions.CalculateHypervolume()
+        print(f"\nHypervolume squareroot of Pareto Front after dominance based energy improvement: {round(hv_sqrt, 2)}")
+        print(f"\nHypervolume log of Pareto Front after dominance based energy improvement: {round(hv_log, 2)}")
+        
+        self.DominanceBasedEnergyImprovementTime = time.time() - current_time
+        print(f"\nDominance Based Energy Improvement finished after: {round(self.DominanceBasedEnergyImprovementTime, 2)} seconds")
+        
+        current_time = time.time()
+        for solution in self.ParetoSolutions.ParetoFront:
+            feasible = solution.feasibility_check()
+            if not feasible:
+                raise Exception('Solution is not feasible after pareto simulated annealing')
 
-                print(f"Lenght of Pareto Front: {len(self.ParetoSolutions.ParetoFront)}")
-                if energy_strategy == 'deltas':
-                    if len(self.ParetoSolutions.ParetoFront) > 100:
-                        energy_strategy = 'pareto'
+        self.FeasibilityCheckTime = time.time() - current_time
 
+        # Show individual best solutions for each objective
+        self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
 
-            currentTemperature *= self.CoolingRate
+        return self.BuildingPhaseTime, self.IndividualPhaseTime, self.DominanceBasedEnergyImprovementTime, self.FeasibilityCheckTime
 
-        print(f"Number of dominates: {count['dominates']}")
-        print(f"Number of dominated: {count['dominated']}")
-        print(f"Number of non-dominated: {count['non-dominated']}")
-        print(f"Number of none: {count['none']}")
-        print(f"Number of fallbacks: {fallbacks}")
-        self.ParetoSolutions.PurgeParetoFront()
-        print(f"Number of Pareto solutions: {len(self.ParetoSolutions.ParetoFront)}")
-
-        return self.ParetoSolutions.ShowFront()
-    
+        
 
 
