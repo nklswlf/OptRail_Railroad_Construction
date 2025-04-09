@@ -6,18 +6,18 @@ This project focuses on the optimization of machine and workforce assignment for
 
 The aim is to assign workers, machines, and equipment (attachments) to fixed construction shifts while optimizing multiple conflicting objectives. The challenge is modeled as a large-scale, multi-objective combinatorial optimization problem.
 
-## 🎯 Objectives
+## 🎯 Optimization Objectives
 
-The optimization process considers the following eight objectives:
+The optimization model aims to balance and improve multiple competing objectives relevant to large-scale construction planning. Specifically, it considers the following eight goals:
 
-1. Construction fulfillment (maximize)
-2. Transport distance of machines (minimize)
-3. Transport distance of attachments (minimize)
-4. Work distance for workers (minimize)
-5. Violation of preferred/staffed drivers (minimize)
-6. Total number of workers used (minimize)
-7. Total number of machines used (minimize)
-8. Total number of attachments used (minimize)
+1. **Maximize** construction site fulfillment  
+2. **Minimize** transport distances of machines  
+3. **Minimize** transport distances of attachments  
+4. **Minimize** commuting distances for workers  
+5. **Minimize** violations of preferred (staffed) driver assignments  
+6. **Minimize** the total number of workers deployed  
+7. **Minimize** the total number of machines used  
+8. **Minimize** the total number of attachments utilized
 
 ## 🧠 Methods Used
 
