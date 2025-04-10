@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit_function import *
+from streamlit_function_math_model import *
 
 # Titel der App
 st.title("Auswertung Bahnbau (MIP)")
