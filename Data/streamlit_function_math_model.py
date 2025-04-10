@@ -23,11 +23,11 @@ def upload_solution(key, instance = None):
         instance_name = uploaded_solution.name
         instance_name = instance_name.replace("Solution_Construciton", "")
         instance_name = instance_name.replace(".json", "")
-        #if uploaded_solution.name.startswith("Solution_Construction") and instance is None or instance == instance_name:
-        st.success("Solution file uploaded successfully!")
-        solution_data = json.load(uploaded_solution)
-        #else:
-            #st.error("Invalid file name. Please upload a Solution that matches the instance and starts with 'Solution_Construction'.")
+        if uploaded_solution.name.startswith("Solution_Construction") and instance is None or instance == instance_name:
+            st.success("Solution file uploaded successfully!")
+            solution_data = json.load(uploaded_solution)
+        else:
+            st.error("Invalid file name. Please upload a Solution that matches the instance and starts with 'Solution_Construction'.")
 
     
 
