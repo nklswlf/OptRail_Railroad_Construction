@@ -7,6 +7,30 @@ import datetime as dt
 
 
 
+def upload_instance():
+    # File upload for the Instance file
+    uploaded_instance = st.file_uploader(
+        "Upload the Instance file", 
+        type=["json"], 
+        key="instance_uploader"
+    )
+
+    instance_data = None
+    instance_name = None
+
+    if uploaded_instance:
+        instance_name = uploaded_instance.name
+        instance_name = instance_name.replace("Instance_", "")
+        instance_name = instance_name.replace(".json", "")
+        st.success("Instance file uploaded successfully!")
+        instance_data = json.load(uploaded_instance)
+
+    return uploaded_instance, instance_data, instance_name
+
+
+
+
+
 def upload_solution(key, instance = None):
     # File upload for the Solution file
     uploaded_solution = st.file_uploader(
@@ -23,11 +47,11 @@ def upload_solution(key, instance = None):
         instance_name = uploaded_solution.name
         instance_name = instance_name.replace("Solution_Construciton", "")
         instance_name = instance_name.replace(".json", "")
-        if uploaded_solution.name.startswith("Solution_Construction") and instance is None or instance == instance_name:
-            st.success("Solution file uploaded successfully!")
-            solution_data = json.load(uploaded_solution)
-        else:
-            st.error("Invalid file name. Please upload a Solution that matches the instance and starts with 'Solution_Construction'.")
+        #if uploaded_solution.name.startswith("Solution_Construction") and instance is None or instance == instance_name:
+        st.success("Solution file uploaded successfully!")
+        solution_data = json.load(uploaded_solution)
+        #else:
+            #st.error("Invalid file name. Please upload a Solution that matches the instance and starts with 'Solution_Construction'.")
 
     
 
