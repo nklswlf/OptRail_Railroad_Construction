@@ -356,6 +356,7 @@ class SolutionApp:
     def streamlit(self, key):
         current_solution_data = self.solution_data[key]
 
+        # --- Gantt-Diagramm ---
         st.subheader("Gantt-Diagrammme")
         self.show_worker_gantt(current_solution_data, key)
         self.show_machine_gantt(current_solution_data, key)
@@ -441,9 +442,6 @@ class SolutionData:
         self.attachment_assignments = raw_data.get("AnbaugeraeteLoesung", {}).get("Anbaugeraetzuweisung", {})
 
         self.worker_hours = dict()
-
-        # Kennzahlen (werden später gesetzt)
-        self.statistics = dict()
 
 
     def to_dict(self):
