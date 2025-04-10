@@ -46,13 +46,13 @@ class SolutionApp:
         if df_worker.empty:
             st.info("Keine Arbeiterzuweisungen vorhanden.")
         else:
-            # Arbeiter sortieren
+            # Arbeiter sortieren in umgekehrter Reihenfolge
             df_worker['Arbeiter'] = pd.Categorical(
                 df_worker['Arbeiter'],
-                categories=sorted(df_worker['Arbeiter'].unique(), key=lambda x: int(x.split('_')[1])),
-                ordered=True
+                categories=sorted(df_worker['Arbeiter'].unique(), key=lambda x: int(x.split('_')[1]), reverse=True)
             )
-        
+            sorted_workers = sorted(df_worker['Arbeiter'].unique(), key=lambda x: int(x.split('_')[1]), reverse=True)
+
             # Anzahl verschiedener Baustellen pro Arbeiter zählen
             arbeiter_anzahl_baustellen_dict = (
                 df_worker.groupby('Arbeiter', observed=False)['Baustelle']
@@ -78,8 +78,9 @@ class SolutionApp:
                 x_end="Ende",
                 y="Arbeiter",
                 color="Schichttyp",
-                title="Arbeiterzuweisungen (Schichten)",
+                title="Arbeiterzuweisungen nach Schichttyp",
                 color_discrete_map={"Frühschicht": "lightblue", "Spätschicht": "lightcoral"},
+                category_orders={"Arbeiter": sorted_workers}
             )
         
             # Wochenenden hervorheben
@@ -117,7 +118,20 @@ class SolutionApp:
             }
             for machine, usages in machine_assignments.items() for usage in usages
         ]
-        df_machine = pd.DataFrame(machine_rows)
+        # Auch Anbaugeräte auslesen
+        attachment_assignments = current_solution.get("AnbaugeraeteLoesung", {}).get("Anbaugeraetzuweisung", {})
+        attachment_rows = [
+            {
+                'Maschine': attachment,
+                'Start': usage['Start'],
+                'Ende': usage['Ende'],
+                'Baustelle': usage['Auftragsnummer'],
+                'Dauer': usage['Dauer']
+            }
+            for attachment, usages in attachment_assignments.items() for usage in usages
+        ]
+        df_machine = pd.DataFrame(machine_rows + attachment_rows)
+
 
         if df_machine.empty:
             st.info("Keine Maschinenzuweisungen vorhanden.")
@@ -144,8 +158,12 @@ class SolutionApp:
             color="Baustelle",
             title="Maschinen- und Anbaugerätezuweisungen nach Baustelle",
             color_discrete_map=color_map,
-            category_orders={"Baustelle": unique_sites}
+            category_orders={
+                "Baustelle": unique_sites,
+                "Maschine": list(dict.fromkeys([row["Maschine"] for row in machine_rows + attachment_rows]))
+            }
         )
+        fig_machine.update_yaxes(autorange="reversed") 
 
         # Wochenenden hervorheben
         start_date = pd.to_datetime(df_machine['Start']).min().date()
@@ -166,65 +184,6 @@ class SolutionApp:
         # Diagramm anzeigen
         st.plotly_chart(fig_machine, key=f"machine_gantt_{key}")
 
-    def show_attachment_gantt(self, current_solution, key):
-        # --- Gantt-Diagramm: Anbaugeräte ---
-        st.subheader("Gantt-Diagramm: Anbaugeräte")
-        attachment_assignments = current_solution.get("AnbaugeraeteLoesung", {}).get("Anbaugeraetzuweisung", {})
-
-        # Daten aufbereiten
-        attachment_rows = [
-            {
-                'Anbaugerät': attachment,
-                'Start': usage['Start'],
-                'Ende': usage['Ende'],
-                'Baustelle': usage['Auftragsnummer'],
-                'Dauer': usage['Dauer']
-            }
-            for attachment, usages in attachment_assignments.items() for usage in usages
-        ]
-        df_attachment = pd.DataFrame(attachment_rows)
-
-        if df_attachment.empty:
-            st.info("Keine Anbaugerätezuweisungen vorhanden.")
-            return
-
-        # Baustellen sortieren + Farbmap
-        unique_sites = sorted(df_attachment['Baustelle'].unique(), key=lambda x: int(x))
-        color_map = {
-            site: px.colors.qualitative.Plotly[i % len(px.colors.qualitative.Plotly)]
-            for i, site in enumerate(unique_sites)
-        }
-
-        # Gantt-Diagramm erstellen
-        fig_attachment = px.timeline(
-            df_attachment,
-            x_start="Start",
-            x_end="Ende",
-            y="Anbaugerät",
-            color="Baustelle",
-            title="Anbaugerätezuweisungen nach Baustelle",
-            color_discrete_map=color_map,
-            category_orders={"Baustelle": unique_sites}
-        )
-
-        # Wochenenden hervorheben
-        start_date = pd.to_datetime(df_attachment['Start']).min().date()
-        end_date = pd.to_datetime(df_attachment['Ende']).max().date()
-        current_date = start_date
-        while current_date <= end_date:
-            if current_date.weekday() in [5, 6]:
-                fig_attachment.add_vrect(
-                    x0=dt.datetime.combine(current_date, dt.datetime.min.time()),
-                    x1=dt.datetime.combine(current_date + dt.timedelta(days=1), dt.datetime.min.time()),
-                    fillcolor="lightgrey",
-                    opacity=0.3,
-                    layer="below",
-                    line_width=0,
-                )
-            current_date += dt.timedelta(days=1)
-
-        # Anzeige
-        st.plotly_chart(fig_attachment, key=f"attachment_gantt_{key}")
 
 
     def streamlit(self, key):
@@ -232,7 +191,7 @@ class SolutionApp:
 
         self.show_worker_gantt(current_solution, key)
         self.show_machine_gantt(current_solution, key)
-        self.show_attachment_gantt(current_solution, key)
+        
     
 
 
