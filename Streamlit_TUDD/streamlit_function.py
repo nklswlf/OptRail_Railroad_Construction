@@ -6,11 +6,15 @@ import plotly.express as px
 import random
 import datetime as dt
 
+
 class SolutionApp:
     def __init__(self):
         self.solution_data = dict()
         self.instance_data = None
         #self.instance_folder = os.path.join(os.path.dirname(__file__), "Instanzen")
+        
+        self.number_sites = 0
+        self.number_shifts = 0
 
     def upload_instance(self):
         uploaded_instance = st.file_uploader("Instanz-Datei hochladen", type=["json"], key="instance_uploader")
@@ -18,20 +22,27 @@ class SolutionApp:
             self.instance_data = json.load(uploaded_instance)
             st.success("Instanzdatei erfolgreich hochgeladen!")
 
+            self.number_sites = len(self.instance_data["Auftraege"])
+            self.number_shifts = len(self.instance_data["Bestellpositionen"])
+            self.number_machines = len(self.instance_data["Maschinen"])
+            self.number_worker = len(self.instance_data["Arbeiter"])
+            self.number_attachments = len(self.instance_data["Anbaugeraete"])
+
     def upload_solution(self, key):
         uploaded_solution = st.file_uploader("Lösungsdatei hochladen", type=["json"], key=f"solution_uploader_{key}")
         if uploaded_solution:
-            self.solution_data[key] = json.load(uploaded_solution)
+            single_solution = SolutionData(json.load(uploaded_solution), key)
+            self.solution_data[key] = single_solution
             st.success("Lösungsdatei erfolgreich hochgeladen!")
             return True
 
-    def show_worker_gantt(self, current_solution, key):
+    def show_worker_gantt(self, solution_data, key):
         # --- Gantt-Diagramm: Arbeiter ---
-        st.subheader("Gantt-Diagramm: Arbeiter")
-        worker_assignments = current_solution.get("Arbeiterloesung", {}).get("Arbeiterzuweisung", {})
+        #st.subheader("Gantt-Diagramm: Arbeiter")
+        worker_assignments = solution_data.worker_assignments
         
         # Daten aufbereiten
-        worker_rows = [
+        solution_data.worker_rows = [
             {
                 'Arbeiter': worker,
                 'Start': shift['Start'],
@@ -41,39 +52,39 @@ class SolutionApp:
             }
             for worker, shifts in worker_assignments.items() for shift in shifts
         ]
-        df_worker = pd.DataFrame(worker_rows)
+        solution_data.df_worker = pd.DataFrame(solution_data.worker_rows)
         
-        if df_worker.empty:
+        if solution_data.df_worker.empty:
             st.info("Keine Arbeiterzuweisungen vorhanden.")
         else:
             # Arbeiter sortieren in umgekehrter Reihenfolge
-            df_worker['Arbeiter'] = pd.Categorical(
-                df_worker['Arbeiter'],
-                categories=sorted(df_worker['Arbeiter'].unique(), key=lambda x: int(x.split('_')[1]), reverse=True)
+            solution_data.df_worker['Arbeiter'] = pd.Categorical(
+                solution_data.df_worker['Arbeiter'],
+                categories=sorted(solution_data.df_worker['Arbeiter'].unique(), key=lambda x: int(x.split('_')[1]), reverse=True)
             )
-            sorted_workers = sorted(df_worker['Arbeiter'].unique(), key=lambda x: int(x.split('_')[1]), reverse=True)
+            sorted_workers = sorted(solution_data.df_worker['Arbeiter'].unique(), key=lambda x: int(x.split('_')[1]), reverse=True)
 
             # Anzahl verschiedener Baustellen pro Arbeiter zählen
-            arbeiter_anzahl_baustellen_dict = (
-                df_worker.groupby('Arbeiter', observed=False)['Baustelle']
+            solution_data.worker_site_count = (
+                solution_data.df_worker.groupby('Arbeiter', observed=False)['Baustelle']
                 .nunique()
                 .to_dict()
             )
-            arbeiter_anzahl_baustellen_dict = {str(worker.split('_')[1]): sites for worker, sites in arbeiter_anzahl_baustellen_dict.items()}
+            solution_data.worker_site_count = {str(worker.split('_')[1]): sites for worker, sites in solution_data.worker_site_count.items()}
         
             # Anzahl der Schichten pro Arbeiter und Schichttyp
-            arbeiter_schicht_dict = (
-                df_worker.groupby(['Arbeiter', 'Schichttyp'], observed=False)
+            solution_data.worker_shift_type_count = (
+                solution_data.df_worker.groupby(['Arbeiter', 'Schichttyp'], observed=False)
                 .size()
                 .unstack(fill_value=0)
                 .rename_axis(None, axis=1)
                 .to_dict(orient='index')
             )
-            arbeiter_schicht_dict = {str(worker.split('_')[1]): shifts for worker, shifts in arbeiter_schicht_dict.items()}
+            solution_data.worker_shift_type_count = {str(worker.split('_')[1]): shifts for worker, shifts in solution_data.worker_shift_type_count.items()}
         
             # Gantt-Diagramm
             fig_worker = px.timeline(
-                df_worker,
+                solution_data.df_worker,
                 x_start="Start",
                 x_end="Ende",
                 y="Arbeiter",
@@ -84,8 +95,8 @@ class SolutionApp:
             )
         
             # Wochenenden hervorheben
-            start_date = pd.to_datetime(df_worker['Start']).min().date()
-            end_date = pd.to_datetime(df_worker['Ende']).max().date()
+            start_date = pd.to_datetime(solution_data.df_worker['Start']).min().date()
+            end_date = pd.to_datetime(solution_data.df_worker['Ende']).max().date()
             current_date = start_date
             while current_date <= end_date:
                 if current_date.weekday() in [5, 6]:
@@ -102,13 +113,13 @@ class SolutionApp:
             # Diagramm anzeigen
             st.plotly_chart(fig_worker, key=f"worker_gantt_{key}")
 
-    def show_machine_gantt(self, current_solution, key):
-        # --- Gantt-Diagramm: Maschinen ---
-        st.subheader("Gantt-Diagramm: Maschinen")
-        machine_assignments = current_solution.get("MaschinenLoesung", {}).get("Maschinenzuweisung", {})
+    def show_machine_gantt(self, solution_data, key):
+        # --- Gantt-Diagramm: Maschinen + Anbaugeräte ---
+        machine_assignments = solution_data.machine_assignments
+        attachment_assignments = solution_data.attachment_assignments
 
         # Daten aufbereiten
-        machine_rows = [
+        solution_data.machine_rows = [
             {
                 'Maschine': machine,
                 'Start': usage['Start'],
@@ -118,9 +129,7 @@ class SolutionApp:
             }
             for machine, usages in machine_assignments.items() for usage in usages
         ]
-        # Auch Anbaugeräte auslesen
-        attachment_assignments = current_solution.get("AnbaugeraeteLoesung", {}).get("Anbaugeraetzuweisung", {})
-        attachment_rows = [
+        solution_data.attachment_rows = [
             {
                 'Maschine': attachment,
                 'Start': usage['Start'],
@@ -130,24 +139,26 @@ class SolutionApp:
             }
             for attachment, usages in attachment_assignments.items() for usage in usages
         ]
-        df_machine = pd.DataFrame(machine_rows + attachment_rows)
-
+        df_machine = pd.DataFrame(solution_data.machine_rows + solution_data.attachment_rows)
 
         if df_machine.empty:
             st.info("Keine Maschinenzuweisungen vorhanden.")
             return
 
-        # Stunden in Nutzung
+        # Statistikdaten
         stunden_in_nutzung_dict = df_machine.groupby('Maschine')['Dauer'].sum().to_dict()
         tage_in_nutzung_dict = {k: v / 24 for k, v in stunden_in_nutzung_dict.items()}
         maschinen_anzahl_baustellen_dict = df_machine.groupby('Maschine')['Baustelle'].nunique().to_dict()
 
-        # Baustellen sortieren
+        # Farben für Baustellen
         unique_sites = sorted(df_machine['Baustelle'].unique(), key=lambda x: int(x))
         color_map = {
             site: px.colors.qualitative.Plotly[i % len(px.colors.qualitative.Plotly)]
             for i, site in enumerate(unique_sites)
         }
+
+        # Maschinenreihenfolge (erst Maschinen, dann Anbaugeräte)
+        ordered_names = list(dict.fromkeys([row["Maschine"] for row in solution_data.machine_rows + solution_data.attachment_rows]))
 
         # Gantt-Diagramm erstellen
         fig_machine = px.timeline(
@@ -160,10 +171,10 @@ class SolutionApp:
             color_discrete_map=color_map,
             category_orders={
                 "Baustelle": unique_sites,
-                "Maschine": list(dict.fromkeys([row["Maschine"] for row in machine_rows + attachment_rows]))
+                "Maschine": ordered_names
             }
         )
-        fig_machine.update_yaxes(autorange="reversed") 
+        fig_machine.update_yaxes(autorange="reversed")
 
         # Wochenenden hervorheben
         start_date = pd.to_datetime(df_machine['Start']).min().date()
@@ -181,21 +192,185 @@ class SolutionApp:
                 )
             current_date += dt.timedelta(days=1)
 
-        # Diagramm anzeigen
         st.plotly_chart(fig_machine, key=f"machine_gantt_{key}")
 
 
+    def general_statistics(self, solution_data):
+        # --- Statistische Kennzahlen ---
+
+        # Rechenzeit in Minuten
+        solution_data.run_time_minutes = solution_data.raw["RechenzeitInSekunden"] / 60
+
+        # Erreichte Baustellen (%)
+        solution_data.finished_sites = sum(solution_data.raw["BerechnetAuftragBearbeitet"].values())
+        solution_data.finished_sites_percentage = (solution_data.finished_sites / self.number_sites) * 100
+
+        # Erreichte Bestellpositionen (%)
+        if len(solution_data.machine_rows) != len(solution_data.worker_rows):
+            st.warning("Die Anzahl der Maschinen und Arbeiter stimmt nicht überein. Bitte überprüfen Sie die Daten.")
+            return
+        solution_data.finished_shifts = len(solution_data.machine_rows)
+        solution_data.finished_shifts_percentage = (solution_data.finished_shifts / self.number_shifts) * 100
+
+        # Bestellpositionen welche von nicht regulären Arbeitern bearbeitet wurden
+        solution_data.non_regular_driver = solution_data.raw["MaschinenLoesung"]["AnzahlStammfahrerVerletzungen"]
+        solution_data.non_regular_driver_percentage = (solution_data.non_regular_driver / solution_data.finished_shifts) * 100
+
+        # Anteil genutzter Maschinen
+        solution_data.machine_count = sum(solution_data.raw["MaschinenLoesung"]["BerechnetMaschineGenutzt"].values())
+        solution_data.machine_count_percentage = (solution_data.machine_count / self.number_machines) * 100
+        solution_data.unued_machine_count = self.number_machines - solution_data.machine_count
+
+        # Anteil genutzter Arbeiter
+        solution_data.worker_count = sum(solution_data.raw["Arbeiterloesung"]["BerechnetArbeiterGenutzt"].values())
+        solution_data.worker_count_percentage = (solution_data.worker_count / self.number_worker) * 100
+        solution_data.unued_worker_count = self.number_worker - solution_data.worker_count
+
+        # Anteil genutzter Anbaugeräte
+        solution_data.attachment_count = sum(solution_data.raw["AnbaugeraeteLoesung"]["BerechnetAnbaugeraetGenutzt"].values())
+        solution_data.attachment_count_percentage = (solution_data.attachment_count / self.number_attachments) * 100
+        solution_data.unued_attachment_count = self.number_attachments - solution_data.attachment_count
+
+        # Gesamttransportdistanz der Maschinen
+        solution_data.transport_distance_machine = sum(solution_data.raw["MaschinenLoesung"]["BerechneteKilometer"].values())
+
+        # Gesamtarbeitswege der Arbeiter
+        solution_data.comute_distance_worker = sum(solution_data.raw["Arbeiterloesung"]["BerechneteKilometer"].values())
+
+        # Gesamttransportdistanz der Anbaugeräte
+        solution_data.transport_distance_attachment = sum(solution_data.raw["AnbaugeraeteLoesung"]["BerechneteKilometer"].values())
+
+        # Arbeitszeiten der Arbeiter
+        for worker, shifts in solution_data.worker_assignments.items():
+            worker = str(worker.split("_")[1])
+            solution_data.worker_hours[worker] = sum(shift['Dauer'] for shift in shifts)
+
+
+    def construction_statistics(self, solution_data):
+        
+        # --- Statistische Kennzahlen ausgeben ---
+        st.write("")
+        st.write("#### Baustellen und Bestellpositionen")
+        st.write(f"**Erreichte Baustellen:** {solution_data.finished_sites} von {self.number_sites} ➡️ {solution_data.finished_sites_percentage:.1f}%")
+        st.write(f"**Erreichte Bestellpositionen:** {solution_data.finished_shifts} von {self.number_shifts} ➡️ {solution_data.finished_shifts_percentage:.1f}%")
+        st.write(f"**Anzahl Stammfahrerverletzungen:** {solution_data.non_regular_driver} von {solution_data.finished_shifts} ➡️ {solution_data.non_regular_driver_percentage:.1f}%")
+        
+        # --- Tabelle: Anzahl der Bestellpositionen pro Baustelle mit dezenter farblicher Markierung ---
+        
+        # Tabelle erstellen
+        baustellen_rows = []
+        for order in self.instance_data["Auftraege"]:
+            order_number = int(order["Auftragsnummer"])
+            order_item_count = len(order["BestellpositionenStrings"])
+            status = solution_data.raw["BerechnetAuftragBearbeitet"][f"Auftrag {str(order_number)}"]
+
+            baustellen_rows.append({
+                "Baustelle": order_number,
+                "Bestellpositionen": order_item_count,
+                "Status": "✅" if status else "❌"
+            })
+            
+        # DataFrame erstellen
+        df_sites = pd.DataFrame(baustellen_rows)
+        # Index entfernen
+        df_sites = df_sites.set_index("Baustelle")
+
+        st.dataframe(df_sites)
+
+        #  --- Diagramm: Anzahl der Bestellpositionen pro Baustelle ---
+        df_sites_sorted = df_sites.reset_index().sort_values(by="Bestellpositionen", ascending=True)
+
+        # Add a new column for a generic X-axis label (e.g., "Site 1", "Site 2")
+        df_sites_sorted['Baustelle_Index'] = range(1, len(df_sites_sorted) + 1)
+
+        # Define colors for the status
+        colors = {
+            "✅": "green",
+            "❌": "red"
+        }
+
+        # Create the bar chart
+        fig = px.bar(
+            df_sites_sorted,
+            x="Baustelle_Index",
+            y="Bestellpositionen",
+            color="Status",
+            title="Baustellen-Bestellpositionen",
+            color_discrete_map=colors,
+            hover_data={"Baustelle": True, "Baustelle_Index": False}
+        )
+
+        # Update X-axis to hide labels
+        fig.update_layout(
+            xaxis_title="",
+            xaxis_showticklabels=False
+        )
+
+        # Display the chart in Streamlit
+        st.plotly_chart(fig, key=f"baustellen_chart_{solution_data.key}")
+
+    def worker_statistics(self, solution_data):
+
+        # --- Statistische Kennzahlen ausgeben ---
+        st.write("")
+        st.write("#### Arbeiter")
+        st.write(f"**Anteil genutzte Arbeiter:** {solution_data.worker_count} von {self.number_worker} ➡️ {solution_data.worker_count_percentage:.1f}%")
+        st.write(f"**Gesamtarbeitswegedistanz:** {solution_data.comute_distance_worker:.1f} km")
+        st.write("")
+
+
+        # --- Tabelle: Arbeitszeiten der Arbeiter ---
+        solution_data.df_worker = pd.DataFrame(solution_data.worker_rows)
+
+        # Arbeitszeiten-Tabelle anzeigen
+        df_arbeitszeiten = pd.DataFrame.from_dict(solution_data.worker_hours, orient='index', columns=['Gesamtstunden'])
+        df_arbeitszeiten.index.name = 'Arbeiter_ID'
+        df_arbeitszeiten['Auslastung'] = ((df_arbeitszeiten['Gesamtstunden'] / 160) * 100).round(1).astype(str) + '%'
+        df_arbeitszeiten['Frühschichten'] = [solution_data.worker_shift_type_count.get(k, {}).get('Frühschicht', 0) for k in df_arbeitszeiten.index]
+        df_arbeitszeiten['Spätschichten'] = [solution_data.worker_shift_type_count.get(k, {}).get('Spätschicht', 0) for k in df_arbeitszeiten.index]
+        df_arbeitszeiten['Baustellen'] = [solution_data.worker_site_count.get(k, 0) for k in df_arbeitszeiten.index]
+        df_arbeitszeiten['Arbeitsweg'] = [round(solution_data.raw["Arbeiterloesung"]["BerechneteKilometer"].get(f"Arbeiter_{k}", 0), 2)for k in df_arbeitszeiten.index]
+        st.dataframe(df_arbeitszeiten)
+        st.write(f"➡️ **Anzahl nicht eingesetzter Arbeiter:** {solution_data.unued_worker_count}")
+    
+    def machine_statistics(self, solution_data):
+
+        # --- Statistische Kennzahlen ausgeben ---
+        st.write("")
+        st.write("#### Maschinen")
+        st.write(f"**Anteil genutzte Maschinen:** {solution_data.machine_count} von {self.number_machines} ➡️ {solution_data.machine_count_percentage:.1f}%")
+        st.write(f"**Gesamttransportdistanz der Maschinen:** {solution_data.transport_distance_machine:.1f} km")
+        st.write("")
+
+
+    def attachment_statistics(self, solution_data):
+        
+        # --- Statistische Kennzahlen ausgeben ---
+        st.write("")
+        st.write("#### Anbaugeräte")
+        st.write(f"**Anteil genutzte Anbaugeräte:** {solution_data.attachment_count} von {self.number_attachments} ➡️ {solution_data.attachment_count_percentage:.1f}%")
+        st.write(f"**Gesamttransportdistanz der Anbaugeräte:** {solution_data.transport_distance_attachment:.1f} km")
+        st.write("")
+
 
     def streamlit(self, key):
-        current_solution = self.solution_data[key]
+        current_solution_data = self.solution_data[key]
 
-        self.show_worker_gantt(current_solution, key)
-        self.show_machine_gantt(current_solution, key)
-        
-    
+        st.subheader("Gantt-Diagrammme")
+        self.show_worker_gantt(current_solution_data, key)
+        self.show_machine_gantt(current_solution_data, key)
 
-
-
+        # --- Statistiken ---
+        self.general_statistics(current_solution_data)
+        st.subheader("Baustellen und Bestellpositionen")
+        # Baustellen und Bestellpositionen
+        self.construction_statistics(current_solution_data)
+        # Arbeiter
+        self.worker_statistics(current_solution_data)
+        # Maschinen
+        self.machine_statistics(current_solution_data)
+        # Anbaugeräte
+        self.attachment_statistics(current_solution_data)
 
 
 
@@ -207,7 +382,7 @@ class SolutionApp:
 
         selected = False
         if not selected:
-            # Anzahl der Lösungen Button
+            # Anzahl Lösungen Button
             if "num_solutions" not in st.session_state:
                 st.session_state.num_solutions = 2
             if "confirmed_num_solutions" not in st.session_state:
@@ -224,7 +399,7 @@ class SolutionApp:
                     st.session_state.confirmed_num_solutions = True
                     st.rerun()
                 st.stop()
-            # Anzahl der Lösungen Definition
+            # Anzahl Lösungen Definition
             num_solutions = st.session_state.num_solutions
             selected = True
 
@@ -255,3 +430,21 @@ class SolutionApp:
         # Letzter Tab: Vergleich
         with tabs[-1]:
             self.compare_results()
+
+
+class SolutionData:
+    def __init__(self, raw_data: dict, key: int):
+        self.key = key
+        self.raw = raw_data
+        self.worker_assignments = raw_data.get("Arbeiterloesung", {}).get("Arbeiterzuweisung", {})
+        self.machine_assignments = raw_data.get("MaschinenLoesung", {}).get("Maschinenzuweisung", {})
+        self.attachment_assignments = raw_data.get("AnbaugeraeteLoesung", {}).get("Anbaugeraetzuweisung", {})
+
+        self.worker_hours = dict()
+
+        # Kennzahlen (werden später gesetzt)
+        self.statistics = dict()
+
+
+    def to_dict(self):
+        return self.statistics
