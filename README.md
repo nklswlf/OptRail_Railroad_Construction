@@ -40,5 +40,3 @@ The optimization model aims to balance and improve multiple competing objectives
 | `OutputData.py`             | Writes solutions, objective values, and keeps pareto archive                |
 | `main_math_model.py`        | Script to manually launch mathematical solver                               |
 | `main.py`                   | Script to manually launch metaheuristic optimization and log experiments    |
-
-> 🛠 Note: This repository is currently private and contains anonymized data and experimental code structures used during thesis development.
