@@ -1,4 +1,9 @@
 Instance,Site Fulfillment,Runtime,Status,MIPGap
-Construction_a3_o80_m10_an10_ar9_reduced.json,3.0,0.8978469371795654,2,0
-Construction_a5_o96_m10_an10_ar10_reduced.json,5.0,2.469844102859497,2,0
-Construction_a10_o107_m5_an57_ar12.json,9.0,11.806936025619507,2,0
+Construction_a3_o80_m10_an10_ar9_reduced.json,3.0,0.8764469623565674,2,0.0
+Construction_a5_o96_m10_an10_ar10_reduced.json,5.0,2.472393035888672,2,0.0
+Construction_a10_o107_m5_an57_ar12.json,9.0,14.10352897644043,2,0.0
+Construction_a15_o170_m9_an80_ar18.json,15.0,69.29059886932373,2,0.0
+Construction_a20_o236_m12_an106_ar24.json,17.0,1096.6153399944305,2,0.0
+Construction_a25_o306_m13_an127_ar31.json,21.0,3601.20144200325,9,0.047619047619047616
+Construction_a30_o355_m18_an148_ar42.json,25.0,3604.1617209911346,9,0.2
+Construction_a40_o476_m22_an215_ar51.json,26.0,3601.3785939216614,9,0.46153846153846156
