@@ -167,9 +167,7 @@ class UpperBound:
             self.O_t_end_inverted[orderID] = t_end
 
 
-        if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
-
-            for orderItem in self.data.order_items:
+            if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
 
                 # O_t: Order items grouped by day
                 if t_start_int not in self.O_t:
@@ -448,6 +446,7 @@ class UpperBound:
 
 
         if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
+
             # Worker flow balance constraints
             for w in self.W:
                 for i in self.N_w[w]:
@@ -500,10 +499,6 @@ class UpperBound:
                 )
 
 
-        self.model.addConstr(
-            gp.quicksum(u[c] for c in self.C) == len(self.C),
-            name="site_completion_constraint"
-        )
         # Site completion constraints
         if self.upper_bound == 'machine':
             for c in self.C:
@@ -582,17 +577,19 @@ class UpperBound:
 
     def execute(self):
         """Run the full optimization workflow."""
-        
 
         self.preprocess_data()
         self.create_optimization_model()
         self.solve_model()
 
-        objective_value = self.model.objVal
+        if self.model.SolCount > 0:
+            objective_value = self.model.objVal
+            gap = self.model.MIPGap if self.model.status == GRB.TIME_LIMIT else 0
+        else:
+            objective_value = None
+            gap = None
 
-        self.model.write("model.lp")
-
-        return objective_value, self.model.Runtime
+        return objective_value, self.model.Runtime, self.model.status, gap
 
 
 
