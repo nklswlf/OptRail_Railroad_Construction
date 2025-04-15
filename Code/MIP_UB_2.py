@@ -11,7 +11,7 @@ from itertools import groupby
 
 class UpperBound:
     
-    def __init__(self, data, upper_bound):
+    def __init__(self, data, upper_bound = 'all'):
         self.data = data
         self.model = None
         self.upper_bound = upper_bound
@@ -87,7 +87,7 @@ class UpperBound:
         
     def preprocess_data(self):
         """Preprocess the input data for optimization."""
-        print("\n Preprocessing data for LP-Relaxation...")
+        print("\n Preprocessing data for MIP...")
         current_time = time.time()
         
         # ========================
@@ -343,14 +343,14 @@ class UpperBound:
 
 
         current_time = time.time()
-        print("\n Creating LP-Relaxation...")
+        print("\n Creating MIP...")
         self.model = gp.Model("Flow_Formulation")
 
         
     
         self.model.setParam('OutputFlag', 0)
 
-
+        self.model.setParam('TimeLimit', 3600)
 
 
 
@@ -366,7 +366,7 @@ class UpperBound:
             indices_3 = [(m, i, self.end) for m in self.M for i in self.N_m[m]]  # (m, i, end)
             indices_4 = [(m, self.start, self.end) for m in self.M]  # (m, start, end)
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
-            x = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="x")
+            x = self.model.addVars(all_indices, vtype=GRB.BINARY, lb=0, ub=1, name="x")
 
         if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
 
@@ -376,7 +376,7 @@ class UpperBound:
             indices_3 = [(w, i, self.end) for w in self.W for i in self.N_w[w]]  # (w, i, end)
             indices_4 = [(w, self.start, self.end) for w in self.W]  # (w, start, end)
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
-            y = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="y")
+            y = self.model.addVars(all_indices, vtype=GRB.BINARY, name="y")
 
         if self.upper_bound == 'attachment' or self.upper_bound == "all":
 
@@ -386,10 +386,10 @@ class UpperBound:
             indices_3 = [(a, i, self.end) for a in self.A for i in self.N_a[a]]
             indices_4 = [(a, self.start, self.end) for a in self.A]
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
-            z = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="z")
+            z = self.model.addVars(all_indices, vtype=GRB.BINARY, name="z")
 
         # Site completion variables
-        u = self.model.addVars(self.C, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="u")
+        u = self.model.addVars(self.C, vtype=GRB.BINARY, name="u")
 
         # ========================
         # 2. Set Objective Function
@@ -467,13 +467,6 @@ class UpperBound:
 
 
 
-            # Total working time constraints
-            for w in self.W:
-                self.model.addConstr(
-                    gp.quicksum(self.t_o[i] * y[w, i, j] for i in self.N_w[w] for j in self.S_wn[w, i]) <= self.T_Wmax,
-                    name=f"work_time_constraint_{w}"
-                )
-
             # Night shift constraints
             for w in self.W:
                 for t in self.T_range:
@@ -499,6 +492,18 @@ class UpperBound:
                         )
 
 
+            # Total working time constraints
+            for w in self.W:
+                self.model.addConstr(
+                    gp.quicksum(self.t_o[i] * y[w, i, j] for i in self.N_w[w] for j in self.S_wn[w, i]) <= self.T_Wmax,
+                    name=f"work_time_constraint_{w}"
+                )
+
+
+        self.model.addConstr(
+            gp.quicksum(u[c] for c in self.C) == len(self.C),
+            name="site_completion_constraint"
+        )
         # Site completion constraints
         if self.upper_bound == 'machine':
             for c in self.C:
@@ -566,10 +571,10 @@ class UpperBound:
 
     def solve_model(self):
         """Solve the optimization model."""
-        print("\n Solving LP-Relaxation...")
+        print("\n Solving MIP...")
         self.model.optimize()
 
-        print(" LP-Relaxation solved after {:.2f} seconds".format(self.model.Runtime))
+        print(" MIP solved after {:.2f} seconds".format(self.model.Runtime))
    
             
         
@@ -583,8 +588,9 @@ class UpperBound:
         self.create_optimization_model()
         self.solve_model()
 
-
         objective_value = self.model.objVal
+
+        self.model.write("model.lp")
 
         return objective_value, self.model.Runtime
 

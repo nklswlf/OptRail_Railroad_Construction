@@ -73,7 +73,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 #instances = ["Construction_a20_o236_m12_an106_ar24.json"]
-instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json"]
+instances = ["Construction_a5_o96_m10_an10_ar10_reduced.json"]
 
 
 
@@ -229,24 +229,6 @@ def main():
 
 UB_techniques = ["all", "both"]
 
-def UB_test():
-    # Test the upper bound
-    for i in instances:
-
-        data = InputData(i)
-
-        
-        solver = Solver(data, 1)
-        for ub_technique in UB_techniques:
-            print(f"\nUB Technique: {ub_technique}")
-
-            start_time = time.time()
-            solver.UpperBound(
-                UB_technique=ub_technique
-            )
-            end_time = time.time() - start_time
-
-            print(f"UB Time: {round(end_time, 2)} seconds, for {ub_technique} and {data.instance}")
 
 if __name__ == "__main__":
-    UB_test()
+    main()
