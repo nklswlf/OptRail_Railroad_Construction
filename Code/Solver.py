@@ -3,7 +3,7 @@ from ConstructiveHeuristic import *
 from ImprovementAlgorithm import *
 from EvaluationLogic import *
 import time
-from MIP_Upper_Bound import *
+from LP_UB import *
 
 class Solver:
     ''' Orchestrates all single pieces to form one strong algorithm to solve flowshop problems
@@ -15,8 +15,6 @@ class Solver:
         self.EvaluationLogic = EvaluationLogic(inputData)
         self.ParetoSolutions = ParetoSolutions(inputData, self.RNG)
         self.runTime = {}
-
-        self.UB_technique = "MIP" # "MIP" or "Greedy"
         
         self.ConstructiveHeuristic = ConstructiveHeuristics(paretoSolutions=self.ParetoSolutions, evaluationLogic=self.EvaluationLogic)
 
@@ -57,7 +55,7 @@ class Solver:
 
         start_time = time.time()
         optimizer = UpperBound(self.InputData, UB_technique)
-        site_fulfillment = optimizer.execute()
+        site_fulfillment, filler, filler, filler = optimizer.execute()
         self.InputData.site_fulfillment = int(site_fulfillment)
 
         self.InputData.reduce_input_data(self.InputData.site_fulfillment)
@@ -65,6 +63,22 @@ class Solver:
         self.UpperBoundTime = time.time() - start_time
         print("\nUpper Bound calculated after:", round(self.UpperBoundTime, 2), "seconds")
         print(f"UB = {round(site_fulfillment, 2)}")
+
+    
+    def RunConstructive(self, UB_technique, order_item_attractiveness_technique, machine_attractiveness_technique):
+        ''' Run the constructive heuristic and return the solution'''
+
+        self.UpperBound(UB_technique)
+
+        starttime = time.time()
+
+        startSolution = self.ConstructionPhase(order_item_attractiveness_technique, machine_attractiveness_technique)
+
+        endtime = time.time()
+        self.RunTime = endtime - starttime
+
+        return startSolution, self.UpperBoundTime, self.ConstructionTime, self.RunTime
+
 
 
 

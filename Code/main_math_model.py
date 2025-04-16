@@ -3,8 +3,8 @@ import OutputData
 import MIP_Flow
 import pandas as pd
 from pathlib import Path
-import MIP_Upper_Bound
-import MIP_UB_2
+import LP_UB as LP_UB
+import MIP_UB as MIP_UB
 
 
 
@@ -90,9 +90,9 @@ def upper_bound():
         data = InputData.InputData(instance)
 
         if model == "LP":
-            optimizer = MIP_Upper_Bound.UpperBound(data, upper_bound="all")
+            optimizer = LP_UB.UpperBound(data, upper_bound="all")
         elif model == "MIP":
-            optimizer = MIP_UB_2.UpperBound(data, upper_bound="all")
+            optimizer = MIP_UB.UpperBound(data, upper_bound="all")
 
         site_fulfillment, runtime, status, gap = optimizer.execute()
 
@@ -109,7 +109,18 @@ def upper_bound():
     print(df_upper_bound)
 
 
+
+def single_run():
+    instance = "Construction_a20_o236_m12_an106_ar24.json"
+
+    data = InputData.InputData(instance)
+    optimizer = MIP_UB.UpperBound(data, upper_bound="all", check_run=True)
+
+    optimizer.execute()
     
+
+
+
 
 
 
@@ -163,7 +174,8 @@ if __name__ == "__main__":
     #TestInputData()
     #pareto()
     #main()
-    upper_bound()
+    #upper_bound()
+    single_run()
 
 
 

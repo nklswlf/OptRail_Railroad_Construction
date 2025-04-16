@@ -73,7 +73,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 #instances = ["Construction_a20_o236_m12_an106_ar24.json"]
-instances = ["Construction_a5_o96_m10_an10_ar10_reduced.json"]
+instances = ["Construction_a20_o236_m12_an106_ar24.json"]
 
 
 
@@ -141,7 +141,7 @@ energy_dominance_neighborhoods = {  'Replace_Shift_Worker': ['driver_violation',
                         
 
 
-only_UB = False
+only_greedy = False
 
 def main():
 
@@ -174,11 +174,43 @@ def main():
 
 
 
-        if only_UB:
+        if only_greedy:
             # Run ONLY the UB
-            solver.UpperBound(
-                UB_technique="all" # or "both"
+            greedy_solution, ub_time, construction_time, run_time = solver.RunConstructive(
+                UB_technique="all",
+                order_item_attractiveness_technique="time_difference_importance",
+                machine_attractiveness_technique="balanced_greedy"
             )
+            end_time = time.time() - start_time
+            input_dict = {
+                "Data": round(current_time, 2),
+                "LP-Relax": round(ub_time, 2),
+            }
+            data_time = round(current_time, 2) + round(ub_time, 2)
+            sa_dict = {
+                "Construction": round(construction_time, 2),
+            }
+            time_entries = [
+                ("Phase", "Time"),
+                ("============", "======"),
+            ] + list(input_dict.items()) + [
+                ("------------", "-----"),
+                ("Input Time", data_time),
+                ("============", "======"),
+            ] + list(sa_dict.items()) + [
+                ("------------", "-----"),
+                ("Algo Time", round(run_time, 2)),
+                ("============", "======"),
+                ("Total Time", round(end_time, 2))
+            ]
+            df = pd.DataFrame(time_entries[1:], columns=time_entries[0])
+            print("\n")
+            print("Time Statistics:")
+            print(df.to_string(index=False))
+            print("\n")
+            print("Greedy Solution:")
+            print(greedy_solution)
+        
         else:
             # Run the algorithm
             ub_time, construction_time, building_time, individual_time, dominance_time, feasibility_check_time, algo_time = solver.RunAlgorithm(
@@ -188,46 +220,45 @@ def main():
                 algorithm=pareto_simulated_annealing
             )
 
-        end_time = time.time() - start_time
+            end_time = time.time() - start_time
 
 
-        input_dict = {
-            "Data": round(current_time, 2),
-            "LP-Relax": round(ub_time, 2),
-        }
-        data_time = round(current_time, 2) + round(ub_time, 2)
+            input_dict = {
+                "Data": round(current_time, 2),
+                "LP-Relax": round(ub_time, 2),
+            }
+            data_time = round(current_time, 2) + round(ub_time, 2)
 
-        sa_dict = {
-            "Construction": round(construction_time, 2),
-            "Building": round(building_time, 2),
-            "Individual": round(individual_time, 2),
-            "Dominance": round(dominance_time, 2),
-            "Feasibility": round(feasibility_check_time, 2),
-        }
+            sa_dict = {
+                "Construction": round(construction_time, 2),
+                "Building": round(building_time, 2),
+                "Individual": round(individual_time, 2),
+                "Dominance": round(dominance_time, 2),
+                "Feasibility": round(feasibility_check_time, 2),
+            }
 
 
-        time_entries = [
-            ("Phase", "Time"),
-            ("============", "======"),
-        ] + list(input_dict.items()) + [
-            ("------------", "-----"),
-            ("Input Time", data_time),
-            ("============", "======"),
-        ] + list(sa_dict.items()) + [
-            ("------------", "-----"),
-            ("Algo Time", round(algo_time, 2)),
-            ("============", "======"),
-            ("Total Time", round(end_time, 2))
-        ]
+            time_entries = [
+                ("Phase", "Time"),
+                ("============", "======"),
+            ] + list(input_dict.items()) + [
+                ("------------", "-----"),
+                ("Input Time", data_time),
+                ("============", "======"),
+            ] + list(sa_dict.items()) + [
+                ("------------", "-----"),
+                ("Algo Time", round(algo_time, 2)),
+                ("============", "======"),
+                ("Total Time", round(end_time, 2))
+            ]
 
-        df = pd.DataFrame(time_entries[1:], columns=time_entries[0])
+            df = pd.DataFrame(time_entries[1:], columns=time_entries[0])
 
-        print("\n")
-        print("Time Statistics:")
-        print(df.to_string(index=False))
-        print("\n")
+            print("\n")
+            print("Time Statistics:")
+            print(df.to_string(index=False))
+            print("\n")
 
-UB_techniques = ["all", "both"]
 
 
 if __name__ == "__main__":

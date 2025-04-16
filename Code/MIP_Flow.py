@@ -1167,6 +1167,20 @@ class FlowFormulation:
         self.create_optimization_model()
         feasible = self.solve_model()
 
+        if self.objective_strategy == "single":
+
+            filename = f"model_{self.data.instance}.lp"
+            solution_filename = f"solution_{self.data.instance}.sol"
+
+            save_path = Path.cwd().parent / "Data" / "ModelFiles" /  f"ModelStatus_{self.model.status}"  / self.data._parent_folder / self.data.instance
+            save_path.mkdir(parents=True, exist_ok=True)
+
+            self.model.write(str(save_path / filename))
+            self.model.write(str(save_path / solution_filename))
+
+            return None
+
+
     
 
         if self.objective_strategy == "hierarchical_tolerance":

@@ -11,10 +11,11 @@ from itertools import groupby
 
 class UpperBound:
     
-    def __init__(self, data, upper_bound = 'all'):
+    def __init__(self, data, upper_bound = 'all', check_run = False):
         self.data = data
         self.model = None
         self.upper_bound = upper_bound
+        self.check_run = check_run
 
         # ========================
         # 1. Sets
@@ -581,6 +582,17 @@ class UpperBound:
         self.preprocess_data()
         self.create_optimization_model()
         self.solve_model()
+
+        if self.check_run:
+            filename = f"model_{self.data.instance}.lp"
+            solution_filename = f"solution_{self.data.instance}.sol"
+
+            save_path = Path.cwd().parent / "Data" / "ModelFiles"/ "MIP" /  f"ModelStatus_{self.model.status}"  / self.data._parent_folder / self.data.instance
+            save_path.mkdir(parents=True, exist_ok=True)
+
+            self.model.write(str(save_path / filename))
+            self.model.write(str(save_path / solution_filename))
+
 
         if self.model.SolCount > 0:
             objective_value = self.model.objVal
