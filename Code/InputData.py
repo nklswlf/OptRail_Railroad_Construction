@@ -129,6 +129,14 @@ class InputData:
             for order_item in order.order_items:
                 order_item.status = True
 
+
+        for order in self.orders:
+            if order.status == False:
+                print(f"Order {order.order_number} is not planned.")
+
+            if order.unuseable == True:
+                print(f"Order {order.order_number} is unuseable.")
+
                 
     def activate_order(self, order_number: int) -> None:
         """Aktiviert eine Order und alle zugehörigen OrderItems."""
