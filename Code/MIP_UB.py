@@ -7,6 +7,8 @@ from InputData import *
 from OutputData import *
 import time
 from itertools import groupby
+from collections import defaultdict
+import re
 
 
 class UpperBound:
@@ -30,6 +32,7 @@ class UpperBound:
             self.A = [] # List of attachment IDs
             self.N_a = {} # Dictionary: Attachment -> Order items
             self.K = set() # Set of all attachment types
+            self.A_k = {} # Dictionary: Attachment type -> Order items
         
         self.N = []  # List of order item IDs
         self.C = []  # List of site IDs
@@ -200,9 +203,16 @@ class UpperBound:
                     if equipment not in self.q_ok[order_item.id]:
                         self.q_ok[order_item.id][equipment] = 0
                     self.q_ok[order_item.id][equipment] += 1
-
                     
                     self.K.add(equipment)
+
+                    if equipment not in self.A_k:
+                        self.A_k[equipment] = []
+                    for attachment in self.data.attachments:
+                        if attachment.type == equipment:
+                            if attachment.id not in self.A_k[equipment]:
+                                self.A_k[equipment].append(attachment.id)
+
             
                 
                 
@@ -555,9 +565,11 @@ class UpperBound:
                     for k in self.K:
                         if k in self.q_ok[i]:
                             self.model.addConstr(
-                                gp.quicksum(z[a, i, j] for a in self.A if (a, i) in self.S_an for j in self.S_an[a, i]) == self.q_ok[i][k] * u[c],
+                                gp.quicksum(z[a, i, j] for a in self.A_k[k] if (a, i) in self.S_an for j in self.S_an[a, i]) == self.q_ok[i][k] * u[c],
                                 name=f"attachment_site_fulfillment_site{c}_order{i}_type{k}"
                             )
+                            print(f"Attachment constraint for site {c}, order {i}, type {k} added.")
+
             
         
         
@@ -573,7 +585,78 @@ class UpperBound:
         print(" MIP solved after {:.2f} seconds".format(self.model.Runtime))
    
             
-        
+    def extract_routes_from_solution(self):
+        def build_path(transitions):
+            
+            adj = defaultdict(list)
+            incoming = defaultdict(int)
+
+            for f, t in transitions:
+                if isinstance(f, int) and isinstance(t, int):
+                    adj[f].append(t)
+                    incoming[t] += 1
+
+            all_nodes = set(n for pair in transitions for n in pair if isinstance(n, int))
+            start_nodes = [n for n in all_nodes if incoming[n] == 0]
+
+            full_path = []
+            visited = set()
+            for start in start_nodes:
+                current = start
+                while current in adj and adj[current]:
+                    next_node = adj[current].pop(0)
+                    if (current, next_node) not in visited:
+                        full_path.append((current, next_node))
+                        visited.add((current, next_node))
+                        current = next_node
+                    else:
+                        break
+
+            path = [full_path[0][0]] + [t for _, t in full_path] if full_path else []
+
+            for f, t in transitions:
+                if f == 'start' and isinstance(t, int) and t not in path:
+                    path.insert(0, t)
+                elif t == 'end' and isinstance(f, int) and f not in path:
+                    path.append(f)
+
+            return path
+
+        routes = {'x': defaultdict(list), 'y': defaultdict(list), 'z': defaultdict(list)}
+
+        for var in self.model.getVars():
+            if var.VarName.startswith(("x[", "y[", "z[")) and round(var.X) == 1:
+                var_type = var.VarName[0]
+                key = var.VarName.split('[')[1].split(']')[0]
+                ent, f, t = key.split(',')
+
+                try:
+                    ent_id = int(re.search(r'\d+$', ent).group())
+                except:
+                    continue
+
+                try:
+                    f_node = int(f)
+                except:
+                    f_node = 'start' if f == 'start' else None
+                try:
+                    t_node = int(t)
+                except:
+                    t_node = 'end' if t == 'end' else None
+
+                if f_node is not None and t_node is not None:
+                    routes[var_type][ent_id].append((f_node, t_node))
+
+        final_routes = {}
+        for k in ['x', 'y', 'z']:
+            max_id = max(routes[k].keys()) if routes[k] else -1
+            filled = {}
+            for i in range(max_id + 1):
+                transitions = routes[k].get(i, [])
+                filled[i] = build_path(transitions) if transitions else []
+            final_routes[k] = dict(sorted(filled.items()))
+
+        return final_routes 
 
 
     def execute(self):
@@ -584,12 +667,20 @@ class UpperBound:
         self.solve_model()
 
         if self.check_run:
+            
+            routes = self.extract_routes_from_solution()
+            return routes['x'], routes['y'], routes['z']
+            
+
+            filename = f"model_{self.data.instance}.lp"
             solution_filename = f"solution_{self.data.instance}.sol"
 
             save_path = Path.cwd().parent / "Data" / "ModelFiles"/ "MIP" /  f"ModelStatus_{self.model.status}"  / self.data._parent_folder / self.data.instance
             save_path.mkdir(parents=True, exist_ok=True)
 
             self.model.write(str(save_path / solution_filename))
+            self.model.write(str(save_path / filename))
+            
 
 
         if self.model.SolCount > 0:

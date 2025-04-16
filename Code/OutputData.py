@@ -132,6 +132,7 @@ class Solution:
 
         print(f"Solution saved to: {output_file_path}")
 
+
     def feasibility_check(self, verbose=False, allverbose=False):
         """
         Check the feasibility of the solution.

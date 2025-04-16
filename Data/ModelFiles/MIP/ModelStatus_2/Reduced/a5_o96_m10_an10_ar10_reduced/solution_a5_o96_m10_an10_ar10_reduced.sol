@@ -2,10 +2,10 @@
 # Objective value = 5
 x[ZWB_Liebherr_A922_Rail1,0,0] 0
 x[ZWB_Liebherr_A922_Rail1,0,1] 0
-x[ZWB_Liebherr_A922_Rail1,0,2] 1
+x[ZWB_Liebherr_A922_Rail1,0,2] 0
 x[ZWB_Liebherr_A922_Rail1,0,3] 0
 x[ZWB_Liebherr_A922_Rail1,0,4] 0
-x[ZWB_Liebherr_A922_Rail1,0,5] 0
+x[ZWB_Liebherr_A922_Rail1,0,5] 1
 x[ZWB_Liebherr_A922_Rail1,0,6] 0
 x[ZWB_Liebherr_A922_Rail1,0,7] 0
 x[ZWB_Liebherr_A922_Rail1,0,8] 0
@@ -102,7 +102,7 @@ x[ZWB_Liebherr_A922_Rail1,2,6] 0
 x[ZWB_Liebherr_A922_Rail1,2,7] 0
 x[ZWB_Liebherr_A922_Rail1,2,8] 0
 x[ZWB_Liebherr_A922_Rail1,2,9] 0
-x[ZWB_Liebherr_A922_Rail1,2,10] 1
+x[ZWB_Liebherr_A922_Rail1,2,10] 0
 x[ZWB_Liebherr_A922_Rail1,2,11] 0
 x[ZWB_Liebherr_A922_Rail1,2,12] 0
 x[ZWB_Liebherr_A922_Rail1,2,13] 0
@@ -239,7 +239,7 @@ x[ZWB_Liebherr_A922_Rail1,5,5] 0
 x[ZWB_Liebherr_A922_Rail1,5,6] 0
 x[ZWB_Liebherr_A922_Rail1,5,7] 0
 x[ZWB_Liebherr_A922_Rail1,5,8] 0
-x[ZWB_Liebherr_A922_Rail1,5,9] 0
+x[ZWB_Liebherr_A922_Rail1,5,9] 1
 x[ZWB_Liebherr_A922_Rail1,5,10] 0
 x[ZWB_Liebherr_A922_Rail1,5,11] 0
 x[ZWB_Liebherr_A922_Rail1,5,12] 0
@@ -428,7 +428,7 @@ x[ZWB_Liebherr_A922_Rail1,9,10] 0
 x[ZWB_Liebherr_A922_Rail1,9,11] 0
 x[ZWB_Liebherr_A922_Rail1,9,12] 0
 x[ZWB_Liebherr_A922_Rail1,9,13] 0
-x[ZWB_Liebherr_A922_Rail1,9,14] 0
+x[ZWB_Liebherr_A922_Rail1,9,14] 1
 x[ZWB_Liebherr_A922_Rail1,9,15] 0
 x[ZWB_Liebherr_A922_Rail1,9,16] 0
 x[ZWB_Liebherr_A922_Rail1,9,17] 0
@@ -474,7 +474,7 @@ x[ZWB_Liebherr_A922_Rail1,10,10] 0
 x[ZWB_Liebherr_A922_Rail1,10,11] 0
 x[ZWB_Liebherr_A922_Rail1,10,12] 0
 x[ZWB_Liebherr_A922_Rail1,10,13] 0
-x[ZWB_Liebherr_A922_Rail1,10,14] 1
+x[ZWB_Liebherr_A922_Rail1,10,14] 0
 x[ZWB_Liebherr_A922_Rail1,10,15] 0
 x[ZWB_Liebherr_A922_Rail1,10,16] 0
 x[ZWB_Liebherr_A922_Rail1,10,17] 0
@@ -659,9 +659,9 @@ x[ZWB_Liebherr_A922_Rail1,14,11] 0
 x[ZWB_Liebherr_A922_Rail1,14,12] 0
 x[ZWB_Liebherr_A922_Rail1,14,13] 0
 x[ZWB_Liebherr_A922_Rail1,14,14] 0
-x[ZWB_Liebherr_A922_Rail1,14,15] 1
+x[ZWB_Liebherr_A922_Rail1,14,15] 0
 x[ZWB_Liebherr_A922_Rail1,14,16] 0
-x[ZWB_Liebherr_A922_Rail1,14,17] 0
+x[ZWB_Liebherr_A922_Rail1,14,17] 1
 x[ZWB_Liebherr_A922_Rail1,14,18] 0
 x[ZWB_Liebherr_A922_Rail1,14,19] 0
 x[ZWB_Liebherr_A922_Rail1,14,20] 0
@@ -707,7 +707,7 @@ x[ZWB_Liebherr_A922_Rail1,15,13] 0
 x[ZWB_Liebherr_A922_Rail1,15,14] 0
 x[ZWB_Liebherr_A922_Rail1,15,15] 0
 x[ZWB_Liebherr_A922_Rail1,15,16] 0
-x[ZWB_Liebherr_A922_Rail1,15,17] 1
+x[ZWB_Liebherr_A922_Rail1,15,17] 0
 x[ZWB_Liebherr_A922_Rail1,15,18] 0
 x[ZWB_Liebherr_A922_Rail1,15,19] 0
 x[ZWB_Liebherr_A922_Rail1,15,20] 0
@@ -800,9 +800,9 @@ x[ZWB_Liebherr_A922_Rail1,17,14] 0
 x[ZWB_Liebherr_A922_Rail1,17,15] 0
 x[ZWB_Liebherr_A922_Rail1,17,16] 0
 x[ZWB_Liebherr_A922_Rail1,17,17] 0
-x[ZWB_Liebherr_A922_Rail1,17,18] 1
+x[ZWB_Liebherr_A922_Rail1,17,18] 0
 x[ZWB_Liebherr_A922_Rail1,17,19] 0
-x[ZWB_Liebherr_A922_Rail1,17,20] 0
+x[ZWB_Liebherr_A922_Rail1,17,20] 1
 x[ZWB_Liebherr_A922_Rail1,17,21] 0
 x[ZWB_Liebherr_A922_Rail1,17,22] 0
 x[ZWB_Liebherr_A922_Rail1,17,23] 0
@@ -849,7 +849,7 @@ x[ZWB_Liebherr_A922_Rail1,18,17] 0
 x[ZWB_Liebherr_A922_Rail1,18,18] 0
 x[ZWB_Liebherr_A922_Rail1,18,19] 0
 x[ZWB_Liebherr_A922_Rail1,18,20] 0
-x[ZWB_Liebherr_A922_Rail1,18,21] 1
+x[ZWB_Liebherr_A922_Rail1,18,21] 0
 x[ZWB_Liebherr_A922_Rail1,18,22] 0
 x[ZWB_Liebherr_A922_Rail1,18,23] 0
 x[ZWB_Liebherr_A922_Rail1,18,24] 0
@@ -947,7 +947,7 @@ x[ZWB_Liebherr_A922_Rail1,20,23] 0
 x[ZWB_Liebherr_A922_Rail1,20,24] 0
 x[ZWB_Liebherr_A922_Rail1,20,25] 0
 x[ZWB_Liebherr_A922_Rail1,20,26] 0
-x[ZWB_Liebherr_A922_Rail1,20,27] 0
+x[ZWB_Liebherr_A922_Rail1,20,27] 1
 x[ZWB_Liebherr_A922_Rail1,20,28] 0
 x[ZWB_Liebherr_A922_Rail1,20,29] 0
 x[ZWB_Liebherr_A922_Rail1,20,30] 0
@@ -988,7 +988,7 @@ x[ZWB_Liebherr_A922_Rail1,21,18] 0
 x[ZWB_Liebherr_A922_Rail1,21,19] 0
 x[ZWB_Liebherr_A922_Rail1,21,20] 0
 x[ZWB_Liebherr_A922_Rail1,21,21] 0
-x[ZWB_Liebherr_A922_Rail1,21,22] 1
+x[ZWB_Liebherr_A922_Rail1,21,22] 0
 x[ZWB_Liebherr_A922_Rail1,21,23] 0
 x[ZWB_Liebherr_A922_Rail1,21,24] 0
 x[ZWB_Liebherr_A922_Rail1,21,25] 0
@@ -1036,7 +1036,7 @@ x[ZWB_Liebherr_A922_Rail1,22,20] 0
 x[ZWB_Liebherr_A922_Rail1,22,21] 0
 x[ZWB_Liebherr_A922_Rail1,22,22] 0
 x[ZWB_Liebherr_A922_Rail1,22,23] 0
-x[ZWB_Liebherr_A922_Rail1,22,24] 1
+x[ZWB_Liebherr_A922_Rail1,22,24] 0
 x[ZWB_Liebherr_A922_Rail1,22,25] 0
 x[ZWB_Liebherr_A922_Rail1,22,26] 0
 x[ZWB_Liebherr_A922_Rail1,22,27] 0
@@ -1138,7 +1138,7 @@ x[ZWB_Liebherr_A922_Rail1,24,30] 0
 x[ZWB_Liebherr_A922_Rail1,24,31] 0
 x[ZWB_Liebherr_A922_Rail1,24,32] 0
 x[ZWB_Liebherr_A922_Rail1,24,33] 0
-x[ZWB_Liebherr_A922_Rail1,24,34] 1
+x[ZWB_Liebherr_A922_Rail1,24,34] 0
 x[ZWB_Liebherr_A922_Rail1,24,35] 0
 x[ZWB_Liebherr_A922_Rail1,24,36] 0
 x[ZWB_Liebherr_A922_Rail1,24,37] 0
@@ -1272,7 +1272,7 @@ x[ZWB_Liebherr_A922_Rail1,27,26] 0
 x[ZWB_Liebherr_A922_Rail1,27,27] 0
 x[ZWB_Liebherr_A922_Rail1,27,28] 0
 x[ZWB_Liebherr_A922_Rail1,27,29] 0
-x[ZWB_Liebherr_A922_Rail1,27,30] 0
+x[ZWB_Liebherr_A922_Rail1,27,30] 1
 x[ZWB_Liebherr_A922_Rail1,27,31] 0
 x[ZWB_Liebherr_A922_Rail1,27,32] 0
 x[ZWB_Liebherr_A922_Rail1,27,33] 0
@@ -1413,7 +1413,7 @@ x[ZWB_Liebherr_A922_Rail1,30,29] 0
 x[ZWB_Liebherr_A922_Rail1,30,30] 0
 x[ZWB_Liebherr_A922_Rail1,30,31] 0
 x[ZWB_Liebherr_A922_Rail1,30,32] 0
-x[ZWB_Liebherr_A922_Rail1,30,33] 0
+x[ZWB_Liebherr_A922_Rail1,30,33] 1
 x[ZWB_Liebherr_A922_Rail1,30,34] 0
 x[ZWB_Liebherr_A922_Rail1,30,35] 0
 x[ZWB_Liebherr_A922_Rail1,30,36] 0
@@ -1559,7 +1559,7 @@ x[ZWB_Liebherr_A922_Rail1,33,37] 0
 x[ZWB_Liebherr_A922_Rail1,33,38] 0
 x[ZWB_Liebherr_A922_Rail1,33,39] 0
 x[ZWB_Liebherr_A922_Rail1,33,40] 0
-x[ZWB_Liebherr_A922_Rail1,33,41] 0
+x[ZWB_Liebherr_A922_Rail1,33,41] 1
 x[ZWB_Liebherr_A922_Rail1,33,42] 0
 x[ZWB_Liebherr_A922_Rail1,33,43] 0
 x[ZWB_Liebherr_A922_Rail1,33,44] 0
@@ -1602,7 +1602,7 @@ x[ZWB_Liebherr_A922_Rail1,34,34] 0
 x[ZWB_Liebherr_A922_Rail1,34,35] 0
 x[ZWB_Liebherr_A922_Rail1,34,36] 0
 x[ZWB_Liebherr_A922_Rail1,34,37] 0
-x[ZWB_Liebherr_A922_Rail1,34,38] 1
+x[ZWB_Liebherr_A922_Rail1,34,38] 0
 x[ZWB_Liebherr_A922_Rail1,34,39] 0
 x[ZWB_Liebherr_A922_Rail1,34,40] 0
 x[ZWB_Liebherr_A922_Rail1,34,41] 0
@@ -1931,7 +1931,7 @@ x[ZWB_Liebherr_A922_Rail1,41,41] 0
 x[ZWB_Liebherr_A922_Rail1,41,42] 0
 x[ZWB_Liebherr_A922_Rail1,41,43] 0
 x[ZWB_Liebherr_A922_Rail1,41,44] 0
-x[ZWB_Liebherr_A922_Rail1,41,45] 0
+x[ZWB_Liebherr_A922_Rail1,41,45] 1
 x[ZWB_Liebherr_A922_Rail1,42,0] 0
 x[ZWB_Liebherr_A922_Rail1,42,1] 0
 x[ZWB_Liebherr_A922_Rail1,42,2] 0
@@ -3287,10 +3287,10 @@ x[ZWB_CAT_M323F5,80,91] 0
 x[ZWB_CAT_M323F5,80,92] 0
 x[ZWB_CAT_M323F5,80,93] 0
 x[ZWB_CAT_M323F5,80,94] 0
-x[ZWB_CAT_M323F5,80,95] 0
+x[ZWB_CAT_M323F5,80,95] 1
 x[ZWB_CAT_M323F5,81,80] 0
 x[ZWB_CAT_M323F5,81,81] 0
-x[ZWB_CAT_M323F5,81,82] 1
+x[ZWB_CAT_M323F5,81,82] 0
 x[ZWB_CAT_M323F5,81,83] 0
 x[ZWB_CAT_M323F5,81,84] 0
 x[ZWB_CAT_M323F5,81,85] 0
@@ -3309,7 +3309,7 @@ x[ZWB_CAT_M323F5,82,81] 0
 x[ZWB_CAT_M323F5,82,82] 0
 x[ZWB_CAT_M323F5,82,83] 0
 x[ZWB_CAT_M323F5,82,84] 0
-x[ZWB_CAT_M323F5,82,85] 1
+x[ZWB_CAT_M323F5,82,85] 0
 x[ZWB_CAT_M323F5,82,86] 0
 x[ZWB_CAT_M323F5,82,87] 0
 x[ZWB_CAT_M323F5,82,88] 0
@@ -3324,7 +3324,7 @@ x[ZWB_CAT_M323F5,83,80] 0
 x[ZWB_CAT_M323F5,83,81] 0
 x[ZWB_CAT_M323F5,83,82] 0
 x[ZWB_CAT_M323F5,83,83] 0
-x[ZWB_CAT_M323F5,83,84] 0
+x[ZWB_CAT_M323F5,83,84] 1
 x[ZWB_CAT_M323F5,83,85] 0
 x[ZWB_CAT_M323F5,83,86] 0
 x[ZWB_CAT_M323F5,83,87] 0
@@ -3378,7 +3378,7 @@ x[ZWB_CAT_M323F5,86,86] 0
 x[ZWB_CAT_M323F5,86,87] 0
 x[ZWB_CAT_M323F5,86,88] 0
 x[ZWB_CAT_M323F5,86,89] 0
-x[ZWB_CAT_M323F5,86,90] 1
+x[ZWB_CAT_M323F5,86,90] 0
 x[ZWB_CAT_M323F5,86,91] 0
 x[ZWB_CAT_M323F5,86,92] 0
 x[ZWB_CAT_M323F5,86,93] 0
@@ -3410,7 +3410,7 @@ x[ZWB_CAT_M323F5,88,86] 0
 x[ZWB_CAT_M323F5,88,87] 0
 x[ZWB_CAT_M323F5,88,88] 0
 x[ZWB_CAT_M323F5,88,89] 0
-x[ZWB_CAT_M323F5,88,90] 0
+x[ZWB_CAT_M323F5,88,90] 1
 x[ZWB_CAT_M323F5,88,91] 0
 x[ZWB_CAT_M323F5,88,92] 0
 x[ZWB_CAT_M323F5,88,93] 0
@@ -3432,7 +3432,7 @@ x[ZWB_CAT_M323F5,89,92] 0
 x[ZWB_CAT_M323F5,89,93] 0
 x[ZWB_CAT_M323F5,89,94] 0
 x[ZWB_CAT_M323F5,89,95] 0
-x[ZWB_CAT_M323F5,90,80] 0
+x[ZWB_CAT_M323F5,90,80] 1
 x[ZWB_CAT_M323F5,90,81] 0
 x[ZWB_CAT_M323F5,90,82] 0
 x[ZWB_CAT_M323F5,90,83] 0
@@ -3443,7 +3443,7 @@ x[ZWB_CAT_M323F5,90,87] 0
 x[ZWB_CAT_M323F5,90,88] 0
 x[ZWB_CAT_M323F5,90,89] 0
 x[ZWB_CAT_M323F5,90,90] 0
-x[ZWB_CAT_M323F5,90,91] 1
+x[ZWB_CAT_M323F5,90,91] 0
 x[ZWB_CAT_M323F5,90,92] 0
 x[ZWB_CAT_M323F5,90,93] 0
 x[ZWB_CAT_M323F5,90,94] 0
@@ -3460,7 +3460,7 @@ x[ZWB_CAT_M323F5,91,88] 0
 x[ZWB_CAT_M323F5,91,89] 0
 x[ZWB_CAT_M323F5,91,90] 0
 x[ZWB_CAT_M323F5,91,91] 0
-x[ZWB_CAT_M323F5,91,92] 1
+x[ZWB_CAT_M323F5,91,92] 0
 x[ZWB_CAT_M323F5,91,93] 0
 x[ZWB_CAT_M323F5,91,94] 0
 x[ZWB_CAT_M323F5,91,95] 0
@@ -3477,7 +3477,7 @@ x[ZWB_CAT_M323F5,92,89] 0
 x[ZWB_CAT_M323F5,92,90] 0
 x[ZWB_CAT_M323F5,92,91] 0
 x[ZWB_CAT_M323F5,92,92] 0
-x[ZWB_CAT_M323F5,92,93] 1
+x[ZWB_CAT_M323F5,92,93] 0
 x[ZWB_CAT_M323F5,92,94] 0
 x[ZWB_CAT_M323F5,92,95] 0
 x[ZWB_CAT_M323F5,93,80] 0
@@ -3494,10 +3494,10 @@ x[ZWB_CAT_M323F5,93,90] 0
 x[ZWB_CAT_M323F5,93,91] 0
 x[ZWB_CAT_M323F5,93,92] 0
 x[ZWB_CAT_M323F5,93,93] 0
-x[ZWB_CAT_M323F5,93,94] 1
+x[ZWB_CAT_M323F5,93,94] 0
 x[ZWB_CAT_M323F5,93,95] 0
 x[ZWB_CAT_M323F5,94,80] 0
-x[ZWB_CAT_M323F5,94,81] 1
+x[ZWB_CAT_M323F5,94,81] 0
 x[ZWB_CAT_M323F5,94,82] 0
 x[ZWB_CAT_M323F5,94,83] 0
 x[ZWB_CAT_M323F5,94,84] 0
@@ -3515,7 +3515,7 @@ x[ZWB_CAT_M323F5,94,95] 0
 x[ZWB_CAT_M323F5,95,80] 0
 x[ZWB_CAT_M323F5,95,81] 0
 x[ZWB_CAT_M323F5,95,82] 0
-x[ZWB_CAT_M323F5,95,83] 0
+x[ZWB_CAT_M323F5,95,83] 1
 x[ZWB_CAT_M323F5,95,84] 0
 x[ZWB_CAT_M323F5,95,85] 0
 x[ZWB_CAT_M323F5,95,86] 0
@@ -3577,8 +3577,8 @@ x[ZWB_Liebherr_A922_Rail6,0,45] 0
 x[ZWB_Liebherr_A922_Rail6,1,0] 0
 x[ZWB_Liebherr_A922_Rail6,1,1] 0
 x[ZWB_Liebherr_A922_Rail6,1,2] 0
-x[ZWB_Liebherr_A922_Rail6,1,3] 0
-x[ZWB_Liebherr_A922_Rail6,1,4] 1
+x[ZWB_Liebherr_A922_Rail6,1,3] 1
+x[ZWB_Liebherr_A922_Rail6,1,4] 0
 x[ZWB_Liebherr_A922_Rail6,1,5] 0
 x[ZWB_Liebherr_A922_Rail6,1,6] 0
 x[ZWB_Liebherr_A922_Rail6,1,7] 0
@@ -3672,7 +3672,7 @@ x[ZWB_Liebherr_A922_Rail6,3,2] 0
 x[ZWB_Liebherr_A922_Rail6,3,3] 0
 x[ZWB_Liebherr_A922_Rail6,3,4] 0
 x[ZWB_Liebherr_A922_Rail6,3,5] 0
-x[ZWB_Liebherr_A922_Rail6,3,6] 0
+x[ZWB_Liebherr_A922_Rail6,3,6] 1
 x[ZWB_Liebherr_A922_Rail6,3,7] 0
 x[ZWB_Liebherr_A922_Rail6,3,8] 0
 x[ZWB_Liebherr_A922_Rail6,3,9] 0
@@ -3717,7 +3717,7 @@ x[ZWB_Liebherr_A922_Rail6,4,1] 0
 x[ZWB_Liebherr_A922_Rail6,4,2] 0
 x[ZWB_Liebherr_A922_Rail6,4,3] 0
 x[ZWB_Liebherr_A922_Rail6,4,4] 0
-x[ZWB_Liebherr_A922_Rail6,4,5] 1
+x[ZWB_Liebherr_A922_Rail6,4,5] 0
 x[ZWB_Liebherr_A922_Rail6,4,6] 0
 x[ZWB_Liebherr_A922_Rail6,4,7] 0
 x[ZWB_Liebherr_A922_Rail6,4,8] 0
@@ -3774,7 +3774,7 @@ x[ZWB_Liebherr_A922_Rail6,5,12] 0
 x[ZWB_Liebherr_A922_Rail6,5,13] 0
 x[ZWB_Liebherr_A922_Rail6,5,14] 0
 x[ZWB_Liebherr_A922_Rail6,5,15] 0
-x[ZWB_Liebherr_A922_Rail6,5,16] 1
+x[ZWB_Liebherr_A922_Rail6,5,16] 0
 x[ZWB_Liebherr_A922_Rail6,5,17] 0
 x[ZWB_Liebherr_A922_Rail6,5,18] 0
 x[ZWB_Liebherr_A922_Rail6,5,19] 0
@@ -3814,7 +3814,7 @@ x[ZWB_Liebherr_A922_Rail6,6,6] 0
 x[ZWB_Liebherr_A922_Rail6,6,7] 0
 x[ZWB_Liebherr_A922_Rail6,6,8] 0
 x[ZWB_Liebherr_A922_Rail6,6,9] 0
-x[ZWB_Liebherr_A922_Rail6,6,10] 0
+x[ZWB_Liebherr_A922_Rail6,6,10] 1
 x[ZWB_Liebherr_A922_Rail6,6,11] 0
 x[ZWB_Liebherr_A922_Rail6,6,12] 0
 x[ZWB_Liebherr_A922_Rail6,6,13] 0
@@ -4000,7 +4000,7 @@ x[ZWB_Liebherr_A922_Rail6,10,8] 0
 x[ZWB_Liebherr_A922_Rail6,10,9] 0
 x[ZWB_Liebherr_A922_Rail6,10,10] 0
 x[ZWB_Liebherr_A922_Rail6,10,11] 0
-x[ZWB_Liebherr_A922_Rail6,10,12] 0
+x[ZWB_Liebherr_A922_Rail6,10,12] 1
 x[ZWB_Liebherr_A922_Rail6,10,13] 0
 x[ZWB_Liebherr_A922_Rail6,10,14] 0
 x[ZWB_Liebherr_A922_Rail6,10,15] 0
@@ -4093,7 +4093,7 @@ x[ZWB_Liebherr_A922_Rail6,12,9] 0
 x[ZWB_Liebherr_A922_Rail6,12,10] 0
 x[ZWB_Liebherr_A922_Rail6,12,11] 0
 x[ZWB_Liebherr_A922_Rail6,12,12] 0
-x[ZWB_Liebherr_A922_Rail6,12,13] 0
+x[ZWB_Liebherr_A922_Rail6,12,13] 1
 x[ZWB_Liebherr_A922_Rail6,12,14] 0
 x[ZWB_Liebherr_A922_Rail6,12,15] 0
 x[ZWB_Liebherr_A922_Rail6,12,16] 0
@@ -4141,7 +4141,7 @@ x[ZWB_Liebherr_A922_Rail6,13,11] 0
 x[ZWB_Liebherr_A922_Rail6,13,12] 0
 x[ZWB_Liebherr_A922_Rail6,13,13] 0
 x[ZWB_Liebherr_A922_Rail6,13,14] 0
-x[ZWB_Liebherr_A922_Rail6,13,15] 0
+x[ZWB_Liebherr_A922_Rail6,13,15] 1
 x[ZWB_Liebherr_A922_Rail6,13,16] 0
 x[ZWB_Liebherr_A922_Rail6,13,17] 0
 x[ZWB_Liebherr_A922_Rail6,13,18] 0
@@ -4234,7 +4234,7 @@ x[ZWB_Liebherr_A922_Rail6,15,12] 0
 x[ZWB_Liebherr_A922_Rail6,15,13] 0
 x[ZWB_Liebherr_A922_Rail6,15,14] 0
 x[ZWB_Liebherr_A922_Rail6,15,15] 0
-x[ZWB_Liebherr_A922_Rail6,15,16] 0
+x[ZWB_Liebherr_A922_Rail6,15,16] 1
 x[ZWB_Liebherr_A922_Rail6,15,17] 0
 x[ZWB_Liebherr_A922_Rail6,15,18] 0
 x[ZWB_Liebherr_A922_Rail6,15,19] 0
@@ -4426,8 +4426,8 @@ x[ZWB_Liebherr_A922_Rail6,19,20] 0
 x[ZWB_Liebherr_A922_Rail6,19,21] 0
 x[ZWB_Liebherr_A922_Rail6,19,22] 0
 x[ZWB_Liebherr_A922_Rail6,19,23] 0
-x[ZWB_Liebherr_A922_Rail6,19,24] 0
-x[ZWB_Liebherr_A922_Rail6,19,25] 1
+x[ZWB_Liebherr_A922_Rail6,19,24] 1
+x[ZWB_Liebherr_A922_Rail6,19,25] 0
 x[ZWB_Liebherr_A922_Rail6,19,26] 0
 x[ZWB_Liebherr_A922_Rail6,19,27] 0
 x[ZWB_Liebherr_A922_Rail6,19,28] 0
@@ -4660,7 +4660,7 @@ x[ZWB_Liebherr_A922_Rail6,24,24] 0
 x[ZWB_Liebherr_A922_Rail6,24,25] 0
 x[ZWB_Liebherr_A922_Rail6,24,26] 0
 x[ZWB_Liebherr_A922_Rail6,24,27] 0
-x[ZWB_Liebherr_A922_Rail6,24,28] 0
+x[ZWB_Liebherr_A922_Rail6,24,28] 1
 x[ZWB_Liebherr_A922_Rail6,24,29] 0
 x[ZWB_Liebherr_A922_Rail6,24,30] 0
 x[ZWB_Liebherr_A922_Rail6,24,31] 0
@@ -4704,7 +4704,7 @@ x[ZWB_Liebherr_A922_Rail6,25,22] 0
 x[ZWB_Liebherr_A922_Rail6,25,23] 0
 x[ZWB_Liebherr_A922_Rail6,25,24] 0
 x[ZWB_Liebherr_A922_Rail6,25,25] 0
-x[ZWB_Liebherr_A922_Rail6,25,26] 1
+x[ZWB_Liebherr_A922_Rail6,25,26] 0
 x[ZWB_Liebherr_A922_Rail6,25,27] 0
 x[ZWB_Liebherr_A922_Rail6,25,28] 0
 x[ZWB_Liebherr_A922_Rail6,25,29] 0
@@ -4751,7 +4751,7 @@ x[ZWB_Liebherr_A922_Rail6,26,23] 0
 x[ZWB_Liebherr_A922_Rail6,26,24] 0
 x[ZWB_Liebherr_A922_Rail6,26,25] 0
 x[ZWB_Liebherr_A922_Rail6,26,26] 0
-x[ZWB_Liebherr_A922_Rail6,26,27] 1
+x[ZWB_Liebherr_A922_Rail6,26,27] 0
 x[ZWB_Liebherr_A922_Rail6,26,28] 0
 x[ZWB_Liebherr_A922_Rail6,26,29] 0
 x[ZWB_Liebherr_A922_Rail6,26,30] 0
@@ -4798,7 +4798,7 @@ x[ZWB_Liebherr_A922_Rail6,27,24] 0
 x[ZWB_Liebherr_A922_Rail6,27,25] 0
 x[ZWB_Liebherr_A922_Rail6,27,26] 0
 x[ZWB_Liebherr_A922_Rail6,27,27] 0
-x[ZWB_Liebherr_A922_Rail6,27,28] 1
+x[ZWB_Liebherr_A922_Rail6,27,28] 0
 x[ZWB_Liebherr_A922_Rail6,27,29] 0
 x[ZWB_Liebherr_A922_Rail6,27,30] 0
 x[ZWB_Liebherr_A922_Rail6,27,31] 0
@@ -4845,9 +4845,9 @@ x[ZWB_Liebherr_A922_Rail6,28,25] 0
 x[ZWB_Liebherr_A922_Rail6,28,26] 0
 x[ZWB_Liebherr_A922_Rail6,28,27] 0
 x[ZWB_Liebherr_A922_Rail6,28,28] 0
-x[ZWB_Liebherr_A922_Rail6,28,29] 1
+x[ZWB_Liebherr_A922_Rail6,28,29] 0
 x[ZWB_Liebherr_A922_Rail6,28,30] 0
-x[ZWB_Liebherr_A922_Rail6,28,31] 0
+x[ZWB_Liebherr_A922_Rail6,28,31] 1
 x[ZWB_Liebherr_A922_Rail6,28,32] 0
 x[ZWB_Liebherr_A922_Rail6,28,33] 0
 x[ZWB_Liebherr_A922_Rail6,28,34] 0
@@ -4893,7 +4893,7 @@ x[ZWB_Liebherr_A922_Rail6,29,27] 0
 x[ZWB_Liebherr_A922_Rail6,29,28] 0
 x[ZWB_Liebherr_A922_Rail6,29,29] 0
 x[ZWB_Liebherr_A922_Rail6,29,30] 0
-x[ZWB_Liebherr_A922_Rail6,29,31] 1
+x[ZWB_Liebherr_A922_Rail6,29,31] 0
 x[ZWB_Liebherr_A922_Rail6,29,32] 0
 x[ZWB_Liebherr_A922_Rail6,29,33] 0
 x[ZWB_Liebherr_A922_Rail6,29,34] 0
@@ -4986,9 +4986,9 @@ x[ZWB_Liebherr_A922_Rail6,31,28] 0
 x[ZWB_Liebherr_A922_Rail6,31,29] 0
 x[ZWB_Liebherr_A922_Rail6,31,30] 0
 x[ZWB_Liebherr_A922_Rail6,31,31] 0
-x[ZWB_Liebherr_A922_Rail6,31,32] 1
+x[ZWB_Liebherr_A922_Rail6,31,32] 0
 x[ZWB_Liebherr_A922_Rail6,31,33] 0
-x[ZWB_Liebherr_A922_Rail6,31,34] 0
+x[ZWB_Liebherr_A922_Rail6,31,34] 1
 x[ZWB_Liebherr_A922_Rail6,31,35] 0
 x[ZWB_Liebherr_A922_Rail6,31,36] 0
 x[ZWB_Liebherr_A922_Rail6,31,37] 0
@@ -5036,7 +5036,7 @@ x[ZWB_Liebherr_A922_Rail6,32,32] 0
 x[ZWB_Liebherr_A922_Rail6,32,33] 0
 x[ZWB_Liebherr_A922_Rail6,32,34] 0
 x[ZWB_Liebherr_A922_Rail6,32,35] 0
-x[ZWB_Liebherr_A922_Rail6,32,36] 1
+x[ZWB_Liebherr_A922_Rail6,32,36] 0
 x[ZWB_Liebherr_A922_Rail6,32,37] 0
 x[ZWB_Liebherr_A922_Rail6,32,38] 0
 x[ZWB_Liebherr_A922_Rail6,32,39] 0
@@ -5128,7 +5128,7 @@ x[ZWB_Liebherr_A922_Rail6,34,32] 0
 x[ZWB_Liebherr_A922_Rail6,34,33] 0
 x[ZWB_Liebherr_A922_Rail6,34,34] 0
 x[ZWB_Liebherr_A922_Rail6,34,35] 0
-x[ZWB_Liebherr_A922_Rail6,34,36] 0
+x[ZWB_Liebherr_A922_Rail6,34,36] 1
 x[ZWB_Liebherr_A922_Rail6,34,37] 0
 x[ZWB_Liebherr_A922_Rail6,34,38] 0
 x[ZWB_Liebherr_A922_Rail6,34,39] 0
@@ -5223,8 +5223,8 @@ x[ZWB_Liebherr_A922_Rail6,36,35] 0
 x[ZWB_Liebherr_A922_Rail6,36,36] 0
 x[ZWB_Liebherr_A922_Rail6,36,37] 0
 x[ZWB_Liebherr_A922_Rail6,36,38] 0
-x[ZWB_Liebherr_A922_Rail6,36,39] 0
-x[ZWB_Liebherr_A922_Rail6,36,40] 1
+x[ZWB_Liebherr_A922_Rail6,36,39] 1
+x[ZWB_Liebherr_A922_Rail6,36,40] 0
 x[ZWB_Liebherr_A922_Rail6,36,41] 0
 x[ZWB_Liebherr_A922_Rail6,36,42] 0
 x[ZWB_Liebherr_A922_Rail6,36,43] 0
@@ -5362,7 +5362,7 @@ x[ZWB_Liebherr_A922_Rail6,39,36] 0
 x[ZWB_Liebherr_A922_Rail6,39,37] 0
 x[ZWB_Liebherr_A922_Rail6,39,38] 0
 x[ZWB_Liebherr_A922_Rail6,39,39] 0
-x[ZWB_Liebherr_A922_Rail6,39,40] 0
+x[ZWB_Liebherr_A922_Rail6,39,40] 1
 x[ZWB_Liebherr_A922_Rail6,39,41] 0
 x[ZWB_Liebherr_A922_Rail6,39,42] 0
 x[ZWB_Liebherr_A922_Rail6,39,43] 0
@@ -5409,8 +5409,8 @@ x[ZWB_Liebherr_A922_Rail6,40,37] 0
 x[ZWB_Liebherr_A922_Rail6,40,38] 0
 x[ZWB_Liebherr_A922_Rail6,40,39] 0
 x[ZWB_Liebherr_A922_Rail6,40,40] 0
-x[ZWB_Liebherr_A922_Rail6,40,41] 1
-x[ZWB_Liebherr_A922_Rail6,40,42] 0
+x[ZWB_Liebherr_A922_Rail6,40,41] 0
+x[ZWB_Liebherr_A922_Rail6,40,42] 1
 x[ZWB_Liebherr_A922_Rail6,40,43] 0
 x[ZWB_Liebherr_A922_Rail6,40,44] 0
 x[ZWB_Liebherr_A922_Rail6,40,45] 0
@@ -5458,7 +5458,7 @@ x[ZWB_Liebherr_A922_Rail6,41,40] 0
 x[ZWB_Liebherr_A922_Rail6,41,41] 0
 x[ZWB_Liebherr_A922_Rail6,41,42] 0
 x[ZWB_Liebherr_A922_Rail6,41,43] 0
-x[ZWB_Liebherr_A922_Rail6,41,44] 1
+x[ZWB_Liebherr_A922_Rail6,41,44] 0
 x[ZWB_Liebherr_A922_Rail6,41,45] 0
 x[ZWB_Liebherr_A922_Rail6,42,0] 0
 x[ZWB_Liebherr_A922_Rail6,42,1] 0
@@ -5503,7 +5503,7 @@ x[ZWB_Liebherr_A922_Rail6,42,39] 0
 x[ZWB_Liebherr_A922_Rail6,42,40] 0
 x[ZWB_Liebherr_A922_Rail6,42,41] 0
 x[ZWB_Liebherr_A922_Rail6,42,42] 0
-x[ZWB_Liebherr_A922_Rail6,42,43] 0
+x[ZWB_Liebherr_A922_Rail6,42,43] 1
 x[ZWB_Liebherr_A922_Rail6,42,44] 0
 x[ZWB_Liebherr_A922_Rail6,42,45] 0
 x[ZWB_Liebherr_A922_Rail6,43,0] 0
@@ -5550,7 +5550,7 @@ x[ZWB_Liebherr_A922_Rail6,43,40] 0
 x[ZWB_Liebherr_A922_Rail6,43,41] 0
 x[ZWB_Liebherr_A922_Rail6,43,42] 0
 x[ZWB_Liebherr_A922_Rail6,43,43] 0
-x[ZWB_Liebherr_A922_Rail6,43,44] 0
+x[ZWB_Liebherr_A922_Rail6,43,44] 1
 x[ZWB_Liebherr_A922_Rail6,43,45] 0
 x[ZWB_Liebherr_A922_Rail6,44,0] 0
 x[ZWB_Liebherr_A922_Rail6,44,1] 0
@@ -5597,7 +5597,7 @@ x[ZWB_Liebherr_A922_Rail6,44,41] 0
 x[ZWB_Liebherr_A922_Rail6,44,42] 0
 x[ZWB_Liebherr_A922_Rail6,44,43] 0
 x[ZWB_Liebherr_A922_Rail6,44,44] 0
-x[ZWB_Liebherr_A922_Rail6,44,45] 1
+x[ZWB_Liebherr_A922_Rail6,44,45] 0
 x[ZWB_Liebherr_A922_Rail6,45,0] 0
 x[ZWB_Liebherr_A922_Rail6,45,1] 0
 x[ZWB_Liebherr_A922_Rail6,45,2] 0
@@ -6815,10 +6815,10 @@ x[ZWB_CAT_M323F8,80,91] 0
 x[ZWB_CAT_M323F8,80,92] 0
 x[ZWB_CAT_M323F8,80,93] 0
 x[ZWB_CAT_M323F8,80,94] 0
-x[ZWB_CAT_M323F8,80,95] 1
+x[ZWB_CAT_M323F8,80,95] 0
 x[ZWB_CAT_M323F8,81,80] 0
 x[ZWB_CAT_M323F8,81,81] 0
-x[ZWB_CAT_M323F8,81,82] 0
+x[ZWB_CAT_M323F8,81,82] 1
 x[ZWB_CAT_M323F8,81,83] 0
 x[ZWB_CAT_M323F8,81,84] 0
 x[ZWB_CAT_M323F8,81,85] 0
@@ -6837,7 +6837,7 @@ x[ZWB_CAT_M323F8,82,81] 0
 x[ZWB_CAT_M323F8,82,82] 0
 x[ZWB_CAT_M323F8,82,83] 0
 x[ZWB_CAT_M323F8,82,84] 0
-x[ZWB_CAT_M323F8,82,85] 0
+x[ZWB_CAT_M323F8,82,85] 1
 x[ZWB_CAT_M323F8,82,86] 0
 x[ZWB_CAT_M323F8,82,87] 0
 x[ZWB_CAT_M323F8,82,88] 0
@@ -6852,7 +6852,7 @@ x[ZWB_CAT_M323F8,83,80] 0
 x[ZWB_CAT_M323F8,83,81] 0
 x[ZWB_CAT_M323F8,83,82] 0
 x[ZWB_CAT_M323F8,83,83] 0
-x[ZWB_CAT_M323F8,83,84] 1
+x[ZWB_CAT_M323F8,83,84] 0
 x[ZWB_CAT_M323F8,83,85] 0
 x[ZWB_CAT_M323F8,83,86] 0
 x[ZWB_CAT_M323F8,83,87] 0
@@ -6903,7 +6903,7 @@ x[ZWB_CAT_M323F8,86,83] 0
 x[ZWB_CAT_M323F8,86,84] 0
 x[ZWB_CAT_M323F8,86,85] 0
 x[ZWB_CAT_M323F8,86,86] 0
-x[ZWB_CAT_M323F8,86,87] 0
+x[ZWB_CAT_M323F8,86,87] 1
 x[ZWB_CAT_M323F8,86,88] 0
 x[ZWB_CAT_M323F8,86,89] 0
 x[ZWB_CAT_M323F8,86,90] 0
@@ -6920,8 +6920,8 @@ x[ZWB_CAT_M323F8,87,84] 0
 x[ZWB_CAT_M323F8,87,85] 0
 x[ZWB_CAT_M323F8,87,86] 0
 x[ZWB_CAT_M323F8,87,87] 0
-x[ZWB_CAT_M323F8,87,88] 1
-x[ZWB_CAT_M323F8,87,89] 0
+x[ZWB_CAT_M323F8,87,88] 0
+x[ZWB_CAT_M323F8,87,89] 1
 x[ZWB_CAT_M323F8,87,90] 0
 x[ZWB_CAT_M323F8,87,91] 0
 x[ZWB_CAT_M323F8,87,92] 0
@@ -6937,14 +6937,14 @@ x[ZWB_CAT_M323F8,88,85] 0
 x[ZWB_CAT_M323F8,88,86] 0
 x[ZWB_CAT_M323F8,88,87] 0
 x[ZWB_CAT_M323F8,88,88] 0
-x[ZWB_CAT_M323F8,88,89] 1
+x[ZWB_CAT_M323F8,88,89] 0
 x[ZWB_CAT_M323F8,88,90] 0
 x[ZWB_CAT_M323F8,88,91] 0
 x[ZWB_CAT_M323F8,88,92] 0
 x[ZWB_CAT_M323F8,88,93] 0
 x[ZWB_CAT_M323F8,88,94] 0
 x[ZWB_CAT_M323F8,88,95] 0
-x[ZWB_CAT_M323F8,89,80] 1
+x[ZWB_CAT_M323F8,89,80] 0
 x[ZWB_CAT_M323F8,89,81] 0
 x[ZWB_CAT_M323F8,89,82] 0
 x[ZWB_CAT_M323F8,89,83] 0
@@ -6955,7 +6955,7 @@ x[ZWB_CAT_M323F8,89,87] 0
 x[ZWB_CAT_M323F8,89,88] 0
 x[ZWB_CAT_M323F8,89,89] 0
 x[ZWB_CAT_M323F8,89,90] 0
-x[ZWB_CAT_M323F8,89,91] 0
+x[ZWB_CAT_M323F8,89,91] 1
 x[ZWB_CAT_M323F8,89,92] 0
 x[ZWB_CAT_M323F8,89,93] 0
 x[ZWB_CAT_M323F8,89,94] 0
@@ -6988,7 +6988,7 @@ x[ZWB_CAT_M323F8,91,88] 0
 x[ZWB_CAT_M323F8,91,89] 0
 x[ZWB_CAT_M323F8,91,90] 0
 x[ZWB_CAT_M323F8,91,91] 0
-x[ZWB_CAT_M323F8,91,92] 0
+x[ZWB_CAT_M323F8,91,92] 1
 x[ZWB_CAT_M323F8,91,93] 0
 x[ZWB_CAT_M323F8,91,94] 0
 x[ZWB_CAT_M323F8,91,95] 0
@@ -7005,7 +7005,7 @@ x[ZWB_CAT_M323F8,92,89] 0
 x[ZWB_CAT_M323F8,92,90] 0
 x[ZWB_CAT_M323F8,92,91] 0
 x[ZWB_CAT_M323F8,92,92] 0
-x[ZWB_CAT_M323F8,92,93] 0
+x[ZWB_CAT_M323F8,92,93] 1
 x[ZWB_CAT_M323F8,92,94] 0
 x[ZWB_CAT_M323F8,92,95] 0
 x[ZWB_CAT_M323F8,93,80] 0
@@ -7022,10 +7022,10 @@ x[ZWB_CAT_M323F8,93,90] 0
 x[ZWB_CAT_M323F8,93,91] 0
 x[ZWB_CAT_M323F8,93,92] 0
 x[ZWB_CAT_M323F8,93,93] 0
-x[ZWB_CAT_M323F8,93,94] 0
+x[ZWB_CAT_M323F8,93,94] 1
 x[ZWB_CAT_M323F8,93,95] 0
 x[ZWB_CAT_M323F8,94,80] 0
-x[ZWB_CAT_M323F8,94,81] 0
+x[ZWB_CAT_M323F8,94,81] 1
 x[ZWB_CAT_M323F8,94,82] 0
 x[ZWB_CAT_M323F8,94,83] 0
 x[ZWB_CAT_M323F8,94,84] 0
@@ -7043,7 +7043,7 @@ x[ZWB_CAT_M323F8,94,95] 0
 x[ZWB_CAT_M323F8,95,80] 0
 x[ZWB_CAT_M323F8,95,81] 0
 x[ZWB_CAT_M323F8,95,82] 0
-x[ZWB_CAT_M323F8,95,83] 1
+x[ZWB_CAT_M323F8,95,83] 0
 x[ZWB_CAT_M323F8,95,84] 0
 x[ZWB_CAT_M323F8,95,85] 0
 x[ZWB_CAT_M323F8,95,86] 0
@@ -7152,7 +7152,7 @@ x[ZWB_Liebherr_A922_Rail9,2,0] 0
 x[ZWB_Liebherr_A922_Rail9,2,1] 0
 x[ZWB_Liebherr_A922_Rail9,2,2] 0
 x[ZWB_Liebherr_A922_Rail9,2,3] 0
-x[ZWB_Liebherr_A922_Rail9,2,4] 0
+x[ZWB_Liebherr_A922_Rail9,2,4] 1
 x[ZWB_Liebherr_A922_Rail9,2,5] 0
 x[ZWB_Liebherr_A922_Rail9,2,6] 0
 x[ZWB_Liebherr_A922_Rail9,2,7] 0
@@ -7200,7 +7200,7 @@ x[ZWB_Liebherr_A922_Rail9,3,2] 0
 x[ZWB_Liebherr_A922_Rail9,3,3] 0
 x[ZWB_Liebherr_A922_Rail9,3,4] 0
 x[ZWB_Liebherr_A922_Rail9,3,5] 0
-x[ZWB_Liebherr_A922_Rail9,3,6] 1
+x[ZWB_Liebherr_A922_Rail9,3,6] 0
 x[ZWB_Liebherr_A922_Rail9,3,7] 0
 x[ZWB_Liebherr_A922_Rail9,3,8] 0
 x[ZWB_Liebherr_A922_Rail9,3,9] 0
@@ -7247,7 +7247,7 @@ x[ZWB_Liebherr_A922_Rail9,4,3] 0
 x[ZWB_Liebherr_A922_Rail9,4,4] 0
 x[ZWB_Liebherr_A922_Rail9,4,5] 0
 x[ZWB_Liebherr_A922_Rail9,4,6] 0
-x[ZWB_Liebherr_A922_Rail9,4,7] 0
+x[ZWB_Liebherr_A922_Rail9,4,7] 1
 x[ZWB_Liebherr_A922_Rail9,4,8] 0
 x[ZWB_Liebherr_A922_Rail9,4,9] 0
 x[ZWB_Liebherr_A922_Rail9,4,10] 0
@@ -7339,7 +7339,7 @@ x[ZWB_Liebherr_A922_Rail9,6,3] 0
 x[ZWB_Liebherr_A922_Rail9,6,4] 0
 x[ZWB_Liebherr_A922_Rail9,6,5] 0
 x[ZWB_Liebherr_A922_Rail9,6,6] 0
-x[ZWB_Liebherr_A922_Rail9,6,7] 1
+x[ZWB_Liebherr_A922_Rail9,6,7] 0
 x[ZWB_Liebherr_A922_Rail9,6,8] 0
 x[ZWB_Liebherr_A922_Rail9,6,9] 0
 x[ZWB_Liebherr_A922_Rail9,6,10] 0
@@ -7433,9 +7433,9 @@ x[ZWB_Liebherr_A922_Rail9,8,5] 0
 x[ZWB_Liebherr_A922_Rail9,8,6] 0
 x[ZWB_Liebherr_A922_Rail9,8,7] 0
 x[ZWB_Liebherr_A922_Rail9,8,8] 0
-x[ZWB_Liebherr_A922_Rail9,8,9] 1
+x[ZWB_Liebherr_A922_Rail9,8,9] 0
 x[ZWB_Liebherr_A922_Rail9,8,10] 0
-x[ZWB_Liebherr_A922_Rail9,8,11] 0
+x[ZWB_Liebherr_A922_Rail9,8,11] 1
 x[ZWB_Liebherr_A922_Rail9,8,12] 0
 x[ZWB_Liebherr_A922_Rail9,8,13] 0
 x[ZWB_Liebherr_A922_Rail9,8,14] 0
@@ -7481,7 +7481,7 @@ x[ZWB_Liebherr_A922_Rail9,9,7] 0
 x[ZWB_Liebherr_A922_Rail9,9,8] 0
 x[ZWB_Liebherr_A922_Rail9,9,9] 0
 x[ZWB_Liebherr_A922_Rail9,9,10] 0
-x[ZWB_Liebherr_A922_Rail9,9,11] 1
+x[ZWB_Liebherr_A922_Rail9,9,11] 0
 x[ZWB_Liebherr_A922_Rail9,9,12] 0
 x[ZWB_Liebherr_A922_Rail9,9,13] 0
 x[ZWB_Liebherr_A922_Rail9,9,14] 0
@@ -7574,13 +7574,13 @@ x[ZWB_Liebherr_A922_Rail9,11,8] 0
 x[ZWB_Liebherr_A922_Rail9,11,9] 0
 x[ZWB_Liebherr_A922_Rail9,11,10] 0
 x[ZWB_Liebherr_A922_Rail9,11,11] 0
-x[ZWB_Liebherr_A922_Rail9,11,12] 1
+x[ZWB_Liebherr_A922_Rail9,11,12] 0
 x[ZWB_Liebherr_A922_Rail9,11,13] 0
 x[ZWB_Liebherr_A922_Rail9,11,14] 0
 x[ZWB_Liebherr_A922_Rail9,11,15] 0
 x[ZWB_Liebherr_A922_Rail9,11,16] 0
 x[ZWB_Liebherr_A922_Rail9,11,17] 0
-x[ZWB_Liebherr_A922_Rail9,11,18] 0
+x[ZWB_Liebherr_A922_Rail9,11,18] 1
 x[ZWB_Liebherr_A922_Rail9,11,19] 0
 x[ZWB_Liebherr_A922_Rail9,11,20] 0
 x[ZWB_Liebherr_A922_Rail9,11,21] 0
@@ -7621,7 +7621,7 @@ x[ZWB_Liebherr_A922_Rail9,12,9] 0
 x[ZWB_Liebherr_A922_Rail9,12,10] 0
 x[ZWB_Liebherr_A922_Rail9,12,11] 0
 x[ZWB_Liebherr_A922_Rail9,12,12] 0
-x[ZWB_Liebherr_A922_Rail9,12,13] 1
+x[ZWB_Liebherr_A922_Rail9,12,13] 0
 x[ZWB_Liebherr_A922_Rail9,12,14] 0
 x[ZWB_Liebherr_A922_Rail9,12,15] 0
 x[ZWB_Liebherr_A922_Rail9,12,16] 0
@@ -7674,7 +7674,7 @@ x[ZWB_Liebherr_A922_Rail9,13,16] 0
 x[ZWB_Liebherr_A922_Rail9,13,17] 0
 x[ZWB_Liebherr_A922_Rail9,13,18] 0
 x[ZWB_Liebherr_A922_Rail9,13,19] 0
-x[ZWB_Liebherr_A922_Rail9,13,20] 1
+x[ZWB_Liebherr_A922_Rail9,13,20] 0
 x[ZWB_Liebherr_A922_Rail9,13,21] 0
 x[ZWB_Liebherr_A922_Rail9,13,22] 0
 x[ZWB_Liebherr_A922_Rail9,13,23] 0
@@ -7905,7 +7905,7 @@ x[ZWB_Liebherr_A922_Rail9,18,17] 0
 x[ZWB_Liebherr_A922_Rail9,18,18] 0
 x[ZWB_Liebherr_A922_Rail9,18,19] 0
 x[ZWB_Liebherr_A922_Rail9,18,20] 0
-x[ZWB_Liebherr_A922_Rail9,18,21] 0
+x[ZWB_Liebherr_A922_Rail9,18,21] 1
 x[ZWB_Liebherr_A922_Rail9,18,22] 0
 x[ZWB_Liebherr_A922_Rail9,18,23] 0
 x[ZWB_Liebherr_A922_Rail9,18,24] 0
@@ -7999,7 +7999,7 @@ x[ZWB_Liebherr_A922_Rail9,20,19] 0
 x[ZWB_Liebherr_A922_Rail9,20,20] 0
 x[ZWB_Liebherr_A922_Rail9,20,21] 0
 x[ZWB_Liebherr_A922_Rail9,20,22] 0
-x[ZWB_Liebherr_A922_Rail9,20,23] 1
+x[ZWB_Liebherr_A922_Rail9,20,23] 0
 x[ZWB_Liebherr_A922_Rail9,20,24] 0
 x[ZWB_Liebherr_A922_Rail9,20,25] 0
 x[ZWB_Liebherr_A922_Rail9,20,26] 0
@@ -8044,7 +8044,7 @@ x[ZWB_Liebherr_A922_Rail9,21,18] 0
 x[ZWB_Liebherr_A922_Rail9,21,19] 0
 x[ZWB_Liebherr_A922_Rail9,21,20] 0
 x[ZWB_Liebherr_A922_Rail9,21,21] 0
-x[ZWB_Liebherr_A922_Rail9,21,22] 0
+x[ZWB_Liebherr_A922_Rail9,21,22] 1
 x[ZWB_Liebherr_A922_Rail9,21,23] 0
 x[ZWB_Liebherr_A922_Rail9,21,24] 0
 x[ZWB_Liebherr_A922_Rail9,21,25] 0
@@ -8091,7 +8091,7 @@ x[ZWB_Liebherr_A922_Rail9,22,19] 0
 x[ZWB_Liebherr_A922_Rail9,22,20] 0
 x[ZWB_Liebherr_A922_Rail9,22,21] 0
 x[ZWB_Liebherr_A922_Rail9,22,22] 0
-x[ZWB_Liebherr_A922_Rail9,22,23] 0
+x[ZWB_Liebherr_A922_Rail9,22,23] 1
 x[ZWB_Liebherr_A922_Rail9,22,24] 0
 x[ZWB_Liebherr_A922_Rail9,22,25] 0
 x[ZWB_Liebherr_A922_Rail9,22,26] 0
@@ -8139,12 +8139,12 @@ x[ZWB_Liebherr_A922_Rail9,23,21] 0
 x[ZWB_Liebherr_A922_Rail9,23,22] 0
 x[ZWB_Liebherr_A922_Rail9,23,23] 0
 x[ZWB_Liebherr_A922_Rail9,23,24] 0
-x[ZWB_Liebherr_A922_Rail9,23,25] 0
+x[ZWB_Liebherr_A922_Rail9,23,25] 1
 x[ZWB_Liebherr_A922_Rail9,23,26] 0
 x[ZWB_Liebherr_A922_Rail9,23,27] 0
 x[ZWB_Liebherr_A922_Rail9,23,28] 0
 x[ZWB_Liebherr_A922_Rail9,23,29] 0
-x[ZWB_Liebherr_A922_Rail9,23,30] 1
+x[ZWB_Liebherr_A922_Rail9,23,30] 0
 x[ZWB_Liebherr_A922_Rail9,23,31] 0
 x[ZWB_Liebherr_A922_Rail9,23,32] 0
 x[ZWB_Liebherr_A922_Rail9,23,33] 0
@@ -8232,7 +8232,7 @@ x[ZWB_Liebherr_A922_Rail9,25,22] 0
 x[ZWB_Liebherr_A922_Rail9,25,23] 0
 x[ZWB_Liebherr_A922_Rail9,25,24] 0
 x[ZWB_Liebherr_A922_Rail9,25,25] 0
-x[ZWB_Liebherr_A922_Rail9,25,26] 0
+x[ZWB_Liebherr_A922_Rail9,25,26] 1
 x[ZWB_Liebherr_A922_Rail9,25,27] 0
 x[ZWB_Liebherr_A922_Rail9,25,28] 0
 x[ZWB_Liebherr_A922_Rail9,25,29] 0
@@ -8281,7 +8281,7 @@ x[ZWB_Liebherr_A922_Rail9,26,25] 0
 x[ZWB_Liebherr_A922_Rail9,26,26] 0
 x[ZWB_Liebherr_A922_Rail9,26,27] 0
 x[ZWB_Liebherr_A922_Rail9,26,28] 0
-x[ZWB_Liebherr_A922_Rail9,26,29] 0
+x[ZWB_Liebherr_A922_Rail9,26,29] 1
 x[ZWB_Liebherr_A922_Rail9,26,30] 0
 x[ZWB_Liebherr_A922_Rail9,26,31] 0
 x[ZWB_Liebherr_A922_Rail9,26,32] 0
@@ -8422,7 +8422,7 @@ x[ZWB_Liebherr_A922_Rail9,29,28] 0
 x[ZWB_Liebherr_A922_Rail9,29,29] 0
 x[ZWB_Liebherr_A922_Rail9,29,30] 0
 x[ZWB_Liebherr_A922_Rail9,29,31] 0
-x[ZWB_Liebherr_A922_Rail9,29,32] 0
+x[ZWB_Liebherr_A922_Rail9,29,32] 1
 x[ZWB_Liebherr_A922_Rail9,29,33] 0
 x[ZWB_Liebherr_A922_Rail9,29,34] 0
 x[ZWB_Liebherr_A922_Rail9,29,35] 0
@@ -8469,7 +8469,7 @@ x[ZWB_Liebherr_A922_Rail9,30,29] 0
 x[ZWB_Liebherr_A922_Rail9,30,30] 0
 x[ZWB_Liebherr_A922_Rail9,30,31] 0
 x[ZWB_Liebherr_A922_Rail9,30,32] 0
-x[ZWB_Liebherr_A922_Rail9,30,33] 1
+x[ZWB_Liebherr_A922_Rail9,30,33] 0
 x[ZWB_Liebherr_A922_Rail9,30,34] 0
 x[ZWB_Liebherr_A922_Rail9,30,35] 0
 x[ZWB_Liebherr_A922_Rail9,30,36] 0
@@ -8563,7 +8563,7 @@ x[ZWB_Liebherr_A922_Rail9,32,31] 0
 x[ZWB_Liebherr_A922_Rail9,32,32] 0
 x[ZWB_Liebherr_A922_Rail9,32,33] 0
 x[ZWB_Liebherr_A922_Rail9,32,34] 0
-x[ZWB_Liebherr_A922_Rail9,32,35] 0
+x[ZWB_Liebherr_A922_Rail9,32,35] 1
 x[ZWB_Liebherr_A922_Rail9,32,36] 0
 x[ZWB_Liebherr_A922_Rail9,32,37] 0
 x[ZWB_Liebherr_A922_Rail9,32,38] 0
@@ -8609,7 +8609,7 @@ x[ZWB_Liebherr_A922_Rail9,33,31] 0
 x[ZWB_Liebherr_A922_Rail9,33,32] 0
 x[ZWB_Liebherr_A922_Rail9,33,33] 0
 x[ZWB_Liebherr_A922_Rail9,33,34] 0
-x[ZWB_Liebherr_A922_Rail9,33,35] 1
+x[ZWB_Liebherr_A922_Rail9,33,35] 0
 x[ZWB_Liebherr_A922_Rail9,33,36] 0
 x[ZWB_Liebherr_A922_Rail9,33,37] 0
 x[ZWB_Liebherr_A922_Rail9,33,38] 0
@@ -8796,8 +8796,8 @@ x[ZWB_Liebherr_A922_Rail9,37,34] 0
 x[ZWB_Liebherr_A922_Rail9,37,35] 0
 x[ZWB_Liebherr_A922_Rail9,37,36] 0
 x[ZWB_Liebherr_A922_Rail9,37,37] 0
-x[ZWB_Liebherr_A922_Rail9,37,38] 0
-x[ZWB_Liebherr_A922_Rail9,37,39] 1
+x[ZWB_Liebherr_A922_Rail9,37,38] 1
+x[ZWB_Liebherr_A922_Rail9,37,39] 0
 x[ZWB_Liebherr_A922_Rail9,37,40] 0
 x[ZWB_Liebherr_A922_Rail9,37,41] 0
 x[ZWB_Liebherr_A922_Rail9,37,42] 0
@@ -8892,7 +8892,7 @@ x[ZWB_Liebherr_A922_Rail9,39,38] 0
 x[ZWB_Liebherr_A922_Rail9,39,39] 0
 x[ZWB_Liebherr_A922_Rail9,39,40] 0
 x[ZWB_Liebherr_A922_Rail9,39,41] 0
-x[ZWB_Liebherr_A922_Rail9,39,42] 1
+x[ZWB_Liebherr_A922_Rail9,39,42] 0
 x[ZWB_Liebherr_A922_Rail9,39,43] 0
 x[ZWB_Liebherr_A922_Rail9,39,44] 0
 x[ZWB_Liebherr_A922_Rail9,39,45] 0
@@ -9031,7 +9031,7 @@ x[ZWB_Liebherr_A922_Rail9,42,39] 0
 x[ZWB_Liebherr_A922_Rail9,42,40] 0
 x[ZWB_Liebherr_A922_Rail9,42,41] 0
 x[ZWB_Liebherr_A922_Rail9,42,42] 0
-x[ZWB_Liebherr_A922_Rail9,42,43] 1
+x[ZWB_Liebherr_A922_Rail9,42,43] 0
 x[ZWB_Liebherr_A922_Rail9,42,44] 0
 x[ZWB_Liebherr_A922_Rail9,42,45] 0
 x[ZWB_Liebherr_A922_Rail9,43,0] 0
@@ -9258,9 +9258,9 @@ x[ZWB_CAT_M323F5,start,82] 0
 x[ZWB_CAT_M323F5,start,83] 0
 x[ZWB_CAT_M323F5,start,84] 0
 x[ZWB_CAT_M323F5,start,85] 0
-x[ZWB_CAT_M323F5,start,86] 1
+x[ZWB_CAT_M323F5,start,86] 0
 x[ZWB_CAT_M323F5,start,87] 0
-x[ZWB_CAT_M323F5,start,88] 0
+x[ZWB_CAT_M323F5,start,88] 1
 x[ZWB_CAT_M323F5,start,89] 0
 x[ZWB_CAT_M323F5,start,90] 0
 x[ZWB_CAT_M323F5,start,91] 0
@@ -9354,8 +9354,8 @@ x[ZWB_CAT_M323F8,start,82] 0
 x[ZWB_CAT_M323F8,start,83] 0
 x[ZWB_CAT_M323F8,start,84] 0
 x[ZWB_CAT_M323F8,start,85] 0
-x[ZWB_CAT_M323F8,start,86] 0
-x[ZWB_CAT_M323F8,start,87] 1
+x[ZWB_CAT_M323F8,start,86] 1
+x[ZWB_CAT_M323F8,start,87] 0
 x[ZWB_CAT_M323F8,start,88] 0
 x[ZWB_CAT_M323F8,start,89] 0
 x[ZWB_CAT_M323F8,start,90] 0
@@ -9366,8 +9366,8 @@ x[ZWB_CAT_M323F8,start,94] 0
 x[ZWB_CAT_M323F8,start,95] 0
 x[ZWB_Liebherr_A922_Rail9,start,0] 0
 x[ZWB_Liebherr_A922_Rail9,start,1] 0
-x[ZWB_Liebherr_A922_Rail9,start,2] 0
-x[ZWB_Liebherr_A922_Rail9,start,3] 1
+x[ZWB_Liebherr_A922_Rail9,start,2] 1
+x[ZWB_Liebherr_A922_Rail9,start,3] 0
 x[ZWB_Liebherr_A922_Rail9,start,4] 0
 x[ZWB_Liebherr_A922_Rail9,start,5] 0
 x[ZWB_Liebherr_A922_Rail9,start,6] 0
@@ -9448,14 +9448,14 @@ x[ZWB_Liebherr_A922_Rail1,34,end] 0
 x[ZWB_Liebherr_A922_Rail1,35,end] 0
 x[ZWB_Liebherr_A922_Rail1,36,end] 0
 x[ZWB_Liebherr_A922_Rail1,37,end] 0
-x[ZWB_Liebherr_A922_Rail1,38,end] 1
+x[ZWB_Liebherr_A922_Rail1,38,end] 0
 x[ZWB_Liebherr_A922_Rail1,39,end] 0
 x[ZWB_Liebherr_A922_Rail1,40,end] 0
 x[ZWB_Liebherr_A922_Rail1,41,end] 0
 x[ZWB_Liebherr_A922_Rail1,42,end] 0
 x[ZWB_Liebherr_A922_Rail1,43,end] 0
 x[ZWB_Liebherr_A922_Rail1,44,end] 0
-x[ZWB_Liebherr_A922_Rail1,45,end] 0
+x[ZWB_Liebherr_A922_Rail1,45,end] 1
 x[Kettenbagger_Kobelco2,46,end] 0
 x[Kettenbagger_Kobelco2,47,end] 0
 x[Kettenbagger_Kobelco2,48,end] 0
@@ -9494,8 +9494,8 @@ x[ZWB_CAT_M323F5,80,end] 0
 x[ZWB_CAT_M323F5,81,end] 0
 x[ZWB_CAT_M323F5,82,end] 0
 x[ZWB_CAT_M323F5,83,end] 0
-x[ZWB_CAT_M323F5,84,end] 0
-x[ZWB_CAT_M323F5,85,end] 1
+x[ZWB_CAT_M323F5,84,end] 1
+x[ZWB_CAT_M323F5,85,end] 0
 x[ZWB_CAT_M323F5,86,end] 0
 x[ZWB_CAT_M323F5,87,end] 0
 x[ZWB_CAT_M323F5,88,end] 0
@@ -9550,8 +9550,8 @@ x[ZWB_Liebherr_A922_Rail6,40,end] 0
 x[ZWB_Liebherr_A922_Rail6,41,end] 0
 x[ZWB_Liebherr_A922_Rail6,42,end] 0
 x[ZWB_Liebherr_A922_Rail6,43,end] 0
-x[ZWB_Liebherr_A922_Rail6,44,end] 0
-x[ZWB_Liebherr_A922_Rail6,45,end] 1
+x[ZWB_Liebherr_A922_Rail6,44,end] 1
+x[ZWB_Liebherr_A922_Rail6,45,end] 0
 x[Kettenbagger_Kobelco7,46,end] 0
 x[Kettenbagger_Kobelco7,47,end] 0
 x[Kettenbagger_Kobelco7,48,end] 0
@@ -9590,8 +9590,8 @@ x[ZWB_CAT_M323F8,80,end] 0
 x[ZWB_CAT_M323F8,81,end] 0
 x[ZWB_CAT_M323F8,82,end] 0
 x[ZWB_CAT_M323F8,83,end] 0
-x[ZWB_CAT_M323F8,84,end] 1
-x[ZWB_CAT_M323F8,85,end] 0
+x[ZWB_CAT_M323F8,84,end] 0
+x[ZWB_CAT_M323F8,85,end] 1
 x[ZWB_CAT_M323F8,86,end] 0
 x[ZWB_CAT_M323F8,87,end] 0
 x[ZWB_CAT_M323F8,88,end] 0
@@ -9640,12 +9640,12 @@ x[ZWB_Liebherr_A922_Rail9,34,end] 0
 x[ZWB_Liebherr_A922_Rail9,35,end] 0
 x[ZWB_Liebherr_A922_Rail9,36,end] 0
 x[ZWB_Liebherr_A922_Rail9,37,end] 0
-x[ZWB_Liebherr_A922_Rail9,38,end] 0
+x[ZWB_Liebherr_A922_Rail9,38,end] 1
 x[ZWB_Liebherr_A922_Rail9,39,end] 0
 x[ZWB_Liebherr_A922_Rail9,40,end] 0
 x[ZWB_Liebherr_A922_Rail9,41,end] 0
 x[ZWB_Liebherr_A922_Rail9,42,end] 0
-x[ZWB_Liebherr_A922_Rail9,43,end] 1
+x[ZWB_Liebherr_A922_Rail9,43,end] 0
 x[ZWB_Liebherr_A922_Rail9,44,end] 0
 x[ZWB_Liebherr_A922_Rail9,45,end] 0
 x[Kettenbagger_Liebherr_9260,start,end] 0
@@ -9845,7 +9845,7 @@ y[0,1,87] 0
 y[0,1,88] 0
 y[0,1,89] 0
 y[0,1,90] 0
-y[0,1,91] 0
+y[0,1,91] 1
 y[0,1,92] 0
 y[0,1,93] 0
 y[0,1,94] 0
@@ -9995,7 +9995,7 @@ y[0,3,45] 0
 y[0,3,46] 0
 y[0,3,47] 0
 y[0,3,48] 0
-y[0,3,49] 1
+y[0,3,49] 0
 y[0,3,50] 0
 y[0,3,51] 0
 y[0,3,52] 0
@@ -11311,7 +11311,7 @@ y[0,17,17] 0
 y[0,17,18] 0
 y[0,17,19] 0
 y[0,17,20] 0
-y[0,17,21] 0
+y[0,17,21] 1
 y[0,17,22] 0
 y[0,17,23] 0
 y[0,17,24] 0
@@ -11703,7 +11703,7 @@ y[0,21,25] 0
 y[0,21,26] 0
 y[0,21,27] 0
 y[0,21,28] 0
-y[0,21,29] 1
+y[0,21,29] 0
 y[0,21,30] 0
 y[0,21,31] 0
 y[0,21,32] 0
@@ -11742,7 +11742,7 @@ y[0,21,64] 0
 y[0,21,65] 0
 y[0,21,66] 0
 y[0,21,67] 0
-y[0,21,68] 0
+y[0,21,68] 1
 y[0,21,69] 0
 y[0,21,70] 0
 y[0,21,71] 0
@@ -12474,7 +12474,7 @@ y[0,29,28] 0
 y[0,29,29] 0
 y[0,29,30] 0
 y[0,29,31] 0
-y[0,29,32] 1
+y[0,29,32] 0
 y[0,29,33] 0
 y[0,29,34] 0
 y[0,29,35] 0
@@ -12767,7 +12767,7 @@ y[0,32,33] 0
 y[0,32,34] 0
 y[0,32,35] 0
 y[0,32,36] 0
-y[0,32,37] 1
+y[0,32,37] 0
 y[0,32,38] 0
 y[0,32,39] 0
 y[0,32,40] 0
@@ -13249,7 +13249,7 @@ y[0,37,35] 0
 y[0,37,36] 0
 y[0,37,37] 0
 y[0,37,38] 0
-y[0,37,39] 1
+y[0,37,39] 0
 y[0,37,40] 0
 y[0,37,41] 0
 y[0,37,42] 0
@@ -13443,7 +13443,7 @@ y[0,39,37] 0
 y[0,39,38] 0
 y[0,39,39] 0
 y[0,39,40] 0
-y[0,39,41] 1
+y[0,39,41] 0
 y[0,39,42] 0
 y[0,39,43] 0
 y[0,39,44] 0
@@ -13734,7 +13734,7 @@ y[0,42,40] 0
 y[0,42,41] 0
 y[0,42,42] 0
 y[0,42,43] 0
-y[0,42,44] 0
+y[0,42,44] 1
 y[0,42,45] 0
 y[0,42,46] 0
 y[0,42,47] 0
@@ -14455,7 +14455,7 @@ y[0,49,89] 0
 y[0,49,90] 0
 y[0,49,91] 0
 y[0,49,92] 0
-y[0,49,93] 1
+y[0,49,93] 0
 y[0,49,94] 0
 y[0,49,95] 0
 y[0,50,0] 0
@@ -14635,7 +14635,7 @@ y[0,51,77] 0
 y[0,51,78] 0
 y[0,51,79] 0
 y[0,51,80] 0
-y[0,51,81] 0
+y[0,51,81] 1
 y[0,51,82] 0
 y[0,51,83] 0
 y[0,51,84] 0
@@ -15147,7 +15147,7 @@ y[0,57,13] 0
 y[0,57,14] 0
 y[0,57,15] 0
 y[0,57,16] 0
-y[0,57,17] 0
+y[0,57,17] 1
 y[0,57,18] 0
 y[0,57,19] 0
 y[0,57,20] 0
@@ -16256,7 +16256,7 @@ y[0,68,66] 0
 y[0,68,67] 0
 y[0,68,68] 0
 y[0,68,69] 0
-y[0,68,70] 0
+y[0,68,70] 1
 y[0,68,71] 0
 y[0,68,72] 0
 y[0,68,73] 0
@@ -16454,7 +16454,7 @@ y[0,70,72] 0
 y[0,70,73] 0
 y[0,70,74] 0
 y[0,70,75] 0
-y[0,70,76] 0
+y[0,70,76] 1
 y[0,70,77] 0
 y[0,70,78] 0
 y[0,70,79] 0
@@ -16996,7 +16996,7 @@ y[0,76,38] 0
 y[0,76,39] 0
 y[0,76,40] 0
 y[0,76,41] 0
-y[0,76,42] 0
+y[0,76,42] 1
 y[0,76,43] 0
 y[0,76,44] 0
 y[0,76,45] 0
@@ -17491,7 +17491,7 @@ y[0,81,53] 0
 y[0,81,54] 0
 y[0,81,55] 0
 y[0,81,56] 0
-y[0,81,57] 0
+y[0,81,57] 1
 y[0,81,58] 0
 y[0,81,59] 0
 y[0,81,60] 0
@@ -17614,7 +17614,7 @@ y[0,82,80] 0
 y[0,82,81] 0
 y[0,82,82] 0
 y[0,82,83] 0
-y[0,82,84] 1
+y[0,82,84] 0
 y[0,82,85] 0
 y[0,82,86] 0
 y[0,82,87] 0
@@ -17743,7 +17743,7 @@ y[0,84,17] 0
 y[0,84,18] 0
 y[0,84,19] 0
 y[0,84,20] 0
-y[0,84,21] 1
+y[0,84,21] 0
 y[0,84,22] 0
 y[0,84,23] 0
 y[0,84,24] 0
@@ -18445,7 +18445,7 @@ y[0,91,47] 0
 y[0,91,48] 0
 y[0,91,49] 0
 y[0,91,50] 0
-y[0,91,51] 0
+y[0,91,51] 1
 y[0,91,52] 0
 y[0,91,53] 0
 y[0,91,54] 0
@@ -18668,7 +18668,7 @@ y[0,93,78] 0
 y[0,93,79] 0
 y[0,93,80] 0
 y[0,93,81] 0
-y[0,93,82] 1
+y[0,93,82] 0
 y[0,93,83] 0
 y[0,93,84] 0
 y[0,93,85] 0
@@ -19448,7 +19448,7 @@ y[1,5,90] 0
 y[1,5,91] 0
 y[1,5,92] 0
 y[1,5,93] 0
-y[1,5,94] 1
+y[1,5,94] 0
 y[1,5,95] 0
 y[1,6,0] 0
 y[1,6,1] 0
@@ -20041,7 +20041,7 @@ y[1,12,11] 0
 y[1,12,12] 0
 y[1,12,13] 0
 y[1,12,14] 0
-y[1,12,15] 0
+y[1,12,15] 1
 y[1,12,16] 0
 y[1,12,17] 0
 y[1,12,18] 0
@@ -20336,7 +20336,7 @@ y[1,15,18] 0
 y[1,15,19] 0
 y[1,15,20] 0
 y[1,15,21] 0
-y[1,15,22] 0
+y[1,15,22] 1
 y[1,15,23] 0
 y[1,15,24] 0
 y[1,15,25] 0
@@ -20863,7 +20863,7 @@ y[1,20,65] 0
 y[1,20,66] 0
 y[1,20,67] 0
 y[1,20,68] 0
-y[1,20,69] 1
+y[1,20,69] 0
 y[1,20,70] 0
 y[1,20,71] 0
 y[1,20,72] 0
@@ -21014,7 +21014,7 @@ y[1,22,24] 0
 y[1,22,25] 0
 y[1,22,26] 0
 y[1,22,27] 0
-y[1,22,28] 0
+y[1,22,28] 1
 y[1,22,29] 0
 y[1,22,30] 0
 y[1,22,31] 0
@@ -21596,7 +21596,7 @@ y[1,28,30] 0
 y[1,28,31] 0
 y[1,28,32] 0
 y[1,28,33] 0
-y[1,28,34] 0
+y[1,28,34] 1
 y[1,28,35] 0
 y[1,28,36] 0
 y[1,28,37] 0
@@ -22174,7 +22174,7 @@ y[1,34,32] 0
 y[1,34,33] 0
 y[1,34,34] 0
 y[1,34,35] 0
-y[1,34,36] 0
+y[1,34,36] 1
 y[1,34,37] 0
 y[1,34,38] 0
 y[1,34,39] 0
@@ -22369,7 +22369,7 @@ y[1,36,35] 0
 y[1,36,36] 0
 y[1,36,37] 0
 y[1,36,38] 0
-y[1,36,39] 0
+y[1,36,39] 1
 y[1,36,40] 0
 y[1,36,41] 0
 y[1,36,42] 0
@@ -22564,7 +22564,7 @@ y[1,38,38] 0
 y[1,38,39] 0
 y[1,38,40] 0
 y[1,38,41] 0
-y[1,38,42] 1
+y[1,38,42] 0
 y[1,38,43] 0
 y[1,38,44] 0
 y[1,38,45] 0
@@ -22661,7 +22661,7 @@ y[1,39,39] 0
 y[1,39,40] 0
 y[1,39,41] 0
 y[1,39,42] 0
-y[1,39,43] 0
+y[1,39,43] 1
 y[1,39,44] 0
 y[1,39,45] 0
 y[1,39,46] 0
@@ -22950,7 +22950,7 @@ y[1,42,40] 0
 y[1,42,41] 0
 y[1,42,42] 0
 y[1,42,43] 0
-y[1,42,44] 1
+y[1,42,44] 0
 y[1,42,45] 0
 y[1,42,46] 0
 y[1,42,47] 0
@@ -23047,7 +23047,7 @@ y[1,43,41] 0
 y[1,43,42] 0
 y[1,43,43] 0
 y[1,43,44] 0
-y[1,43,45] 0
+y[1,43,45] 1
 y[1,43,46] 0
 y[1,43,47] 0
 y[1,43,48] 0
@@ -24405,7 +24405,7 @@ y[1,57,55] 0
 y[1,57,56] 0
 y[1,57,57] 0
 y[1,57,58] 0
-y[1,57,59] 1
+y[1,57,59] 0
 y[1,57,60] 0
 y[1,57,61] 0
 y[1,57,62] 0
@@ -24558,7 +24558,7 @@ y[1,59,16] 0
 y[1,59,17] 0
 y[1,59,18] 0
 y[1,59,19] 0
-y[1,59,20] 1
+y[1,59,20] 0
 y[1,59,21] 0
 y[1,59,22] 0
 y[1,59,23] 0
@@ -25536,7 +25536,7 @@ y[1,69,34] 0
 y[1,69,35] 0
 y[1,69,36] 0
 y[1,69,37] 0
-y[1,69,38] 1
+y[1,69,38] 0
 y[1,69,39] 0
 y[1,69,40] 0
 y[1,69,41] 0
@@ -27135,7 +27135,7 @@ y[1,86,1] 0
 y[1,86,2] 0
 y[1,86,3] 0
 y[1,86,4] 0
-y[1,86,5] 1
+y[1,86,5] 0
 y[1,86,6] 0
 y[1,86,7] 0
 y[1,86,8] 0
@@ -27955,7 +27955,7 @@ y[1,94,53] 0
 y[1,94,54] 0
 y[1,94,55] 0
 y[1,94,56] 0
-y[1,94,57] 1
+y[1,94,57] 0
 y[1,94,58] 0
 y[1,94,59] 0
 y[1,94,60] 0
@@ -28868,7 +28868,7 @@ y[2,8,6] 0
 y[2,8,7] 0
 y[2,8,8] 0
 y[2,8,9] 0
-y[2,8,10] 1
+y[2,8,10] 0
 y[2,8,11] 0
 y[2,8,12] 0
 y[2,8,13] 0
@@ -29112,7 +29112,7 @@ y[2,10,58] 0
 y[2,10,59] 0
 y[2,10,60] 0
 y[2,10,61] 0
-y[2,10,62] 1
+y[2,10,62] 0
 y[2,10,63] 0
 y[2,10,64] 0
 y[2,10,65] 0
@@ -30367,8 +30367,8 @@ y[2,23,65] 0
 y[2,23,66] 0
 y[2,23,67] 0
 y[2,23,68] 0
-y[2,23,69] 0
-y[2,23,70] 1
+y[2,23,69] 1
+y[2,23,70] 0
 y[2,23,71] 0
 y[2,23,72] 0
 y[2,23,73] 0
@@ -30852,7 +30852,7 @@ y[2,28,70] 0
 y[2,28,71] 0
 y[2,28,72] 0
 y[2,28,73] 0
-y[2,28,74] 1
+y[2,28,74] 0
 y[2,28,75] 0
 y[2,28,76] 0
 y[2,28,77] 0
@@ -31390,7 +31390,7 @@ y[2,34,32] 0
 y[2,34,33] 0
 y[2,34,34] 0
 y[2,34,35] 0
-y[2,34,36] 1
+y[2,34,36] 0
 y[2,34,37] 0
 y[2,34,38] 0
 y[2,34,39] 0
@@ -32651,7 +32651,7 @@ y[2,47,45] 0
 y[2,47,46] 0
 y[2,47,47] 0
 y[2,47,48] 0
-y[2,47,49] 0
+y[2,47,49] 1
 y[2,47,50] 0
 y[2,47,51] 0
 y[2,47,52] 0
@@ -32887,7 +32887,7 @@ y[2,49,89] 0
 y[2,49,90] 0
 y[2,49,91] 0
 y[2,49,92] 0
-y[2,49,93] 0
+y[2,49,93] 1
 y[2,49,94] 0
 y[2,49,95] 0
 y[2,50,0] 0
@@ -33816,7 +33816,7 @@ y[2,59,58] 0
 y[2,59,59] 0
 y[2,59,60] 0
 y[2,59,61] 0
-y[2,59,62] 0
+y[2,59,62] 1
 y[2,59,63] 0
 y[2,59,64] 0
 y[2,59,65] 0
@@ -34065,7 +34065,7 @@ y[2,62,19] 0
 y[2,62,20] 0
 y[2,62,21] 0
 y[2,62,22] 0
-y[2,62,23] 0
+y[2,62,23] 1
 y[2,62,24] 0
 y[2,62,25] 0
 y[2,62,26] 0
@@ -34106,7 +34106,7 @@ y[2,62,60] 0
 y[2,62,61] 0
 y[2,62,62] 0
 y[2,62,63] 0
-y[2,62,64] 1
+y[2,62,64] 0
 y[2,62,65] 0
 y[2,62,66] 0
 y[2,62,67] 0
@@ -34257,7 +34257,7 @@ y[2,64,19] 0
 y[2,64,20] 0
 y[2,64,21] 0
 y[2,64,22] 0
-y[2,64,23] 1
+y[2,64,23] 0
 y[2,64,24] 0
 y[2,64,25] 0
 y[2,64,26] 0
@@ -34743,7 +34743,7 @@ y[2,69,25] 0
 y[2,69,26] 0
 y[2,69,27] 0
 y[2,69,28] 0
-y[2,69,29] 0
+y[2,69,29] 1
 y[2,69,30] 0
 y[2,69,31] 0
 y[2,69,32] 0
@@ -34838,7 +34838,7 @@ y[2,70,24] 0
 y[2,70,25] 0
 y[2,70,26] 0
 y[2,70,27] 0
-y[2,70,28] 1
+y[2,70,28] 0
 y[2,70,29] 0
 y[2,70,30] 0
 y[2,70,31] 0
@@ -35228,7 +35228,7 @@ y[2,74,30] 0
 y[2,74,31] 0
 y[2,74,32] 0
 y[2,74,33] 0
-y[2,74,34] 1
+y[2,74,34] 0
 y[2,74,35] 0
 y[2,74,36] 0
 y[2,74,37] 0
@@ -37077,7 +37077,7 @@ y[2,93,55] 0
 y[2,93,56] 0
 y[2,93,57] 0
 y[2,93,58] 0
-y[2,93,59] 0
+y[2,93,59] 1
 y[2,93,60] 0
 y[2,93,61] 0
 y[2,93,62] 0
@@ -37696,7 +37696,7 @@ y[3,4,2] 0
 y[3,4,3] 0
 y[3,4,4] 0
 y[3,4,5] 0
-y[3,4,6] 0
+y[3,4,6] 1
 y[3,4,7] 0
 y[3,4,8] 0
 y[3,4,9] 0
@@ -37891,7 +37891,7 @@ y[3,6,5] 0
 y[3,6,6] 0
 y[3,6,7] 0
 y[3,6,8] 0
-y[3,6,9] 1
+y[3,6,9] 0
 y[3,6,10] 0
 y[3,6,11] 0
 y[3,6,12] 0
@@ -37934,7 +37934,7 @@ y[3,6,48] 0
 y[3,6,49] 0
 y[3,6,50] 0
 y[3,6,51] 0
-y[3,6,52] 0
+y[3,6,52] 1
 y[3,6,53] 0
 y[3,6,54] 0
 y[3,6,55] 0
@@ -38225,7 +38225,7 @@ y[3,9,51] 0
 y[3,9,52] 0
 y[3,9,53] 0
 y[3,9,54] 0
-y[3,9,55] 1
+y[3,9,55] 0
 y[3,9,56] 0
 y[3,9,57] 0
 y[3,9,58] 0
@@ -38813,7 +38813,7 @@ y[3,15,63] 0
 y[3,15,64] 0
 y[3,15,65] 0
 y[3,15,66] 0
-y[3,15,67] 1
+y[3,15,67] 0
 y[3,15,68] 0
 y[3,15,69] 0
 y[3,15,70] 0
@@ -39293,7 +39293,7 @@ y[3,20,63] 0
 y[3,20,64] 0
 y[3,20,65] 0
 y[3,20,66] 0
-y[3,20,67] 0
+y[3,20,67] 1
 y[3,20,68] 0
 y[3,20,69] 0
 y[3,20,70] 0
@@ -40315,7 +40315,7 @@ y[3,31,29] 0
 y[3,31,30] 0
 y[3,31,31] 0
 y[3,31,32] 0
-y[3,31,33] 0
+y[3,31,33] 1
 y[3,31,34] 0
 y[3,31,35] 0
 y[3,31,36] 0
@@ -40553,7 +40553,7 @@ y[3,33,75] 0
 y[3,33,76] 0
 y[3,33,77] 0
 y[3,33,78] 0
-y[3,33,79] 0
+y[3,33,79] 1
 y[3,33,80] 0
 y[3,33,81] 0
 y[3,33,82] 0
@@ -41726,7 +41726,7 @@ y[3,46,0] 0
 y[3,46,1] 0
 y[3,46,2] 0
 y[3,46,3] 0
-y[3,46,4] 0
+y[3,46,4] 1
 y[3,46,5] 0
 y[3,46,6] 0
 y[3,46,7] 0
@@ -42318,7 +42318,7 @@ y[3,52,16] 0
 y[3,52,17] 0
 y[3,52,18] 0
 y[3,52,19] 0
-y[3,52,20] 0
+y[3,52,20] 1
 y[3,52,21] 0
 y[3,52,22] 0
 y[3,52,23] 0
@@ -42671,7 +42671,7 @@ y[3,55,81] 0
 y[3,55,82] 0
 y[3,55,83] 0
 y[3,55,84] 0
-y[3,55,85] 1
+y[3,55,85] 0
 y[3,55,86] 0
 y[3,55,87] 0
 y[3,55,88] 0
@@ -43810,12 +43810,12 @@ y[3,67,68] 0
 y[3,67,69] 0
 y[3,67,70] 0
 y[3,67,71] 0
-y[3,67,72] 0
+y[3,67,72] 1
 y[3,67,73] 0
 y[3,67,74] 0
 y[3,67,75] 0
 y[3,67,76] 0
-y[3,67,77] 1
+y[3,67,77] 0
 y[3,67,78] 0
 y[3,67,79] 0
 y[3,67,80] 0
@@ -44249,7 +44249,7 @@ y[3,72,27] 0
 y[3,72,28] 0
 y[3,72,29] 0
 y[3,72,30] 0
-y[3,72,31] 0
+y[3,72,31] 1
 y[3,72,32] 0
 y[3,72,33] 0
 y[3,72,34] 0
@@ -44777,7 +44777,7 @@ y[3,77,75] 0
 y[3,77,76] 0
 y[3,77,77] 0
 y[3,77,78] 0
-y[3,77,79] 1
+y[3,77,79] 0
 y[3,77,80] 0
 y[3,77,81] 0
 y[3,77,82] 0
@@ -44927,7 +44927,7 @@ y[3,79,33] 0
 y[3,79,34] 0
 y[3,79,35] 0
 y[3,79,36] 0
-y[3,79,37] 0
+y[3,79,37] 1
 y[3,79,38] 0
 y[3,79,39] 0
 y[3,79,40] 0
@@ -45481,7 +45481,7 @@ y[3,85,11] 0
 y[3,85,12] 0
 y[3,85,13] 0
 y[3,85,14] 0
-y[3,85,15] 1
+y[3,85,15] 0
 y[3,85,16] 0
 y[3,85,17] 0
 y[3,85,18] 0
@@ -45856,7 +45856,7 @@ y[3,89,2] 0
 y[3,89,3] 0
 y[3,89,4] 0
 y[3,89,5] 0
-y[3,89,6] 1
+y[3,89,6] 0
 y[3,89,7] 0
 y[3,89,8] 0
 y[3,89,9] 0
@@ -46612,7 +46612,7 @@ y[4,0,86] 0
 y[4,0,87] 0
 y[4,0,88] 0
 y[4,0,89] 0
-y[4,0,90] 0
+y[4,0,90] 1
 y[4,0,91] 0
 y[4,0,92] 0
 y[4,0,93] 0
@@ -47289,7 +47289,7 @@ y[4,7,91] 0
 y[4,7,92] 0
 y[4,7,93] 0
 y[4,7,94] 0
-y[4,7,95] 0
+y[4,7,95] 1
 y[4,8,0] 0
 y[4,8,1] 0
 y[4,8,2] 0
@@ -48077,14 +48077,14 @@ y[4,16,15] 0
 y[4,16,16] 0
 y[4,16,17] 0
 y[4,16,18] 0
-y[4,16,19] 0
+y[4,16,19] 1
 y[4,16,20] 0
 y[4,16,21] 0
 y[4,16,22] 0
 y[4,16,23] 0
 y[4,16,24] 0
 y[4,16,25] 0
-y[4,16,26] 1
+y[4,16,26] 0
 y[4,16,27] 0
 y[4,16,28] 0
 y[4,16,29] 0
@@ -48381,7 +48381,7 @@ y[4,19,31] 0
 y[4,19,32] 0
 y[4,19,33] 0
 y[4,19,34] 0
-y[4,19,35] 0
+y[4,19,35] 1
 y[4,19,36] 0
 y[4,19,37] 0
 y[4,19,38] 0
@@ -49058,7 +49058,7 @@ y[4,26,36] 0
 y[4,26,37] 0
 y[4,26,38] 0
 y[4,26,39] 0
-y[4,26,40] 1
+y[4,26,40] 0
 y[4,26,41] 0
 y[4,26,42] 0
 y[4,26,43] 0
@@ -49922,7 +49922,7 @@ y[4,35,36] 0
 y[4,35,37] 0
 y[4,35,38] 0
 y[4,35,39] 0
-y[4,35,40] 0
+y[4,35,40] 1
 y[4,35,41] 0
 y[4,35,42] 0
 y[4,35,43] 0
@@ -54314,7 +54314,7 @@ y[4,81,12] 0
 y[4,81,13] 0
 y[4,81,14] 0
 y[4,81,15] 0
-y[4,81,16] 1
+y[4,81,16] 0
 y[4,81,17] 0
 y[4,81,18] 0
 y[4,81,19] 0
@@ -54575,7 +54575,7 @@ y[4,83,81] 0
 y[4,83,82] 0
 y[4,83,83] 0
 y[4,83,84] 0
-y[4,83,85] 0
+y[4,83,85] 1
 y[4,83,86] 0
 y[4,83,87] 0
 y[4,83,88] 0
@@ -54698,7 +54698,7 @@ y[4,85,12] 0
 y[4,85,13] 0
 y[4,85,14] 0
 y[4,85,15] 0
-y[4,85,16] 0
+y[4,85,16] 1
 y[4,85,17] 0
 y[4,85,18] 0
 y[4,85,19] 0
@@ -55051,7 +55051,7 @@ y[4,88,77] 0
 y[4,88,78] 0
 y[4,88,79] 0
 y[4,88,80] 0
-y[4,88,81] 1
+y[4,88,81] 0
 y[4,88,82] 0
 y[4,88,83] 0
 y[4,88,84] 0
@@ -55169,7 +55169,7 @@ y[4,90,3] 0
 y[4,90,4] 0
 y[4,90,5] 0
 y[4,90,6] 0
-y[4,90,7] 0
+y[4,90,7] 1
 y[4,90,8] 0
 y[4,90,9] 0
 y[4,90,10] 0
@@ -55725,7 +55725,7 @@ y[4,95,79] 0
 y[4,95,80] 0
 y[4,95,81] 0
 y[4,95,82] 0
-y[4,95,83] 0
+y[4,95,83] 1
 y[4,95,84] 0
 y[4,95,85] 0
 y[4,95,86] 0
@@ -56020,7 +56020,7 @@ y[5,2,86] 0
 y[5,2,87] 0
 y[5,2,88] 0
 y[5,2,89] 0
-y[5,2,90] 1
+y[5,2,90] 0
 y[5,2,91] 0
 y[5,2,92] 0
 y[5,2,93] 0
@@ -57148,7 +57148,7 @@ y[5,14,62] 0
 y[5,14,63] 0
 y[5,14,64] 0
 y[5,14,65] 0
-y[5,14,66] 0
+y[5,14,66] 1
 y[5,14,67] 0
 y[5,14,68] 0
 y[5,14,69] 0
@@ -57921,7 +57921,7 @@ y[5,22,67] 0
 y[5,22,68] 0
 y[5,22,69] 0
 y[5,22,70] 0
-y[5,22,71] 1
+y[5,22,71] 0
 y[5,22,72] 0
 y[5,22,73] 0
 y[5,22,74] 0
@@ -58757,7 +58757,7 @@ y[5,31,39] 0
 y[5,31,40] 0
 y[5,31,41] 0
 y[5,31,42] 0
-y[5,31,43] 1
+y[5,31,43] 0
 y[5,31,44] 0
 y[5,31,45] 0
 y[5,31,46] 0
@@ -60396,7 +60396,7 @@ y[5,48,46] 0
 y[5,48,47] 0
 y[5,48,48] 0
 y[5,48,49] 0
-y[5,48,50] 0
+y[5,48,50] 1
 y[5,48,51] 0
 y[5,48,52] 0
 y[5,48,53] 0
@@ -60590,7 +60590,7 @@ y[5,50,48] 0
 y[5,50,49] 0
 y[5,50,50] 0
 y[5,50,51] 0
-y[5,50,52] 1
+y[5,50,52] 0
 y[5,50,53] 0
 y[5,50,54] 0
 y[5,50,55] 0
@@ -60632,7 +60632,7 @@ y[5,50,90] 0
 y[5,50,91] 0
 y[5,50,92] 0
 y[5,50,93] 0
-y[5,50,94] 0
+y[5,50,94] 1
 y[5,50,95] 0
 y[5,51,0] 0
 y[5,51,1] 0
@@ -60786,7 +60786,7 @@ y[5,52,52] 0
 y[5,52,53] 0
 y[5,52,54] 0
 y[5,52,55] 0
-y[5,52,56] 1
+y[5,52,56] 0
 y[5,52,57] 0
 y[5,52,58] 0
 y[5,52,59] 0
@@ -60978,7 +60978,7 @@ y[5,54,52] 0
 y[5,54,53] 0
 y[5,54,54] 0
 y[5,54,55] 0
-y[5,54,56] 0
+y[5,54,56] 1
 y[5,54,57] 0
 y[5,54,58] 0
 y[5,54,59] 0
@@ -61128,7 +61128,7 @@ y[5,56,10] 0
 y[5,56,11] 0
 y[5,56,12] 0
 y[5,56,13] 0
-y[5,56,14] 0
+y[5,56,14] 1
 y[5,56,15] 0
 y[5,56,16] 0
 y[5,56,17] 0
@@ -61172,7 +61172,7 @@ y[5,56,54] 0
 y[5,56,55] 0
 y[5,56,56] 0
 y[5,56,57] 0
-y[5,56,58] 1
+y[5,56,58] 0
 y[5,56,59] 0
 y[5,56,60] 0
 y[5,56,61] 0
@@ -61328,7 +61328,7 @@ y[5,58,18] 0
 y[5,58,19] 0
 y[5,58,20] 0
 y[5,58,21] 0
-y[5,58,22] 1
+y[5,58,22] 0
 y[5,58,23] 0
 y[5,58,24] 0
 y[5,58,25] 0
@@ -62101,7 +62101,7 @@ y[5,66,23] 0
 y[5,66,24] 0
 y[5,66,25] 0
 y[5,66,26] 0
-y[5,66,27] 0
+y[5,66,27] 1
 y[5,66,28] 0
 y[5,66,29] 0
 y[5,66,30] 0
@@ -62627,7 +62627,7 @@ y[5,71,69] 0
 y[5,71,70] 0
 y[5,71,71] 0
 y[5,71,72] 0
-y[5,71,73] 1
+y[5,71,73] 0
 y[5,71,74] 0
 y[5,71,75] 0
 y[5,71,76] 0
@@ -62777,7 +62777,7 @@ y[5,73,27] 0
 y[5,73,28] 0
 y[5,73,29] 0
 y[5,73,30] 0
-y[5,73,31] 1
+y[5,73,31] 0
 y[5,73,32] 0
 y[5,73,33] 0
 y[5,73,34] 0
@@ -64138,7 +64138,7 @@ y[5,87,44] 0
 y[5,87,45] 0
 y[5,87,46] 0
 y[5,87,47] 0
-y[5,87,48] 0
+y[5,87,48] 1
 y[5,87,49] 0
 y[5,87,50] 0
 y[5,87,51] 0
@@ -64428,7 +64428,7 @@ y[5,90,46] 0
 y[5,90,47] 0
 y[5,90,48] 0
 y[5,90,49] 0
-y[5,90,50] 1
+y[5,90,50] 0
 y[5,90,51] 0
 y[5,90,52] 0
 y[5,90,53] 0
@@ -64816,7 +64816,7 @@ y[5,94,50] 0
 y[5,94,51] 0
 y[5,94,52] 0
 y[5,94,53] 0
-y[5,94,54] 0
+y[5,94,54] 1
 y[5,94,55] 0
 y[5,94,56] 0
 y[5,94,57] 0
@@ -65000,7 +65000,7 @@ y[6,0,42] 0
 y[6,0,43] 0
 y[6,0,44] 0
 y[6,0,45] 0
-y[6,0,46] 1
+y[6,0,46] 0
 y[6,0,47] 0
 y[6,0,48] 0
 y[6,0,49] 0
@@ -65430,7 +65430,7 @@ y[6,4,88] 0
 y[6,4,89] 0
 y[6,4,90] 0
 y[6,4,91] 0
-y[6,4,92] 1
+y[6,4,92] 0
 y[6,4,93] 0
 y[6,4,94] 0
 y[6,4,95] 0
@@ -66023,7 +66023,7 @@ y[6,11,9] 0
 y[6,11,10] 0
 y[6,11,11] 0
 y[6,11,12] 0
-y[6,11,13] 0
+y[6,11,13] 1
 y[6,11,14] 0
 y[6,11,15] 0
 y[6,11,16] 0
@@ -66120,7 +66120,7 @@ y[6,12,10] 0
 y[6,12,11] 0
 y[6,12,12] 0
 y[6,12,13] 0
-y[6,12,14] 1
+y[6,12,14] 0
 y[6,12,15] 0
 y[6,12,16] 0
 y[6,12,17] 0
@@ -66220,7 +66220,7 @@ y[6,13,14] 0
 y[6,13,15] 0
 y[6,13,16] 0
 y[6,13,17] 0
-y[6,13,18] 0
+y[6,13,18] 1
 y[6,13,19] 0
 y[6,13,20] 0
 y[6,13,21] 0
@@ -66358,7 +66358,7 @@ y[6,14,56] 0
 y[6,14,57] 0
 y[6,14,58] 0
 y[6,14,59] 0
-y[6,14,60] 1
+y[6,14,60] 0
 y[6,14,61] 0
 y[6,14,62] 0
 y[6,14,63] 0
@@ -66746,7 +66746,7 @@ y[6,18,60] 0
 y[6,18,61] 0
 y[6,18,62] 0
 y[6,18,63] 0
-y[6,18,64] 0
+y[6,18,64] 1
 y[6,18,65] 0
 y[6,18,66] 0
 y[6,18,67] 0
@@ -66754,7 +66754,7 @@ y[6,18,68] 0
 y[6,18,69] 0
 y[6,18,70] 0
 y[6,18,71] 0
-y[6,18,72] 1
+y[6,18,72] 0
 y[6,18,73] 0
 y[6,18,74] 0
 y[6,18,75] 0
@@ -69374,7 +69374,7 @@ y[6,46,0] 0
 y[6,46,1] 0
 y[6,46,2] 0
 y[6,46,3] 0
-y[6,46,4] 1
+y[6,46,4] 0
 y[6,46,5] 0
 y[6,46,6] 0
 y[6,46,7] 0
@@ -70053,7 +70053,7 @@ y[6,53,7] 0
 y[6,53,8] 0
 y[6,53,9] 0
 y[6,53,10] 0
-y[6,53,11] 0
+y[6,53,11] 1
 y[6,53,12] 0
 y[6,53,13] 0
 y[6,53,14] 0
@@ -70150,7 +70150,7 @@ y[6,54,8] 0
 y[6,54,9] 0
 y[6,54,10] 0
 y[6,54,11] 0
-y[6,54,12] 1
+y[6,54,12] 0
 y[6,54,13] 0
 y[6,54,14] 0
 y[6,54,15] 0
@@ -70732,7 +70732,7 @@ y[6,60,14] 0
 y[6,60,15] 0
 y[6,60,16] 0
 y[6,60,17] 0
-y[6,60,18] 1
+y[6,60,18] 0
 y[6,60,19] 0
 y[6,60,20] 0
 y[6,60,21] 0
@@ -71128,7 +71128,7 @@ y[6,64,26] 0
 y[6,64,27] 0
 y[6,64,28] 0
 y[6,64,29] 0
-y[6,64,30] 0
+y[6,64,30] 1
 y[6,64,31] 0
 y[6,64,32] 0
 y[6,64,33] 0
@@ -71896,7 +71896,7 @@ y[6,72,26] 0
 y[6,72,27] 0
 y[6,72,28] 0
 y[6,72,29] 0
-y[6,72,30] 1
+y[6,72,30] 0
 y[6,72,31] 0
 y[6,72,32] 0
 y[6,72,33] 0
@@ -72688,7 +72688,7 @@ y[6,80,50] 0
 y[6,80,51] 0
 y[6,80,52] 0
 y[6,80,53] 0
-y[6,80,54] 1
+y[6,80,54] 0
 y[6,80,55] 0
 y[6,80,56] 0
 y[6,80,57] 0
@@ -73298,7 +73298,7 @@ y[6,86,84] 0
 y[6,86,85] 0
 y[6,86,86] 0
 y[6,86,87] 0
-y[6,86,88] 0
+y[6,86,88] 1
 y[6,86,89] 0
 y[6,86,90] 0
 y[6,86,91] 0
@@ -73455,7 +73455,7 @@ y[6,88,49] 0
 y[6,88,50] 0
 y[6,88,51] 0
 y[6,88,52] 0
-y[6,88,53] 0
+y[6,88,53] 1
 y[6,88,54] 0
 y[6,88,55] 0
 y[6,88,56] 0
@@ -73866,7 +73866,7 @@ y[6,92,76] 0
 y[6,92,77] 0
 y[6,92,78] 0
 y[6,92,79] 0
-y[6,92,80] 1
+y[6,92,80] 0
 y[6,92,81] 0
 y[6,92,82] 0
 y[6,92,83] 0
@@ -74467,7 +74467,7 @@ y[7,3,5] 0
 y[7,3,6] 0
 y[7,3,7] 0
 y[7,3,8] 0
-y[7,3,9] 0
+y[7,3,9] 1
 y[7,3,10] 0
 y[7,3,11] 0
 y[7,3,12] 0
@@ -75089,7 +75089,7 @@ y[7,9,51] 0
 y[7,9,52] 0
 y[7,9,53] 0
 y[7,9,54] 0
-y[7,9,55] 0
+y[7,9,55] 1
 y[7,9,56] 0
 y[7,9,57] 0
 y[7,9,58] 0
@@ -75865,7 +75865,7 @@ y[7,17,59] 0
 y[7,17,60] 0
 y[7,17,61] 0
 y[7,17,62] 0
-y[7,17,63] 1
+y[7,17,63] 0
 y[7,17,64] 0
 y[7,17,65] 0
 y[7,17,66] 0
@@ -76641,11 +76641,11 @@ y[7,25,67] 0
 y[7,25,68] 0
 y[7,25,69] 0
 y[7,25,70] 0
-y[7,25,71] 0
+y[7,25,71] 1
 y[7,25,72] 0
 y[7,25,73] 0
 y[7,25,74] 0
-y[7,25,75] 1
+y[7,25,75] 0
 y[7,25,76] 0
 y[7,25,77] 0
 y[7,25,78] 0
@@ -78773,7 +78773,7 @@ y[7,47,87] 0
 y[7,47,88] 0
 y[7,47,89] 0
 y[7,47,90] 0
-y[7,47,91] 1
+y[7,47,91] 0
 y[7,47,92] 0
 y[7,47,93] 0
 y[7,47,94] 0
@@ -79510,7 +79510,7 @@ y[7,55,56] 0
 y[7,55,57] 0
 y[7,55,58] 0
 y[7,55,59] 0
-y[7,55,60] 0
+y[7,55,60] 1
 y[7,55,61] 0
 y[7,55,62] 0
 y[7,55,63] 0
@@ -79955,7 +79955,7 @@ y[7,60,21] 0
 y[7,60,22] 0
 y[7,60,23] 0
 y[7,60,24] 0
-y[7,60,25] 0
+y[7,60,25] 1
 y[7,60,26] 0
 y[7,60,27] 0
 y[7,60,28] 0
@@ -80283,7 +80283,7 @@ y[7,63,61] 0
 y[7,63,62] 0
 y[7,63,63] 0
 y[7,63,64] 0
-y[7,63,65] 1
+y[7,63,65] 0
 y[7,63,66] 0
 y[7,63,67] 0
 y[7,63,68] 0
@@ -80435,7 +80435,7 @@ y[7,65,21] 0
 y[7,65,22] 0
 y[7,65,23] 0
 y[7,65,24] 0
-y[7,65,25] 1
+y[7,65,25] 0
 y[7,65,26] 0
 y[7,65,27] 0
 y[7,65,28] 0
@@ -81061,7 +81061,7 @@ y[7,71,71] 0
 y[7,71,72] 0
 y[7,71,73] 0
 y[7,71,74] 0
-y[7,71,75] 0
+y[7,71,75] 1
 y[7,71,76] 0
 y[7,71,77] 0
 y[7,71,78] 0
@@ -81405,7 +81405,7 @@ y[7,75,31] 0
 y[7,75,32] 0
 y[7,75,33] 0
 y[7,75,34] 0
-y[7,75,35] 1
+y[7,75,35] 0
 y[7,75,36] 0
 y[7,75,37] 0
 y[7,75,38] 0
@@ -81448,7 +81448,7 @@ y[7,75,74] 0
 y[7,75,75] 0
 y[7,75,76] 0
 y[7,75,77] 0
-y[7,75,78] 0
+y[7,75,78] 1
 y[7,75,79] 0
 y[7,75,80] 0
 y[7,75,81] 0
@@ -81699,7 +81699,7 @@ y[7,78,37] 0
 y[7,78,38] 0
 y[7,78,39] 0
 y[7,78,40] 0
-y[7,78,41] 0
+y[7,78,41] 1
 y[7,78,42] 0
 y[7,78,43] 0
 y[7,78,44] 0
@@ -83001,7 +83001,7 @@ y[7,91,91] 0
 y[7,91,92] 0
 y[7,91,93] 0
 y[7,91,94] 0
-y[7,91,95] 1
+y[7,91,95] 0
 y[7,92,0] 0
 y[7,92,1] 0
 y[7,92,2] 0
@@ -83307,7 +83307,7 @@ y[7,95,13] 0
 y[7,95,14] 0
 y[7,95,15] 0
 y[7,95,16] 0
-y[7,95,17] 1
+y[7,95,17] 0
 y[7,95,18] 0
 y[7,95,19] 0
 y[7,95,20] 0
@@ -83670,7 +83670,7 @@ y[8,2,88] 0
 y[8,2,89] 0
 y[8,2,90] 0
 y[8,2,91] 0
-y[8,2,92] 0
+y[8,2,92] 1
 y[8,2,93] 0
 y[8,2,94] 0
 y[8,2,95] 0
@@ -84111,7 +84111,7 @@ y[8,7,49] 0
 y[8,7,50] 0
 y[8,7,51] 0
 y[8,7,52] 0
-y[8,7,53] 1
+y[8,7,53] 0
 y[8,7,54] 0
 y[8,7,55] 0
 y[8,7,56] 0
@@ -84430,7 +84430,7 @@ y[8,10,80] 0
 y[8,10,81] 0
 y[8,10,82] 0
 y[8,10,83] 0
-y[8,10,84] 0
+y[8,10,84] 1
 y[8,10,85] 0
 y[8,10,86] 0
 y[8,10,87] 0
@@ -84461,7 +84461,7 @@ y[8,11,15] 0
 y[8,11,16] 0
 y[8,11,17] 0
 y[8,11,18] 0
-y[8,11,19] 1
+y[8,11,19] 0
 y[8,11,20] 0
 y[8,11,21] 0
 y[8,11,22] 0
@@ -85234,7 +85234,7 @@ y[8,19,20] 0
 y[8,19,21] 0
 y[8,19,22] 0
 y[8,19,23] 0
-y[8,19,24] 1
+y[8,19,24] 0
 y[8,19,25] 0
 y[8,19,26] 0
 y[8,19,27] 0
@@ -85716,8 +85716,8 @@ y[8,24,22] 0
 y[8,24,23] 0
 y[8,24,24] 0
 y[8,24,25] 0
-y[8,24,26] 0
-y[8,24,27] 1
+y[8,24,26] 1
+y[8,24,27] 0
 y[8,24,28] 0
 y[8,24,29] 0
 y[8,24,30] 0
@@ -85955,7 +85955,7 @@ y[8,26,69] 0
 y[8,26,70] 0
 y[8,26,71] 0
 y[8,26,72] 0
-y[8,26,73] 0
+y[8,26,73] 1
 y[8,26,74] 0
 y[8,26,75] 0
 y[8,26,76] 0
@@ -86054,7 +86054,7 @@ y[8,27,72] 0
 y[8,27,73] 0
 y[8,27,74] 0
 y[8,27,75] 0
-y[8,27,76] 1
+y[8,27,76] 0
 y[8,27,77] 0
 y[8,27,78] 0
 y[8,27,79] 0
@@ -88001,7 +88001,7 @@ y[8,48,3] 0
 y[8,48,4] 0
 y[8,48,5] 0
 y[8,48,6] 0
-y[8,48,7] 1
+y[8,48,7] 0
 y[8,48,8] 0
 y[8,48,9] 0
 y[8,48,10] 0
@@ -88485,7 +88485,7 @@ y[8,53,7] 0
 y[8,53,8] 0
 y[8,53,9] 0
 y[8,53,10] 0
-y[8,53,11] 1
+y[8,53,11] 0
 y[8,53,12] 0
 y[8,53,13] 0
 y[8,53,14] 0
@@ -89015,7 +89015,7 @@ y[8,58,57] 0
 y[8,58,58] 0
 y[8,58,59] 0
 y[8,58,60] 0
-y[8,58,61] 0
+y[8,58,61] 1
 y[8,58,62] 0
 y[8,58,63] 0
 y[8,58,64] 0
@@ -89266,7 +89266,7 @@ y[8,61,20] 0
 y[8,61,21] 0
 y[8,61,22] 0
 y[8,61,23] 0
-y[8,61,24] 0
+y[8,61,24] 1
 y[8,61,25] 0
 y[8,61,26] 0
 y[8,61,27] 0
@@ -90471,7 +90471,7 @@ y[8,73,73] 0
 y[8,73,74] 0
 y[8,73,75] 0
 y[8,73,76] 0
-y[8,73,77] 0
+y[8,73,77] 1
 y[8,73,78] 0
 y[8,73,79] 0
 y[8,73,80] 0
@@ -90760,7 +90760,7 @@ y[8,76,74] 0
 y[8,76,75] 0
 y[8,76,76] 0
 y[8,76,77] 0
-y[8,76,78] 1
+y[8,76,78] 0
 y[8,76,79] 0
 y[8,76,80] 0
 y[8,76,81] 0
@@ -90919,7 +90919,7 @@ y[8,78,41] 0
 y[8,78,42] 0
 y[8,78,43] 0
 y[8,78,44] 0
-y[8,78,45] 1
+y[8,78,45] 0
 y[8,78,46] 0
 y[8,78,47] 0
 y[8,78,48] 0
@@ -91076,7 +91076,7 @@ y[8,80,6] 0
 y[8,80,7] 0
 y[8,80,8] 0
 y[8,80,9] 0
-y[8,80,10] 0
+y[8,80,10] 1
 y[8,80,11] 0
 y[8,80,12] 0
 y[8,80,13] 0
@@ -91508,7 +91508,7 @@ y[8,84,54] 0
 y[8,84,55] 0
 y[8,84,56] 0
 y[8,84,57] 0
-y[8,84,58] 0
+y[8,84,58] 1
 y[8,84,59] 0
 y[8,84,60] 0
 y[8,84,61] 0
@@ -91786,7 +91786,7 @@ y[8,87,44] 0
 y[8,87,45] 0
 y[8,87,46] 0
 y[8,87,47] 0
-y[8,87,48] 1
+y[8,87,48] 0
 y[8,87,49] 0
 y[8,87,50] 0
 y[8,87,51] 0
@@ -92298,7 +92298,7 @@ y[8,92,76] 0
 y[8,92,77] 0
 y[8,92,78] 0
 y[8,92,79] 0
-y[8,92,80] 0
+y[8,92,80] 1
 y[8,92,81] 0
 y[8,92,82] 0
 y[8,92,83] 0
@@ -92749,7 +92749,7 @@ y[9,1,47] 0
 y[9,1,48] 0
 y[9,1,49] 0
 y[9,1,50] 0
-y[9,1,51] 1
+y[9,1,51] 0
 y[9,1,52] 0
 y[9,1,53] 0
 y[9,1,54] 0
@@ -93090,7 +93090,7 @@ y[9,5,4] 0
 y[9,5,5] 0
 y[9,5,6] 0
 y[9,5,7] 0
-y[9,5,8] 0
+y[9,5,8] 1
 y[9,5,9] 0
 y[9,5,10] 0
 y[9,5,11] 0
@@ -93452,7 +93452,7 @@ y[9,8,78] 0
 y[9,8,79] 0
 y[9,8,80] 0
 y[9,8,81] 0
-y[9,8,82] 0
+y[9,8,82] 1
 y[9,8,83] 0
 y[9,8,84] 0
 y[9,8,85] 0
@@ -93911,7 +93911,7 @@ y[9,13,57] 0
 y[9,13,58] 0
 y[9,13,59] 0
 y[9,13,60] 0
-y[9,13,61] 1
+y[9,13,61] 0
 y[9,13,62] 0
 y[9,13,63] 0
 y[9,13,64] 0
@@ -95712,7 +95712,7 @@ y[9,32,34] 0
 y[9,32,35] 0
 y[9,32,36] 0
 y[9,32,37] 0
-y[9,32,38] 0
+y[9,32,38] 1
 y[9,32,39] 0
 y[9,32,40] 0
 y[9,32,41] 0
@@ -97581,7 +97581,7 @@ y[9,51,79] 0
 y[9,51,80] 0
 y[9,51,81] 0
 y[9,51,82] 0
-y[9,51,83] 1
+y[9,51,83] 0
 y[9,51,84] 0
 y[9,51,85] 0
 y[9,51,86] 0
@@ -98524,7 +98524,7 @@ y[9,61,62] 0
 y[9,61,63] 0
 y[9,61,64] 0
 y[9,61,65] 0
-y[9,61,66] 1
+y[9,61,66] 0
 y[9,61,67] 0
 y[9,61,68] 0
 y[9,61,69] 0
@@ -98715,7 +98715,7 @@ y[9,63,61] 0
 y[9,63,62] 0
 y[9,63,63] 0
 y[9,63,64] 0
-y[9,63,65] 0
+y[9,63,65] 1
 y[9,63,66] 0
 y[9,63,67] 0
 y[9,63,68] 0
@@ -98916,7 +98916,7 @@ y[9,65,70] 0
 y[9,65,71] 0
 y[9,65,72] 0
 y[9,65,73] 0
-y[9,65,74] 0
+y[9,65,74] 1
 y[9,65,75] 0
 y[9,65,76] 0
 y[9,65,77] 0
@@ -99006,7 +99006,7 @@ y[9,66,64] 0
 y[9,66,65] 0
 y[9,66,66] 0
 y[9,66,67] 0
-y[9,66,68] 1
+y[9,66,68] 0
 y[9,66,69] 0
 y[9,66,70] 0
 y[9,66,71] 0
@@ -99163,7 +99163,7 @@ y[9,68,29] 0
 y[9,68,30] 0
 y[9,68,31] 0
 y[9,68,32] 0
-y[9,68,33] 1
+y[9,68,33] 0
 y[9,68,34] 0
 y[9,68,35] 0
 y[9,68,36] 0
@@ -99738,7 +99738,7 @@ y[9,74,28] 0
 y[9,74,29] 0
 y[9,74,30] 0
 y[9,74,31] 0
-y[9,74,32] 0
+y[9,74,32] 1
 y[9,74,33] 0
 y[9,74,34] 0
 y[9,74,35] 0
@@ -100537,7 +100537,7 @@ y[9,82,59] 0
 y[9,82,60] 0
 y[9,82,61] 0
 y[9,82,62] 0
-y[9,82,63] 0
+y[9,82,63] 1
 y[9,82,64] 0
 y[9,82,65] 0
 y[9,82,66] 0
@@ -100583,7 +100583,7 @@ y[9,83,9] 0
 y[9,83,10] 0
 y[9,83,11] 0
 y[9,83,12] 0
-y[9,83,13] 1
+y[9,83,13] 0
 y[9,83,14] 0
 y[9,83,15] 0
 y[9,83,16] 0
@@ -101151,7 +101151,7 @@ y[9,89,1] 0
 y[9,89,2] 0
 y[9,89,3] 0
 y[9,89,4] 0
-y[9,89,5] 0
+y[9,89,5] 1
 y[9,89,6] 0
 y[9,89,7] 0
 y[9,89,8] 0
@@ -101819,9 +101819,9 @@ y[9,95,93] 0
 y[9,95,94] 0
 y[9,95,95] 0
 y[0,start,0] 0
-y[0,start,1] 0
+y[0,start,1] 1
 y[0,start,2] 0
-y[0,start,3] 1
+y[0,start,3] 0
 y[0,start,4] 0
 y[0,start,5] 0
 y[0,start,6] 0
@@ -101926,7 +101926,7 @@ y[1,start,8] 0
 y[1,start,9] 0
 y[1,start,10] 0
 y[1,start,11] 0
-y[1,start,12] 0
+y[1,start,12] 1
 y[1,start,13] 0
 y[1,start,14] 0
 y[1,start,15] 0
@@ -102000,7 +102000,7 @@ y[1,start,82] 0
 y[1,start,83] 0
 y[1,start,84] 0
 y[1,start,85] 0
-y[1,start,86] 1
+y[1,start,86] 0
 y[1,start,87] 0
 y[1,start,88] 0
 y[1,start,89] 0
@@ -102018,7 +102018,7 @@ y[2,start,4] 0
 y[2,start,5] 0
 y[2,start,6] 0
 y[2,start,7] 0
-y[2,start,8] 1
+y[2,start,8] 0
 y[2,start,9] 0
 y[2,start,10] 0
 y[2,start,11] 0
@@ -102057,7 +102057,7 @@ y[2,start,43] 0
 y[2,start,44] 0
 y[2,start,45] 0
 y[2,start,46] 0
-y[2,start,47] 0
+y[2,start,47] 1
 y[2,start,48] 0
 y[2,start,49] 0
 y[2,start,50] 0
@@ -102152,7 +102152,7 @@ y[3,start,42] 0
 y[3,start,43] 0
 y[3,start,44] 0
 y[3,start,45] 0
-y[3,start,46] 0
+y[3,start,46] 1
 y[3,start,47] 0
 y[3,start,48] 0
 y[3,start,49] 0
@@ -102195,14 +102195,14 @@ y[3,start,85] 0
 y[3,start,86] 0
 y[3,start,87] 0
 y[3,start,88] 0
-y[3,start,89] 1
+y[3,start,89] 0
 y[3,start,90] 0
 y[3,start,91] 0
 y[3,start,92] 0
 y[3,start,93] 0
 y[3,start,94] 0
 y[3,start,95] 0
-y[4,start,0] 0
+y[4,start,0] 1
 y[4,start,1] 0
 y[4,start,2] 0
 y[4,start,3] 0
@@ -102290,7 +102290,7 @@ y[4,start,84] 0
 y[4,start,85] 0
 y[4,start,86] 0
 y[4,start,87] 0
-y[4,start,88] 1
+y[4,start,88] 0
 y[4,start,89] 0
 y[4,start,90] 0
 y[4,start,91] 0
@@ -102300,7 +102300,7 @@ y[4,start,94] 0
 y[4,start,95] 0
 y[5,start,0] 0
 y[5,start,1] 0
-y[5,start,2] 1
+y[5,start,2] 0
 y[5,start,3] 0
 y[5,start,4] 0
 y[5,start,5] 0
@@ -102385,7 +102385,7 @@ y[5,start,83] 0
 y[5,start,84] 0
 y[5,start,85] 0
 y[5,start,86] 0
-y[5,start,87] 0
+y[5,start,87] 1
 y[5,start,88] 0
 y[5,start,89] 0
 y[5,start,90] 0
@@ -102394,7 +102394,7 @@ y[5,start,92] 0
 y[5,start,93] 0
 y[5,start,94] 0
 y[5,start,95] 0
-y[6,start,0] 1
+y[6,start,0] 0
 y[6,start,1] 0
 y[6,start,2] 0
 y[6,start,3] 0
@@ -102480,7 +102480,7 @@ y[6,start,82] 0
 y[6,start,83] 0
 y[6,start,84] 0
 y[6,start,85] 0
-y[6,start,86] 0
+y[6,start,86] 1
 y[6,start,87] 0
 y[6,start,88] 0
 y[6,start,89] 0
@@ -102493,7 +102493,7 @@ y[6,start,95] 0
 y[7,start,0] 0
 y[7,start,1] 0
 y[7,start,2] 0
-y[7,start,3] 0
+y[7,start,3] 1
 y[7,start,4] 0
 y[7,start,5] 0
 y[7,start,6] 0
@@ -102537,7 +102537,7 @@ y[7,start,43] 0
 y[7,start,44] 0
 y[7,start,45] 0
 y[7,start,46] 0
-y[7,start,47] 1
+y[7,start,47] 0
 y[7,start,48] 0
 y[7,start,49] 0
 y[7,start,50] 0
@@ -102588,7 +102588,7 @@ y[7,start,94] 0
 y[7,start,95] 0
 y[8,start,0] 0
 y[8,start,1] 0
-y[8,start,2] 0
+y[8,start,2] 1
 y[8,start,3] 0
 y[8,start,4] 0
 y[8,start,5] 0
@@ -102673,7 +102673,7 @@ y[8,start,83] 0
 y[8,start,84] 0
 y[8,start,85] 0
 y[8,start,86] 0
-y[8,start,87] 1
+y[8,start,87] 0
 y[8,start,88] 0
 y[8,start,89] 0
 y[8,start,90] 0
@@ -102683,7 +102683,7 @@ y[8,start,93] 0
 y[8,start,94] 0
 y[8,start,95] 0
 y[9,start,0] 0
-y[9,start,1] 1
+y[9,start,1] 0
 y[9,start,2] 0
 y[9,start,3] 0
 y[9,start,4] 0
@@ -102771,7 +102771,7 @@ y[9,start,85] 0
 y[9,start,86] 0
 y[9,start,87] 0
 y[9,start,88] 0
-y[9,start,89] 0
+y[9,start,89] 1
 y[9,start,90] 0
 y[9,start,91] 0
 y[9,start,92] 0
@@ -102819,10 +102819,10 @@ y[0,37,end] 0
 y[0,38,end] 0
 y[0,39,end] 0
 y[0,40,end] 0
-y[0,41,end] 1
+y[0,41,end] 0
 y[0,42,end] 0
 y[0,43,end] 0
-y[0,44,end] 0
+y[0,44,end] 1
 y[0,45,end] 0
 y[0,46,end] 0
 y[0,47,end] 0
@@ -102918,8 +102918,8 @@ y[1,40,end] 0
 y[1,41,end] 0
 y[1,42,end] 0
 y[1,43,end] 0
-y[1,44,end] 1
-y[1,45,end] 0
+y[1,44,end] 0
+y[1,45,end] 1
 y[1,46,end] 0
 y[1,47,end] 0
 y[1,48,end] 0
@@ -102999,14 +102999,14 @@ y[2,25,end] 0
 y[2,26,end] 0
 y[2,27,end] 0
 y[2,28,end] 0
-y[2,29,end] 0
+y[2,29,end] 1
 y[2,30,end] 0
 y[2,31,end] 0
 y[2,32,end] 0
 y[2,33,end] 0
 y[2,34,end] 0
 y[2,35,end] 0
-y[2,36,end] 1
+y[2,36,end] 0
 y[2,37,end] 0
 y[2,38,end] 0
 y[2,39,end] 0
@@ -103103,7 +103103,7 @@ y[3,33,end] 0
 y[3,34,end] 0
 y[3,35,end] 0
 y[3,36,end] 0
-y[3,37,end] 0
+y[3,37,end] 1
 y[3,38,end] 0
 y[3,39,end] 0
 y[3,40,end] 0
@@ -103145,7 +103145,7 @@ y[3,75,end] 0
 y[3,76,end] 0
 y[3,77,end] 0
 y[3,78,end] 0
-y[3,79,end] 1
+y[3,79,end] 0
 y[3,80,end] 0
 y[3,81,end] 0
 y[3,82,end] 0
@@ -103285,7 +103285,7 @@ y[5,23,end] 0
 y[5,24,end] 0
 y[5,25,end] 0
 y[5,26,end] 0
-y[5,27,end] 0
+y[5,27,end] 1
 y[5,28,end] 0
 y[5,29,end] 0
 y[5,30,end] 0
@@ -103301,7 +103301,7 @@ y[5,39,end] 0
 y[5,40,end] 0
 y[5,41,end] 0
 y[5,42,end] 0
-y[5,43,end] 1
+y[5,43,end] 0
 y[5,44,end] 0
 y[5,45,end] 0
 y[5,46,end] 0
@@ -103485,13 +103485,13 @@ y[7,31,end] 0
 y[7,32,end] 0
 y[7,33,end] 0
 y[7,34,end] 0
-y[7,35,end] 1
+y[7,35,end] 0
 y[7,36,end] 0
 y[7,37,end] 0
 y[7,38,end] 0
 y[7,39,end] 0
 y[7,40,end] 0
-y[7,41,end] 0
+y[7,41,end] 1
 y[7,42,end] 0
 y[7,43,end] 0
 y[7,44,end] 0
@@ -103591,7 +103591,7 @@ y[8,41,end] 0
 y[8,42,end] 0
 y[8,43,end] 0
 y[8,44,end] 0
-y[8,45,end] 1
+y[8,45,end] 0
 y[8,46,end] 0
 y[8,47,end] 0
 y[8,48,end] 0
@@ -103623,7 +103623,7 @@ y[8,73,end] 0
 y[8,74,end] 0
 y[8,75,end] 0
 y[8,76,end] 0
-y[8,77,end] 0
+y[8,77,end] 1
 y[8,78,end] 0
 y[8,79,end] 0
 y[8,80,end] 0
@@ -103675,12 +103675,12 @@ y[9,29,end] 0
 y[9,30,end] 0
 y[9,31,end] 0
 y[9,32,end] 0
-y[9,33,end] 1
+y[9,33,end] 0
 y[9,34,end] 0
 y[9,35,end] 0
 y[9,36,end] 0
 y[9,37,end] 0
-y[9,38,end] 0
+y[9,38,end] 1
 y[9,39,end] 0
 y[9,40,end] 0
 y[9,41,end] 0
@@ -103749,44 +103749,44 @@ y[7,start,end] 0
 y[8,start,end] 0
 y[9,start,end] 0
 z[0,6,6] 0
-z[0,6,7] 0
+z[0,6,7] 1
 z[0,6,8] 0
 z[0,7,6] 0
 z[0,7,7] 0
-z[0,7,8] 0
+z[0,7,8] 1
 z[0,8,6] 0
 z[0,8,7] 0
 z[0,8,8] 0
 z[1,6,6] 0
-z[1,6,7] 0
-z[1,6,8] 1
+z[1,6,7] 1
+z[1,6,8] 0
 z[1,6,46] 0
 z[1,7,6] 0
 z[1,7,7] 0
-z[1,7,8] 0
+z[1,7,8] 1
 z[1,7,46] 0
 z[1,8,6] 0
 z[1,8,7] 0
 z[1,8,8] 0
 z[1,8,46] 0
-z[1,46,6] 0
+z[1,46,6] 1
 z[1,46,7] 0
 z[1,46,8] 0
 z[1,46,46] 0
 z[2,46,46] 0
 z[8,38,38] 0
-z[0,start,6] 0
-z[0,start,7] 1
+z[0,start,6] 1
+z[0,start,7] 0
 z[0,start,8] 0
-z[1,start,6] 1
+z[1,start,6] 0
 z[1,start,7] 0
 z[1,start,8] 0
-z[1,start,46] 0
+z[1,start,46] 1
 z[2,start,46] 1
 z[8,start,38] 1
 z[0,6,end] 0
-z[0,7,end] 1
-z[0,8,end] 0
+z[0,7,end] 0
+z[0,8,end] 1
 z[1,6,end] 0
 z[1,7,end] 0
 z[1,8,end] 1

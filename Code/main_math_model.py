@@ -111,12 +111,16 @@ def upper_bound():
 
 
 def single_run():
-    instance = "Construction_a20_o236_m12_an106_ar24.json"
+    instance = "Construction_a5_o96_m10_an10_ar10_reduced.json"
 
     data = InputData.InputData(instance)
     optimizer = MIP_UB.UpperBound(data, upper_bound="all", check_run=True)
 
-    optimizer.execute()
+    machine, worker, attachment = optimizer.execute()
+
+    print(f"Machine: {machine}")
+    print(f"Worker: {worker}")
+    print(f"Attachment: {attachment}")
     
 
 
