@@ -10,3 +10,36 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+
+# ❌ Ignoriere große Model- und Lösungsdateien
+*.lp
+*.mps
+*.sol
+*.sav
+*.json.sol
+
+# ❌ Ignoriere temporäre Dateien
+*.log
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+
+# ❌ Python-Umgebungen
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.venv
+.conda
+
+# ❌ IDE-spezifisch (VSCode, PyCharm, etc.)
+.vscode/
+.idea/
+
+# ❌ Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# ❌ Sonstiges
+*.old
