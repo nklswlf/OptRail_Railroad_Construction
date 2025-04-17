@@ -37,6 +37,7 @@ class UpperBound:
         self.N = []  # List of order item IDs
         self.C = []  # List of site IDs
         self.N_c = {}  # Dictionary: Site -> Order items
+        self.q_c = {}  # Dictionary: Site -> Complexity score
 
         # ========================
         # 2. Parameters
@@ -63,7 +64,7 @@ class UpperBound:
         self.S_an = {}  # Successors for attachment order items
         self.d_ij = []  # Distance matrix for machines (transport routes)
         self.d_wi = []  # Distance matrix for workers (work routes)
-        self.q_ok = {}  # Dictionary: Order item -> Attachment types
+        self.a_ok = {}  # Dictionary: Order item -> Attachment types
 
         # ========================
         # 4. Time and Range
@@ -140,6 +141,7 @@ class UpperBound:
         for order in self.data.orders:
             self.C.append(order.site_number)
             self.N_c[order.site_number] = [int(item_id) for item_id in order.order_item_ids]
+            self.q_c[order.site_number] = order.complexity_score
 
         # ========================
         # 4. Process Order Items
@@ -198,11 +200,11 @@ class UpperBound:
         # Order items and attachment types
         if self.upper_bound == 'attachment' or self.upper_bound == 'all':
             for order_item in self.data.order_items:
-                self.q_ok[order_item.id] = dict()
+                self.a_ok[order_item.id] = dict()
                 for equipment in order_item.equipment_types:
-                    if equipment not in self.q_ok[order_item.id]:
-                        self.q_ok[order_item.id][equipment] = 0
-                    self.q_ok[order_item.id][equipment] += 1
+                    if equipment not in self.a_ok[order_item.id]:
+                        self.a_ok[order_item.id][equipment] = 0
+                    self.a_ok[order_item.id][equipment] += 1
                     
                     self.K.add(equipment)
 
@@ -420,6 +422,7 @@ class UpperBound:
 
 
         # Definition of the objective criteria/functions
+        self.construction_fulfillment_complexity = gp.quicksum(u[c] * self.q_c[c] for c in self.C)
         self.construction_fulfillment = gp.quicksum(u[c] for c in self.C)
 
 
@@ -545,9 +548,9 @@ class UpperBound:
             for c in self.C:
                 for i in self.N_c[c]:
                     for k in self.K:
-                        if k in self.q_ok[i]:
+                        if k in self.a_ok[i]:
                             self.model.addConstr(
-                                gp.quicksum(z[a, i, j] for a in self.A_k[k] if (a, i) in self.S_an for j in self.S_an[a, i]) == self.q_ok[i][k] * u[c],
+                                gp.quicksum(z[a, i, j] for a in self.A_k[k] if (a, i) in self.S_an for j in self.S_an[a, i]) == self.a_ok[i][k] * u[c],
                                 name=f"attachment_site_fulfillment_site{c}_order{i}_type{k}"
                             )
 
@@ -577,9 +580,9 @@ class UpperBound:
                         name=f"worker_site_fulfillment_site{c}_order{i}"
                     )
                     for k in self.K:
-                        if k in self.q_ok[i]:
+                        if k in self.a_ok[i]:
                             self.model.addConstr(
-                                gp.quicksum(z[a, i, j] for a in self.A_k[k] if (a, i) in self.S_an for j in self.S_an[a, i]) == self.q_ok[i][k] * u[c],
+                                gp.quicksum(z[a, i, j] for a in self.A_k[k] if (a, i) in self.S_an for j in self.S_an[a, i]) == self.a_ok[i][k] * u[c],
                                 name=f"attachment_site_fulfillment_site{c}_order{i}_type{k}"
                             )
 
@@ -684,6 +687,20 @@ class UpperBound:
             var_names = self.model.getAttr("VarName", self.model.getVars())
             var_values = self.model.getAttr("X", self.model.getVars())
             order_count = sum(val for name, val in zip(var_names, var_values) if name.startswith("u["))
+
+            # Extracting the order item IDs of the most promising orders
+            u_vars = []
+            for name, val in zip(var_names, var_values):
+                if name.startswith("u["):
+                    c = int(name.split("[")[1].split("]")[0])
+                    n_items = len(self.N_c[c])  # Anzahl Order Items pro Site
+                    u_vars.append((c, val, n_items))
+            # Sortiere: zuerst nach LP-Wert (absteigend), dann nach Order Item Count (aufsteigend), dann nach Site Index (aufsteigend)
+            u_vars_sorted = sorted(u_vars, key=lambda x: (-x[1], x[2], x[0]))
+
+            top_n = int(order_count)
+            order_list = [c for c, _, _ in u_vars_sorted[:top_n]]
+
             x_count = sum(val for name, val in zip(var_names, var_values) if name.startswith("x["))
             order_item_count = x_count - len(self.M)
             gap = self.model.MIPGap if self.model.status == GRB.TIME_LIMIT else 0
@@ -702,7 +719,7 @@ class UpperBound:
             self.model.write(str(save_path / solution_filename))
             self.model.write(str(save_path / filename))
 
-        return objective_value, order_count, order_item_count, self.model.Runtime, self.model.status, gap
+        return objective_value, order_count, order_item_count, order_list, self.model.Runtime, self.model.status, gap
 
 
 

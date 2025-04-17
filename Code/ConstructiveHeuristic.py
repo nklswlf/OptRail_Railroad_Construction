@@ -18,12 +18,12 @@ class ConstructiveHeuristics:
         self.data = input_data
         self.order_item_attractiveness_technique = order_item_attractiveness_technique
         self.machine_attractiveness_technique = machine_attractiveness_technique
-        start_solution = self.Greedy()
+        start_solution = self.WorkerGreedy()
 
         return start_solution
     
 
-    def Greedy(self):
+    def WorkerGreedy(self):
         
         print(f"\nCalculating Greedy solution with {self.order_item_attractiveness_technique} and {self.machine_attractiveness_technique}...\n")
 
@@ -380,6 +380,34 @@ class ConstructiveHeuristics:
             raise Exception("Solution is not feasible")
 
 
+
+    def OrderItemGreedy(self):
+
+        #Order items sorted after start time
+
+        greedy_order_items = list()
+        for order_item in self.data.order_items:
+            if order_item.status == True:
+                greedy_order_items.append(order_item)
+
+        # Sort order items by start time
+        sorted_greedy_order_items = sorted(greedy_order_items, key=lambda x: x.start_time)
+
+
+        for order_item in sorted_greedy_order_items:
+
+            worker_attractiveness = dict()
+            for worker in self.data.workers:
+                if worker.work_hours <= self.data._max_working_hours:
+                    if order_item in worker._possible_order_items[order_item.order_number]:
+                        # Calculate attractiveness for the worker
+                        worker_attractiveness[worker] = len(worker.qualifications)
+                        sorted_worker_attractiveness = sorted(worker_attractiveness, key=worker_attractiveness.get, reverse=True)
+
+        
+
+
+            
 
     def order_item_attractiveness_function(self, attractiveness):
         ''' Attractiveness function for order items'''

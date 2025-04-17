@@ -55,16 +55,18 @@ class Solver:
 
         start_time = time.time()
         optimizer = UpperBound(self.InputData, bound_technique=UB_technique)
-        site_fulfillment = optimizer.execute()
-        self.InputData.site_fulfillment = int(site_fulfillment[0])
+        solution = optimizer.execute()
 
-        
-        self.InputData.reduce_input_data(self.InputData.site_fulfillment)
+        #self.InputData.site_fulfillment = int(solution[0])
+        #self.InputData.reduce_input_data(self.InputData.site_fulfillment)
+
+
+        for order_number in solution[3]:
+            self.InputData.activate_order(order_number)
         
         
         self.UpperBoundTime = time.time() - start_time
         print("\nUpper Bound calculated after:", round(self.UpperBoundTime, 2), "seconds")
-        print(f"UB = {round(site_fulfillment[0], 2)}")
 
     
     def RunConstructive(self, UB_technique, order_item_attractiveness_technique, machine_attractiveness_technique):

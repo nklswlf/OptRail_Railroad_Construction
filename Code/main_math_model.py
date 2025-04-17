@@ -99,9 +99,8 @@ def experiments():
 
 
 def single_run():
-    instance = "Construction_a50_o578_m28_an276_ar66.json"
+    instance = "Construction_a20_o236_m12_an106_ar24.json"
     strategy = "LP"
-    route_test = False
 
     data = InputData.InputData(instance)
     
@@ -115,8 +114,10 @@ def single_run():
     print(f"\nObjective value: {solution[0]}")
     print(f"Orders: {solution[1]}")
     print(f"Order items: {solution[2]}")
+    print(f"Order List: {solution[3]}")
+    print(f"Length of Order List: {len(solution[3])}")
 
-    if strategy == "MIP" and route_test:
+    if strategy == "MIP":
         route = optimizer.extract_routes_from_solution()
         Solution = OutputData.Solution(route[1], route[0], route[2], data)
         feasible = Solution.feasibility_check()
@@ -130,7 +131,6 @@ def single_run():
 if __name__ == "__main__":
     #experiments()
     single_run()
-
 
 
 

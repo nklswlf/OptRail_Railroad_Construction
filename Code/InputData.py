@@ -31,6 +31,14 @@ class InputData:
                             "machine_type_count": 0.04935076,
                             "worker_qualification_count": 0.03397183
                             }
+        self.complexity_ahp = {"order_item_count": 0.40671321997258464,
+                               "regular_driver_count": 0.2125882387371141,
+                               "worker_distance": 0.1445266762045684,
+                               "transport_distance": 0.09585079248980775,
+                               "machine_type_count": 0.061996079901354036,
+                               "worker_qualification_count": 0.03916249634728554,
+                               "attachment_count": 0.03916249634728554
+                               }
     
         
         # Default values for Occupational Safety
@@ -86,8 +94,14 @@ class InputData:
 
 
 
-        self.create_priorities_orders()
+        #self.create_priorities_orders()
+
+        self.calculate_complexity()
         self.connect_order_item_to_order()
+
+        for order in self.orders:
+            print(f"Order {order.order_number} has {len(order.order_item_ids)} order items and complexity class {order.complexity_class} with a score of {order.complexity_score}.")
+            
 
 
         # Dynamic dictionary for planned shifts for greedy algorithm
@@ -175,6 +189,185 @@ class InputData:
         '''
         for order in self.orders:
             order.order_items = [order_item for order_item in self.order_items if order_item.order_number == order.order_number]
+
+
+    def calculate_complexity(self):
+        """
+        Generate priorities for all orders based on multiple criteria.
+
+        This function calculates ranks for different parameters (e.g., order items, machine types)
+        and combines them into an overall priority score with Borda Count (BC) and Analytic Hierarchy Process (AHP).
+        """
+        # 1. Calculate rank for order_item_count (more are more complex)
+        self.complexity_rank(
+            self.orders, 
+            lambda order: len(order.order_item_ids), 
+            "order_item_count",
+            reverse=True
+        )
+
+
+        # 2. Calculate rank for regular_driver_count (less is more complex)
+        machine_types = {
+            order.order_number: set(
+                item.machine_type for item in self.order_items if item.order_number == order.order_number
+            )
+            for order in self.orders
+        }
+        possible_regular_drivers = {
+            order.order_number: {
+                driver for machine in self.machines
+                if machine.type in machine_types[order.order_number]
+                for driver in machine.default_drivers
+            }
+            for order in self.orders
+        }
+        self.complexity_rank(
+            self.orders, 
+            lambda order: len(possible_regular_drivers[order.order_number]), 
+            "regular_driver_count"
+        )
+
+        # 3. Calculate rank for worker_distance (longer distances are more complex)
+        worker_distances = {
+            order.order_number: sum(
+                self.work_routes[worker.personal_number][order.site_number]
+                for worker in self.workers
+            ) / len(self.workers)
+            for order in self.orders
+        }
+        self.complexity_rank(
+            self.orders, 
+            lambda order: worker_distances[order.order_number], 
+            "worker_distance",
+            reverse=True
+        )
+
+        # 4. Calculate rank for transport_distance (longer distances are more complex)
+        transport_distances = {
+            order.order_number: sum(
+                self.transport_routes[order.site_number][site]
+                for site in range(len(self.transport_routes))
+            ) / len(self.transport_routes)
+            for order in self.orders
+        }
+        self.complexity_rank(
+            self.orders, 
+            lambda order: transport_distances[order.order_number], 
+            "transport_distance",
+            reverse=True
+        )
+
+        # 5. Calculate rank for machine_type_count (more machine types are more complex)
+        self.complexity_rank(
+            self.orders, 
+            lambda order: len(set(
+                item.machine_type for item in self.order_items if item.order_number == order.order_number
+            )), 
+            "machine_type_count",
+            reverse=True
+        )
+    
+
+        # 6. Calculate rank for worker_qualification_count (more qualifications are more complex)
+        worker_qualifications = {
+            order.order_number: set(
+                qualification for item in self.order_items
+                if item.order_number == order.order_number
+                for qualification in item.worker_qualifications
+            )
+            for order in self.orders
+        }
+        self.complexity_rank(
+            self.orders, 
+            lambda order: len(worker_qualifications[order.order_number]), 
+            "worker_qualification_count",
+            reverse=True
+        )
+
+        # 7. Calculate rank for attachment_count (more attachments are more complex)
+        self.complexity_rank(
+            self.orders, 
+            lambda order: len(list(
+                item.equipment_types for item in self.order_items if item.order_number == order.order_number
+            )), 
+            "attachment_count",
+            reverse=True
+        )
+
+        
+        # 7. Calculate overall Rank with Borda Count
+        self.complexity_borda_count_ahp()
+        self.assign_complexity_classes_from_final_score()
+    
+    def complexity_rank(self, orders, key_func, rank_name, reverse=False):
+        """
+        Calculate the rank for orders based on a key function.
+
+        Parameters:
+            orders (list): List of order objects.
+            key_func (function): Function to determine the key value for ranking.
+            rank_name (str): The name of the rank attribute to store (e.g., 'order_item_count').
+            reverse (bool): Whether to sort in descending order (default: False).
+        """
+        sorted_orders = sorted(orders, key=key_func, reverse=reverse)
+        current_rank = 1
+        last_value = None
+
+        for i, order in enumerate(sorted_orders):
+            value = key_func(order)
+            if value != last_value:
+                current_rank = i + 1
+                last_value = value
+            order._complexity[rank_name] = current_rank
+
+        if rank_name == 'order_item_count':
+            self.order_ranking = sorted_orders
+
+
+    def complexity_borda_count_ahp(self):
+        """
+        Calculate the overall priority rank using Borda Count combined with Analytic Hierarchy Process (AHP).
+        """
+
+        borda_count_ahp = {
+            order.order_number: sum(
+                (len(self.orders) - rank + 1)
+                * self.complexity_ahp[rank_name]
+                for rank_name, rank in order._complexity.items()
+            )
+            for order in self.orders
+        }
+
+        self.calculate_rank(
+            self.orders, 
+            lambda order: borda_count_ahp[order.order_number], 
+            "borda_count_ahp", 
+            reverse=True
+        )
+
+
+    def assign_complexity_classes_from_final_score(self, num_classes: int = 3) -> None:
+        """
+        Assign complexity classes to orders based on the final Borda Count rank stored in order._complexity["borda_count_ahp"].
+        Orders are sorted by their rank (lower = more complex). Each order's complexity_score is set to the rank,
+        and complexity_class is assigned starting from 1 (most complex) to num_classes (least complex).
+ 
+        :param num_classes: Number of complexity classes (default is 3), where 1 is most complex.
+        """
+        sorted_orders = sorted(self.orders, key=lambda order: order._complexity.get("borda_count_ahp", 0))
+        total_orders = len(sorted_orders)
+        if total_orders == 0:
+            return
+        group_size = total_orders / num_classes
+        for i, order in enumerate(sorted_orders):
+            complexity_class = int(i // group_size) + 1
+            order.complexity_score = num_classes - complexity_class + 1
+            if complexity_class > num_classes:
+                complexity_class = num_classes
+            order.complexity_class = complexity_class
+
+
 
 
         
@@ -307,8 +500,6 @@ class InputData:
             self.order_ranking = sorted_orders
         
 
-
-
     def calculate_borda_count_ahp(self, ahp=True):
         """
         Calculate the overall priority rank using Borda Count combined with Analytic Hierarchy Process (AHP).
@@ -363,10 +554,6 @@ class InputData:
             return str(file_path.resolve()), file_path.parent.name  # Return file path and parent folder name
 
         raise FileNotFoundError(f"File '{self.instance_filename}' not found in directory '{base_path}'.")
-
-
-
-
 
 
 
@@ -588,9 +775,12 @@ class Order:
         self._order_item_ids = [int(item) for item in json_data.get("BestellpositionenStrings", [])]
         self._location = json_data.get("Standort", {"Item1": 0.0, "Item2": 0.0})
         self._priority = {}
+        self._complexity = {}
         self.dynamic_percentage = 0
         self.status = False
         self.unuseable = False
+        self.complexity_score = None
+        self.complexity_class = None
 
 
 
@@ -625,6 +815,10 @@ class Order:
     @property
     def priority(self) -> dict[str, int]:
         return self._priority
+    
+    @property
+    def complexity(self) -> dict[str, int]:
+        return self._complexity
     
     
 
