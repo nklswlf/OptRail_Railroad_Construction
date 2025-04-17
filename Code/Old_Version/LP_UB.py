@@ -582,12 +582,14 @@ class UpperBound:
 
         if self.model.SolCount > 0:
             objective_value = self.model.objVal
+            sum_x = sum(self.model.getAttr('x', self.model.getVars()))
+
             gap = self.model.MIPGap if self.model.status == GRB.TIME_LIMIT else 0
         else:
             objective_value = None
             gap = None
 
-        return objective_value, self.model.Runtime, self.model.status, gap
+        return objective_value, sum_x, self.model.Runtime, self.model.status, gap
 
 
 

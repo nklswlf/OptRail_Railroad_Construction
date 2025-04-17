@@ -13,11 +13,11 @@ import re
 
 class UpperBound:
     
-    def __init__(self, data, upper_bound = 'all', check_run = False):
+    def __init__(self, data, bound_technique = "LP", upper_bound = 'all'):
         self.data = data
         self.model = None
         self.upper_bound = upper_bound
-        self.check_run = check_run
+        self.bound_techique = bound_technique
 
         # ========================
         # 1. Sets
@@ -375,7 +375,11 @@ class UpperBound:
             indices_3 = [(m, i, self.end) for m in self.M for i in self.N_m[m]]  # (m, i, end)
             indices_4 = [(m, self.start, self.end) for m in self.M]  # (m, start, end)
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
-            x = self.model.addVars(all_indices, vtype=GRB.BINARY, lb=0, ub=1, name="x")
+
+            if self.bound_techique == 'MIP':
+                x = self.model.addVars(all_indices, vtype=GRB.BINARY, name="x")
+            elif self.bound_techique == 'LP':
+                x = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="x")
 
         if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
 
@@ -385,7 +389,10 @@ class UpperBound:
             indices_3 = [(w, i, self.end) for w in self.W for i in self.N_w[w]]  # (w, i, end)
             indices_4 = [(w, self.start, self.end) for w in self.W]  # (w, start, end)
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
-            y = self.model.addVars(all_indices, vtype=GRB.BINARY, name="y")
+            if self.bound_techique == 'MIP':
+                y = self.model.addVars(all_indices, vtype=GRB.BINARY, name="y")
+            elif self.bound_techique == 'LP':
+                y = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="y")
 
         if self.upper_bound == 'attachment' or self.upper_bound == "all":
 
@@ -395,10 +402,17 @@ class UpperBound:
             indices_3 = [(a, i, self.end) for a in self.A for i in self.N_a[a]]
             indices_4 = [(a, self.start, self.end) for a in self.A]
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
-            z = self.model.addVars(all_indices, vtype=GRB.BINARY, name="z")
+            
+            if self.bound_techique == 'MIP':
+                z = self.model.addVars(all_indices, vtype=GRB.BINARY, name="z")
+            elif self.bound_techique == 'LP':
+                z = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="z")
 
         # Site completion variables
-        u = self.model.addVars(self.C, vtype=GRB.BINARY, name="u")
+        if self.bound_techique == 'MIP':
+            u = self.model.addVars(self.C, vtype=GRB.BINARY, name="u")
+        elif self.bound_techique == 'LP':
+            u = self.model.addVars(self.C, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="u")
 
         # ========================
         # 2. Set Objective Function
@@ -666,31 +680,30 @@ class UpperBound:
         self.create_optimization_model()
         self.solve_model()
 
-        if self.check_run:
-            
-            routes = self.extract_routes_from_solution()
-            return routes['x'], routes['y'], routes['z']
+
             
 
-            filename = f"model_{self.data.instance}.lp"
-            solution_filename = f"solution_{self.data.instance}.sol"
+        filename = f"model_{self.data.instance}.lp"
+        solution_filename = f"solution_{self.data.instance}.sol"
 
-            save_path = Path.cwd().parent / "Data" / "ModelFiles"/ "MIP" /  f"ModelStatus_{self.model.status}"  / self.data._parent_folder / self.data.instance
-            save_path.mkdir(parents=True, exist_ok=True)
+        save_path = Path.cwd().parent / "Data" / "ModelFiles"/ self.bound_techique /  f"ModelStatus_{self.model.status}"  / self.data._parent_folder / self.data.instance
+        save_path.mkdir(parents=True, exist_ok=True)
 
-            self.model.write(str(save_path / solution_filename))
-            self.model.write(str(save_path / filename))
+        self.model.write(str(save_path / solution_filename))
+        self.model.write(str(save_path / filename))
             
 
 
         if self.model.SolCount > 0:
             objective_value = self.model.objVal
+            order_count = sum(var.X for var in self.model.getVars() if var.VarName.startswith("u["))
+            order_item_count = sum(var.X for var in self.model.getVars() if var.VarName.startswith("x[")) - len(self.M)
             gap = self.model.MIPGap if self.model.status == GRB.TIME_LIMIT else 0
         else:
             objective_value = None
             gap = None
 
-        return objective_value, self.model.Runtime, self.model.status, gap
+        return objective_value, order_count, order_item_count, self.model.Runtime, self.model.status, gap
 
 
 

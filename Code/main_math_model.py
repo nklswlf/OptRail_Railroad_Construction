@@ -3,8 +3,8 @@ import OutputData
 import MIP_Flow
 import pandas as pd
 from pathlib import Path
-import LP_UB as LP_UB
 import MIP_UB as MIP_UB
+import OutputData
 
 
 
@@ -60,7 +60,7 @@ Construction_a50_o578_m28_an276_ar66.json
 
 def upper_bound():
 
-    model = "MIP"
+    bound_technique = "MIP"
 
     instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a5_o96_m10_an10_ar10_reduced.json",
@@ -72,27 +72,17 @@ def upper_bound():
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
     
-    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
-                "Construction_a5_o96_m10_an10_ar10_reduced.json",
-                "Construction_a10_o107_m5_an57_ar12.json",
-                "Construction_a15_o170_m9_an80_ar18.json",
-                "Construction_a20_o236_m12_an106_ar24.json",
-                "Construction_a25_o306_m13_an127_ar31.json",
-                "Construction_a30_o355_m18_an148_ar42.json",
-                "Construction_a40_o476_m22_an215_ar51.json"]
-    
-    
     dict_upper_bound = dict()
 
-    
+
     for instance in instances:
         
         data = InputData.InputData(instance)
 
-        if model == "LP":
-            optimizer = LP_UB.UpperBound(data, upper_bound="all")
-        elif model == "MIP":
-            optimizer = MIP_UB.UpperBound(data, upper_bound="all")
+        if bound_technique == "LP":
+            optimizer = MIP_UB.UpperBound(data, bound_technique=bound_technique)
+        elif bound_technique == "MIP":
+            optimizer = MIP_UB.UpperBound(data, bound_technique=bound_technique)
 
         site_fulfillment, runtime, status, gap = optimizer.execute()
 
@@ -105,29 +95,49 @@ def upper_bound():
     df_upper_bound = pd.DataFrame.from_dict(dict_upper_bound,orient="index",columns=["Site Fulfillment", "Runtime", "Status", "MIPGap"]).reset_index(names=["Instance"])
     upper_bound_path = Path.cwd().parent / "Data" / "Solution_math_model" / "Upper_Bound"
     upper_bound_path.mkdir(parents=True, exist_ok=True)
-    df_upper_bound.to_csv(upper_bound_path / f"upper_bound_{model}.csv", index=False)
+    df_upper_bound.to_csv(upper_bound_path / f"upper_bound_{bound_technique}.csv", index=False)
     print(df_upper_bound)
 
 
 
 def single_run():
-    instance = "Construction_a5_o96_m10_an10_ar10_reduced.json"
+    instance = "Construction_a10_o107_m5_an57_ar12.json"
+    strategy = "LP"
+    route_test = False
 
     data = InputData.InputData(instance)
-    optimizer = MIP_UB.UpperBound(data, upper_bound="all", check_run=True)
+    
+    if strategy == "MIP":
+        optimizer = MIP_UB.UpperBound(data,bound_technique='MIP' ,upper_bound="all")
+    elif strategy == "LP":
+        optimizer = MIP_UB.UpperBound(data,bound_technique='LP' ,upper_bound="all")
 
-    machine, worker, attachment = optimizer.execute()
+    solution = optimizer.execute()
 
-    print(f"Machine: {machine}")
-    print(f"Worker: {worker}")
-    print(f"Attachment: {attachment}")
+    print(f"Objective value: {solution[0]}")
+    print(f"Orders: {solution[1]}")
+    print(f"Order items: {solution[2]}")
+
+    if strategy == "MIP" and route_test:
+        route = optimizer.extract_routes_from_solution()
+        Solution = OutputData.Solution(route[1], route[0], route[2], data)
+        feasible = Solution.feasibility_check()
+        if not feasible:
+            raise Exception(f"Infeasible solution for instance {instance}")
+        else:
+            print("Feasible solution")
     
 
 
+if __name__ == "__main__":
+    #upper_bound()
+    single_run()
 
 
 
 
+
+'''
 def main():
     instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a5_o96_m10_an10_ar10_reduced.json",
@@ -168,22 +178,6 @@ def main():
                 
                 else:
                     print(f"No solution found for instance {instance}")
-
-                    
-                        
-                    
-
-
-if __name__ == "__main__":
-    #TestInputData()
-    #pareto()
-    #main()
-    #upper_bound()
-    single_run()
-
-
-
-
 
 
 
@@ -228,3 +222,5 @@ def pareto():
             pareto_path.mkdir(parents=True, exist_ok=True)
 
             pareto_results_df.to_csv(pareto_path / f"{pareto_attribute}_pareto_results.csv", index=False)
+
+'''

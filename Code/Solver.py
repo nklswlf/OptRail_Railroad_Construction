@@ -3,7 +3,7 @@ from ConstructiveHeuristic import *
 from ImprovementAlgorithm import *
 from EvaluationLogic import *
 import time
-from LP_UB import *
+from MIP_UB import *
 
 class Solver:
     ''' Orchestrates all single pieces to form one strong algorithm to solve flowshop problems
@@ -54,9 +54,9 @@ class Solver:
         print("\nCalculating Upper Bound...")
 
         start_time = time.time()
-        optimizer = UpperBound(self.InputData, UB_technique)
-        site_fulfillment, filler, filler, filler = optimizer.execute()
-        self.InputData.site_fulfillment = int(site_fulfillment)
+        optimizer = UpperBound(self.InputData, bound_technique=UB_technique)
+        site_fulfillment = optimizer.execute()
+        self.InputData.site_fulfillment = int(site_fulfillment[0])
 
         
         self.InputData.reduce_input_data(self.InputData.site_fulfillment)
@@ -71,7 +71,7 @@ class Solver:
         
         self.UpperBoundTime = time.time() - start_time
         print("\nUpper Bound calculated after:", round(self.UpperBoundTime, 2), "seconds")
-        print(f"UB = {round(site_fulfillment, 2)}")
+        print(f"UB = {round(site_fulfillment[0], 2)}")
 
     
     def RunConstructive(self, UB_technique, order_item_attractiveness_technique, machine_attractiveness_technique):
