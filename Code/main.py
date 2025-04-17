@@ -72,7 +72,7 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                                                             # Reached after pre-processing in InputData
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-instances = ["Construction_a10_o107_m5_an57_ar12.json"]
+instances = ["Construction_a50_o578_m28_an276_ar66.json"]
 
 
 

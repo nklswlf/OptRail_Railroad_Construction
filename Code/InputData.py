@@ -269,76 +269,17 @@ class InputData:
         )
 
         # 7. Calculate rank for attachment_count fewer attachments are better
+        self.calculate_rank(
+            self.orders, 
+            lambda order: len(list(
+                item.equipment_types for item in self.order_items if item.order_number == order.order_number
+            )), 
+            "attachment_count"
+        )
 
-
-        # Print current priorities for each order and the ahp weights
-        #print("Order priorities calculated with different criteria:")
-        #for order in self.orders:
-        #    print(f"Order {order.order_number}: {order._priority}")
-        #print(f"AHP weights: {self._ahp_weights}")
         
-
         # 7. Calculate overall Rank with Borda Count
         self.calculate_borda_count_ahp()
-        
-
-
-
-    def calculate_borda_count_ahp(self, ahp=True):
-        """
-        Calculate the overall priority rank using Borda Count combined with Analytic Hierarchy Process (AHP).
-        """
-        if ahp:
-            borda_count_ahp = {
-                order.order_number: sum(
-                    (len(self.orders) - rank + 1)
-                    * self._ahp_weights[rank_name]
-                    for rank_name, rank in order._priority.items()
-                )
-                for order in self.orders
-            }
-
-            #print("Borda Count and AHP weights:")
-            #for order in self.orders:
-            #    print(f"Order {order.order_number}: {borda_count_ahp[order.order_number]:.2f}")
-
-            self.calculate_rank(
-                self.orders, 
-                lambda order: borda_count_ahp[order.order_number], 
-                "borda_count_ahp", 
-                reverse=True
-            )
-            
-            #print("Order priorities calculated with Borda Count and AHP:")
-            #for order in self.orders:
-            #    print(f"Order {order.order_number}: {order._priority['borda_count_ahp']:.2f}")
-
-        elif not ahp:
-            borda_count = {
-                order.order_number: sum(
-                    (len(self.orders) - rank + 1)
-                    for rank_name, rank in order._priority.items()
-                )
-                for order in self.orders
-            }
-
-            #print("Borda Count without AHP weights:")
-            #for order in self.orders:
-            #    print(f"Order {order.order_number}: {borda_count[order.order_number]}")
-
-            self.calculate_rank(
-                self.orders, 
-                lambda order: borda_count[order.order_number], 
-                "borda_count", 
-                reverse=True
-            )
-            
-            #print("Order priorities calculated with Borda Count:")
-            #for order in self.orders:
-            #    print(f"Order {order.order_number}: {order._priority['borda_count']:.2f}")
-
-
-
 
 
     def calculate_rank(self, orders, key_func, rank_name, reverse=False):
@@ -364,7 +305,48 @@ class InputData:
 
         if rank_name == 'order_item_count':
             self.order_ranking = sorted_orders
+        
 
+
+
+    def calculate_borda_count_ahp(self, ahp=True):
+        """
+        Calculate the overall priority rank using Borda Count combined with Analytic Hierarchy Process (AHP).
+        """
+        if ahp:
+            borda_count_ahp = {
+                order.order_number: sum(
+                    (len(self.orders) - rank + 1)
+                    * self._ahp_weights[rank_name]
+                    for rank_name, rank in order._priority.items()
+                )
+                for order in self.orders
+            }
+
+            self.calculate_rank(
+                self.orders, 
+                lambda order: borda_count_ahp[order.order_number], 
+                "borda_count_ahp", 
+                reverse=True
+            )
+
+
+        elif not ahp:
+            borda_count = {
+                order.order_number: sum(
+                    (len(self.orders) - rank + 1)
+                    for rank_name, rank in order._priority.items()
+                )
+                for order in self.orders
+            }
+
+            self.calculate_rank(
+                self.orders, 
+                lambda order: borda_count[order.order_number], 
+                "borda_count", 
+                reverse=True
+            )
+            
         
 
     def _find_instance_file(self) -> tuple[str, str]:

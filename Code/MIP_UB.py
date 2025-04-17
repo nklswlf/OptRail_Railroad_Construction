@@ -547,7 +547,7 @@ class UpperBound:
                     for k in self.K:
                         if k in self.q_ok[i]:
                             self.model.addConstr(
-                                gp.quicksum(z[a, i, j] for a in self.A if (a, i) in self.S_an for j in self.S_an[a, i]) == self.q_ok[i][k] * u[c],
+                                gp.quicksum(z[a, i, j] for a in self.A_k[k] if (a, i) in self.S_an for j in self.S_an[a, i]) == self.q_ok[i][k] * u[c],
                                 name=f"attachment_site_fulfillment_site{c}_order{i}_type{k}"
                             )
 
@@ -582,7 +582,6 @@ class UpperBound:
                                 gp.quicksum(z[a, i, j] for a in self.A_k[k] if (a, i) in self.S_an for j in self.S_an[a, i]) == self.q_ok[i][k] * u[c],
                                 name=f"attachment_site_fulfillment_site{c}_order{i}_type{k}"
                             )
-                            print(f"Attachment constraint for site {c}, order {i}, type {k} added.")
 
             
         
@@ -680,28 +679,28 @@ class UpperBound:
         self.create_optimization_model()
         self.solve_model()
 
-
-            
-
-        filename = f"model_{self.data.instance}.lp"
-        solution_filename = f"solution_{self.data.instance}.sol"
-
-        save_path = Path.cwd().parent / "Data" / "ModelFiles"/ self.bound_techique /  f"ModelStatus_{self.model.status}"  / self.data._parent_folder / self.data.instance
-        save_path.mkdir(parents=True, exist_ok=True)
-
-        self.model.write(str(save_path / solution_filename))
-        self.model.write(str(save_path / filename))
-            
-
-
         if self.model.SolCount > 0:
             objective_value = self.model.objVal
-            order_count = sum(var.X for var in self.model.getVars() if var.VarName.startswith("u["))
-            order_item_count = sum(var.X for var in self.model.getVars() if var.VarName.startswith("x[")) - len(self.M)
+            var_names = self.model.getAttr("VarName", self.model.getVars())
+            var_values = self.model.getAttr("X", self.model.getVars())
+            order_count = sum(val for name, val in zip(var_names, var_values) if name.startswith("u["))
+            x_count = sum(val for name, val in zip(var_names, var_values) if name.startswith("x["))
+            order_item_count = x_count - len(self.M)
             gap = self.model.MIPGap if self.model.status == GRB.TIME_LIMIT else 0
         else:
             objective_value = None
             gap = None
+
+        create_files = True
+        if create_files:
+            filename = f"model_{self.data.instance}.lp"
+            solution_filename = f"solution_{self.data.instance}.sol"
+
+            save_path = Path.cwd().parent / "Data" / "ModelFiles"/ self.bound_techique /  f"ModelStatus_{self.model.status}"  / self.data._parent_folder / self.data.instance
+            save_path.mkdir(parents=True, exist_ok=True)
+
+            self.model.write(str(save_path / solution_filename))
+            self.model.write(str(save_path / filename))
 
         return objective_value, order_count, order_item_count, self.model.Runtime, self.model.status, gap
 

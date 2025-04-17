@@ -58,7 +58,7 @@ Construction_a50_o578_m28_an276_ar66.json
 
 
 
-def upper_bound():
+def experiments():
 
     bound_technique = "MIP"
 
@@ -84,15 +84,13 @@ def upper_bound():
         elif bound_technique == "MIP":
             optimizer = MIP_UB.UpperBound(data, bound_technique=bound_technique)
 
-        site_fulfillment, runtime, status, gap = optimizer.execute()
+        obj_value, order_count, order_item_count, runtime, status, gap = optimizer.execute()
 
-        dict_upper_bound[instance] = [site_fulfillment, runtime, status, gap]
+        dict_upper_bound[instance] = [obj_value, order_count, order_item_count, runtime, status, gap]
 
-        print(f"Site fulfillment for instance {instance} and upper bound {upper_bound}:")
-        print(site_fulfillment)
-        print(instance)
 
-    df_upper_bound = pd.DataFrame.from_dict(dict_upper_bound,orient="index",columns=["Site Fulfillment", "Runtime", "Status", "MIPGap"]).reset_index(names=["Instance"])
+    df_upper_bound = pd.DataFrame.from_dict(dict_upper_bound,orient="index",columns=["Objective Value", "Order Count", "Order Item Count", "Runtime (s)", "Status", "Gap"])
+    df_upper_bound.index.name = "Instance"
     upper_bound_path = Path.cwd().parent / "Data" / "Solution_math_model" / "Upper_Bound"
     upper_bound_path.mkdir(parents=True, exist_ok=True)
     df_upper_bound.to_csv(upper_bound_path / f"upper_bound_{bound_technique}.csv", index=False)
@@ -101,7 +99,7 @@ def upper_bound():
 
 
 def single_run():
-    instance = "Construction_a10_o107_m5_an57_ar12.json"
+    instance = "Construction_a50_o578_m28_an276_ar66.json"
     strategy = "LP"
     route_test = False
 
@@ -114,7 +112,7 @@ def single_run():
 
     solution = optimizer.execute()
 
-    print(f"Objective value: {solution[0]}")
+    print(f"\nObjective value: {solution[0]}")
     print(f"Orders: {solution[1]}")
     print(f"Order items: {solution[2]}")
 
@@ -130,7 +128,7 @@ def single_run():
 
 
 if __name__ == "__main__":
-    #upper_bound()
+    #experiments()
     single_run()
 
 

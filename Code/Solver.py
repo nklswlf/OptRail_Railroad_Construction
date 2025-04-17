@@ -60,14 +60,7 @@ class Solver:
 
         
         self.InputData.reduce_input_data(self.InputData.site_fulfillment)
-
-        if self.InputData.instance == "a20_o236_m12_an106_ar24":
-            self.InputData.deactivate_order(8)
-            self.InputData.activate_order(11)
-
-        for order in self.InputData.orders:
-            if order.status == False:
-                print("Order", order.order_number, "is not planned.")
+        
         
         self.UpperBoundTime = time.time() - start_time
         print("\nUpper Bound calculated after:", round(self.UpperBoundTime, 2), "seconds")
