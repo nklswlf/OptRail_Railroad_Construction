@@ -207,7 +207,109 @@ class IterativeImprovement(ImprovementAlgorithm):
 
 
 
-class ParetoSimulatedAnnealing(ImprovementAlgorithm):
+class BuildingSimulatedAnnealing(ImprovementAlgorithm):
+    """ Simulated Annealing algorithm to find a fully staffed solution. """
+
+    def __init__(self, inputData:InputData,
+                 start_temp:int,
+                 min_temp:int,
+                 cooling_rate:float,
+                 max_iterations:int,
+                 fallback_threshold:int,
+                 scaling_energy:int):
+        super().__init__(inputData)
+
+        self.StartTemperature = start_temp
+        self.MinTemperature = min_temp
+        self.CoolingRate = cooling_rate
+        self.MaxIterations = max_iterations
+        self.FallbackThreshold = fallback_threshold
+        self.ScalingEnergy = scaling_energy
+
+        self.DistanceTypes = {  'Swap_Shift_External': ['commute_distance', 'transport_distance', 'attachment_distance'],
+                                'Replace_Shift_Worker': ['commute_distance'],
+                                'Replace_Shift_Machine': ['transport_distance'],
+                                'Replace_Shift_Attachment': ['attachment_distance'],
+                                'Swap_Shift_Worker': ['commute_distance'],
+                                'Swap_Shift_Machine': ['transport_distance'],
+                                'Swap_Shift_Attachment': ['attachment_distance'],
+                                'Insert_Shift': None}
+        
+
+        self.FulfillmentType = 'Insert_Shift'
+
+
+    def Run(self, solution:Solution) -> Solution:
+        ''' Run simulated annealing algorithm with given solutions and parameters'''
+        
+        current_temperature = self.StartTemperature
+        self.InitializeNeighborhoods(list(self.DistanceTypes.keys()) + [self.FulfillmentType])
+
+
+        while current_temperature > self.MinTemperature:
+
+            print(f"\nSolution order item count: {solution.number_of_finished_order_items}")
+            print(f"Solution distances: {solution.total_distance}")
+            best_distance = solution.total_distance
+            fallback_counter = 0
+
+            for i in range(self.MaxIterations):
+
+                # Check if solution is fully staffed
+                if solution.total_dynamic_percentage == self.InputData.site_fulfillment:
+                    print("\nFound fully staffed solution:")
+                    print(solution)
+                    return solution
+
+                # Randomly select a neighborhood type and create a move
+                random_type = self.RNG.choice(list(self.DistanceTypes.keys()))
+                neighborhood = self.Neighborhoods[random_type]
+                move = neighborhood.SingleMove(solution)
+                objective = self.DistanceTypes[random_type]
+
+                if move is None:
+                    continue
+
+                
+                if objective is not None:
+                    value = 0
+                    for obj in objective:
+                        value += move.DeltaDetails[obj]
+                else:
+                    value = -1
+
+                if value <= 0:
+                    pass
+                elif value > 0:
+                    prob = math.exp(-value * self.ScalingEnergy / current_temperature)
+                    random_number = self.RNG.random()
+
+                    if prob < random_number:
+                        continue
+
+                
+                # Rethink this solution creation strategy: Compare to IM Challenge --> Changing the solution in place instead of creating a new one
+                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
+                solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                self.EvaluationLogic.evaluate(solution)
+
+
+
+            
+            # Update the temperature
+            current_temperature *= self.CoolingRate
+
+
+
+
+
+
+
+
+
+
+
+class MOSA(ImprovementAlgorithm):
     """ Simulated Annealing algorithm with perturbation to escape local optima. """
 
     def __init__(self, inputData:InputData,
@@ -241,90 +343,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.BuildingIteration = 0
 
 
-    def BuildingPhase(self, solution:Solution) -> Solution:
-
-        ''' Building phase to find a fully staffed solution'''
-        self.BuildingIteration += 1
-        print(f"\nBuilding Phase Iteration {self.BuildingIteration}...")
-
-        fallback_counter = 0
-        current_temperature = self.StartTemperature
-        local_pareto_solutions = ParetoSolutions(self.InputData)
-        break_counter = 0
-        break_flag = False
-
-        while current_temperature > self.MinTemperature:
-
-            if break_flag:
-                break
-
-            for i in range(self.MaxIterations):
-
-
-                if solution.total_dynamic_percentage == self.InputData.site_fulfillment:
-                    if len(local_pareto_solutions.ParetoFront) > 0:
-                        print("\nLocal Pareto Front after Building Phase:")
-                        local_pareto_solutions.ShowFront()
-                    self.ParetoSolutions.ParetoFront.append(solution)
-                    print("\nSingle Solution added to Global Pareto Front:")
-                    print(solution)
-                    return solution, True
-
-
-                random_objective = self.RNG.choice(list(self.BuildingTypesObjectives.keys()))
-                types = self.BuildingTypesObjectives[random_objective]
-                random_type = self.RNG.choice(types)
-                neighborhood = self.Neighborhoods[random_type]
-                move = neighborhood.SingleMove(solution)
-
-                if move is None:
-                    # Count consecutive non-moves for Insert_Shift and Swap_Shift_External
-                    # Break if threshold is reached
-                    if random_type in ['Insert_Shift', 'Swap_Shift_External']:
-                        break_counter += 1
-                    if break_counter >= self.MaxBuildingIterationsWithoutImprovement:
-                        break_flag = True
-                        break
-                    
-                    continue
-
-                value = move.DeltaDetails[random_objective]
-
-                if value <= 0:
-                    pass
-                elif value > 0:
-                    prob = math.exp(-value * self.ScalingEnergy/ current_temperature)
-                    random_number = self.RNG.random()
-
-                    if prob < random_number:
-                        continue
-
-                
-                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
-                solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
-                self.EvaluationLogic.evaluate(solution)
-
-                added = local_pareto_solutions.UpdateParetoFront(solution)
-
-                if not added:
-                    fallback_counter += 1
-                    if fallback_counter >= self.FallbackThreshold:
-                        local_pareto_solutions.SortParetoFront()
-                        solution = local_pareto_solutions.ParetoFront[0]
-                else:
-                    fallback_counter = 0
-
-            current_temperature *= self.CoolingRate
-
-        solution = deepcopy(local_pareto_solutions.ParetoFront[0])
-        #local_pareto_solutions.UpdateParetoFront(solution)
-        print("\nDid not find fully staffed solution after Building Phase iteration")
-        print(f"\nSingle Solution which is not fully fulfilled after Building Phase iteration:")
-        print(solution)
-        return solution, False
     
-        # Introduce a perturbation to escape local optima!!! --> Maybe not necessary for building phase
-
 
     def ImproveIndividuals(self, solution:Solution, objective:str) -> ParetoSolutions:
         ''' Improve individuals with simulated annealing algorithm'''
@@ -631,29 +650,6 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.InitializeNeighborhoods()
         currentSolution = deepcopy(solution)
 
-        # Building up after the initial solution
-        Found = False
-        exchange_tries = 0
-        print(f"\nStarting Building Phase to find a fully staffed solution...")
-        current_time = time.time()
-        while not Found:
-            currentSolution, Found = self.BuildingPhase(currentSolution)
-
-            if not Found:
-                if exchange_tries < 2: # Change: LOOP could HAPPEN
-                    print(f"\nSwapping sites to find a fully staffed solution...")
-                    currentSolution = self.EditSites(currentSolution, True)
-                    feasible = currentSolution.feasibility_check()
-                    if not feasible:
-                        raise Exception('Solution is not feasible after adding site')
-                    exchange_tries += 1
-                    print("Sites have been swapped")
-                else:
-                    print(f"\nDeleting sites to find a fully staffed solution...")
-                    currentSolution = self.EditSites(currentSolution, False)
-                    print("Site has been deleted")
-        self.BuildingPhaseTime = time.time() - current_time
-        print(f"Building Phase finished after: {round(self.BuildingPhaseTime, 2)} seconds")
 
         self.ParetoSolutions.SetReferencePoint(currentSolution)
 
@@ -703,3 +699,94 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         
 
 
+
+
+
+
+
+'''
+def BuildingPhase(self, solution:Solution) -> Solution:
+
+        self.BuildingIteration += 1
+        print(f"\nBuilding Phase Iteration {self.BuildingIteration}...")
+
+        fallback_counter = 0
+        current_temperature = self.StartTemperature
+        local_pareto_solutions = ParetoSolutions(self.InputData)
+        break_counter = 0
+        break_flag = False
+
+        while current_temperature > self.MinTemperature:
+
+            if break_flag:
+                break
+
+            for i in range(self.MaxIterations):
+
+
+                if solution.total_dynamic_percentage == self.InputData.site_fulfillment:
+                    if len(local_pareto_solutions.ParetoFront) > 0:
+                        print("\nLocal Pareto Front after Building Phase:")
+                        local_pareto_solutions.ShowFront()
+                    self.ParetoSolutions.ParetoFront.append(solution)
+                    print("\nSingle Solution added to Global Pareto Front:")
+                    print(solution)
+                    return solution, True
+
+
+                random_objective = self.RNG.choice(list(self.BuildingTypesObjectives.keys()))
+                types = self.BuildingTypesObjectives[random_objective]
+                random_type = self.RNG.choice(types)
+                neighborhood = self.Neighborhoods[random_type]
+                move = neighborhood.SingleMove(solution)
+
+                if move is None:
+                    # Count consecutive non-moves for Insert_Shift and Swap_Shift_External
+                    # Break if threshold is reached
+                    if random_type in ['Insert_Shift', 'Swap_Shift_External']:
+                        break_counter += 1
+                    if break_counter >= self.MaxBuildingIterationsWithoutImprovement:
+                        break_flag = True
+                        break
+                    
+                    continue
+
+                value = move.DeltaDetails[random_objective]
+
+                if value <= 0:
+                    pass
+                elif value > 0:
+                    prob = math.exp(-value * self.ScalingEnergy/ current_temperature)
+                    random_number = self.RNG.random()
+
+                    if prob < random_number:
+                        continue
+
+                
+                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
+                solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                self.EvaluationLogic.evaluate(solution)
+
+                added = local_pareto_solutions.UpdateParetoFront(solution)
+
+                if not added:
+                    fallback_counter += 1
+                    if fallback_counter >= self.FallbackThreshold:
+                        local_pareto_solutions.SortParetoFront()
+                        solution = local_pareto_solutions.ParetoFront[0]
+                else:
+                    fallback_counter = 0
+
+            current_temperature *= self.CoolingRate
+
+        solution = deepcopy(local_pareto_solutions.ParetoFront[0])
+        #local_pareto_solutions.UpdateParetoFront(solution)
+        print("\nDid not find fully staffed solution after Building Phase iteration")
+        print(f"\nSingle Solution which is not fully fulfilled after Building Phase iteration:")
+        print(solution)
+        return solution, False
+    
+        # Introduce a perturbation to escape local optima!!! --> Maybe not necessary for building phase
+
+
+'''

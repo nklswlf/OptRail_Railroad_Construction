@@ -792,7 +792,12 @@ class EvaluationLogic:
         self.calculate_machine_worker_attachment_count_and_utilization_time(solution)
         self.calculate_dynamic_percentage_order(solution)
         self.calculate_attachment_distance(solution)
+        self.calculate_cummulative_distance(solution)
 
+    
+    def calculate_cummulative_distance(self, solution:Solution):
+
+        solution.total_distance = solution.total_commute_distance + solution.total_transport_distance + solution.total_attachment_distance
 
     def calculate_attachment_distance(self, solution:Solution):
             ''' Calculate the total transport distance of the attachments'''

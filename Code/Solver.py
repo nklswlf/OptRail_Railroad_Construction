@@ -63,6 +63,7 @@ class Solver:
 
         for order_number in solution[3]:
             self.InputData.activate_order(order_number)
+
         
         
         self.UpperBoundTime = time.time() - start_time
@@ -84,8 +85,6 @@ class Solver:
         return startSolution, self.UpperBoundTime, self.ConstructionTime, self.RunTime
 
 
-
-
     def RunAlgorithm(self, UB_technique, order_item_attractiveness_technique, machine_attractiveness_technique, algorithm:ImprovementAlgorithm):
         ''' Run local search with chosen algorithm and neighborhoods'''
 
@@ -95,7 +94,9 @@ class Solver:
 
         startSolution = self.ConstructionPhase(order_item_attractiveness_technique, machine_attractiveness_technique)
 
-        building_time, individual_time, dominance_time, feasibility_check_time = self.ImprovementPhase(startSolution, algorithm)
+        builded_solution = self.ImprovementPhase(startSolution, algorithm[0])
+
+        building_time, individual_time, dominance_time, feasibility_check_time = self.ImprovementPhase(builded_solution, algorithm[1])
 
         endtime = time.time()
         self.RunTime = endtime - starttime
