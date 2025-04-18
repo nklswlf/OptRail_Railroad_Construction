@@ -182,10 +182,18 @@ def main():
         
         algorithms = [building_sa, mosa]
 
-        solver.RunAlgorithm(UB_technique="LP",
-                            order_item_attractiveness_technique="time_difference_importance",
-                            machine_attractiveness_technique="balanced_greedy",
-                            algorithm=algorithms)
+
+        if only_greedy:
+            solver.RunConstructive(UB_technique="LP",
+                                   order_item_attractiveness_technique="time_difference_importance",
+                                   machine_attractiveness_technique="balanced_greedy",
+                                   worker_attractiveness_technique = "balanced_greedy")
+        else:
+            solver.RunAlgorithm(UB_technique="LP",
+                                order_item_attractiveness_technique="time_difference_importance",
+                                machine_attractiveness_technique="balanced_greedy",
+                                worker_attractiveness_technique = "balanced_greedy",
+                                algorithm=algorithms)
 
 
 
