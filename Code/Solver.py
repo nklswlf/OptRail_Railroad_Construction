@@ -97,10 +97,17 @@ class Solver:
 
         builded_solution = self.ImprovementPhase(startSolution, algorithm[0])
 
-        building_time, individual_time, dominance_time, feasibility_check_time = self.ImprovementPhase(builded_solution, algorithm[1])
+        improvement_time = self.ImprovementPhase(builded_solution, algorithm[1])
 
         endtime = time.time()
         self.RunTime = endtime - starttime
 
-        return self.UpperBoundTime, self.ConstructionTime, building_time, individual_time, dominance_time, feasibility_check_time, self.RunTime
+        times = {
+            "ConstructionTime": self.ConstructionTime,
+            "ImprovementTime": improvement_time,
+            "UpperBoundTime": self.UpperBoundTime,
+            "RunTime": self.RunTime
+        }
+
+        return times
 

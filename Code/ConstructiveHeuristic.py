@@ -22,7 +22,7 @@ class ConstructiveHeuristics:
     def Run(self, input_data:InputData, order_item_attractiveness_technique, machine_attractiveness_technique, worker_attractiveness_technique):
         ''' Run the constructive heuristic on the input data'''
 
-        greedy_technique = "worker_greedy"
+        greedy_technique = "order_item_greedy"
 
         self.data = input_data
         self.order_item_attractiveness_technique = order_item_attractiveness_technique

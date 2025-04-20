@@ -223,7 +223,7 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
         self.MinTemperature = min_temp
         self.CoolingRate = cooling_rate
         self.MaxIterations = max_iterations
-        self.FallbackThreshold = fallback_threshold
+        self.FallbackThreshold = fallback_threshold # Currently not used
         self.ScalingEnergy = scaling_energy
 
         self.DistanceTypes = {  'Swap_Shift_External': ['commute_distance', 'transport_distance', 'attachment_distance'],
@@ -289,6 +289,7 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
 
                 
                 # Rethink this solution creation strategy: Compare to IM Challenge --> Changing the solution in place instead of creating a new one
+                # Evaluate distances and dynamic percentage ONLY maybe
                 worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
                 solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
                 self.EvaluationLogic.evaluate(solution)
@@ -302,14 +303,244 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
 
 
 
+class ParetoSimulatedAnnealing(ImprovementAlgorithm):
+    """ Simulated Annealing algorithm to find a fully staffed solution. """
+
+    def __init__(self, inputData:InputData,
+                 start_temp:int,
+                 min_temp:int,
+                 cooling_rate:float,
+                 max_iterations:int,
+                 fallback_threshold:int,
+                 scaling_energy:int):
+        super().__init__(inputData)
+
+        self.StartTemperature = start_temp
+        self.MinTemperature = min_temp
+        self.CoolingRate = cooling_rate
+        self.MaxIterations = max_iterations
+        self.FallbackThreshold = fallback_threshold # Currently not used
+        self.ScalingEnergy = scaling_energy
+
+        self.SizeStartPopulation = 5
+        self.WeightAlpha = 1.1
+
+
+        self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
+                                    'Replace_Shift_Machine': ['driver_violation', 'transport_distance', 'machine_count'],
+                                    'Replace_Shift_Attachment': ['attachment_distance', 'attachment_count'],
+                                    'Swap_Shift_Worker': ['driver_violation', 'commute_distance'],
+                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance'],
+                                    'Swap_Shift_Attachment': ['attachment_distance']}
+
+
+
+    def MutateSolution(self, solution: Solution) -> None:
+        ''' Mutate the solution by applying multiple moves on a copy of the original '''
+
+        random_number_of_moves = self.RNG.integers(10, 50)
+        current_solution = deepcopy(solution)
+
+        for _ in range(random_number_of_moves):
+            move = None
+            attempts = 0
+            while move is None and attempts < 10:
+                random_type = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
+                neighborhood = self.Neighborhoods[random_type]
+                try:
+                    move = neighborhood.SingleMove(current_solution)
+                except KeyError:
+                    move = None
+                attempts += 1
+
+            if move is None:
+                continue
+
+            worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
+            current_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+            self.EvaluationLogic.evaluate(current_solution)
+
+        self.ParetoSolutions.UpdateParetoFront(current_solution)
+
+    
+    def update_weights(self, x, population, objectives):
+        """
+        Berechnet dynamische Gewichtung der Ziele basierend auf Dominanz-Relationen
+        """
+
+        # Mapping für interne Attributnamen in Solution
+        attr_mapping = {
+            'commute_distance': 'total_commute_distance',
+            'transport_distance': 'total_transport_distance',
+            'attachment_distance': 'total_attachment_distance',
+            'worker_count': 'number_of_workers',
+            'machine_count': 'number_of_machines',
+            'attachment_count': 'number_of_attachments',
+            'driver_violation': 'driver_violation'
+        }
+
+        def dominates(a, b):
+            better_in_at_least_one = False
+            for obj in objectives:
+                if a[obj] > b[obj]:
+                    return False
+                if a[obj] < b[obj]:
+                    better_in_at_least_one = True
+            return better_in_at_least_one
+
+        def distance(a, b):
+            return sum(abs(a[obj] - b[obj]) for obj in objectives)
+
+        # Aktuelle Lösung
+        x_values = {
+            obj: getattr(x, attr_mapping.get(obj, obj), 0)
+            for obj in objectives
+        }
+
+        candidates = []
+        for x_ in population:
+            if x_ == x:
+                continue
+            x__values = {
+                obj: getattr(x_, attr_mapping.get(obj, obj), 0)
+                for obj in objectives
+            }
+            if not dominates(x_values, x__values):
+                candidates.append((x_, distance(x_values, x__values)))
+
+        if not candidates:
+            weights = weights = {obj: self.RNG.random() for obj in objectives}
+        else:
+            x_prime, _ = min(candidates, key=lambda tup: tup[1])
+            x_prime_values = {
+                obj: getattr(x_prime, attr_mapping.get(obj, obj), 0)
+                for obj in objectives
+            }
+
+            weights = {}
+            for obj in objectives:
+                if x_values[obj] > x_prime_values[obj]:
+                    weights[obj] = self.WeightAlpha
+                elif x_values[obj] < x_prime_values[obj]:
+                    weights[obj] = 1 / self.WeightAlpha
+                else:
+                    weights[obj] = 1.0
+
+        # Normalisierung
+        total = sum(weights.values())
+        normalized_weights = {k: v / total for k, v in weights.items()}
+        return normalized_weights
+
+
+
+    def PSA(self, local_solution: Solution, local_pareto_front: list) -> list[Solution]:
+        current_temperature = self.StartTemperature
+        local_pareto_solutions = ParetoSolutions(self.InputData)
+        local_pareto_solutions.ParetoFront = local_pareto_front
+
+        while current_temperature > self.MinTemperature:
+            for i in range(self.MaxIterations):
+                random_type = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
+                neighborhood = self.Neighborhoods[random_type]
+                move = neighborhood.SingleMove(local_solution)
+
+                if move is None:
+                    continue
+
+                objectives = self.NeighborhoodTypes[random_type]
+                weights = self.update_weights(local_solution, local_pareto_solutions.ParetoFront, objectives)
+
+                value = sum(weights[obj] * move.DeltaDetails[obj] for obj in objectives)
+
+                if value > 0:
+                    prob = math.exp(-value * self.ScalingEnergy / current_temperature)
+                    if self.RNG.random() > prob:
+                        continue
+
+                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, local_solution)
+                local_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                self.EvaluationLogic.evaluate(local_solution)
+                local_pareto_solutions.UpdateParetoFront(local_solution)
+
+            current_temperature *= self.CoolingRate
+
+        return local_pareto_solutions.ParetoFront
 
 
 
 
+    def Run(self, solution: Solution) -> Solution:
+        ''' Run simulated annealing algorithm with given solutions and parameters '''
+
+        start_time = time.time()
+
+        self.InitializeNeighborhoods(list(self.NeighborhoodTypes.keys()))
+
+        while len(self.ParetoSolutions.ParetoFront) < self.SizeStartPopulation:
+            self.MutateSolution(solution)
+        print(f"Initial Solution Pool:")
+        self.ParetoSolutions.SortParetoFront()
+        self.ParetoSolutions.ShowFront()
+        
+
+        if len(self.ParetoSolutions.ParetoFront) != self.SizeStartPopulation:
+            raise Exception(f"Not enough solutions in Pareto Front: {len(self.ParetoSolutions.ParetoFront)}")
+
+        tasks = []
+        with ProcessPoolExecutor() as executor:
+            for solution in self.ParetoSolutions.ParetoFront:
+                local_solution = deepcopy(solution)
+                local_pareto_front = deepcopy(self.ParetoSolutions.ParetoFront)
+                tasks.append(executor.submit(self.PSA, local_solution, local_pareto_front))
+            results: list[list[Solution]] = [task.result() for task in tasks]
 
 
+        combined_solutions = [sol for sublist in results for sol in sublist]
 
-class MOSA(ImprovementAlgorithm):
+        self.ParetoSolutions.ParetoFront = combined_solutions
+        self.ParetoSolutions.PurgeParetoFront()
+        self.ParetoSolutions.SortParetoFront()
+
+        for solution in self.ParetoSolutions.ParetoFront:
+            feasible = solution.feasibility_check()
+            if not feasible:
+                raise Exception('Solution is not feasible after pareto simulated annealing')
+
+        print("\nFinal Pareto Front:")
+        self.ParetoSolutions.ShowFront()
+
+        algo_time = time.time() - start_time
+
+        return algo_time
+
+
+        
+
+class DominanceSimulatedAnnealing(ImprovementAlgorithm):
+    """ Simulated Annealing algorithm with dominance based energy. """
+
+    def __init__(self, inputData:InputData,
+                 start_temp:int,
+                 min_temp:int,
+                 cooling_rate:float,
+                 max_iterations:int,
+                 fallback_threshold:int,
+                 scaling_energy:int):
+        super().__init__(inputData)
+
+        self.StartTemperature = start_temp
+        self.MinTemperature = min_temp
+        self.CoolingRate = cooling_rate
+        self.MaxIterations = max_iterations
+        self.FallbackThreshold = fallback_threshold # Currently not used
+        self.ScalingEnergy = scaling_energy
+
+    
+
+        
+
+
+class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
     """ Simulated Annealing algorithm with perturbation to escape local optima. """
 
     def __init__(self, inputData:InputData,
@@ -544,103 +775,8 @@ class MOSA(ImprovementAlgorithm):
         self.ParetoSolutions.ShowFront()
 
 
-    def EditSites(self, solution:Solution, add_site:bool) -> Solution:
 
-        amount_not_started_orders = len(solution.not_started_orders)
-
-        if amount_not_started_orders >= 1:
-
-            chosen_order = max(solution.not_started_orders, key=lambda order: len(order.order_item_ids))
-            chosen_order_item_ids = chosen_order.order_item_ids
-            
-            
-            self.InputData.deactivate_order(chosen_order.order_number)
-
-            new_route_plan_worker = deepcopy(solution.route_plan_worker)
-            new_route_plan_machine = deepcopy(solution.route_plan_machine)
-            new_route_plan_attachment = deepcopy(solution.route_plan_attachment)
-
-            for worker, route in new_route_plan_worker.items():
-                for order_item_id in chosen_order_item_ids:
-                    if order_item_id in route:
-                        route.remove(order_item_id)
-            for machine, route in new_route_plan_machine.items():
-                for order_item_id in chosen_order_item_ids:
-                    if order_item_id in route:
-                        route.remove(order_item_id)
-            for attachment, route in new_route_plan_attachment.items():
-                for order_item_id in chosen_order_item_ids:
-                    if order_item_id in route:
-                        route.remove(order_item_id)
-
-            if add_site:
-                usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable and order.order_number not in self.DontChangeBackInOrder]
-
-                if usable_orders:
-                    new_order = min(usable_orders, key=lambda order: len(order.order_item_ids))
-                    self.InputData.activate_order(new_order.order_number)
-                else:
-                    raise Exception("No usable order to add")
-
-            self.DontChangeBackInOrder.add(chosen_order.order_number)
-            new_solution = Solution(new_route_plan_worker, new_route_plan_machine, new_route_plan_attachment, self.InputData)
-            self.EvaluationLogic.evaluate(new_solution)
-
-            
-            return new_solution
-        
-        amount_semifinished_orders = len(solution.semifinished_orders)
-
-        if amount_semifinished_orders >= 1:
-
-            chosen_order = max(solution.semifinished_orders, key=lambda order: len(order.order_item_ids))
-            chosen_order_item_ids = chosen_order.order_item_ids
-
-
-         
-            self.InputData.deactivate_order(chosen_order.order_number)
-
-            
-            new_route_plan_worker = deepcopy(solution.route_plan_worker)
-            new_route_plan_machine = deepcopy(solution.route_plan_machine)
-            new_route_plan_attachment = deepcopy(solution.route_plan_attachment)
-
-            for worker, route in new_route_plan_worker.items():
-                for order_item_id in chosen_order_item_ids:
-                    if order_item_id in route:
-                        route.remove(order_item_id)
-            for machine, route in new_route_plan_machine.items():
-                for order_item_id in chosen_order_item_ids:
-                    if order_item_id in route:
-                        route.remove(order_item_id)
-            for attachment, route in new_route_plan_attachment.items():
-                for order_item_id in chosen_order_item_ids:
-                    if order_item_id in route:
-                        route.remove(order_item_id)
-
-            if add_site:
-                usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable and order.order_number not in self.DontChangeBackInOrder]
-
-
-                if usable_orders != []:
-                    new_order = min(usable_orders, key=lambda order: len(order.order_item_ids))
-                    self.InputData.activate_order(new_order.order_number)
-                else:
-                    raise Exception("No usable order to add")
-                
-
-
-            self.DontChangeBackInOrder.add(chosen_order.order_number)
-            new_solution = Solution(new_route_plan_worker, new_route_plan_machine, new_route_plan_attachment, self.InputData)
-            self.EvaluationLogic.evaluate(new_solution)
-
-            return new_solution
-
-
-        raise Exception("No order to delete")
     
-        
-
 
     
     def Run(self, solution:Solution) -> Solution:
@@ -788,5 +924,100 @@ def BuildingPhase(self, solution:Solution) -> Solution:
     
         # Introduce a perturbation to escape local optima!!! --> Maybe not necessary for building phase
 
+        
+            def EditSites(self, solution:Solution, add_site:bool) -> Solution:
+
+        amount_not_started_orders = len(solution.not_started_orders)
+
+        if amount_not_started_orders >= 1:
+
+            chosen_order = max(solution.not_started_orders, key=lambda order: len(order.order_item_ids))
+            chosen_order_item_ids = chosen_order.order_item_ids
+            
+            
+            self.InputData.deactivate_order(chosen_order.order_number)
+
+            new_route_plan_worker = deepcopy(solution.route_plan_worker)
+            new_route_plan_machine = deepcopy(solution.route_plan_machine)
+            new_route_plan_attachment = deepcopy(solution.route_plan_attachment)
+
+            for worker, route in new_route_plan_worker.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+            for machine, route in new_route_plan_machine.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+            for attachment, route in new_route_plan_attachment.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+
+            if add_site:
+                usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable and order.order_number not in self.DontChangeBackInOrder]
+
+                if usable_orders:
+                    new_order = min(usable_orders, key=lambda order: len(order.order_item_ids))
+                    self.InputData.activate_order(new_order.order_number)
+                else:
+                    raise Exception("No usable order to add")
+
+            self.DontChangeBackInOrder.add(chosen_order.order_number)
+            new_solution = Solution(new_route_plan_worker, new_route_plan_machine, new_route_plan_attachment, self.InputData)
+            self.EvaluationLogic.evaluate(new_solution)
+
+            
+            return new_solution
+        
+        amount_semifinished_orders = len(solution.semifinished_orders)
+
+        if amount_semifinished_orders >= 1:
+
+            chosen_order = max(solution.semifinished_orders, key=lambda order: len(order.order_item_ids))
+            chosen_order_item_ids = chosen_order.order_item_ids
+
+
+         
+            self.InputData.deactivate_order(chosen_order.order_number)
+
+            
+            new_route_plan_worker = deepcopy(solution.route_plan_worker)
+            new_route_plan_machine = deepcopy(solution.route_plan_machine)
+            new_route_plan_attachment = deepcopy(solution.route_plan_attachment)
+
+            for worker, route in new_route_plan_worker.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+            for machine, route in new_route_plan_machine.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+            for attachment, route in new_route_plan_attachment.items():
+                for order_item_id in chosen_order_item_ids:
+                    if order_item_id in route:
+                        route.remove(order_item_id)
+
+            if add_site:
+                usable_orders = [order for order in solution.not_recognized_orders if not order.unuseable and order.order_number not in self.DontChangeBackInOrder]
+
+
+                if usable_orders != []:
+                    new_order = min(usable_orders, key=lambda order: len(order.order_item_ids))
+                    self.InputData.activate_order(new_order.order_number)
+                else:
+                    raise Exception("No usable order to add")
+                
+
+
+            self.DontChangeBackInOrder.add(chosen_order.order_number)
+            new_solution = Solution(new_route_plan_worker, new_route_plan_machine, new_route_plan_attachment, self.InputData)
+            self.EvaluationLogic.evaluate(new_solution)
+
+            return new_solution
+
+
+        raise Exception("No order to delete")
 
 '''

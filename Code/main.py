@@ -56,7 +56,7 @@ Construction_a40_o476_m22_an215_ar51.json
 Construction_a50_o578_m28_an276_ar66.json
 '''
 
-instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
+instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a5_o96_m10_an10_ar10_reduced.json",
                 "Construction_a10_o107_m5_an57_ar12.json",
                 "Construction_a10_o114_m6_an57_ar11.json",
@@ -68,11 +68,11 @@ instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                                                             # Check with UB LP Relaxation including ATTACHMENTS
                 "Construction_a25_o306_m13_an127_ar31.json",
                 "Construction_a30_o355_m18_an148_ar42.json",
-                "Construction_a40_o476_m22_an215_ar51.json", # UB not reached!!! because not machine type 2 does not exist for a machine in the instance
+                "Construction_a40_o476_m22_an215_ar51.json", # UB not reached!!! because machine type 2 does not exist for a machine in the instance
                                                             # Reached after pre-processing in InputData
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-instances = ["Construction_a20_o236_m12_an106_ar24.json"]
+instances = ["Construction_a10_o107_m5_an57_ar12.json"]
 
 
 
@@ -167,7 +167,7 @@ def main():
                                                  
 
 
-        mosa = MOSA(inputData=data,
+        mosa = TwoPhaseMOSA(inputData=data,
                     start_temp=20,
                     min_temp=0.1,
                     cooling_rate=0.95,
@@ -180,7 +180,19 @@ def main():
                     improveTypesObjectives=improve_types_and_objectives,
                     improveIndividualStrategy="parallel")
         
-        algorithms = [building_sa, mosa]
+
+        
+        psa = ParetoSimulatedAnnealing( inputData=data,
+                                        start_temp=20,
+                                        min_temp=0.1,
+                                        cooling_rate=0.95,
+                                        max_iterations=3000,
+                                        fallback_threshold=25,
+                                        scaling_energy=30)
+                                       
+
+        
+        algorithms = [building_sa, psa]
 
 
         if only_greedy:
@@ -189,13 +201,15 @@ def main():
                                    machine_attractiveness_technique="balanced_greedy",
                                    worker_attractiveness_technique = "balanced_greedy")
         else:
-            solver.RunAlgorithm(UB_technique="LP",
+            times = solver.RunAlgorithm(UB_technique="LP",
                                 order_item_attractiveness_technique="time_difference_importance",
                                 machine_attractiveness_technique="balanced_greedy",
                                 worker_attractiveness_technique = "balanced_greedy",
                                 algorithm=algorithms)
 
 
+            for key, value in times.items():
+                print(f"{key}: {value}")
 
         
 
