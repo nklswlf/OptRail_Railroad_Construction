@@ -19,27 +19,32 @@ class ConstructiveHeuristics:
 
 
 
-    def Run(self, input_data:InputData, order_item_attractiveness_technique, machine_attractiveness_technique, worker_attractiveness_technique):
+    def Run(self, input_data: InputData, greedy_technique: dict):
         ''' Run the constructive heuristic on the input data'''
 
-        greedy_technique = "order_item_greedy"
-
         self.data = input_data
-        self.order_item_attractiveness_technique = order_item_attractiveness_technique
-        self.machine_attractiveness_technique = machine_attractiveness_technique
-        self.worker_attractiveness_technique = worker_attractiveness_technique
-        
-        if greedy_technique == "worker_greedy":
+
+        self.GreedyTechnique = next(iter(greedy_technique))
+        settings = greedy_technique[self.GreedyTechnique]
+
+        print(f"\nFinding initial solution with {self.GreedyTechnique}...")
+
+        if self.GreedyTechnique == "worker_greedy":
+            self.order_item_attractiveness_technique = settings['order_item_attractiveness_technique']
+            self.machine_attractiveness_technique = settings['machine_attractiveness_technique']
             start_solution = self.WorkerGreedy()
-        elif greedy_technique == "order_item_greedy":
+
+        elif self.GreedyTechnique == "order_item_greedy":
+            self.worker_attractiveness_technique = settings['worker_attractiveness_technique']
+            self.machine_attractiveness_technique = settings['machine_attractiveness_technique']
             start_solution = self.OrderItemGreedy()
 
         return start_solution
+
     
 
     def WorkerGreedy(self):
         
-        print(f"\nCalculating Greedy solution with {self.order_item_attractiveness_technique} and {self.machine_attractiveness_technique}...\n")
 
         '''
         Greedy with potential GRASPS elements
@@ -388,7 +393,8 @@ class ConstructiveHeuristics:
 
         if feasible:
             self.EvaluationLogic.evaluate(start_solution)
-            #self.ParetoSolutions.ParetoFront.append(start_solution)
+            print(f"Greedy solution with {self.GreedyTechnique}")
+            print(start_solution)
             return start_solution
         else:
             raise Exception("Solution is not feasible")
@@ -648,6 +654,8 @@ class ConstructiveHeuristics:
         feasible = greedy_solution.feasibility_check()
 
         if feasible:
+            print(f"Greedy solution with {self.GreedyTechnique}")
+            print(greedy_solution)
             return greedy_solution
         else:
             raise Exception("Solution is not feasible")

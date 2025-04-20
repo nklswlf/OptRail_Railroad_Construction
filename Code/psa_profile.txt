@@ -1,0 +1,58 @@
+         112601850 function calls (94525651 primitive calls) in 320.993 seconds
+
+   Ordered by: cumulative time
+   List reduced from 1456 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000  320.993  320.993 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/main.py:116(main)
+        1    0.108    0.108  319.206  319.206 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/Solver.py:96(Run)
+        1    0.008    0.008  311.690  311.690 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/Solver.py:53(ImprovementPhase)
+        1    0.008    0.008  311.682  311.682 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/ImprovementAlgorithm.py:472(Run)
+       14  301.060   21.504  301.060   21.504 {method 'acquire' of '_thread.lock' objects}
+        3    0.000    0.000  300.973  100.324 /opt/anaconda3/lib/python3.9/threading.py:280(wait)
+        1    0.000    0.000  300.973  300.973 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/ImprovementAlgorithm.py:495(<listcomp>)
+        5    0.000    0.000  300.973   60.195 /opt/anaconda3/lib/python3.9/concurrent/futures/_base.py:418(result)
+17746290/850    5.128    0.000   10.029    0.012 /opt/anaconda3/lib/python3.9/copy.py:128(deepcopy)
+17262/870    0.104    0.000   10.028    0.012 /opt/anaconda3/lib/python3.9/copy.py:226(_deepcopy_dict)
+334035/31522    2.144    0.000    9.971    0.000 /opt/anaconda3/lib/python3.9/copy.py:200(_deepcopy_list)
+ 10692/36    0.011    0.000    9.895    0.275 /opt/anaconda3/lib/python3.9/copy.py:258(_reconstruct)
+        1    0.006    0.006    5.688    5.688 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/Solver.py:21(BoundPhase)
+        1    1.269    1.269    5.682    5.682 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/MIP_UB.py:678(execute)
+        6    0.012    0.002    3.775    0.629 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/ImprovementAlgorithm.py:338(MutateSolution)
+        1    2.017    2.017    2.464    2.464 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/MIP_UB.py:352(create_optimization_model)
+        1    0.000    0.000    1.788    1.788 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/InputData.py:10(__init__)
+        1    0.000    0.000    1.783    1.783 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/InputData.py:561(_load_data)
+        1    0.000    0.000    1.491    1.491 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/Solver.py:41(BuildingPhase)
+        1    0.001    0.001    1.491    1.491 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/ImprovementAlgorithm.py:242(Run)
+        1    1.426    1.426    1.426    1.426 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/MIP_UB.py:596(solve_model)
+       59    0.000    0.000    1.161    0.020 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/Neighborhood.py:186(SingleMove)
+       34    0.171    0.005    1.129    0.033 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/Neighborhood.py:458(MakeOneMove)
+ 27806301    1.105    0.000    1.105    0.000 {method 'get' of 'dict' objects}
+        9    0.618    0.069    0.876    0.097 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/InputData.py:1168(add_data)
+       18    0.547    0.030    0.843    0.047 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/InputData.py:1031(add_data)
+    14174    0.755    0.000    0.772    0.000 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/Neighborhood.py:436(find_first_insertion_position)
+ 18970005    0.596    0.000    0.596    0.000 {method 'append' of 'list' objects}
+ 18479929    0.580    0.000    0.580    0.000 {built-in method builtins.id}
+   199762    0.016    0.000    0.501    0.000 {built-in method builtins.next}
+     8687    0.125    0.000    0.412    0.000 {gurobipy.quicksum}
+      334    0.001    0.000    0.396    0.001 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/EvaluationLogic.py:784(evaluate)
+        1    0.216    0.216    0.339    0.339 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/MIP_UB.py:93(preprocess_data)
+  9079334    0.270    0.000    0.270    0.000 /opt/anaconda3/lib/python3.9/copy.py:182(_deepcopy_atomic)
+       21    0.026    0.001    0.241    0.011 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/OutputData.py:136(feasibility_check)
+        1    0.000    0.000    0.229    0.229 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/Solver.py:33(ConstructionPhase)
+        1    0.000    0.000    0.229    0.229 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/ConstructiveHeuristic.py:22(Run)
+        1    0.030    0.030    0.229    0.229 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/ConstructiveHeuristic.py:44(WorkerGreedy)
+  2142680    0.206    0.000    0.206    0.000 {method 'total_seconds' of 'datetime.timedelta' objects}
+  4137480    0.178    0.000    0.178    0.000 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/InputData.py:862(id)
+      339    0.001    0.000    0.174    0.001 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/Neighborhood.py:1472(SingleMove)
+      334    0.052    0.000    0.167    0.001 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/EvaluationLogic.py:948(calculate_driver_violation)
+5358/5325    0.010    0.000    0.165    0.000 {built-in method builtins.sum}
+   370794    0.128    0.000    0.155    0.000 /opt/anaconda3/lib/python3.9/copy.py:242(_keep_alive)
+     9338    0.079    0.000    0.113    0.000 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/ConstructiveHeuristic.py:299(<genexpr>)
+   992622    0.110    0.000    0.110    0.000 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/MIP_UB.py:514(<genexpr>)
+  1633194    0.098    0.000    0.098    0.000 {method 'startswith' of 'str' objects}
+      334    0.084    0.000    0.090    0.000 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/EvaluationLogic.py:828(categorizing_orders)
+  2133515    0.088    0.000    0.088    0.000 /Users/niklas/Desktop/Diplomarbeit/OptRail_Railroad_Construction/Code/InputData.py:693(start_date)
+        1    0.000    0.000    0.087    0.087 /opt/anaconda3/lib/python3.9/concurrent/futures/_base.py:636(__exit__)
+
+

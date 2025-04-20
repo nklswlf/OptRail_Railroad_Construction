@@ -516,7 +516,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         
 
-class DominanceSimulatedAnnealing(ImprovementAlgorithm):
+class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
     """ Simulated Annealing algorithm with dominance based energy. """
 
     def __init__(self, inputData:InputData,

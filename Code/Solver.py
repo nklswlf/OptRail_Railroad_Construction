@@ -14,100 +14,95 @@ class Solver:
         self.RNG = numpy.random.default_rng(self.Seed)
         self.EvaluationLogic = EvaluationLogic(inputData)
         self.ParetoSolutions = ParetoSolutions(inputData, self.RNG)
-        self.runTime = {}
         
         self.ConstructiveHeuristic = ConstructiveHeuristics(paretoSolutions=self.ParetoSolutions, evaluationLogic=self.EvaluationLogic, rng=self.RNG)
 
+
+    def BoundPhase(self, UB_technique):
+        ''' Calculate the upper bound for the problem instance'''
+
+        print("\nCalculating Upper Bound...")
+
+        optimizer = UpperBound(self.InputData, bound_technique=UB_technique)
+        solution = optimizer.execute()
+
+        for order_number in solution[3]:
+            self.InputData.activate_order(order_number)
     
 
-    def ConstructionPhase(self, order_item_attractiveness_technique, machine_attractiveness_technique, worker_attractiveness_technique) -> Solution:
+    def ConstructionPhase(self, greedy_technique) -> Solution:
         ''' Start the construction phase by choosing a constructive heuristic'''
-        ''' Find one start solution by using the chosen constructive heuristic'''
 
-        starttime = time.time()
-        start_solutuion = self.ConstructiveHeuristic.Run(self.InputData, order_item_attractiveness_technique, machine_attractiveness_technique, worker_attractiveness_technique)
-        print("Constructive solution found after:", round(time.time() - starttime, 2), "seconds")
-        print(start_solutuion)
-
-        endtime = time.time()
-        self.ConstructionTime = endtime - starttime
-
+        start_solutuion = self.ConstructiveHeuristic.Run(self.InputData, greedy_technique)
 
         return start_solutuion
+    
+
+    def BuildingPhase(self, startSolution:Solution, algorithm:ImprovementAlgorithm) -> Solution:
+        ''' Start the building phase by choosing a algorithm'''
+
+        print("\nBuilding Phase started...")
+
+        algorithm.Initialize(self.EvaluationLogic, self.ParetoSolutions, self.RNG)
+        staffed_solutuion = algorithm.Run(startSolution)
+
+
+        return staffed_solutuion
 
 
     def ImprovementPhase(self, startSolution:Solution, algorithm:ImprovementAlgorithm) -> Solution:
         ''' Start the improvement phase by choosing a algorithm'''
 
         print("\nImprovement Phase started...")
-        start_time = time.time()
 
         algorithm.Initialize(self.EvaluationLogic, self.ParetoSolutions, self.RNG)
-        bestSolution = algorithm.Run(startSolution)
-
-        print("\nImprovement Phase finished after:", round(time.time() - start_time, 2), "seconds")
-
-        return bestSolution
-    
-    def UpperBound(self, UB_technique):
-        ''' Calculate the upper bound for the problem instance'''
-
-        print("\nCalculating Upper Bound...")
-
-        start_time = time.time()
-        optimizer = UpperBound(self.InputData, bound_technique=UB_technique)
-        solution = optimizer.execute()
-
-        #self.InputData.site_fulfillment = int(solution[0])
-        #self.InputData.reduce_input_data(self.InputData.site_fulfillment)
+        algorithm.Run(startSolution)
 
 
-        for order_number in solution[3]:
-            self.InputData.activate_order(order_number)
-
-        
-        
-        self.UpperBoundTime = time.time() - start_time
-        print("\nUpper Bound calculated after:", round(self.UpperBoundTime, 2), "seconds")
 
     
-    def RunConstructive(self, UB_technique, order_item_attractiveness_technique, machine_attractiveness_technique, worker_attractiveness_technique):
+#####################################################################################################################################################################################
+   
+    
+
+    
+    def RunConstructive(self, UB_technique, greedy_technique):
         ''' Run the constructive heuristic and return the solution'''
 
-        self.UpperBound(UB_technique)
+        self.BoundPhase(UB_technique)
 
-        starttime = time.time()
-
-        startSolution = self.ConstructionPhase(order_item_attractiveness_technique, machine_attractiveness_technique, worker_attractiveness_technique)
-
-        endtime = time.time()
-        self.RunTime = endtime - starttime
-
-        return startSolution, self.UpperBoundTime, self.ConstructionTime, self.RunTime
+        startSolution = self.ConstructionPhase(greedy_technique)
 
 
-    def RunAlgorithm(self, UB_technique, order_item_attractiveness_technique, machine_attractiveness_technique, worker_attractiveness_technique, algorithm):
-        ''' Run local search with chosen algorithm and neighborhoods'''
+        return startSolution
 
-        self.UpperBound(UB_technique)
 
-        starttime = time.time()
 
-        startSolution = self.ConstructionPhase(order_item_attractiveness_technique, machine_attractiveness_technique, worker_attractiveness_technique)
+    def RunBuilding(self, UB_technique, greedy_technique, building_algorithm):
+        ''' Run the building phase and return the solution'''
 
-        builded_solution = self.ImprovementPhase(startSolution, algorithm[0])
+        self.BoundPhase(UB_technique)
 
-        improvement_time = self.ImprovementPhase(builded_solution, algorithm[1])
+        startSolution = self.ConstructionPhase(greedy_technique)
 
-        endtime = time.time()
-        self.RunTime = endtime - starttime
+        staffed_solution = self.BuildingPhase(startSolution, building_algorithm)
 
-        times = {
-            "ConstructionTime": self.ConstructionTime,
-            "ImprovementTime": improvement_time,
-            "UpperBoundTime": self.UpperBoundTime,
-            "RunTime": self.RunTime
-        }
 
-        return times
+        return staffed_solution
+
+
+
+
+    def Run(self, UB_technique, greedy_technique, building_algorithm, improvement_algorithm):
+        ''' Run the algorithm and return the solution'''
+
+        self.BoundPhase(UB_technique)
+
+        startSolution = self.ConstructionPhase(greedy_technique)
+
+        staffed_solution = self.BuildingPhase(startSolution, building_algorithm)
+
+        self.ImprovementPhase(staffed_solution, improvement_algorithm)
+
+
 
