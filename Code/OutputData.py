@@ -76,16 +76,7 @@ class Solution:
                 f"Number of machines: {self.number_of_machines}\n"
                 f"Number of workers: {self.number_of_workers}\n"
                 f"Number of attachments: {self.number_of_attachments}")
-    
-
-    def repair_solution(self):
-        ''' Repair the solution by deleting all order items of semi-finished orders from the route plans'''
-        ## OR
-        ''' Repair the solution with heuristic or mathamatical optimization by reassigning the order items of semi-finished orders to the route plans'''
-
-        ## TO DO: Implement the repair solution method
-        pass
-
+ 
 
     def create_output_file_greedy(self, time_for_data_loading, time_for_construction ,order_item_attractiveness_technique:str, machine_attractiveness_technique:str):
         ''' Create the output file for the greedy solution for comparing different strategies'''
@@ -368,246 +359,21 @@ class Solution:
             print("\nFeasibility check completed. Solution is feasible.")
         return True    
 
-    
-    # Old Version of Feasibility Check
-    '''
-    def feasibility_check(self, verbose=False):
-        Check the feasibility of the solution.
-        print("\nChecking the feasibility of the solution...")
-        
-        # ========================
-        # 1. Order Item Feasibility
-        # ========================
-        if verbose:
-            print("\nChecking if the assigned order items are present in both route plans...")
+    def clone(self, evaluate=True):
+        """
+        Creates a shallow copy of the solution object with deep-copied route plans.
+        This avoids full deepcopy overhead, while preserving route data integrity.
+        """
+        machine_route_plan = {k: v[:] for k, v in self.route_plan_machine.items()}
+        worker_route_plan = {k: v[:] for k, v in self.route_plan_worker.items()}
+        attachment_route_plan = {k: v[:] for k, v in self.route_plan_attachment.items()}
 
-        # Check if all order items in machine route are present in worker route
-        for machine_route_order_items in self.route_plan_machine.values():
-            for order_item in machine_route_order_items:
-                if not any(order_item in worker_route_order_items for worker_route_order_items in self.route_plan_worker.values()):
-                    print(f"Order item {order_item} is not present in the worker route.")
-                    return False
-
-        # Check if all order items in worker route are present in machine route
-        for worker_route_order_items in self.route_plan_worker.values():
-            for order_item in worker_route_order_items:
-                if not any(order_item in machine_route_order_items for machine_route_order_items in self.route_plan_machine.values()):
-                    print(f"Order item {order_item} is not present in the machine route.")
-                    return False
-
-        # 1. Check: No duplicates within each worker's route
-        for worker_id, route in self.route_plan_worker.items():
-            if len(route) != len(set(route)):
-                print(f"Worker {worker_id} has duplicate order items in their route: {route}")
-                return False
-
-        # 2. Check: Each order item appears only in one worker's route overall
-        all_worker_order_items = [order_item for route in self.route_plan_worker.values() for order_item in route]
-        if len(all_worker_order_items) != len(set(all_worker_order_items)):
-            print("An order item has been assigned to more than one worker.")
-            return False
-
-        # 1. Check: No duplicates within each machine's route
-        for machine_id, route in self.route_plan_machine.items():
-            if len(route) != len(set(route)):
-                print(f"Machine {machine_id} has duplicate order items in its route: {route}")
-                return False
-
-        # 2. Check: Each order item appears only in one machine's route overall
-        all_machine_order_items = [order_item for route in self.route_plan_machine.values() for order_item in route]
-        if len(all_machine_order_items) != len(set(all_machine_order_items)):
-            print("An order item has been assigned to more than one machine.")
-            return False
-
-        # 1. Check: No duplicates within each attachment's route
-        for attachment_id, route in self.route_plan_attachment.items():
-            if len(route) != len(set(route)):
-                print(f"Attachment {attachment_id} has duplicate order items in its route: {route}")
-                return False
-                
-        # Check that all order items are assigned to the needed attachments with the correct counts
-        for machine_route_order_items in self.route_plan_machine.values():
-            for order_item_id in machine_route_order_items:
-                order_item_object = next((o for o in self.data.order_items if o.id == order_item_id), None)
-                if order_item_object is None:
-                    print(f"Order Item {order_item_id} was not found in the data.")
-                    return False 
-                if order_item_object.equipment_types:
-                    assigned_types = []
-                    for attachment_id, route in self.route_plan_attachment.items():
-                        if order_item_id in route:
-                            attachment_object = self.data.attachments[int(attachment_id)]
-                            assigned_types.append(attachment_object.type)
-
-                    required_counts = Counter(order_item_object.equipment_types)
-                    assigned_counts = Counter(assigned_types)
-
-                    # Check for too few attachments for each required equipment type
-                    for equipment_type, required_count in required_counts.items():
-                        if assigned_counts[equipment_type] < required_count:
-                            print(f"Order Item {order_item_id} needs {required_count}x Equipment-Type {equipment_type}, "
-                                f"but there are only {assigned_counts[equipment_type]} assigned.")
-                            return False
-
-                    # Check for too many attachments or attachments that are not needed
-                    for equipment_type, assigned_count in assigned_counts.items():
-                        # If the equipment type isn't required at all or is over-assigned:
-                        if assigned_count > required_counts.get(equipment_type, 0):
-                            print(f"Order Item {order_item_id} has {assigned_count}x Equipment-Type {equipment_type} assigned, "
-                                f"but only {required_counts.get(equipment_type, 0)} are needed.")
-                            return False
-                        
-        if verbose:
-            print("The assigned order items are present in both route plans.")
-
-        # ========================
-        # 2. Machine Route Feasibility
-        # ========================
-        for machine_name, route in self.route_plan_machine.items():
-            if verbose:
-                print(f"\nChecking route for machine {machine_name}...")
-
-            machine_object = next((m for m in self.data.machines if m.id == machine_name), None)
-            order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
-
-            # Check if the machine type is correct for the order items in the route
-            for order_item in order_item_objects:
-                if machine_object.type != order_item.machine_type:
-                    print(f"Machine {machine_name} is not correct assigned to order item {order_item.id}.")
-                    return False
-
-            # Check if the sequence of the order items is correct with start, end and travel times
-            for order_item_i in order_item_objects:
-                for order_item_j in order_item_objects:
-                    order_item_i_index = order_item_objects.index(order_item_i)
-                    order_item_j_index = order_item_objects.index(order_item_j)
-                    if order_item_i_index + 1 == order_item_j_index:
-                        order_i = next((order for order in self.data.orders if int(order_item_i.id) in [int(item) for item in order.order_item_ids]), None)
-                        order_j = next((order for order in self.data.orders if int(order_item_j.id) in [int(item) for item in order.order_item_ids]), None)
-                        distance = self.data.transport_routes[order_i.site_number][order_j.site_number]
-                        travel_time_double = (distance / self.data._transport_speed_kmh)
-                        travel_time = timedelta(hours=travel_time_double)
-                        if order_item_i.end_time + travel_time >= order_item_j.start_time:
-                            print(f"Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
-                            return False
-
-            if verbose:
-                print(f"Route for machine {machine_name} is feasible.")
-
-        # ========================
-        # 3. Worker Route Feasibility
-        # ========================
-        for worker_id, route in self.route_plan_worker.items():
-            if verbose:
-                print(f"\nChecking route for worker {worker_id}...")
-
-            worker_object = next((w for w in self.data.workers if w.personal_number == worker_id), None)
-            order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
-
-            # Check if the worker qualifications are correct for the order items in the route
-            for order_item in order_item_objects:
-                if order_item.worker_qualifications:
-                    if not set(order_item.worker_qualifications).issubset(set(worker_object.qualifications)):
-                        print(f"Worker {worker_id} (Qualifications: {worker_object.qualifications}) does not have the correct qualifications for order item {order_item.id} (Qualifications: {order_item.worker_qualifications}).")
-                        return False
-
-            # Check if the sequence of the order items is correct with start, end and break times
-            for order_item_i in order_item_objects:
-                for order_item_j in order_item_objects:
-                    order_item_i_index = order_item_objects.index(order_item_i)
-                    order_item_j_index = order_item_objects.index(order_item_j)
-                    if order_item_i_index + 1 == order_item_j_index:
-                        break_time_double = self.data._hours_between_shifts
-                        break_time = timedelta(hours=break_time_double)
-                        if order_item_i.end_time + break_time >= order_item_j.start_time:
-                            print(f"Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
-                            return False
-
-            # Check if the worker does not work more than 5 consecutive night shifts
-            checked_indices = set()
-            for i, order_item_i in enumerate(order_item_objects):
-                if i in checked_indices:
-                    continue
-                if order_item_i.start_time.hour >= self.data._day_and_night_shift_boundary:
-                    night_shifts = 1
-                    for j in range(i + 1, len(order_item_objects)):
-                        order_item_j = order_item_objects[j]
-                        time_difference = (order_item_j.start_time - order_item_i.start_time).days
-                        if time_difference == night_shifts:
-                            if order_item_j.start_time.hour >= self.data._day_and_night_shift_boundary:
-                                night_shifts += 1
-                                checked_indices.add(j)
-                            else:
-                                break
-                        else:
-                            break
-                    if night_shifts > self.data._max_consecutive_night_shifts:
-                        print(f"Worker {worker_id} has more than {self.data._max_consecutive_night_shifts} consecutive night shifts ({night_shifts}).")
-                        return False
-                    checked_indices.add(i)
-            
-            # Check if the worker does not work more than 10 shifts in 14 days
-            for i, order_item_i in enumerate(order_item_objects):
-                window_start = order_item_i.start_time.date()
-                window_end = window_start + self.data._time_period_for_max_shifts
-                shift_count = 0
-                for order_item_j in order_item_objects:
-                    if window_start <= order_item_j.start_time.date() < window_end:
-                        shift_count += 1
-                if shift_count > self.data._max_shifts_in_time_period:
-                    print(f"Worker {worker_id} has more than {self.data._max_shifts_in_time_period} shifts ({shift_count}) within the {self.data._time_period_for_max_shifts}-day period starting on {window_start}.")
-                    return False
-
-            # Check if the worker does not work more than 160 hours in a month
-            total_duration_hours = sum(order_item.duration for order_item in order_item_objects)
-            if total_duration_hours > self.data._max_working_hours:
-                print(f"Worker {worker_id} exceeds the maximum allowed total working hours ({self.data._max_working_hours} hours) with {total_duration_hours:.2f} hours.")
-                return False
-            
-            if verbose:
-                print(f"Route for worker {worker_id} is feasible.")
-
-                
-        # ========================
-        # 4. Attachment Route Feasibility
-        # ========================
-
-        for attachment_id, route in self.route_plan_attachment.items():
-            if verbose:
-                print(f"\nChecking route for attachment {attachment_id}...")
-
-            attachment_object = next((a for a in self.data.attachments if a.id == attachment_id), None)
-            order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
- 
-            # Check if the attachment type is correct for the order items in the route
-            for order_item in order_item_objects:
-                if attachment_object.type not in order_item.equipment_types:
-                    print(f"Attachment {attachment_id} is not correctly assigned to order item {order_item.id}.")
-                    return False
-
-            # Check if the sequence of the order items is correct with start, end and travel times
-            for order_item_i in order_item_objects:
-                for order_item_j in order_item_objects:
-                    order_item_i_index = order_item_objects.index(order_item_i)
-                    order_item_j_index = order_item_objects.index(order_item_j)
-                    if order_item_i_index + 1 == order_item_j_index:
-                        order_i = next((order for order in self.data.orders if int(order_item_i.id) in [int(item) for item in order.order_item_ids]), None)
-                        order_j = next((order for order in self.data.orders if int(order_item_j.id) in [int(item) for item in order.order_item_ids]), None)
-                        distance = self.data.transport_routes[order_i.site_number][order_j.site_number]
-                        travel_time_double = (distance / self.data._transport_speed_kmh)
-                        travel_time = timedelta(hours=travel_time_double)
-                        if order_item_i.end_time + travel_time >= order_item_j.start_time:
-                            print(f"Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
-                            return False
-                        
-            if verbose:
-                print(f"Route for attachment {attachment_id} is feasible.")
-
-
-        print("\nFeasibility check completed. Solution is feasible.")
-        return True
-
-        '''
+        return Solution(
+            route_plan_worker=worker_route_plan,
+            route_plan_machine=machine_route_plan,
+            route_plan_attachment=attachment_route_plan,
+            data=self.data
+        )
        
 
 class ParetoSolutions:
@@ -616,7 +382,6 @@ class ParetoSolutions:
     def __init__(self, data:InputData, rng = None):
         self.data = data
         self.RNG = rng
-        ''' Create an empty list for the solutions'''
         self.ParetoFront = []
 
     def PurgeParetoFront(self):

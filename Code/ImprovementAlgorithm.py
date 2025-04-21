@@ -5,6 +5,7 @@ import numpy as np
 import time
 from concurrent.futures import ProcessPoolExecutor
 import pandas as pd
+import copy
 
 
 class ImprovementAlgorithm:
@@ -70,99 +71,6 @@ class ImprovementAlgorithm:
             neighborhood = self.CreateNeighborhood(neighborhoodType)
             neighborhoods_dict[neighborhoodType] = neighborhood
 
-
-
-class RepairAlgorithm(ImprovementAlgorithm):
-    """ Repair algorithm to fix incomplete solutions. """
-    
-    def __init__(self, inputData:InputData, neighborhoodEvaluationStrategy:str = 'BestImprovement', neighborhoodTypes:list[str] = ['Insert_Shift']):
-        super().__init__(inputData, neighborhoodEvaluationStrategy, neighborhoodTypes)
-
-    def Run(self, solution:Solution) -> Solution:
-        ''' Run local search with given solutions and iterate through all given neighborhood types'''
-
-        self.InitializeNeighborhoods()
-
-        self.GetOrderItemsToRearrange(solution)
-        print("Order and Order Items to rearrange: ", self.orders_to_rearrange)
-
-        destroyed_solution = self.Destroy(solution)
-
-        for neighborhoodType in self.NeighborhoodTypes:
-            print(f'\nRunning neighborhood {neighborhoodType}')
-            neighborhood = self.Neighborhoods[neighborhoodType]
-
-            repaired_solution = neighborhood.LocalSearch(self.NeighborhoodEvaluationStrategy, solution)
-            print(f'Best solution: {repaired_solution}')
-
-        
-        return repaired_solution
-    
-
-    def GetOrderItemsToRearrange(self, solution:Solution) -> list[int]:
-        ''' Get all order items of semi-finished orders from the solution'''
-
-        self.orders_to_rearrange = dict()
-
-        for order in solution.semifinished_orders:
-            self.orders_to_rearrange[order.order_number] = order.order_item_ids
-
-    
-
-    def Destroy(self, solution:Solution) -> Solution:
-        ''' Delete order items of semi-finished orders from the solution'''
-
-        route_plan_worker = deepcopy(solution.route_plan_worker)
-        route_plan_machine = deepcopy(solution.route_plan_machine)
-        semifinished_orders = deepcopy(solution.semifinished_orders)
-
-        """
-        print("Worker Route Plan before Destroy:")
-        for worker, route in solution.route_plan_worker.items():
-            print(f"Worker {worker}: {route}")
-        
-        print("Machine Route Plan before Destroy:")
-        for machine, route in solution.route_plan_machine.items():
-            print(f"Machine {machine}: {route}")
-        """
-
-
-        for order in semifinished_orders:
-            for order_item_id in order.order_item_ids:
-                for worker, route in route_plan_worker.items():
-                    if order_item_id in route:
-                        route.remove(order_item_id)
-                for machine, route in route_plan_machine.items():
-                    if order_item_id in route:
-                        route.remove(order_item_id)
-
-
-        destroyed_solution = Solution(route_plan_worker, route_plan_machine, self.InputData)
-
-        """
-        print("Worker Route Plan after Destroy:")
-        for worker, route in destroyed_solution.route_plan_worker.items():
-            print(f"Worker {worker}: {route}")
-        
-        print("Machine Route Plan after Destroy:")
-        for machine, route in destroyed_solution.route_plan_machine.items():
-            print(f"Machine {machine}: {route}")
-        """
-        
-
-        if destroyed_solution.feasibility_check():
-            print("Solution is feasible after Destroy")
-            self.EvaluationLogic.evaluate(destroyed_solution)
-            print(f"Solution after Destroy: {destroyed_solution}")
-        else:
-            print("Solution is not feasible after Destroy")
-
-        
-
-
-
-
-        return destroyed_solution
 
 
 
@@ -322,7 +230,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.FallbackThreshold = fallback_threshold # Currently not used
         self.ScalingEnergy = scaling_energy
 
-        self.SizeStartPopulation = 5
+        self.SizeStartPopulation = 3
         self.WeightAlpha = 1.1
 
 
@@ -339,7 +247,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         ''' Mutate the solution by applying multiple moves on a copy of the original '''
 
         random_number_of_moves = self.RNG.integers(10, 50)
-        current_solution = deepcopy(solution)
+        current_solution = solution.clone()
 
         for _ in range(random_number_of_moves):
             move = None
@@ -489,8 +397,11 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         tasks = []
         with ProcessPoolExecutor() as executor:
             for solution in self.ParetoSolutions.ParetoFront:
-                local_solution = deepcopy(solution)
-                local_pareto_front = deepcopy(self.ParetoSolutions.ParetoFront)
+                local_solution = solution.clone()
+                self.EvaluationLogic.evaluate(local_solution)
+                local_pareto_front = [sol for sol in self.ParetoSolutions.ParetoFront if sol != local_solution]
+                for sol in local_pareto_front:
+                    self.EvaluationLogic.evaluate(sol)
                 tasks.append(executor.submit(self.PSA, local_solution, local_pareto_front))
             results: list[list[Solution]] = [task.result() for task in tasks]
 

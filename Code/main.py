@@ -28,7 +28,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = ["Construction_a15_o170_m9_an80_ar18.json"]
+instances = ["Construction_a50_o578_m28_an276_ar66.json"]
 
 
 
@@ -137,7 +137,7 @@ def main():
                                         start_temp=20,
                                         min_temp=0.1,
                                         cooling_rate=0.95,
-                                        max_iterations=3000,
+                                        max_iterations=100,
                                         fallback_threshold=25,
                                         scaling_energy=30)
 
@@ -186,7 +186,7 @@ def profile_main():
     pr.disable()
     with open("psa_profile.txt", "w") as f:
         ps = pstats.Stats(pr, stream=f).sort_stats("cumtime")
-        ps.print_stats(50)  # z. B. Top 50 Einträge
+        ps.print_stats(300)
 
 
 if __name__ == "__main__":

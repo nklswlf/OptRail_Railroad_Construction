@@ -6,11 +6,10 @@ from EvaluationLogic import *
 class ConstructiveHeuristics:
     ''' Class for creating objects to run different constructive heuristics'''
 
-    def __init__(self,  paretoSolutions: ParetoSolutions, evaluationLogic: EvaluationLogic, rng):
+    def __init__(self, evaluationLogic: EvaluationLogic, rng):
         ''' Initialize the class with the input data, pareto solutions and evaluation logic'''
 
         self.EvaluationLogic = evaluationLogic
-        self.ParetoSolutions = paretoSolutions
         self.RNG = rng
 
         self.route_plan_worker = dict()

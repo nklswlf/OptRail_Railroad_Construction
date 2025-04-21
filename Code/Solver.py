@@ -4,6 +4,7 @@ from ImprovementAlgorithm import *
 from EvaluationLogic import *
 import time
 from MIP_UB import *
+import numpy
 
 class Solver:
     ''' Orchestrates all single pieces to form one strong algorithm to solve flowshop problems
@@ -15,7 +16,7 @@ class Solver:
         self.EvaluationLogic = EvaluationLogic(inputData)
         self.ParetoSolutions = ParetoSolutions(inputData, self.RNG)
         
-        self.ConstructiveHeuristic = ConstructiveHeuristics(paretoSolutions=self.ParetoSolutions, evaluationLogic=self.EvaluationLogic, rng=self.RNG)
+        self.ConstructiveHeuristic = ConstructiveHeuristics(evaluationLogic=self.EvaluationLogic, rng=self.RNG)
 
 
     def BoundPhase(self, UB_technique):

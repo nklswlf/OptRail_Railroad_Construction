@@ -1,5 +1,3 @@
-import numpy 
-from copy import deepcopy
 from InputData import InputData
 from OutputData import Solution
 
