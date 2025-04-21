@@ -28,7 +28,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = ["Construction_a50_o578_m28_an276_ar66.json"]
+instances = ["Construction_a20_o236_m12_an106_ar24.json"]
 
 
 
@@ -111,9 +111,11 @@ greedy_technique_b = {'order_item_greedy': {'worker_attractiveness_technique': '
 
 
 step = None
-#step = 'building'
+step = 'greedy'
 
 def main():
+
+
 
     for i in instances:
         data = InputData(i)
@@ -176,6 +178,7 @@ def main():
                         greedy_technique=greedy_technique_b,
                         building_algorithm=building_sa,
                         improvement_algorithm=psa)
+
 
 def profile_main():
     pr = cProfile.Profile()

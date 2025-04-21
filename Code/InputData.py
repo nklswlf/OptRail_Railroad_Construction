@@ -698,10 +698,6 @@ class InputData:
         return self._max_work_distance
 
     
-    
-    
-
-
 class Order:
     def __init__(self, json_data):
         self._order_number = int(json_data.get("Auftragsnummer", ""))
@@ -863,49 +859,57 @@ class Attachment:
 
 
     def add_data(self, input_data: InputData):
-
-        for order in input_data.orders:
-            self._possible_order_items[order] = []
-            self._possible_order_item_ids[order.order_number] = []
-
+        self._possible_order_items = {order: [] for order in input_data.orders}
+        self._possible_order_item_ids = {order.order_number: [] for order in input_data.orders}
 
         for order_item in input_data.order_items:
             for order in input_data.orders:
-                if order_item.order_number == order.order_number:
-                    if self._type in order_item.equipment_types:
-                        self._possible_order_items[order].append(order_item)
-                        self._possible_order_item_ids[order.order_number].append(order_item.id)
+                if order_item.order_number == order.order_number and self._type in order_item.equipment_types:
+                    self._possible_order_items[order].append(order_item)
+                    self._possible_order_item_ids[order.order_number].append(order_item.id)
 
-        all_order_items = [item for order_items in self._possible_order_items.values() for item in order_items]
-        
-        
-        for order_item_1 in all_order_items:
-            
-            if order_item_1 not in self._predecessors:
-                self._predecessors[order_item_1] = []
-                self._predecessor_ids[order_item_1.id] = []
-            if order_item_1 not in self._successors:
-                self._successors[order_item_1] = []
-                self._successor_ids[order_item_1.id] = []
+        all_order_items = list({oi for items in self._possible_order_items.values() for oi in items})
+        seconds_per_day = input_data._seconds_a_day
+        speed_kmh = input_data._transport_speed_kmh
+        transport_matrix = input_data._transport_routes_order_item
+        break_time = input_data._hours_between_shifts / 24
 
-            for order_item_2 in all_order_items:
-                if order_item_1 != order_item_2:
-                    start_time_order_item_1 = (order_item_1.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_1 = (order_item_1.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    start_time_order_item_2 = (order_item_2.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_2 = (order_item_2.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+        times = {
+            oi.id: (
+                (oi.start_time - input_data.start_date).total_seconds() / seconds_per_day,
+                (oi.end_time - input_data.start_date).total_seconds() / seconds_per_day
+            )
+            for oi in all_order_items
+        }
 
-                    transport_distance = input_data._transport_routes_order_item[order_item_1.id][order_item_2.id]
-                    transport_time = transport_distance / input_data._transport_speed_kmh
-                    transport_time = transport_time / 24
+        self._predecessors.clear()
+        self._predecessor_ids.clear()
+        self._successors.clear()
+        self._successor_ids.clear()
 
-                    if start_time_order_item_1 >= end_time_order_item_2 + transport_time:
-                        self._predecessors[order_item_1].append(order_item_2)
-                        self._predecessor_ids[order_item_1.id].append(order_item_2.id)
+        for oi1 in all_order_items:
+            self._predecessors[oi1] = []
+            self._predecessor_ids[oi1.id] = []
+            self._successors[oi1] = []
+            self._successor_ids[oi1.id] = []
 
-                    if start_time_order_item_2 >= end_time_order_item_1 + transport_time:
-                        self._successors[order_item_1].append(order_item_2)
-                        self._successor_ids[order_item_1.id].append(order_item_2.id)
+            st1, et1 = times[oi1.id]
+            for oi2 in all_order_items:
+                if oi1.id == oi2.id:
+                    continue
+                st2, et2 = times[oi2.id]
+                transport_time = transport_matrix[oi1.id][oi2.id] / speed_kmh / 24
+
+                if transport_time > break_time:
+                    raise ValueError(f"Attachment transport time ({transport_time:.2f}) > break ({break_time:.2f}) between {oi1.id} and {oi2.id}")
+
+                if st1 >= et2 + transport_time:
+                    self._predecessors[oi1].append(oi2)
+                    self._predecessor_ids[oi1.id].append(oi2.id)
+
+                if st2 >= et1 + transport_time:
+                    self._successors[oi1].append(oi2)
+                    self._successor_ids[oi1.id].append(oi2.id)
             
         
 
@@ -964,68 +968,65 @@ class Worker:
         self._successor_ids = dict()
         self.work_hours = 0
 
-
-
     def add_data(self, input_data: InputData):
-        
-    
-        # Initialisiere _possible_order_items als leeres Dictionary
-        for order in input_data.orders:
-            self._possible_order_items[order] = []
-            self._possible_order_item_ids[order.order_number] = []
 
-        # Füge Order Items hinzu, basierend auf Qualifikationen
+        self._possible_order_items = {order: [] for order in input_data.orders}
+        self._possible_order_item_ids = {order.order_number: [] for order in input_data.orders}
+
+        qualifications_set = set(self._qualifications)
         for order_item in input_data.order_items:
-            # Prüfen, zu welchem Auftrag das Order Item gehört
-            for order in input_data.orders:
-                if order_item.order_number == order.order_number:
-                    # Überprüfe Qualifikationen
-                    if not order_item.worker_qualifications or set(order_item.worker_qualifications).issubset(self._qualifications):
+            if not order_item.worker_qualifications or set(order_item.worker_qualifications).issubset(qualifications_set):
+                for order in input_data.orders:
+                    if order_item.order_number == order.order_number:
                         self._possible_order_items[order].append(order_item)
                         self._possible_order_item_ids[order.order_number].append(order_item.id)
+                        break
 
+        all_order_items = [item for items in self._possible_order_items.values() for item in items]
+        seconds_per_day = input_data._seconds_a_day
+        speed_kmh = input_data._transport_speed_kmh
+        break_time = input_data._hours_between_shifts / 24
+        transport_matrix = input_data._transport_routes_order_item
 
-        all_order_items = [item for order_items in self._possible_order_items.values() for item in order_items]
-        for order_item_1 in all_order_items:
+        rtimes = {
+            oi.id: (
+                (oi.start_time - input_data.start_date).total_seconds() / seconds_per_day,
+                (oi.end_time - input_data.start_date).total_seconds() / seconds_per_day
+            )
+            for oi in all_order_items
+        }
 
-            if order_item_1 not in self._predecessors:
-                self._predecessors[order_item_1] = []
-                self._predecessor_ids[order_item_1.id] = []
-            if order_item_1 not in self._successors:
-                self._successors[order_item_1] = []
-                self._successor_ids[order_item_1.id] = []
+        self._predecessors.clear()
+        self._predecessor_ids.clear()
+        self._successors.clear()
+        self._successor_ids.clear()
 
-            for order_item_2 in all_order_items:
-                if order_item_1 != order_item_2:
-                    # Zeitdifferenzen berechnen
-                    start_time_order_item_1 = (order_item_1.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_1 = (order_item_1.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    start_time_order_item_2 = (order_item_2.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_2 = (order_item_2.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+        for oi1 in all_order_items:
+            self._predecessors[oi1] = []
+            self._predecessor_ids[oi1.id] = []
+            self._successors[oi1] = []
+            self._successor_ids[oi1.id] = []
 
-                    break_time = input_data._hours_between_shifts / 24
+            st1, et1 = rtimes[oi1.id]
+            for oi2 in all_order_items:
+                if oi1.id == oi2.id:
+                    continue
 
-                    # Transportzeit berechnen
-                    transport_distance = input_data._transport_routes_order_item[order_item_1.id][order_item_2.id]
-                    transport_time = transport_distance / input_data._transport_speed_kmh
-                    transport_time = transport_time / 24
+                st2, et2 = rtimes[oi2.id]
+                transport_time = transport_matrix[oi1.id][oi2.id] / speed_kmh / 24
 
-                    if max(break_time, transport_time) == transport_time:
-                        raise Exception(f"Transport time {transport_time} is greater than break time {break_time} for order items {order_item_1.id} and {order_item_2.id}.")
-                    #break_time = max(break_time, transport_time)
+                if transport_time > break_time:
+                    raise Exception(f"Transport time {transport_time:.2f} > break {break_time:.2f} between {oi1.id} and {oi2.id}.")
 
-                    # Vorgänger und Nachfolger bestimmen
-                    if start_time_order_item_1 >= end_time_order_item_2 + break_time:
-                        self._predecessors[order_item_1].append(order_item_2)
-                        self._predecessor_ids[order_item_1.id].append(order_item_2.id)
+                if st1 >= et2 + break_time:
+                    self._predecessors[oi1].append(oi2)
+                    self._predecessor_ids[oi1.id].append(oi2.id)
+                if st2 >= et1 + break_time:
+                    self._successors[oi1].append(oi2)
+                    self._successor_ids[oi1.id].append(oi2.id)
 
-                    if start_time_order_item_2 >= end_time_order_item_1 + break_time:
-                        self._successors[order_item_1].append(order_item_2)
-                        self._successor_ids[order_item_1.id].append(order_item_2.id)
-
-        # Create night shift list
-        self._night_shifts = [order_item for order_items in self._possible_order_items.values() for order_item in order_items if order_item.night_shift]
-        self._night_shift_ids = [order_item.id for order_item in self._night_shifts]
+        self._night_shifts = [oi for oi in all_order_items if oi.night_shift]
+        self._night_shift_ids = [oi.id for oi in self._night_shifts]
 
     @property
     def personal_number(self) -> int:
@@ -1113,42 +1114,46 @@ class Machine:
                         self._possible_order_items[order].append(order_item)
                         self._possible_order_item_ids[order.order_number].append(order_item.id)
 
-        # Erstelle Predecessors und Successors für alle Order Items
-        all_order_items = [item for items in self._possible_order_items.values() for item in items]
+        # Vorberechnete Zeiten & Transportdistanzen
+        seconds_per_day = input_data._seconds_a_day
+        speed_kmh = input_data._transport_speed_kmh
+        transport_matrix = input_data._transport_routes_order_item
 
-        for order_item_1 in all_order_items:
-            if order_item_1 not in self._predecessors:
-                self._predecessors[order_item_1] = []
-                self._predecessor_ids[order_item_1.id] = []
-            if order_item_1 not in self._successors:
-                self._successors[order_item_1] = []
-                self._successor_ids[order_item_1.id] = []
+        all_order_items = list({oi for items in self._possible_order_items.values() for oi in items})
+        times = {
+            oi.id: (
+                (oi.start_time - input_data.start_date).total_seconds() / seconds_per_day,
+                (oi.end_time - input_data.start_date).total_seconds() / seconds_per_day
+            )
+            for oi in all_order_items
+        }
 
-            for order_item_2 in all_order_items:
-                if order_item_1 != order_item_2:
-                    # Zeitdifferenzen berechnen
-                    start_time_order_item_1 = (order_item_1.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_1 = (order_item_1.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    start_time_order_item_2 = (order_item_2.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_2 = (order_item_2.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+        self._predecessors.clear()
+        self._predecessor_ids.clear()
+        self._successors.clear()
+        self._successor_ids.clear()
 
-                    # Transportzeit berechnen
-                    transport_distance = input_data._transport_routes_order_item[order_item_1.id][order_item_2.id]
-                    transport_time = transport_distance / input_data._transport_speed_kmh
-                    transport_time = transport_time / 24
+        for oi1 in all_order_items:
+            self._predecessors[oi1] = []
+            self._predecessor_ids[oi1.id] = []
+            self._successors[oi1] = []
+            self._successor_ids[oi1.id] = []
 
-                    # Vorgänger hinzufügen
-                    if start_time_order_item_1 >= end_time_order_item_2 + transport_time:
-                        if order_item_2 not in self._predecessors[order_item_1]:
-                            self._predecessors[order_item_1].append(order_item_2)
-                            self._predecessor_ids[order_item_1.id].append(order_item_2.id)
+            st1, et1 = times[oi1.id]
+            for oi2 in all_order_items:
+                if oi1.id == oi2.id:
+                    continue
 
-                    # Nachfolger hinzufügen
-                    if start_time_order_item_2 >= end_time_order_item_1 + transport_time:
-                        if order_item_2 not in self._successors[order_item_1]:
-                            self._successors[order_item_1].append(order_item_2)
-                            self._successor_ids[order_item_1.id].append(order_item_2.id)
+                st2, et2 = times[oi2.id]
+                transport_time = transport_matrix[oi1.id][oi2.id] / speed_kmh / 24
 
+                if st1 >= et2 + transport_time:
+                    self._predecessors[oi1].append(oi2)
+                    self._predecessor_ids[oi1.id].append(oi2.id)
+
+                if st2 >= et1 + transport_time:
+                    self._successors[oi1].append(oi2)
+                    self._successor_ids[oi1.id].append(oi2.id)
 
 
     @property
