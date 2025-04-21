@@ -422,7 +422,7 @@ class UpperBound:
 
 
         # Definition of the objective criteria/functions
-        self.construction_fulfillment_complexity = gp.quicksum(u[c] * self.q_c[c] for c in self.C)
+        #self.construction_fulfillment_complexity = gp.quicksum(u[c] * self.q_c[c] for c in self.C)
         self.construction_fulfillment = gp.quicksum(u[c] for c in self.C)
 
 

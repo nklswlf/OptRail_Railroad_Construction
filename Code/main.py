@@ -163,17 +163,17 @@ def main():
 
         if step == 'greedy':
             greedy_solution = solver.RunConstructive(UB_technique="LP",
-                                greedy_technique=greedy_technique_a)
+                                greedy_technique=greedy_technique_b)
 
             
         elif step == 'building':
             staffed_solution = solver.RunBuilding(UB_technique="LP",
-                               greedy_technique=greedy_technique_a,
+                               greedy_technique=greedy_technique_b,
                                building_algorithm=building_sa)
 
         else:
             solver.Run( UB_technique="LP",
-                        greedy_technique=greedy_technique_a,
+                        greedy_technique=greedy_technique_b,
                         building_algorithm=building_sa,
                         improvement_algorithm=psa)
 

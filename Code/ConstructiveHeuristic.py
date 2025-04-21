@@ -2,6 +2,7 @@
 from OutputData import *
 from InputData import *
 from EvaluationLogic import *
+from copy import deepcopy
 
 class ConstructiveHeuristics:
     ''' Class for creating objects to run different constructive heuristics'''
