@@ -25,9 +25,9 @@ class Solver:
         print("\nCalculating Upper Bound...")
 
         optimizer = UpperBound(self.InputData, bound_technique=UB_technique)
-        solution = optimizer.execute()
+        best_orders = optimizer.execute()
 
-        for order_number in solution[3]:
+        for order_number in best_orders:
             self.InputData.activate_order(order_number)
     
 

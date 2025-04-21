@@ -682,45 +682,37 @@ class UpperBound:
         self.create_optimization_model()
         self.solve_model()
 
+
+
         if self.model.SolCount > 0:
-            objective_value = self.model.objVal
             var_names = self.model.getAttr("VarName", self.model.getVars())
             var_values = self.model.getAttr("X", self.model.getVars())
-            order_count = sum(val for name, val in zip(var_names, var_values) if name.startswith("u["))
 
-            # Extracting the order item IDs of the most promising orders
-            u_vars = []
-            for name, val in zip(var_names, var_values):
-                if name.startswith("u["):
-                    c = int(name.split("[")[1].split("]")[0])
-                    n_items = len(self.N_c[c])  # Anzahl Order Items pro Site
-                    u_vars.append((c, val, n_items))
-            # Sortiere: zuerst nach LP-Wert (absteigend), dann nach Order Item Count (aufsteigend), dann nach Site Index (aufsteigend)
+            u_vars = [
+                (int(name.split("[")[1].split("]")[0]), val, len(self.N_c[int(name.split("[")[1].split("]")[0])]))
+                for name, val in zip(var_names, var_values)
+                if name.startswith("u[")
+            ]
             u_vars_sorted = sorted(u_vars, key=lambda x: (-x[1], x[2], x[0]))
+            order_count = sum(val for name, val in zip(var_names, var_values) if name.startswith("u["))
+            int_order_count = int(order_count)
+            order_list = [c for c, _, _ in u_vars_sorted[:int_order_count]]
 
-            top_n = int(order_count)
-            order_list = [c for c, _, _ in u_vars_sorted[:top_n]]
+            if False:
+                # Optionales Logging / spätere Erweiterung
+                objective_value = self.model.objVal
+                x_count = sum(val for name, val in zip(var_names, var_values) if name.startswith("x["))
+                order_item_count = x_count - len(self.M)
+                gap = self.model.MIPGap if self.model.status == GRB.TIME_LIMIT else 0
 
-            x_count = sum(val for name, val in zip(var_names, var_values) if name.startswith("x["))
-            order_item_count = x_count - len(self.M)
-            gap = self.model.MIPGap if self.model.status == GRB.TIME_LIMIT else 0
+                filename = f"model_{self.data.instance}.lp"
+                solution_filename = f"solution_{self.data.instance}.sol"
+                save_path = Path.cwd().parent / "Data" / "ModelFiles"/ self.bound_techique /  f"ModelStatus_{self.model.status}"  / self.data._parent_folder / self.data.instance
+                save_path.mkdir(parents=True, exist_ok=True)
+                self.model.write(str(save_path / solution_filename))
+                self.model.write(str(save_path / filename))
+                return objective_value, order_count, order_item_count, order_list, self.model.Runtime, self.model.status, gap
         else:
-            objective_value = None
-            gap = None
+            order_list = []
 
-        create_files = True
-        if create_files:
-            filename = f"model_{self.data.instance}.lp"
-            solution_filename = f"solution_{self.data.instance}.sol"
-
-            save_path = Path.cwd().parent / "Data" / "ModelFiles"/ self.bound_techique /  f"ModelStatus_{self.model.status}"  / self.data._parent_folder / self.data.instance
-            save_path.mkdir(parents=True, exist_ok=True)
-
-            self.model.write(str(save_path / solution_filename))
-            self.model.write(str(save_path / filename))
-
-        return objective_value, order_count, order_item_count, order_list, self.model.Runtime, self.model.status, gap
-
-
-
-        
+        return order_list

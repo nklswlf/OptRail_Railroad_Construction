@@ -9,7 +9,6 @@ from ImprovementAlgorithm import *
 from Solver import *
 import cProfile
 import pstats
-from io import StringIO
 
 instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a5_o96_m10_an10_ar10_reduced.json",
@@ -111,7 +110,7 @@ greedy_technique_b = {'order_item_greedy': {'worker_attractiveness_technique': '
 
 
 step = None
-step = 'greedy'
+#step = 'greedy'
 
 def main():
 
@@ -130,7 +129,7 @@ def main():
                                                     start_temp=20,
                                                     min_temp=0.1,
                                                     cooling_rate=0.95,
-                                                    max_iterations=3000,
+                                                    max_iterations=6000,
                                                     fallback_threshold=25,
                                                     scaling_energy=30)
                                                  
@@ -138,8 +137,8 @@ def main():
         psa = ParetoSimulatedAnnealing( inputData=data,
                                         start_temp=20,
                                         min_temp=0.1,
-                                        cooling_rate=0.95,
-                                        max_iterations=100,
+                                        cooling_rate=0.99,
+                                        max_iterations=200,
                                         fallback_threshold=25,
                                         scaling_energy=30)
 
