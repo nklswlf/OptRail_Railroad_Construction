@@ -475,7 +475,7 @@ class InsertShiftNeighborhood(OutputNeighborhood):
             create and return an InsertShiftMove.
         6. Otherwise, skip this order item and try another.
         """
-        max_attempts = 100
+        #max_attempts = 100
         attempts = 0
         self.Moves.clear()
         
@@ -486,8 +486,12 @@ class InsertShiftNeighborhood(OutputNeighborhood):
 
         if not unused_order_item_ids:
             return None
+        
+        order_item_candidates = list(unused_order_item_ids)
+        self.RNG.shuffle(order_item_candidates)
 
-        while attempts < max_attempts:
+        for order_item_id in order_item_candidates:
+
             attempts += 1
             order_item_id = self.RNG.choice(unused_order_item_ids)
             order_item_obj = solution.data.order_items[order_item_id]
@@ -1028,11 +1032,12 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
 
         if not unused_order_item_ids:
             return None  # No unused order items available
+        
+        order_item_candidates = list(unused_order_item_ids)
+        self.RNG.shuffle(order_item_candidates)
 
-        while attempts < max_attempts:
-            attempts += 1
-            order_item_id_ext = self.RNG.choice(unused_order_item_ids)
-            order_item_ext_obj = solution.data.order_items[order_item_id_ext]
+        for order_item_id_ext in order_item_candidates:
+
 
             # --- WORKER Component ---
             candidate_workers = [
