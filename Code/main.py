@@ -40,46 +40,6 @@ neighboorhood_types_local_search = ['Swap_Shift_External']
 
 
 
-objectives = ["commute_distance", "transport_distance", "attachment_distance",
-              "worker_count", "machine_count", "attachment_count",
-              "dynamic_percentage", "driver_violation"]
-
-
-
-types_and_objectives = {"dynamic_percentage_order": ["Insert_Shift", "Swap_Shift_External"],
-                        "driver_violation": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Machine', 'Swap_Shift_Worker', 'Replace_Shift_Worker', 'Replace_Shift_Machine'],
-                        "commute_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Worker', 'Replace_Shift_Worker'],
-                        "transport_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Machine', 'Replace_Shift_Machine'],
-                        "attachment_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Attachment', 'Replace_Shift_Attachment'],
-                        "machine_count": ["Insert_Shift", "Swap_Shift_External", 'Replace_Shift_Machine'],
-                        "worker_count": ["Insert_Shift", 'Replace_Shift_Worker'],
-                        "attachment_count": ["Insert_Shift", "Swap_Shift_External", 'Replace_Shift_Attachment']}
-
-
-
-building_types_and_objectives = {"dynamic_percentage_order": ["Insert_Shift", "Swap_Shift_External"],
-                        "commute_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Worker', 'Replace_Shift_Worker'],
-                        "transport_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Machine', 'Replace_Shift_Machine'],
-                        "attachment_distance": ["Insert_Shift", "Swap_Shift_External", 'Swap_Shift_Attachment', 'Replace_Shift_Attachment']}
-
-
-
-improve_types_and_objectives = {
-                        "driver_violation": ['Swap_Shift_Machine', 'Swap_Shift_Worker', 'Replace_Shift_Worker', 'Replace_Shift_Machine'],
-                        "commute_distance": ['Swap_Shift_Worker', 'Replace_Shift_Worker'],
-                        "transport_distance": ['Swap_Shift_Machine', 'Replace_Shift_Machine'],
-                        "attachment_distance": ['Swap_Shift_Attachment', 'Replace_Shift_Attachment'],
-                        "machine_count": ['Replace_Shift_Machine'],
-                        "worker_count": ['Replace_Shift_Worker'],
-                        "attachment_count": ['Replace_Shift_Attachment']}
-
-
-energy_dominance_neighborhoods = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
-                                    'Replace_Shift_Machine': ['driver_violation', 'transport_distance', 'machine_count'],
-                                    'Replace_Shift_Attachment': ['attachment_distance', 'attachment_count'],
-                                    'Swap_Shift_Worker': ['driver_violation', 'commute_distance'],
-                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance'],
-                                    'Swap_Shift_Attachment': ['attachment_distance']}
 
 
 ## Greedy Techniques
@@ -144,9 +104,9 @@ def main():
 
 
         dbsa = DominanceBasedSimulatedAnnealing( inputData=data,
-                                                start_temp=50,
+                                                start_temp=20,
                                                 min_temp=0.1,
-                                                cooling_rate=0.99,
+                                                cooling_rate=0.95,
                                                 max_iterations=150,
                                                 fallback_threshold=25,
                                                 scaling_energy=30)
@@ -154,17 +114,20 @@ def main():
         
 
         tpsa = TwoPhaseSimulatedAnnealing(  inputData=data,
-                                            start_temp=20,
-                                            min_temp=0.1,
-                                            cooling_rate=0.95,
-                                            max_iterations= 100,
-                                            fallback_threshold=25,
-                                            scaling_energy= 30,
-                                            max_building_iterations_without_improvement=20000,
-                                            neighborhoodTypes=neighboorhood_types,
-                                            energyDominanceNeighborhoods=energy_dominance_neighborhoods,
-                                            improveTypesObjectives=improve_types_and_objectives,
-                                            improveIndividualStrategy="parallel")
+                                            start_temp_individual=20,
+                                            min_temp_individual=0.1,
+                                            cooling_rate_individual=0.95,
+                                            max_iterations_individual=100,
+                                            fallback_threshold_individual=25,
+                                            scaling_energy_individual=30,
+
+                                            start_temp_dominance=20,
+                                            min_temp_dominance=0.1,
+                                            cooling_rate_dominance=0.95,
+                                            max_iterations_dominance=300,
+                                            fallback_threshold_dominance=25,
+                                            scaling_energy_dominance=30)
+
                                        
 
         if step == 'greedy':
@@ -178,10 +141,18 @@ def main():
                                building_algorithm=building_sa)
 
         else:
-            solver.Run( UB_technique="LP",
+            times = solver.Run( UB_technique="LP",
                         greedy_technique=greedy_technique_b,
                         building_algorithm=building_sa,
-                        improvement_algorithm=dbsa)
+                        improvement_algorithm=psa)
+
+
+            print("\nBound Time: ", round(times["Bound Time"], 2))
+            print("Construction Time: ", round(times["Construction Time"], 2))
+            print("Building Time: ", round(times["Building Time"], 2))
+            print("Improvement Time: ", round(times["Improvement Time"], 2))
+            print("Total Time: ", round(times["Total Time"], 2))
+
 
 
 

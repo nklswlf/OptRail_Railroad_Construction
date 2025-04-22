@@ -402,8 +402,8 @@ class ParetoSolutions:
         if solution is None:
             raise ValueError("Solution cannot be None.")
         
-        epsilon = 2
-        epsilon_2 = 4
+        epsilon = 4
+        epsilon_2 = 8
         driver = solution.driver_violation * epsilon
         commute = solution.total_commute_distance * epsilon_2
         transport = solution.total_transport_distance * epsilon_2
@@ -468,7 +468,9 @@ class ParetoSolutions:
         hv_log = math.log10(hv_value) * 10
         hv_sqrt = math.sqrt(hv_value)
         
-        return hv_sqrt, hv_log
+        print(f"Hypervolume: {hv_value}")
+        print(f"Log10 Hypervolume: {hv_log}")
+        print(f"Square Root Hypervolume: {hv_sqrt}")
         
 
 
@@ -602,11 +604,11 @@ class ParetoSolutions:
         else:
             raise ValueError("new_solution must be of type Solution or dict.")
 
-        # Interpolierte Punkte erzeugen (optional zur Verfeinerung der Energiebewertung)
+        # Interpolierte Punkte erzeugen
         if interpolated_points is None:
             interpolated_points = []
-            if len(self.ParetoFront) >= 2:
-                num_samples = min(20, len(self.ParetoFront) * 3)
+            if len(self.ParetoFront) >= 2 and len(self.ParetoFront) < 50:
+                num_samples = min(20, len(self.ParetoFront))
                 for _ in range(num_samples):
                     a, b = self.RNG.choice(self.ParetoFront, size=2, replace=False)
                     alpha = self.RNG.uniform(0.1, 0.9)
