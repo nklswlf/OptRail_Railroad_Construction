@@ -78,50 +78,6 @@ class Solution:
                 f"Number of attachments: {self.number_of_attachments}")
  
 
-    def create_output_file_greedy(self, time_for_data_loading, time_for_construction ,order_item_attractiveness_technique:str, machine_attractiveness_technique:str):
-        ''' Create the output file for the greedy solution for comparing different strategies'''
-
-        # Create a dictionary for the solution
-        solution = {
-            "Instance": self.data.instance,
-            "Time_for_data_loading": time_for_data_loading,
-            "Time_for_construction": time_for_construction,
-            "Order_item_attractiveness_technique": order_item_attractiveness_technique,
-            "Machine_attractiveness_technique": machine_attractiveness_technique,
-            "Number_of_finished_orders": self.number_of_finished_orders,
-            "Number_of_semifinished_orders": len(self.semifinished_orders),
-            "Number_of_not_started_orders": len(self.not_started_orders),
-            "Number_of_finished_order_items": self.number_of_finished_order_items,
-            "Driver_violation": self.driver_violation,
-            "Commute_distance": round(self.total_commute_distance, 2),
-            "Transport_distance": round(self.total_transport_distance, 2),
-            "Number_of_workers": self.number_of_workers,
-            "Number_of_machines": self.number_of_machines,
-            "Sum_dynamic_precentage": round(sum([order.dynamic_percentage for order in self.data.orders]),4),
-            "Dynamic_percentage": [round(order.dynamic_percentage,4) for order in self.data.orders],
-            "Worker_route_plan": self.route_plan_worker,
-            "Machine_route_plan": self.route_plan_machine
-        }
-
-
-        print("\nCreating output file...")
-
-        # Define the base directory (parent of the 'Code' directory)
-        base_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-        # Build the output file path
-        output_file_path = os.path.join(
-            base_directory, "Data", "Solution", "Greedy_Testing",  self.data._parent_folder, self.data.instance , f"OI_{order_item_attractiveness_technique}_M_{machine_attractiveness_technique}_{self.data.instance}.json"
-        )
-
-        # Ensure the directory exists
-        os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
-
-        # Write the solution to the JSON file
-        with open(output_file_path, 'w') as file:
-            json.dump(solution, file, indent=4)
-
-        print(f"Solution saved to: {output_file_path}")
 
 
     def feasibility_check(self, verbose=False, allverbose=False):
@@ -404,7 +360,6 @@ class ParetoSolutions:
             
             # Create a tuple of objective values. Adjust the order if necessary.
             obj_tuple = (
-                sol.total_dynamic_percentage,
                 sol.total_commute_distance,
                 sol.total_transport_distance,
                 sol.total_transport_distance_attachments,
@@ -432,36 +387,7 @@ class ParetoSolutions:
         
         self.ParetoFront = non_dominated
 
-    '''
-    def SetReferencePointFromParetoFront(self):
-        """
-        Automatically sets a valid reference point based on the worst (max) values
-        of each objective across the current Pareto front.
-        """
-        if not self.ParetoFront:
-            raise ValueError("ParetoFront is empty.")
 
-        # Extract objectives from Pareto front
-        epsilon = 1.2
-        driver = max(sol.driver_violation for sol in self.ParetoFront) * epsilon
-        commute = max(sol.total_commute_distance for sol in self.ParetoFront) * epsilon
-        transport = max(sol.total_transport_distance for sol in self.ParetoFront) * epsilon
-        attachments = max(sol.total_transport_distance_attachments for sol in self.ParetoFront) * epsilon
-        workers = max(sol.number_of_workers for sol in self.ParetoFront) * epsilon
-        machines = max(sol.number_of_machines for sol in self.ParetoFront) * epsilon
-        attach_count = max(sol.number_of_attachments for sol in self.ParetoFront) * epsilon
-
-        epsilon = 1e-6  # Small value to avoid numerical issues
-        self.ReferencePoint = np.array([
-            driver + epsilon,
-            commute + epsilon,
-            transport + epsilon,
-            attachments + epsilon,
-            workers + epsilon,
-            machines + epsilon,
-            attach_count + epsilon
-        ])
-    '''
 
     def SetReferencePoint(self, solution: Solution):
         """
@@ -604,7 +530,6 @@ class ParetoSolutions:
         A solution dominates another if it is not worse in any objective and is strictly better in at least one.
         """
         objectives = [
-            ("total_dynamic_percentage", "max"),
             ("total_commute_distance", "min"),
             ("total_transport_distance", "min"),
             ("total_transport_distance_attachments", "min"),
@@ -861,8 +786,7 @@ class ParetoSolutions:
         solutions = []
         for solution in self.ParetoFront:
             solutions.append({
-                "Finished Orders": solution.number_of_finished_orders,
-                "Dynamic Percentage": round(solution.total_dynamic_percentage, 2),
+                "Orders": solution.number_of_finished_orders,
                 "Order Items": solution.number_of_finished_order_items,
                 "Driver Violation": solution.driver_violation,
                 "Commute Distance": round(solution.total_commute_distance, 2),
@@ -877,10 +801,10 @@ class ParetoSolutions:
         df = pd.DataFrame(solutions)
 
         # Sort according to the total_dynamic_percentage (higher is better), then sort by the other objectives
-        df = df.sort_values(by=["Finished Orders" ,"Dynamic Percentage", "Order Items", "Driver Violation", "Commute Distance",
+        df = df.sort_values(by=["Orders" , "Order Items", "Driver Violation", "Commute Distance",
                                 "Transport Machines", "Transport Attachments",
                                 "Machines", "Workers", "Attachments"],
-                            ascending=[False, False, False, True, True, True, True, True, True, True])
+                            ascending=[False, False, True, True, True, True, True, True, True])
         
 
         # Show the DataFrame
@@ -913,170 +837,4 @@ class ParetoSolutions:
 
 
 
-    def CalculateAverageDynamicPercentage(self):
 
-        average_dynamic_percentage = {}
-
-        for order in self.data.orders:
-            average_dynamic_percentage[order.order_number] = 0
-
-
-        for solution in self.ParetoFront:
-            for order in self.data.orders:
-                average_dynamic_percentage[order.order_number] += solution.dynamic_percentage_order[order.order_number]
-
-        for order in self.data.orders:
-            average_dynamic_percentage[order.order_number] = average_dynamic_percentage[order.order_number] / len(self.ParetoFront)
-
-
-        return average_dynamic_percentage
-
-            
-
-
-
-
-class GanttDiagramGenerator:
-    def __init__(self, input_file, parent_folder, optimization_strategy, number_of_objectives):
-        """
-        Initialize the GanttDiagramGenerator with input file and parent folder.
-        """
-        self.input_file = input_file
-        self.parent_folder = parent_folder
-        self.instance = input_file.split('Construction_')[1].split('.json')[0]
-        self.script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.optimization_strategy = optimization_strategy
-        self.number_of_objectives = number_of_objectives
-
-        # Paths for input and output files
-        self.input_file_path = os.path.join(
-            self.script_dir, "..", "Data", "Instanzen", parent_folder, input_file
-        )
-        self.output_file_path = os.path.join(
-            self.script_dir, "..", "Data", "Solution", parent_folder, self.instance, f"{self.number_of_objectives}_Objectives" ,self.optimization_strategy, f"Solution_{input_file}"
-        )
-
-        # Load input and output data
-        self.input_data = self._load_json(self.input_file_path)
-        self.output_data = self._load_json(self.output_file_path)
-
-    @staticmethod
-    def _load_json(file_path):
-        """
-        Load JSON data from the given file path.
-        """
-        with open(file_path, 'r') as file:
-            return json.load(file)
-
-    def create_gantt_diagrams(self):
-        """
-        Generate Gantt diagrams for both worker shifts and machine assignments.
-        """
-        print(f"Creating Gantt diagrams for instance {self.instance}...")
-
-        self._create_shift_plan()
-        self._create_machine_plan()
-
-        print(f"Gantt diagrams have been created.\n")
-
-    def _create_shift_plan(self):
-        """
-        Create a Gantt diagram for worker shifts based on input and output data.
-        """
-        worker_assignments = self.output_data['Arbeiterzuweisung']
-        unassigned_workers = [
-            w['Name'] for w in self.input_data['Arbeiter'] if w['Name'] not in worker_assignments
-        ]
-
-        # Build DataFrame for worker shifts
-        df = pd.DataFrame([
-            {'Arbeiter': worker, 'Start': shift['Start'], 'Ende': shift['Ende'], 'ID': shift['ID']}
-            for worker, shifts in worker_assignments.items() for shift in shifts
-        ])
-
-        # Determine shift type (early or late shift) based on start time
-        df['Shift_Type'] = df['Start'].apply(
-            lambda start: 'Early Shift' if pd.to_datetime(start).hour < 14 else 'Late Shift'
-        )
-
-        # Add site number based on task ID
-        df['Site_Number'] = df['ID'].apply(self._get_site_number)
-
-        # Create Gantt chart
-        fig = px.timeline(
-            df, x_start="Start", x_end="Ende", y="Arbeiter", color="Shift_Type",
-            hover_data={'Shift_Type': False, 'Site_Number': True, 'Start': True, 'Ende': True, 'Arbeiter': False},
-            category_orders={"Arbeiter": sorted(df["Arbeiter"].unique(), key=lambda x: int(x.split("_")[1]), reverse=True)},
-            color_discrete_map={"Early Shift": "lightblue", "Late Shift": "lightcoral"}
-        )
-        fig.update_layout(
-            title=f"Worker Assignments with Site Information for Instance {self.instance}",
-            xaxis_title="Date", yaxis_title="Worker"
-        )
-
-        # Save and show the chart
-        self._save_chart(fig, f"Shift_Plan_{self.instance}.html")
-        print(f"Workers without shifts: {unassigned_workers}")
-
-    def _create_machine_plan(self):
-        """
-        Create a Gantt diagram for machine and attachment assignments.
-        """
-        machine_assignments = self.output_data['Maschinenzuweisung']
-        attachment_assignments = self.output_data.get('Anbaugeraetzuweisung', {})
-        unassigned_machines = [
-            m['Name'] for m in self.input_data['Maschinen'] if m['Name'] not in machine_assignments
-        ]
-
-        # Build DataFrames for machines and attachments
-        machine_rows = [
-            {'Name': machine, 'Start': usage['Start'], 'Ende': usage['Ende'], 'ID': usage['ID'], 'Type': 'Machine'}
-            for machine, usages in machine_assignments.items() for usage in usages
-        ]
-        attachment_rows = [
-            {'Name': attachment, 'Start': usage['Start'], 'Ende': usage['Ende'], 'ID': usage['ID'], 'Type': 'Attachment'}
-            for attachment, usages in attachment_assignments.items() for usage in usages
-        ]
-        df_combined = pd.concat([pd.DataFrame(machine_rows), pd.DataFrame(attachment_rows)])
-
-        # Add site number based on task ID
-        df_combined['Site_Number'] = df_combined['ID'].apply(self._get_site_number)
-
-        # Create Gantt chart
-        fig = px.timeline(
-            df_combined, x_start="Start", x_end="Ende", y="Name", color="Site_Number",
-            hover_data={'Site_Number': False, 'Start': True, 'Ende': True, 'Type': True, 'Name': False},
-            category_orders={
-                "Name": sorted(df_combined["Name"].unique(), reverse=True),
-                "Site_Number": sorted(df_combined["Site_Number"].unique(), key=lambda x: int(x))
-            }
-        )
-        fig.update_layout(
-            title=f"Machine and Attachment Assignments by Site for Instance {self.instance}",
-            xaxis_title="Date", yaxis_title="Name"
-        )
-
-        # Save and show the chart
-        self._save_chart(fig, f"Machine_Plan_{self.instance}.html")
-        print(f"Machines without assignments: {unassigned_machines}")
-
-    def _get_site_number(self, task_id):
-        """
-        Get the site number for a given task ID.
-        """
-        for task in self.input_data['Bestellpositionen']:
-            if task['ID'] == task_id:
-                return task['Auftragsnummer']
-        return None
-
-    def _save_chart(self, fig, file_name):
-        """
-        Save the Gantt chart as an HTML file and display it.
-        """
-
-        html_file_path = os.path.join(
-            self.script_dir, "..", "Data", "Solution", self.parent_folder, self.instance, f"{self.number_of_objectives}_Objectives" , self.optimization_strategy,file_name
-        )
-        os.makedirs(os.path.dirname(html_file_path), exist_ok=True)
-        fig.write_html(html_file_path)
-        #fig.show()

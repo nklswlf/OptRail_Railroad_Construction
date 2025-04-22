@@ -537,9 +537,9 @@ class InputData:
         self._average_transport_distance = sum(sum(row) for row in self._transport_routes) / (len(self._transport_routes)*len(self._transport_routes[0]))
         self._min_transport_distance = min(min(row) for row in self._transport_routes if any(row))            
         self._max_transport_distance = max(max(row) for row in self._transport_routes if any(row))
-        self._average_work_distance = 2* sum(sum(row) for row in self._work_routes) / (len(self._work_routes)*len(self._work_routes[0]))
-        self._min_work_distance = 2*min(min(row) for row in self._work_routes if any(row))
-        self._max_work_distance = 2*max(max(row) for row in self._work_routes if any(row))
+        self._average_work_distance = sum(sum(row) for row in self._work_routes) / (len(self._work_routes)*len(self._work_routes[0]))
+        self._min_work_distance = (min(min(row) for row in self._work_routes if any(row)))
+        self._max_work_distance = (max(max(row) for row in self._work_routes if any(row)))
 
 
         # Connect order items to their corresponding orders

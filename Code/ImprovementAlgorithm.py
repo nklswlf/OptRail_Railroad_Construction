@@ -6,6 +6,9 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 import pandas as pd
 import copy
+import cProfile
+import pstats
+import os
 
 
 class ImprovementAlgorithm:
@@ -280,7 +283,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         attr_mapping = {
             'commute_distance': 'total_commute_distance',
             'transport_distance': 'total_transport_distance',
-            'attachment_distance': 'total_attachment_distance',
+            'attachment_distance': 'total_transport_distance_attachments',
             'worker_count': 'number_of_workers',
             'machine_count': 'number_of_machines',
             'attachment_count': 'number_of_attachments',
@@ -341,7 +344,12 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
 
 
+    
+
     def PSA(self, local_solution: Solution, local_pareto_front: list) -> list[Solution]:
+        profiler = cProfile.Profile()
+        profiler.enable()
+
         current_temperature = self.StartTemperature
         local_pareto_solutions = ParetoSolutions(self.InputData)
         local_pareto_solutions.ParetoFront = local_pareto_front
@@ -371,6 +379,11 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 local_pareto_solutions.UpdateParetoFront(local_solution)
 
             current_temperature *= self.CoolingRate
+
+        profile_path_txt = f"psa_profile_{os.getpid()}.txt"
+        with open(profile_path_txt, "w") as f:
+            ps = pstats.Stats(profiler, stream=f)
+            ps.sort_stats("cumulative").print_stats()
 
         return local_pareto_solutions.ParetoFront
 
@@ -624,7 +637,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                     elif objective == 'transport_distance':
                         objective_dict[objective] = solution.total_transport_distance - value
                     elif objective == 'attachment_distance':
-                        objective_dict[objective] = solution.total_attachment_distance - value
+                        objective_dict[objective] = solution.total_transport_distance_attachments - value
                     elif objective == 'machine_count':
                         objective_dict[objective] = solution.number_of_machines - value
                     elif objective == 'worker_count':
@@ -641,7 +654,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                     elif objective == 'transport_distance':
                         objective_dict[objective] = solution.total_transport_distance
                     elif objective == 'attachment_distance':
-                        objective_dict[objective] = solution.total_attachment_distance
+                        objective_dict[objective] = solution.total_transport_distance_attachments
                     elif objective == 'machine_count':
                         objective_dict[objective] = solution.number_of_machines
                     elif objective == 'worker_count':

@@ -27,7 +27,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = ["Construction_a20_o236_m12_an106_ar24.json"]
+instances = ["Construction_a10_o107_m5_an57_ar12.json"]
 
 
 
@@ -36,7 +36,7 @@ neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace
                        'Swap_Shift_Worker', 'Swap_Shift_Machine', 'Swap_Shift_Attachment',
                        'Swap_Shift_External', 'Insert_Shift']
 
-neighboorhood_types_local_search = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace_Shift_Attachment']
+neighboorhood_types_local_search = ['Swap_Shift_External']
 
 
 
@@ -129,7 +129,7 @@ def main():
                                                     start_temp=20,
                                                     min_temp=0.1,
                                                     cooling_rate=0.95,
-                                                    max_iterations=6000,
+                                                    max_iterations=3000,
                                                     fallback_threshold=25,
                                                     scaling_energy=30)
                                                  

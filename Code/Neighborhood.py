@@ -161,13 +161,13 @@ class OutputNeighborhood(BaseNeighborhood):
 
             if bestNeighborhoodMove is not None:
                 
-                #print(f"\nIteration: {iterator}")
+                print(f"\nIteration: {iterator}")
+                print(bestNeighborhoodSolution)
 
                 worker_route, machine_route, attachement_route = self.constructCompleteRoutes(bestNeighborhoodMove, bestNeighborhoodSolution)
                 bestNeighborhoodSolution = Solution(worker_route, machine_route, attachement_route, self.data)
                 self.evaluationLogic.evaluate(bestNeighborhoodSolution)
-
-                #print(bestNeighborhoodSolution)
+                
 
                 #print(bestNeighborhoodMove.DeltaDetails)
 
@@ -175,11 +175,30 @@ class OutputNeighborhood(BaseNeighborhood):
 
                 #print(f"Best Neighborhood Solution: \n{bestNeighborhoodSolution}")
 
+                denorm = {}
+                for detail,value in bestNeighborhoodMove.DeltaDetails.items():
+                    if detail == 'attachment_distance':
+                        denorm[detail] = value * (self.data.max_transport_distance - self.data.min_transport_distance) + self.data.min_transport_distance
+
+                    elif detail == 'commute_distance':
+                        denorm[detail] = value * (self.data.max_work_distance - self.data.min_work_distance) + self.data.min_work_distance
+
+                    elif detail == 'transport_distance':
+                        denorm[detail] = value * (self.data.max_transport_distance - self.data.min_transport_distance) + self.data.min_transport_distance
+
+                    else:
+                        denorm[detail] = value
+
+                for detail, value in denorm.items():
+                    print(f"{detail}: {value}")
+
             else:
                 #print(f"\nNo better solution found in iteration {iterator}")
                 hasSolutionImproved = False
 
             iterator += 1
+
+            
 
         return bestNeighborhoodSolution
     
@@ -197,7 +216,7 @@ class OutputNeighborhood(BaseNeighborhood):
         else:
             #print(f'No moves found in SingleMove() for neighborhood {self.Type}.')
             return None
-    
+
 
 class InsertShiftMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
@@ -1021,8 +1040,6 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
         - Randomly selects valid attachment swaps (if required).
         """
 
-        max_attempts = 100
-        attempts = 0
         self.Moves.clear()
 
         if not_used_shifts is None:
@@ -1439,6 +1456,8 @@ class TimeNeighborhood(BaseNeighborhood):
 
         iterator = 1
         while hasSolutionImproved:
+
+            print(f"Solution: {bestNeighborhoodSolution}")
             
             # Sets Algorithm back!
             self.Update() 
@@ -1449,11 +1468,29 @@ class TimeNeighborhood(BaseNeighborhood):
 
 
             if bestNeighborhoodMove is not None and bestNeighborhoodMove.Delta < 0:
-                #print(f"\nIteration: {iterator}")
+                print(f"\nIteration: {iterator}")
 
                 worker_route, machine_route, attachement_route = self.constructCompleteRoutes(bestNeighborhoodMove, bestNeighborhoodSolution)
                 bestNeighborhoodSolution = Solution(worker_route, machine_route, attachement_route, self.data)
                 self.evaluationLogic.evaluate(bestNeighborhoodSolution)
+
+                denorm = {}
+                for detail,value in bestNeighborhoodMove.DeltaDetails.items():
+                    if detail == 'attachment_distance':
+                        denorm[detail] = value * (self.data.max_transport_distance - self.data.min_transport_distance) + self.data.min_transport_distance
+
+                    elif detail == 'commute_distance':
+                        denorm[detail] = value * (self.data.max_work_distance - self.data.min_work_distance) + self.data.min_work_distance
+
+                    elif detail == 'transport_distance':
+                        denorm[detail] = value * (self.data.max_transport_distance - self.data.min_transport_distance) + self.data.min_transport_distance
+
+                    else:
+                        denorm[detail] = value
+
+                for detail, value in denorm.items():
+                    print(f"{detail}: {value}")
+
 
                 #self.solutionPool.AddSolution(bestNeighborhoodSolution)
 
@@ -1488,6 +1525,9 @@ class TimeNeighborhood(BaseNeighborhood):
         else:
             pass
             #print(f'No moves found in SingleMove() for neighborhood {self.Type}.')
+
+
+
 
 
 
@@ -1687,7 +1727,7 @@ class SwapShiftAttachmentNeighborhood(TimeNeighborhood):
         6. If any valid move is found, return one randomly using self.RNG.choice;
             otherwise, return None after max_attempts.
         """
-        max_attempts = 100
+        max_attempts = 10
         attachment_ids = list(solution.route_plan_attachment.keys())
         attempts = 0
         self.Moves.clear()  # Clear any previously stored moves
