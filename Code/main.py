@@ -27,7 +27,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = ["Construction_a10_o107_m5_an57_ar12.json"]
+instances = ["Construction_a15_o170_m9_an80_ar18.json"]
 
 
 
@@ -137,13 +137,19 @@ def main():
         psa = ParetoSimulatedAnnealing( inputData=data,
                                         start_temp=20,
                                         min_temp=0.1,
-                                        cooling_rate=0.99,
-                                        max_iterations=200,
+                                        cooling_rate=0.95,
+                                        max_iterations=100,
                                         fallback_threshold=25,
                                         scaling_energy=30)
 
 
-        #dbsa = DominanceBasedSimulatedAnnealing( inputData=data)
+        dbsa = DominanceBasedSimulatedAnnealing( inputData=data,
+                                                start_temp=50,
+                                                min_temp=0.1,
+                                                cooling_rate=0.99,
+                                                max_iterations=150,
+                                                fallback_threshold=25,
+                                                scaling_energy=30)
 
         
 
@@ -161,7 +167,6 @@ def main():
                                             improveIndividualStrategy="parallel")
                                        
 
-
         if step == 'greedy':
             greedy_solution = solver.RunConstructive(UB_technique="LP",
                                 greedy_technique=greedy_technique_b)
@@ -176,7 +181,8 @@ def main():
             solver.Run( UB_technique="LP",
                         greedy_technique=greedy_technique_b,
                         building_algorithm=building_sa,
-                        improvement_algorithm=psa)
+                        improvement_algorithm=dbsa)
+
 
 
 def profile_main():

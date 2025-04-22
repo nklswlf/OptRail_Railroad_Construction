@@ -432,6 +432,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         print("\nFinal Pareto Front:")
         self.ParetoSolutions.ShowFront()
+        self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
 
         algo_time = time.time() - start_time
 
@@ -458,6 +459,160 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         self.MaxIterations = max_iterations
         self.FallbackThreshold = fallback_threshold # Currently not used
         self.ScalingEnergy = scaling_energy
+
+        self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
+                                    'Replace_Shift_Machine': ['driver_violation', 'transport_distance', 'machine_count'],
+                                    'Replace_Shift_Attachment': ['attachment_distance', 'attachment_count'],
+                                    'Swap_Shift_Worker': ['driver_violation', 'commute_distance'],
+                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance'],
+                                    'Swap_Shift_Attachment': ['attachment_distance']}
+
+
+    def location_move(self, solution:Solution) -> None:
+        
+        random_number_of_moves = self.RNG.integers(10, 15)
+        current_solution = solution.clone()
+        delta_details = dict()
+        objectives = set()
+
+        for _ in range(random_number_of_moves):
+            move = None
+            attempts = 0
+            while move is None and attempts < 10:
+                random_type = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
+                neighborhood = self.Neighborhoods[random_type]
+                try:
+                    move = neighborhood.SingleMove(current_solution)
+                except KeyError:
+                    move = None
+                attempts += 1
+
+            if move is None:
+                continue
+
+            for obj, details in move.DeltaDetails.items():
+                if obj not in delta_details:
+                    delta_details[obj] = 0
+                delta_details[obj] += details
+                objectives.add(obj)
+
+
+            worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
+            current_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+
+
+
+        
+        return delta_details,objectives, worker_route_plan, machine_route_plan, attachment_route_plan
+    
+    def DominanceBasedEnergyImprovement(self, solution:Solution) -> None:
+        ''' Simulated annealing algorithm with energy dominance neighborhood'''
+        
+        current_temperature = self.StartTemperature
+
+        while current_temperature > self.MinTemperature:
+
+            for i in range(self.MaxIterations):
+
+                dominating_count_current, interpolated_points = self.ParetoSolutions.CountDominatingSolutions(solution)
+
+                neighborhoodType = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
+                neighborhood = self.Neighborhoods[neighborhoodType]
+                objectives = self.NeighborhoodTypes[neighborhoodType]
+
+                move_type = self.RNG.choice(['traversal', 'location'])
+                if move_type == 'traversal':
+                    move = neighborhood.SingleMove(solution) 
+                    if move is None:
+                        continue
+                    delta_details = move.DeltaDetails
+                elif move_type == 'location':
+                    delta_details, objectives, worker_route_plan, machine_route_plan, attachment_route_plan = self.location_move(solution)
+
+
+                not_involved_objectives = ['driver_violation', 'commute_distance', 'transport_distance', 'attachment_distance', 'machine_count', 'worker_count', 'attachment_count']
+                objective_dict = dict()
+
+                for objective in objectives:
+                    value = delta_details[objective]
+                    not_involved_objectives.remove(objective)
+
+                    if objective == 'driver_violation':
+                        objective_dict[objective] = solution.driver_violation - value
+                    elif objective == 'commute_distance':
+                        objective_dict[objective] = solution.total_commute_distance - value
+                    elif objective == 'transport_distance':
+                        objective_dict[objective] = solution.total_transport_distance - value
+                    elif objective == 'attachment_distance':
+                        objective_dict[objective] = solution.total_transport_distance_attachments - value
+                    elif objective == 'machine_count':
+                        objective_dict[objective] = solution.number_of_machines - value
+                    elif objective == 'worker_count':
+                        objective_dict[objective] = solution.number_of_workers - value
+                    elif objective == 'attachment_count':
+                        objective_dict[objective] = solution.number_of_attachments - value
+                
+                for objective in not_involved_objectives:
+
+                    if objective == 'driver_violation':
+                        objective_dict[objective] = solution.driver_violation
+                    elif objective == 'commute_distance':
+                        objective_dict[objective] = solution.total_commute_distance
+                    elif objective == 'transport_distance':
+                        objective_dict[objective] = solution.total_transport_distance
+                    elif objective == 'attachment_distance':
+                        objective_dict[objective] = solution.total_transport_distance_attachments
+                    elif objective == 'machine_count':
+                        objective_dict[objective] = solution.number_of_machines
+                    elif objective == 'worker_count':
+                        objective_dict[objective] = solution.number_of_workers
+                    elif objective == 'attachment_count':
+                        objective_dict[objective] = solution.number_of_attachments
+
+                # Possible to combine objectives to 3 main topics: distance, ressource count, violation
+
+                dominating_count_new, filler = self.ParetoSolutions.CountDominatingSolutions(objective_dict, interpolated_points=interpolated_points)
+
+                overall_difference = dominating_count_new - dominating_count_current
+                
+                if overall_difference <= 0:
+                    pass
+                elif overall_difference > 0:
+                        
+                        prob =  math.exp(-overall_difference * self.ScalingEnergy / current_temperature)
+                        random_number = self.RNG.random()
+                        if prob < random_number:
+                            continue
+
+                if move_type == 'traversal':
+                    worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
+                solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                self.EvaluationLogic.evaluate(solution)
+
+                self.ParetoSolutions.UpdateParetoFront(solution)
+
+
+            current_temperature *= self.CoolingRate
+
+        
+
+
+    def Run(self, solution:Solution) -> Solution:
+        ''' Run simulated annealing algorithm with given solutions and parameters'''
+
+        self.InitializeNeighborhoods(list(self.NeighborhoodTypes.keys()))
+
+        #self.ParetoSolutions.SetReferencePoint(solution)
+
+        self.DominanceBasedEnergyImprovement(solution)
+
+
+        self.ParetoSolutions.PurgeParetoFront()
+        self.ParetoSolutions.SortParetoFront()
+        print("\nPareto Front after Dominance Based Energy Improvement:")
+        self.ParetoSolutions.ShowFront()
+        self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
+
 
     
 

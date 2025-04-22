@@ -577,7 +577,7 @@ class ParetoSolutions:
 
 
 
-    def CountDominatingSolutions(self, new_solution) -> int:
+    def CountDominatingSolutions(self, new_solution, interpolated_points=None):
         """
         Zählt, wie viele Lösungen aus der Pareto-Front die new_solution dominieren.
 
@@ -602,12 +602,34 @@ class ParetoSolutions:
         else:
             raise ValueError("new_solution must be of type Solution or dict.")
 
+        # Interpolierte Punkte erzeugen (optional zur Verfeinerung der Energiebewertung)
+        if interpolated_points is None:
+            interpolated_points = []
+            if len(self.ParetoFront) >= 2:
+                num_samples = min(20, len(self.ParetoFront) * 3)
+                for _ in range(num_samples):
+                    a, b = self.RNG.choice(self.ParetoFront, size=2, replace=False)
+                    alpha = self.RNG.uniform(0.1, 0.9)
+                    point = {
+                        "driver_violation": alpha * a.driver_violation + (1 - alpha) * b.driver_violation,
+                        "commute_distance": alpha * a.total_commute_distance + (1 - alpha) * b.total_commute_distance,
+                        "transport_distance": alpha * a.total_transport_distance + (1 - alpha) * b.total_transport_distance,
+                        "attachment_distance": alpha * a.total_transport_distance_attachments + (1 - alpha) * b.total_transport_distance_attachments,
+                        "machine_count": alpha * a.number_of_machines + (1 - alpha) * b.number_of_machines,
+                        "worker_count": alpha * a.number_of_workers + (1 - alpha) * b.number_of_workers,
+                        "attachment_count": alpha * a.number_of_attachments + (1 - alpha) * b.number_of_attachments
+                    }
+                    interpolated_points.append(point)
 
         count = 0
         for solution in self.ParetoFront:
             if self.ShortCompareSolutions(solution, objective_dict):
                 count += 1
-        return count
+        for point in interpolated_points:
+            if self.ShortCompareSolutions(point, objective_dict):
+                count += 1
+
+        return count, interpolated_points
     
     def ShortCompareSolutions(self, current_solution, objective_dict):
         """

@@ -1529,8 +1529,6 @@ class TimeNeighborhood(BaseNeighborhood):
 
 
 
-
-
 class SwapShiftAttachmentMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
                     
