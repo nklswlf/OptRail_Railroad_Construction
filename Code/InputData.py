@@ -14,11 +14,10 @@ class InputData:
         :param instance_filename: Name of the JSON file containing the data.
         '''
         
-
+        # File name and instance number
         self.instance_filename = instance_filename
         self.instance = instance_filename.split('Construction_')[1].split('.json')[0]
         self._data_path, self._parent_folder = self._find_instance_file()
-        self.site_fulfillment = 0
 
         print(f"\nInstance: {self.instance}")
         print(f"\nLoading data from '{instance_filename}'...")
@@ -31,8 +30,15 @@ class InputData:
                             "machine_type_count": 0.04935076,
                             "worker_qualification_count": 0.03397183
                             }
+        self.complexity_ahp = {"order_item_count": 0.40671321997258464,
+                               "regular_driver_count": 0.2125882387371141,
+                               "worker_distance": 0.1445266762045684,
+                               "transport_distance": 0.09585079248980775,
+                               "machine_type_count": 0.061996079901354036,
+                               "worker_qualification_count": 0.03916249634728554,
+                               "attachment_count": 0.03916249634728554
+                               }
     
-        
         # Default values for Occupational Safety
         self._max_consecutive_night_shifts = 5 # Max consecutive night shifts
         self._max_shifts_in_time_period = 10 # Max shifts in a time period
@@ -53,91 +59,46 @@ class InputData:
         self._worker_travel_cost_per_km = 0.5  # Travel cost per km for a worker
         self._machine_transport_cost_per_km = 1.6  # Transport cost per km for a machine
 
+        # Dynamic value for maximum possible sites to be fulfilled
+        self.site_fulfillment = 0
 
+        # Load data from JSON file
         self._load_data()
 
-        # Easy predecessor and successor access for workers and machines
+        # Transform data for easier access and usage
+        self._transfrom_data()
+
+        print(f"Data loaded from '{self.instance_filename}' in folder '{self._parent_folder}'.")
+
+    def check_order_usability(self):
         '''
-        # Print Predecessor and Successor for for machine 1 and order item 46 as actual ids
-        print("Predecessor and Successor for machine 1 and order item 46")
-        print([predecessor.id for predecessor in self.machines[1].predecessors[self.order_items[46]]])
-        print([successor.id for successor in self.machines[1].successors[self.order_items[46]]])
-
-
-        # Alle möglichen Order Items für Maschine 1
-        print("Alle möglichen Order Items für Maschine 1 und Auftrag 2")
-        print([order_item.id for order_item in self.machines[1].possible_order_items[self.orders[2]]])
-        # Distanz zwischen order item 46 und order item 17
-        print("Distanz zwischen order item 46 und order item 17")
-        print(self._transport_routes_order_item[46][17])
-        # Zeit in Stunden zwischen order item 46 und order item 17
-        print("Zeit in Stunden zwischen order item 46 und order item 17")
-        print(self._transport_routes_order_item[46][17] / self._transport_speed_kmh)
-        # Endzeit von order item 46
-        print("Endzeit von order item 46")
-        print(self.order_items[46].end_time)
-        # Startzeit von order item 17
-        print("Startzeit von order item 17")
-        print(self.order_items[17].start_time)
-        # Zeitdifferenz in Stunden zwischen order item 46 und order item 17
-        print("Zeitdifferenz in Stunden zwischen order item 46 und order item 17")
-        print((self.order_items[17].start_time - self.order_items[46].end_time).total_seconds() / 3600)
+        Check if the orders are unuseable and set the status accordingly.
         '''
-
-
-
-        self.create_priorities_orders()
-        self.connect_order_item_to_order()
-
-
-        # Dynamic dictionary for planned shifts for greedy algorithm
-        self.planned_shifts_worker = dict()
-        self.planned_shifts_machine = dict()
         for order in self.orders:
-            self.planned_shifts_worker[order] = list()
-            self.planned_shifts_machine[order] = list()
-
-
-
-    def reduce_input_data(self, number_of_orders):
-        '''
-        Reduce the input data to a smaller number of orders.
-
-        :param number_of_orders: Number of orders to keep.
-        '''
-        machine_types = {machine.type for machine in self.machines}
-        attachment_types = {attachment.type for attachment in self.attachments}
-        amount_planned_orders = 0
-
-        for order in self.order_ranking:
-            if amount_planned_orders == number_of_orders:
-                break
-
+            '''
             if not all(
-                order_item.machine_type in machine_types and
-                set(order_item.equipment_types).issubset(attachment_types) and
+                order_item.machine_type in {machine.type for machine in self.machines} and
+                set(order_item.equipment_types).issubset({attachment.type for attachment in self.attachments}) and
                 any(set(order_item.worker_qualifications).issubset(worker.qualifications) for worker in self.workers)
                 for order_item in order.order_items
             ):
                 order.unuseable = True
-                continue
+            '''
+            if not all(order_item.machine_type in {machine.type for machine in self.machines} for order_item in order.order_items):
+                not_found_machine_type = set(order_item.machine_type for order_item in order.order_items) - {machine.type for machine in self.machines}
+                print(f"Order {order.order_number} is not useable because of machine type(s): {not_found_machine_type}.")
 
+            if not all(set(order_item.equipment_types).issubset({attachment.type for attachment in self.attachments}) for order_item in order.order_items):
+                not_found_attachment_type = set(order_item.equipment_types for order_item in order.order_items) - {attachment.type for attachment in self.attachments}
+                print(f"Order {order.order_number} is not useable because of attachment type(s): {not_found_attachment_type}.")
 
-            order.status = True
-            amount_planned_orders += 1
+            if not all(any(set(order_item.worker_qualifications).issubset(worker.qualifications) for worker in self.workers) for order_item in order.order_items):
+                not_found_worker_qualification = set(order_item.worker_qualifications for order_item in order.order_items) - {worker.qualifications for worker in self.workers}
+                print(f"Order {order.order_number} is not useable because of worker qualifications: {not_found_worker_qualification}.")
 
-            for order_item in order.order_items:
-                order_item.status = True
-
-
-        for order in self.orders:
-            if order.status == False:
-                print(f"Order {order.order_number} is not planned.")
-
-            if order.unuseable == True:
-                print(f"Order {order.order_number} is unuseable.")
-
-                
+            else:
+                print(f"Order {order.order_number} is useable.")
+                          
     def activate_order(self, order_number: int) -> None:
         """Aktiviert eine Order und alle zugehörigen OrderItems."""
         for order in self.orders:
@@ -167,14 +128,187 @@ class InputData:
                     order_item.status = False
                 break
         
-
-    
     def connect_order_item_to_order(self):
         '''
         Connect each order item to its corresponding order.
         '''
         for order in self.orders:
             order.order_items = [order_item for order_item in self.order_items if order_item.order_number == order.order_number]
+
+
+
+    def calculate_complexity(self):
+        """
+        Generate priorities for all orders based on multiple criteria.
+
+        This function calculates ranks for different parameters (e.g., order items, machine types)
+        and combines them into an overall priority score with Borda Count (BC) and Analytic Hierarchy Process (AHP).
+        """
+        # 1. Calculate rank for order_item_count (more are more complex)
+        self.complexity_rank(
+            self.orders, 
+            lambda order: len(order.order_item_ids), 
+            "order_item_count",
+            reverse=True
+        )
+
+
+        # 2. Calculate rank for regular_driver_count (less is more complex)
+        machine_types = {
+            order.order_number: set(
+                item.machine_type for item in self.order_items if item.order_number == order.order_number
+            )
+            for order in self.orders
+        }
+        possible_regular_drivers = {
+            order.order_number: {
+                driver for machine in self.machines
+                if machine.type in machine_types[order.order_number]
+                for driver in machine.default_drivers
+            }
+            for order in self.orders
+        }
+        self.complexity_rank(
+            self.orders, 
+            lambda order: len(possible_regular_drivers[order.order_number]), 
+            "regular_driver_count"
+        )
+
+        # 3. Calculate rank for worker_distance (longer distances are more complex)
+        worker_distances = {
+            order.order_number: sum(
+                self.work_routes[worker.personal_number][order.site_number]
+                for worker in self.workers
+            ) / len(self.workers)
+            for order in self.orders
+        }
+        self.complexity_rank(
+            self.orders, 
+            lambda order: worker_distances[order.order_number], 
+            "worker_distance",
+            reverse=True
+        )
+
+        # 4. Calculate rank for transport_distance (longer distances are more complex)
+        transport_distances = {
+            order.order_number: sum(
+                self.transport_routes[order.site_number][site]
+                for site in range(len(self.transport_routes))
+            ) / len(self.transport_routes)
+            for order in self.orders
+        }
+        self.complexity_rank(
+            self.orders, 
+            lambda order: transport_distances[order.order_number], 
+            "transport_distance",
+            reverse=True
+        )
+
+        # 5. Calculate rank for machine_type_count (more machine types are more complex)
+        self.complexity_rank(
+            self.orders, 
+            lambda order: len(set(
+                item.machine_type for item in self.order_items if item.order_number == order.order_number
+            )), 
+            "machine_type_count",
+            reverse=True
+        )
+    
+
+        # 6. Calculate rank for worker_qualification_count (more qualifications are more complex)
+        worker_qualifications = {
+            order.order_number: set(
+                qualification for item in self.order_items
+                if item.order_number == order.order_number
+                for qualification in item.worker_qualifications
+            )
+            for order in self.orders
+        }
+        self.complexity_rank(
+            self.orders, 
+            lambda order: len(worker_qualifications[order.order_number]), 
+            "worker_qualification_count",
+            reverse=True
+        )
+
+        # 7. Calculate rank for attachment_count (more attachments are more complex)
+        self.complexity_rank(
+            self.orders, 
+            lambda order: len(list(
+                item.equipment_types for item in self.order_items if item.order_number == order.order_number
+            )), 
+            "attachment_count",
+            reverse=True
+        )
+
+        
+        # 7. Calculate overall Rank with Borda Count
+        self.complexity_borda_count_ahp()
+        self.assign_complexity_classes_from_final_score()
+    
+    def complexity_rank(self, orders, key_func, rank_name, reverse=False):
+        """
+        Calculate the rank for orders based on a key function.
+
+        Parameters:
+            orders (list): List of order objects.
+            key_func (function): Function to determine the key value for ranking.
+            rank_name (str): The name of the rank attribute to store (e.g., 'order_item_count').
+            reverse (bool): Whether to sort in descending order (default: False).
+        """
+        sorted_orders = sorted(orders, key=key_func, reverse=reverse)
+        current_rank = 1
+        last_value = None
+
+        for i, order in enumerate(sorted_orders):
+            value = key_func(order)
+            if value != last_value:
+                current_rank = i + 1
+                last_value = value
+            order._complexity[rank_name] = current_rank
+
+    def complexity_borda_count_ahp(self):
+        """
+        Calculate the overall priority rank using Borda Count combined with Analytic Hierarchy Process (AHP).
+        """
+
+        borda_count_ahp = {
+            order.order_number: sum(
+                (len(self.orders) - rank + 1)
+                * self.complexity_ahp[rank_name]
+                for rank_name, rank in order._complexity.items()
+            )
+            for order in self.orders
+        }
+
+        self.calculate_rank(
+            self.orders, 
+            lambda order: borda_count_ahp[order.order_number], 
+            "complexity_borda_count_ahp", 
+            reverse=True
+        )
+
+    def assign_complexity_classes_from_final_score(self, num_classes: int = 3) -> None:
+        """
+        Assign complexity classes to orders based on the final Borda Count rank stored in order._complexity["borda_count_ahp"].
+        Orders are sorted by their rank (lower = more complex). Each order's complexity_score is set to the rank,
+        and complexity_class is assigned starting from 1 (most complex) to num_classes (least complex).
+ 
+        :param num_classes: Number of complexity classes (default is 3), where 1 is most complex.
+        """
+        sorted_orders = sorted(self.orders, key=lambda order: order._complexity.get("complexity_borda_count_ahp", 0))
+        total_orders = len(sorted_orders)
+        if total_orders == 0:
+            return
+        group_size = total_orders / num_classes
+        for i, order in enumerate(sorted_orders):
+            complexity_class = int(i // group_size) + 1
+            order.complexity_score = num_classes - complexity_class + 1
+            if complexity_class > num_classes:
+                complexity_class = num_classes
+            order.complexity_class = complexity_class
+
+
 
 
         
@@ -281,7 +415,6 @@ class InputData:
         # 7. Calculate overall Rank with Borda Count
         self.calculate_borda_count_ahp()
 
-
     def calculate_rank(self, orders, key_func, rank_name, reverse=False):
         """
         Calculate the rank for orders based on a key function.
@@ -302,12 +435,6 @@ class InputData:
                 current_rank = i + 1
                 last_value = value
             order._priority[rank_name] = current_rank
-
-        if rank_name == 'order_item_count':
-            self.order_ranking = sorted_orders
-        
-
-
 
     def calculate_borda_count_ahp(self, ahp=True):
         """
@@ -346,8 +473,8 @@ class InputData:
                 "borda_count", 
                 reverse=True
             )
-            
-        
+
+
 
     def _find_instance_file(self) -> tuple[str, str]:
         '''
@@ -364,13 +491,6 @@ class InputData:
 
         raise FileNotFoundError(f"File '{self.instance_filename}' not found in directory '{base_path}'.")
 
-
-
-
-
-
-
-
     def _load_data(self) -> None:
         ''' Load data from the JSON file and initialize lists of objects. '''
         with open(self._data_path, 'r', encoding='utf-8') as json_file:
@@ -383,9 +503,7 @@ class InputData:
 
             # Load each data category part 1
             self._orders = [Order(order) for order in data.get("Auftraege", [])]
-            self._excluded_orders = list()
             self._order_items = [OrderItem(item) for item in data.get("Bestellpositionen", [])]
-            self._excluded_order_items = list()
             self._attachments = [Attachment(attachment) for attachment in data.get("Anbaugeraete", [])]
             self._workers = [Worker(worker) for worker in data.get("Arbeiter", [])]
             self._machines = [Machine(machine) for machine in data.get("Maschinen", [])]
@@ -393,44 +511,65 @@ class InputData:
             # Convert ArbeitswegeString and TransportwegeString to 2D lists
             self._transport_routes = self._convert_square_2d_list(data.get("TransportwegeString", {}))
             self._work_routes = self._convert_rectangular_2d_list(data.get("ArbeitswegeString", {}))
-            # Convert distance matrix from order to order item
-            self._transport_routes_order_item = self._convert_from_order_to_order_item(self._transport_routes, "transport")
-            self._work_routes_order_item = self._convert_from_order_to_order_item(self._work_routes, "work")
 
-            # Add data to order items (day or night shift)
-            for order_item in self.order_items:
-                order_item.day_or_night(self)
-
-            # Add data to workers and machines (predessors, successors, possible order items)
-            for machine in self.machines:
-                machine.add_data(self)
-            for worker in self.workers:
-                worker.add_data(self)
-            for attachment in self.attachments:
-                attachment.add_data(self)
-
-            for order_item in self.order_items:
-                needed_attachment_types = order_item.equipment_types
-                for attachment_type in needed_attachment_types:
-                    all_attachment_types = [attachment.type for attachment in self.attachments]
-                    if attachment_type not in all_attachment_types:
-                        raise Exception(f"Missing attachment type '{attachment_type}' required for order item ID {order_item.id}.")
-
-
-            self._average_transport_distance = sum(sum(row) for row in self._transport_routes) / (len(self._transport_routes)*len(self._transport_routes[0]))
-            self._min_transport_distance = min(min(row) for row in self._transport_routes if any(row))            
-            self._max_transport_distance = max(max(row) for row in self._transport_routes if any(row))
-
-            self._average_work_distance = 2* sum(sum(row) for row in self._work_routes) / (len(self._work_routes)*len(self._work_routes[0]))
-            self._min_work_distance = 2*min(min(row) for row in self._work_routes if any(row))
-            self._max_work_distance = 2*max(max(row) for row in self._work_routes if any(row))
+    
             
-            self._min_dynamic_precentage_change = 1/max(len(order.order_item_ids) for order in self.orders)
-            self._max_dynamic_precentage_change = 1/min(len(order.order_item_ids) for order in self.orders)
+            
+    def _transfrom_data(self) -> None:
+            
+        # Convert distance matrix from order to order item
+        self._transport_routes_order_item = self._convert_from_order_to_order_item(self._transport_routes, "transport")
+        self._work_routes_order_item = self._convert_from_order_to_order_item(self._work_routes, "work")
+
+        # Add data to order items (day or night shift)
+        for order_item in self.order_items:
+            order_item.day_or_night(self)
+
+        # Add data to workers and machines (predessors, successors, possible order items)
+        for machine in self.machines:
+            machine.add_data(self)
+        for worker in self.workers:
+            worker.add_data(self)
+        for attachment in self.attachments:
+            attachment.add_data(self)
+
+        # Calculate average, min, and max distances for transport and work routes for normalization during optimization
+        self._average_transport_distance = sum(sum(row) for row in self._transport_routes) / (len(self._transport_routes)*len(self._transport_routes[0]))
+        self._min_transport_distance = min(min(row) for row in self._transport_routes if any(row))            
+        self._max_transport_distance = max(max(row) for row in self._transport_routes if any(row))
+        self._average_work_distance = sum(sum(row) for row in self._work_routes) / (len(self._work_routes)*len(self._work_routes[0]))
+        self._min_work_distance = (min(min(row) for row in self._work_routes if any(row)))
+        self._max_work_distance = (max(max(row) for row in self._work_routes if any(row)))
+
+
+        # Connect order items to their corresponding orders
+        self.connect_order_item_to_order()
+
+        # Check orders for usability
+        self.check_order_usability()
+
+
+        # Complexity for orders
+        #self.calculate_complexity()
+
+
+        # Greedy "WorkerGreedy" Data Preparation
+
+        # Priorities for orders
+        #self.create_priorities_orders()
+
+        # Dynamic dictionary for planned shifts
+        #self.planned_shifts_worker = dict()
+        #self.planned_shifts_machine = dict()
+        #for order in self.orders:
+        #    self.planned_shifts_worker[order] = list()
+        #    self.planned_shifts_machine[order] = list()
+            
 
 
             
-            print(f"Data loaded from '{self.instance_filename}' in folder '{self._parent_folder}'.")
+
+
 
     def _convert_from_order_to_order_item(self, routes_matrix, route_type):
         
@@ -453,7 +592,6 @@ class InputData:
                 final_routes_matrix.append(row)
 
         return final_routes_matrix
-
 
     def _convert_square_2d_list(self, routes_dict: dict) -> List[List[Optional[float]]]:
         ''' Convert a nested dictionary of routes to a square 2D list (matrix) '''
@@ -558,27 +696,8 @@ class InputData:
     @property
     def max_work_distance(self) -> float:
         return self._max_work_distance
-    
-    @property
-    def min_dynamic_precentage_change(self) -> float:
-        return self._min_dynamic_precentage_change
-    
-    @property
-    def max_dynamic_precentage_change(self) -> float:
-        return self._max_dynamic_precentage_change
-    
-    @property
-    def excluded_orders(self) -> List['Order']:
-        return self._excluded_orders
-    
-    @property
-    def excluded_order_items(self) -> List['OrderItem']:
-        return self._excluded_order_items
-    
-    
-    
 
-
+    
 class Order:
     def __init__(self, json_data):
         self._order_number = int(json_data.get("Auftragsnummer", ""))
@@ -588,9 +707,12 @@ class Order:
         self._order_item_ids = [int(item) for item in json_data.get("BestellpositionenStrings", [])]
         self._location = json_data.get("Standort", {"Item1": 0.0, "Item2": 0.0})
         self._priority = {}
+        self._complexity = {}
         self.dynamic_percentage = 0
         self.status = False
         self.unuseable = False
+        self.complexity_score = None
+        self.complexity_class = None
 
 
 
@@ -625,6 +747,10 @@ class Order:
     @property
     def priority(self) -> dict[str, int]:
         return self._priority
+    
+    @property
+    def complexity(self) -> dict[str, int]:
+        return self._complexity
     
     
 
@@ -733,49 +859,57 @@ class Attachment:
 
 
     def add_data(self, input_data: InputData):
-
-        for order in input_data.orders:
-            self._possible_order_items[order] = []
-            self._possible_order_item_ids[order.order_number] = []
-
+        self._possible_order_items = {order: [] for order in input_data.orders}
+        self._possible_order_item_ids = {order.order_number: [] for order in input_data.orders}
 
         for order_item in input_data.order_items:
             for order in input_data.orders:
-                if order_item.order_number == order.order_number:
-                    if self._type in order_item.equipment_types:
-                        self._possible_order_items[order].append(order_item)
-                        self._possible_order_item_ids[order.order_number].append(order_item.id)
+                if order_item.order_number == order.order_number and self._type in order_item.equipment_types:
+                    self._possible_order_items[order].append(order_item)
+                    self._possible_order_item_ids[order.order_number].append(order_item.id)
 
-        all_order_items = [item for order_items in self._possible_order_items.values() for item in order_items]
-        
-        
-        for order_item_1 in all_order_items:
-            
-            if order_item_1 not in self._predecessors:
-                self._predecessors[order_item_1] = []
-                self._predecessor_ids[order_item_1.id] = []
-            if order_item_1 not in self._successors:
-                self._successors[order_item_1] = []
-                self._successor_ids[order_item_1.id] = []
+        all_order_items = list({oi for items in self._possible_order_items.values() for oi in items})
+        seconds_per_day = input_data._seconds_a_day
+        speed_kmh = input_data._transport_speed_kmh
+        transport_matrix = input_data._transport_routes_order_item
+        break_time = input_data._hours_between_shifts / 24
 
-            for order_item_2 in all_order_items:
-                if order_item_1 != order_item_2:
-                    start_time_order_item_1 = (order_item_1.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_1 = (order_item_1.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    start_time_order_item_2 = (order_item_2.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_2 = (order_item_2.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+        times = {
+            oi.id: (
+                (oi.start_time - input_data.start_date).total_seconds() / seconds_per_day,
+                (oi.end_time - input_data.start_date).total_seconds() / seconds_per_day
+            )
+            for oi in all_order_items
+        }
 
-                    transport_distance = input_data._transport_routes_order_item[order_item_1.id][order_item_2.id]
-                    transport_time = transport_distance / input_data._transport_speed_kmh
-                    transport_time = transport_time / 24
+        self._predecessors.clear()
+        self._predecessor_ids.clear()
+        self._successors.clear()
+        self._successor_ids.clear()
 
-                    if start_time_order_item_1 >= end_time_order_item_2 + transport_time:
-                        self._predecessors[order_item_1].append(order_item_2)
-                        self._predecessor_ids[order_item_1.id].append(order_item_2.id)
+        for oi1 in all_order_items:
+            self._predecessors[oi1] = []
+            self._predecessor_ids[oi1.id] = []
+            self._successors[oi1] = []
+            self._successor_ids[oi1.id] = []
 
-                    if start_time_order_item_2 >= end_time_order_item_1 + transport_time:
-                        self._successors[order_item_1].append(order_item_2)
-                        self._successor_ids[order_item_1.id].append(order_item_2.id)
+            st1, et1 = times[oi1.id]
+            for oi2 in all_order_items:
+                if oi1.id == oi2.id:
+                    continue
+                st2, et2 = times[oi2.id]
+                transport_time = transport_matrix[oi1.id][oi2.id] / speed_kmh / 24
+
+                if transport_time > break_time:
+                    raise ValueError(f"Attachment transport time ({transport_time:.2f}) > break ({break_time:.2f}) between {oi1.id} and {oi2.id}")
+
+                if st1 >= et2 + transport_time:
+                    self._predecessors[oi1].append(oi2)
+                    self._predecessor_ids[oi1.id].append(oi2.id)
+
+                if st2 >= et1 + transport_time:
+                    self._successors[oi1].append(oi2)
+                    self._successor_ids[oi1.id].append(oi2.id)
             
         
 
@@ -835,69 +969,64 @@ class Worker:
         self.work_hours = 0
 
     def add_data(self, input_data: InputData):
-        
-    
-        # Initialisiere _possible_order_items als leeres Dictionary
-        for order in input_data.orders:
-            self._possible_order_items[order] = []
-            self._possible_order_item_ids[order.order_number] = []
 
-        # Füge Order Items hinzu, basierend auf Qualifikationen
+        self._possible_order_items = {order: [] for order in input_data.orders}
+        self._possible_order_item_ids = {order.order_number: [] for order in input_data.orders}
+
+        qualifications_set = set(self._qualifications)
         for order_item in input_data.order_items:
-            # Prüfen, zu welchem Auftrag das Order Item gehört
-            for order in input_data.orders:
-                if order_item.order_number == order.order_number:
-                    # Überprüfe Qualifikationen
-                    if not order_item.worker_qualifications or set(order_item.worker_qualifications).issubset(self._qualifications):
+            if not order_item.worker_qualifications or set(order_item.worker_qualifications).issubset(qualifications_set):
+                for order in input_data.orders:
+                    if order_item.order_number == order.order_number:
                         self._possible_order_items[order].append(order_item)
                         self._possible_order_item_ids[order.order_number].append(order_item.id)
+                        break
 
+        all_order_items = [item for items in self._possible_order_items.values() for item in items]
+        seconds_per_day = input_data._seconds_a_day
+        speed_kmh = input_data._transport_speed_kmh
+        break_time = input_data._hours_between_shifts / 24
+        transport_matrix = input_data._transport_routes_order_item
 
-        all_order_items = [item for order_items in self._possible_order_items.values() for item in order_items]
-        for order_item_1 in all_order_items:
+        rtimes = {
+            oi.id: (
+                (oi.start_time - input_data.start_date).total_seconds() / seconds_per_day,
+                (oi.end_time - input_data.start_date).total_seconds() / seconds_per_day
+            )
+            for oi in all_order_items
+        }
 
-            if order_item_1 not in self._predecessors:
-                self._predecessors[order_item_1] = []
-                self._predecessor_ids[order_item_1.id] = []
-            if order_item_1 not in self._successors:
-                self._successors[order_item_1] = []
-                self._successor_ids[order_item_1.id] = []
+        self._predecessors.clear()
+        self._predecessor_ids.clear()
+        self._successors.clear()
+        self._successor_ids.clear()
 
-            for order_item_2 in all_order_items:
-                if order_item_1 != order_item_2:
-                    # Zeitdifferenzen berechnen
-                    start_time_order_item_1 = (order_item_1.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_1 = (order_item_1.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    start_time_order_item_2 = (order_item_2.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_2 = (order_item_2.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+        for oi1 in all_order_items:
+            self._predecessors[oi1] = []
+            self._predecessor_ids[oi1.id] = []
+            self._successors[oi1] = []
+            self._successor_ids[oi1.id] = []
 
-                    break_time = input_data._hours_between_shifts / 24
+            st1, et1 = rtimes[oi1.id]
+            for oi2 in all_order_items:
+                if oi1.id == oi2.id:
+                    continue
 
-                    # Transportzeit berechnen
-                    transport_distance = input_data._transport_routes_order_item[order_item_1.id][order_item_2.id]
-                    transport_time = transport_distance / input_data._transport_speed_kmh
-                    transport_time = transport_time / 24
+                st2, et2 = rtimes[oi2.id]
+                transport_time = transport_matrix[oi1.id][oi2.id] / speed_kmh / 24
 
-                    if max(break_time, transport_time) == transport_time:
-                        raise Exception(f"Transport time {transport_time} is greater than break time {break_time} for order items {order_item_1.id} and {order_item_2.id}.")
+                if transport_time > break_time:
+                    raise Exception(f"Transport time {transport_time:.2f} > break {break_time:.2f} between {oi1.id} and {oi2.id}.")
 
+                if st1 >= et2 + break_time:
+                    self._predecessors[oi1].append(oi2)
+                    self._predecessor_ids[oi1.id].append(oi2.id)
+                if st2 >= et1 + break_time:
+                    self._successors[oi1].append(oi2)
+                    self._successor_ids[oi1.id].append(oi2.id)
 
-                    #break_time = max(break_time, transport_time)
-
-
-
-                    # Vorgänger und Nachfolger bestimmen
-                    if start_time_order_item_1 >= end_time_order_item_2 + break_time:
-                        self._predecessors[order_item_1].append(order_item_2)
-                        self._predecessor_ids[order_item_1.id].append(order_item_2.id)
-
-                    if start_time_order_item_2 >= end_time_order_item_1 + break_time:
-                        self._successors[order_item_1].append(order_item_2)
-                        self._successor_ids[order_item_1.id].append(order_item_2.id)
-
-        # Create night shift list
-        self._night_shifts = [order_item for order_items in self._possible_order_items.values() for order_item in order_items if order_item.night_shift]
-        self._night_shift_ids = [order_item.id for order_item in self._night_shifts]
+        self._night_shifts = [oi for oi in all_order_items if oi.night_shift]
+        self._night_shift_ids = [oi.id for oi in self._night_shifts]
 
     @property
     def personal_number(self) -> int:
@@ -985,42 +1114,46 @@ class Machine:
                         self._possible_order_items[order].append(order_item)
                         self._possible_order_item_ids[order.order_number].append(order_item.id)
 
-        # Erstelle Predecessors und Successors für alle Order Items
-        all_order_items = [item for items in self._possible_order_items.values() for item in items]
+        # Vorberechnete Zeiten & Transportdistanzen
+        seconds_per_day = input_data._seconds_a_day
+        speed_kmh = input_data._transport_speed_kmh
+        transport_matrix = input_data._transport_routes_order_item
 
-        for order_item_1 in all_order_items:
-            if order_item_1 not in self._predecessors:
-                self._predecessors[order_item_1] = []
-                self._predecessor_ids[order_item_1.id] = []
-            if order_item_1 not in self._successors:
-                self._successors[order_item_1] = []
-                self._successor_ids[order_item_1.id] = []
+        all_order_items = list({oi for items in self._possible_order_items.values() for oi in items})
+        times = {
+            oi.id: (
+                (oi.start_time - input_data.start_date).total_seconds() / seconds_per_day,
+                (oi.end_time - input_data.start_date).total_seconds() / seconds_per_day
+            )
+            for oi in all_order_items
+        }
 
-            for order_item_2 in all_order_items:
-                if order_item_1 != order_item_2:
-                    # Zeitdifferenzen berechnen
-                    start_time_order_item_1 = (order_item_1.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_1 = (order_item_1.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    start_time_order_item_2 = (order_item_2.start_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
-                    end_time_order_item_2 = (order_item_2.end_time - input_data.start_date).total_seconds() / input_data._seconds_a_day
+        self._predecessors.clear()
+        self._predecessor_ids.clear()
+        self._successors.clear()
+        self._successor_ids.clear()
 
-                    # Transportzeit berechnen
-                    transport_distance = input_data._transport_routes_order_item[order_item_1.id][order_item_2.id]
-                    transport_time = transport_distance / input_data._transport_speed_kmh
-                    transport_time = transport_time / 24
+        for oi1 in all_order_items:
+            self._predecessors[oi1] = []
+            self._predecessor_ids[oi1.id] = []
+            self._successors[oi1] = []
+            self._successor_ids[oi1.id] = []
 
-                    # Vorgänger hinzufügen
-                    if start_time_order_item_1 >= end_time_order_item_2 + transport_time:
-                        if order_item_2 not in self._predecessors[order_item_1]:
-                            self._predecessors[order_item_1].append(order_item_2)
-                            self._predecessor_ids[order_item_1.id].append(order_item_2.id)
+            st1, et1 = times[oi1.id]
+            for oi2 in all_order_items:
+                if oi1.id == oi2.id:
+                    continue
 
-                    # Nachfolger hinzufügen
-                    if start_time_order_item_2 >= end_time_order_item_1 + transport_time:
-                        if order_item_2 not in self._successors[order_item_1]:
-                            self._successors[order_item_1].append(order_item_2)
-                            self._successor_ids[order_item_1.id].append(order_item_2.id)
+                st2, et2 = times[oi2.id]
+                transport_time = transport_matrix[oi1.id][oi2.id] / speed_kmh / 24
 
+                if st1 >= et2 + transport_time:
+                    self._predecessors[oi1].append(oi2)
+                    self._predecessor_ids[oi1.id].append(oi2.id)
+
+                if st2 >= et1 + transport_time:
+                    self._successors[oi1].append(oi2)
+                    self._successor_ids[oi1.id].append(oi2.id)
 
 
     @property

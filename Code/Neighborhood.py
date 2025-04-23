@@ -161,13 +161,13 @@ class OutputNeighborhood(BaseNeighborhood):
 
             if bestNeighborhoodMove is not None:
                 
-                #print(f"\nIteration: {iterator}")
+                print(f"\nIteration: {iterator}")
+                print(bestNeighborhoodSolution)
 
                 worker_route, machine_route, attachement_route = self.constructCompleteRoutes(bestNeighborhoodMove, bestNeighborhoodSolution)
                 bestNeighborhoodSolution = Solution(worker_route, machine_route, attachement_route, self.data)
                 self.evaluationLogic.evaluate(bestNeighborhoodSolution)
-
-                #print(bestNeighborhoodSolution)
+                
 
                 #print(bestNeighborhoodMove.DeltaDetails)
 
@@ -175,11 +175,30 @@ class OutputNeighborhood(BaseNeighborhood):
 
                 #print(f"Best Neighborhood Solution: \n{bestNeighborhoodSolution}")
 
+                denorm = {}
+                for detail,value in bestNeighborhoodMove.DeltaDetails.items():
+                    if detail == 'attachment_distance':
+                        denorm[detail] = value * (self.data.max_transport_distance - self.data.min_transport_distance) + self.data.min_transport_distance
+
+                    elif detail == 'commute_distance':
+                        denorm[detail] = value * (self.data.max_work_distance - self.data.min_work_distance) + self.data.min_work_distance
+
+                    elif detail == 'transport_distance':
+                        denorm[detail] = value * (self.data.max_transport_distance - self.data.min_transport_distance) + self.data.min_transport_distance
+
+                    else:
+                        denorm[detail] = value
+
+                for detail, value in denorm.items():
+                    print(f"{detail}: {value}")
+
             else:
                 #print(f"\nNo better solution found in iteration {iterator}")
                 hasSolutionImproved = False
 
             iterator += 1
+
+            
 
         return bestNeighborhoodSolution
     
@@ -197,7 +216,7 @@ class OutputNeighborhood(BaseNeighborhood):
         else:
             #print(f'No moves found in SingleMove() for neighborhood {self.Type}.')
             return None
-    
+
 
 class InsertShiftMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
@@ -475,7 +494,7 @@ class InsertShiftNeighborhood(OutputNeighborhood):
             create and return an InsertShiftMove.
         6. Otherwise, skip this order item and try another.
         """
-        max_attempts = 100
+        #max_attempts = 100
         attempts = 0
         self.Moves.clear()
         
@@ -486,8 +505,12 @@ class InsertShiftNeighborhood(OutputNeighborhood):
 
         if not unused_order_item_ids:
             return None
+        
+        order_item_candidates = list(unused_order_item_ids)
+        self.RNG.shuffle(order_item_candidates)
 
-        while attempts < max_attempts:
+        for order_item_id in order_item_candidates:
+
             attempts += 1
             order_item_id = self.RNG.choice(unused_order_item_ids)
             order_item_obj = solution.data.order_items[order_item_id]
@@ -616,9 +639,9 @@ class InsertShiftNeighborhood(OutputNeighborhood):
     def constructCompleteRoutes(self, move:InsertShiftMove, solution:Solution) -> dict: 
         ''' Constructs the comlete Route from the Move'''
         
-        machine_route_plan = deepcopy(solution.route_plan_machine)
-        worker_route_plan = deepcopy(solution.route_plan_worker)
-        attachment_route_plan = deepcopy(solution.route_plan_attachment)
+        machine_route_plan = {k: v[:] for k, v in solution.route_plan_machine.items()}
+        worker_route_plan = {k: v[:] for k, v in solution.route_plan_worker.items()}
+        attachment_route_plan = {k: v[:] for k, v in solution.route_plan_attachment.items()}
 
         machine_route_plan[move.MachineID] = move.MachineRoute
         worker_route_plan[move.WorkerID] = move.WorkerRoute
@@ -1017,8 +1040,6 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
         - Randomly selects valid attachment swaps (if required).
         """
 
-        max_attempts = 100
-        attempts = 0
         self.Moves.clear()
 
         if not_used_shifts is None:
@@ -1028,11 +1049,12 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
 
         if not unused_order_item_ids:
             return None  # No unused order items available
+        
+        order_item_candidates = list(unused_order_item_ids)
+        self.RNG.shuffle(order_item_candidates)
 
-        while attempts < max_attempts:
-            attempts += 1
-            order_item_id_ext = self.RNG.choice(unused_order_item_ids)
-            order_item_ext_obj = solution.data.order_items[order_item_id_ext]
+        for order_item_id_ext in order_item_candidates:
+
 
             # --- WORKER Component ---
             candidate_workers = [
@@ -1344,9 +1366,9 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
     
     def constructCompleteRoutes(self, move:SwapShiftExternalMove, solution:Solution) -> dict:
         
-        machine_route_plan = deepcopy(solution.route_plan_machine)
-        worker_route_plan = deepcopy(solution.route_plan_worker)
-        attachement_route_plan = deepcopy(solution.route_plan_attachment)
+        machine_route_plan = {k: v[:] for k, v in solution.route_plan_machine.items()}
+        worker_route_plan = {k: v[:] for k, v in solution.route_plan_worker.items()}
+        attachment_route_plan = {k: v[:] for k, v in solution.route_plan_attachment.items()}
 
         #print("\n")
 
@@ -1363,13 +1385,13 @@ class SwapShiftExternalNeighborhood(OutputNeighborhood):
         
 
         for index in range(move.NumberOfAttachmentsInt):
-            attachement_route_plan[getattr(move, f"AttachmentIDInt_{index}")] = getattr(move, f"AttachmentRouteInt_{index}")
+            attachment_route_plan[getattr(move, f"AttachmentIDInt_{index}")] = getattr(move, f"AttachmentRouteInt_{index}")
 
         for index in range(move.NumberOfAttachmentsExt):
-            attachement_route_plan[getattr(move, f"AttachmentIDExt_{index}")] = getattr(move, f"AttachmentRouteExt_{index}")
+            attachment_route_plan[getattr(move, f"AttachmentIDExt_{index}")] = getattr(move, f"AttachmentRouteExt_{index}")
 
 
-        return worker_route_plan, machine_route_plan, attachement_route_plan
+        return worker_route_plan, machine_route_plan, attachment_route_plan
     
 
     def MakeBestMove(self) -> BaseMove:
@@ -1434,6 +1456,8 @@ class TimeNeighborhood(BaseNeighborhood):
 
         iterator = 1
         while hasSolutionImproved:
+
+            print(f"Solution: {bestNeighborhoodSolution}")
             
             # Sets Algorithm back!
             self.Update() 
@@ -1444,11 +1468,29 @@ class TimeNeighborhood(BaseNeighborhood):
 
 
             if bestNeighborhoodMove is not None and bestNeighborhoodMove.Delta < 0:
-                #print(f"\nIteration: {iterator}")
+                print(f"\nIteration: {iterator}")
 
                 worker_route, machine_route, attachement_route = self.constructCompleteRoutes(bestNeighborhoodMove, bestNeighborhoodSolution)
                 bestNeighborhoodSolution = Solution(worker_route, machine_route, attachement_route, self.data)
                 self.evaluationLogic.evaluate(bestNeighborhoodSolution)
+
+                denorm = {}
+                for detail,value in bestNeighborhoodMove.DeltaDetails.items():
+                    if detail == 'attachment_distance':
+                        denorm[detail] = value * (self.data.max_transport_distance - self.data.min_transport_distance) + self.data.min_transport_distance
+
+                    elif detail == 'commute_distance':
+                        denorm[detail] = value * (self.data.max_work_distance - self.data.min_work_distance) + self.data.min_work_distance
+
+                    elif detail == 'transport_distance':
+                        denorm[detail] = value * (self.data.max_transport_distance - self.data.min_transport_distance) + self.data.min_transport_distance
+
+                    else:
+                        denorm[detail] = value
+
+                for detail, value in denorm.items():
+                    print(f"{detail}: {value}")
+
 
                 #self.solutionPool.AddSolution(bestNeighborhoodSolution)
 
@@ -1483,6 +1525,7 @@ class TimeNeighborhood(BaseNeighborhood):
         else:
             pass
             #print(f'No moves found in SingleMove() for neighborhood {self.Type}.')
+
 
 
 
@@ -1682,7 +1725,7 @@ class SwapShiftAttachmentNeighborhood(TimeNeighborhood):
         6. If any valid move is found, return one randomly using self.RNG.choice;
             otherwise, return None after max_attempts.
         """
-        max_attempts = 100
+        max_attempts = 10
         attachment_ids = list(solution.route_plan_attachment.keys())
         attempts = 0
         self.Moves.clear()  # Clear any previously stored moves
@@ -1849,9 +1892,9 @@ class SwapShiftAttachmentNeighborhood(TimeNeighborhood):
     
     def constructCompleteRoutes(self, move:SwapShiftAttachmentMove, solution:Solution) -> dict:
 
-        worker_route_plan = deepcopy(solution.route_plan_worker)
-        machine_route_plan = deepcopy(solution.route_plan_machine)
-        attachment_route_plan = deepcopy(solution.route_plan_attachment)
+        machine_route_plan = {k: v[:] for k, v in solution.route_plan_machine.items()}
+        worker_route_plan = {k: v[:] for k, v in solution.route_plan_worker.items()}
+        attachment_route_plan = {k: v[:] for k, v in solution.route_plan_attachment.items()}
 
         attachment_route_plan[move.AttachmentID1] = move.AttachmentRoute1
         attachment_route_plan[move.AttachmentID2] = move.AttachmentRoute2
@@ -2092,9 +2135,9 @@ class ReplaceShiftAttachmentNeighborhood(TimeNeighborhood):
     def constructCompleteRoutes(self, move:ReplaceShiftAttachmentMove, solution:Solution) -> dict:
         ''' Constructs the comlete Route from the Move'''
         
-        attachment_route_plan = deepcopy(solution.route_plan_attachment)
-        worker_route_plan = deepcopy(solution.route_plan_worker)
-        machine_route_plan = deepcopy(solution.route_plan_machine)
+        machine_route_plan = {k: v[:] for k, v in solution.route_plan_machine.items()}
+        worker_route_plan = {k: v[:] for k, v in solution.route_plan_worker.items()}
+        attachment_route_plan = {k: v[:] for k, v in solution.route_plan_attachment.items()}
 
         attachment_route_plan[move.AttachmentID1] = move.AttachmentRoute1
         attachment_route_plan[move.AttachmentID2] = move.AttachmentRoute2
@@ -2313,16 +2356,16 @@ class ReplaceShiftMachineNeighborhood(TimeNeighborhood):
         self.MoveSolutions.sort(key=lambda move: move.Delta, reverse=False)
 
 
-    def constructCompleteRoutes(self, move:ReplaceShiftMachineMove, solution:Solution) -> dict:
-        
-        machine_route_plan = deepcopy(solution.route_plan_machine)
-        worker_route_plan = deepcopy(solution.route_plan_worker)
-        attachement_route_plan = deepcopy(solution.route_plan_attachment)
+    def constructCompleteRoutes(self, move: ReplaceShiftMachineMove, solution: Solution) -> dict:
+
+        machine_route_plan = {k: v[:] for k, v in solution.route_plan_machine.items()}
+        worker_route_plan = {k: v[:] for k, v in solution.route_plan_worker.items()}
+        attachment_route_plan = {k: v[:] for k, v in solution.route_plan_attachment.items()}
 
         machine_route_plan[move.MachineID1] = move.MachineRoute1
         machine_route_plan[move.MachineID2] = move.MachineRoute2
 
-        return worker_route_plan, machine_route_plan, attachement_route_plan 
+        return worker_route_plan, machine_route_plan, attachment_route_plan
 
 
 class SwapShiftMachineMove(BaseMove):
@@ -2701,9 +2744,9 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
     
     def constructCompleteRoutes(self, move:SwapShiftMachineMove, solution:Solution) -> dict:
 
-        machine_route_plan = deepcopy(solution.route_plan_machine)
-        worker_route_plan = deepcopy(solution.route_plan_worker)
-        attachment_route_plan = deepcopy(solution.route_plan_attachment)
+        machine_route_plan = {k: v[:] for k, v in solution.route_plan_machine.items()}
+        worker_route_plan = {k: v[:] for k, v in solution.route_plan_worker.items()}
+        attachment_route_plan = {k: v[:] for k, v in solution.route_plan_attachment.items()}
 
         machine_route_plan[move.MachineID1] = move.MachineRoute1
         machine_route_plan[move.MachineID2] = move.MachineRoute2
@@ -3315,9 +3358,9 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
     
     def constructCompleteRoutes(self, move:SwapShiftWorkerMove, solution:Solution) -> dict:
 
-        machine_route_plan = deepcopy(solution.route_plan_machine)
-        worker_route_plan = deepcopy(solution.route_plan_worker)
-        attachment_route_plan = deepcopy(solution.route_plan_attachment)
+        machine_route_plan = {k: v[:] for k, v in solution.route_plan_machine.items()}
+        worker_route_plan = {k: v[:] for k, v in solution.route_plan_worker.items()}
+        attachment_route_plan = {k: v[:] for k, v in solution.route_plan_attachment.items()}
 
         worker_route_plan[move.WorkerID1] = move.WorkerRoute1
         worker_route_plan[move.WorkerID2] = move.WorkerRoute2

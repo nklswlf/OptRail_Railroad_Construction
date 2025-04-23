@@ -1,5 +1,3 @@
-import numpy 
-from copy import deepcopy
 from InputData import InputData
 from OutputData import Solution
 
@@ -15,7 +13,8 @@ class EvaluationLogic:
         
 
         # Calculate the extra commute distance
-        delta_commute_distance = ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemID] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+        delta_commute_distance = ((self.data.work_routes_order_item[move.WorkerID][move.OrderItemID] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+        delta_commute_distance *= 2
 
         # Calculate the extra transport distance
         if len(move.MachineRoute) == 1:
@@ -126,9 +125,9 @@ class EvaluationLogic:
         ''' Calculate the delta of the objective function value when swapping two order items between two external workers'''
         
         # Calculate the extra commute distance
-        delta_commute_distance = (+ ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemIDExt] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
-                                - ((2*self.data.work_routes_order_item[move.WorkerID][move.OrderItemIDInt] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
-
+        delta_commute_distance = (((self.data.work_routes_order_item[move.WorkerID][move.OrderItemIDExt] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                - ((self.data.work_routes_order_item[move.WorkerID][move.OrderItemIDInt] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
+        delta_commute_distance *= 2
 
         # Calculate the extra transport distance
         delta_transport_distance = 0
@@ -310,7 +309,7 @@ class EvaluationLogic:
 
         # 3️⃣ Return both summary (list) and details (dictionary)
         return delta_summary, delta_details
-    
+
 
     def calculate_swap_shift_machine_delta(self, move):
         
@@ -432,12 +431,13 @@ class EvaluationLogic:
         ''' Calculate the delta of the objective function value when swapping two order items between two workers'''
 
         # Calculate the extra commute distance
-        delta_commute_distance = (+ ((2*self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID2] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
-                                 + ((2*self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID1] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
-                                 - ((2*self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID1] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
-                                 - ((2*self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID2] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
-                                  
-        if abs(delta_commute_distance) < 0.000000001:
+        delta_commute_distance = (+ ((self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID2] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                 + ((self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID1] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                 - ((self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID1] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                 - ((self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID2] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
+        delta_commute_distance *= 2
+
+        if abs(delta_commute_distance) < 1e-10:
             delta_commute_distance = 0
 
 
@@ -660,9 +660,9 @@ class EvaluationLogic:
         ''' Calculate the delta of the objective function value when replacing an order item between two workers'''
 
         # Calculate the extra commute distance
-        delta_commute_distance = (((2*self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
-                                 - ((2*self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
-        
+        delta_commute_distance = (((self.data.work_routes_order_item[move.WorkerID2][move.OrderItemID] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance))
+                                 - ((self.data.work_routes_order_item[move.WorkerID1][move.OrderItemID] - self.data.min_work_distance) / (self.data.max_work_distance - self.data.min_work_distance)))
+        delta_commute_distance *= 2
 
         # Calculate extra driver violation
         machine = self.data.machines[move.MachineID]
@@ -792,7 +792,12 @@ class EvaluationLogic:
         self.calculate_machine_worker_attachment_count_and_utilization_time(solution)
         self.calculate_dynamic_percentage_order(solution)
         self.calculate_attachment_distance(solution)
+        self.calculate_cummulative_distance(solution)
 
+    
+    def calculate_cummulative_distance(self, solution:Solution):
+
+        solution.total_distance = solution.total_commute_distance + solution.total_transport_distance + solution.total_transport_distance_attachments
 
     def calculate_attachment_distance(self, solution:Solution):
             ''' Calculate the total transport distance of the attachments'''
@@ -802,7 +807,8 @@ class EvaluationLogic:
                 for i in range(len(route) - 1):
                     solution.transport_distance_per_attachment[attachment_id] += self.data.transport_routes_order_item[route[i]][route[i + 1]]
                 
-            solution.total_attachment_distance = sum(solution.transport_distance_per_attachment.values())
+            solution.total_transport_distance_attachments = sum(solution.transport_distance_per_attachment.values())
+
 
     def calculate_dynamic_percentage_order(self, solution:Solution):
         ''' Calculate the dynamic percentage of the solution'''

@@ -4,6 +4,7 @@ from ImprovementAlgorithm import *
 from EvaluationLogic import *
 import time
 from MIP_UB import *
+import numpy
 
 class Solver:
     ''' Orchestrates all single pieces to form one strong algorithm to solve flowshop problems
@@ -14,89 +15,115 @@ class Solver:
         self.RNG = numpy.random.default_rng(self.Seed)
         self.EvaluationLogic = EvaluationLogic(inputData)
         self.ParetoSolutions = ParetoSolutions(inputData, self.RNG)
-        self.runTime = {}
         
-        self.ConstructiveHeuristic = ConstructiveHeuristics(paretoSolutions=self.ParetoSolutions, evaluationLogic=self.EvaluationLogic)
+        self.ConstructiveHeuristic = ConstructiveHeuristics(evaluationLogic=self.EvaluationLogic, rng=self.RNG)
 
+
+    def BoundPhase(self, UB_technique):
+        ''' Calculate the upper bound for the problem instance'''
+
+        print("\nCalculating Upper Bound...")
+
+        optimizer = UpperBound(self.InputData, bound_technique=UB_technique)
+        best_orders = optimizer.execute()
+
+        for order_number in best_orders:
+            self.InputData.activate_order(order_number)
     
 
-    def ConstructionPhase(self, order_item_attractiveness_technique, machine_attractiveness_technique) -> Solution:
-        ''' Find one start solution by using the chosen constructive heuristic'''
+    def ConstructionPhase(self, greedy_technique) -> Solution:
+        ''' Start the construction phase by choosing a constructive heuristic'''
 
-        starttime = time.time()
-        start_solutuion = self.ConstructiveHeuristic.Run(self.InputData, order_item_attractiveness_technique, machine_attractiveness_technique)
-        print("Constructive solution found after:", round(time.time() - starttime, 2), "seconds")
-        print(start_solutuion)
-
-        endtime = time.time()
-        self.ConstructionTime = endtime - starttime
-
+        start_solutuion = self.ConstructiveHeuristic.Run(self.InputData, greedy_technique)
 
         return start_solutuion
+    
+
+    def BuildingPhase(self, startSolution:Solution, algorithm:ImprovementAlgorithm) -> Solution:
+        ''' Start the building phase by choosing a algorithm'''
+
+        print("\nBuilding Phase started...")
+
+        algorithm.Initialize(self.EvaluationLogic, self.ParetoSolutions, self.RNG)
+        staffed_solutuion = algorithm.Run(startSolution)
+
+
+        return staffed_solutuion
 
 
     def ImprovementPhase(self, startSolution:Solution, algorithm:ImprovementAlgorithm) -> Solution:
         ''' Start the improvement phase by choosing a algorithm'''
 
         print("\nImprovement Phase started...")
-        start_time = time.time()
 
         algorithm.Initialize(self.EvaluationLogic, self.ParetoSolutions, self.RNG)
-        bestSolution = algorithm.Run(startSolution)
+        algorithm.Run(startSolution)
 
-        print("\nImprovement Phase finished after:", round(time.time() - start_time, 2), "seconds")
 
-        return bestSolution
-    
-    def UpperBound(self, UB_technique):
-        ''' Calculate the upper bound for the problem instance'''
-
-        print("\nCalculating Upper Bound...")
-
-        start_time = time.time()
-        optimizer = UpperBound(self.InputData, bound_technique=UB_technique)
-        site_fulfillment = optimizer.execute()
-        self.InputData.site_fulfillment = int(site_fulfillment[0])
-
-        
-        self.InputData.reduce_input_data(self.InputData.site_fulfillment)
-        
-        
-        self.UpperBoundTime = time.time() - start_time
-        print("\nUpper Bound calculated after:", round(self.UpperBoundTime, 2), "seconds")
-        print(f"UB = {round(site_fulfillment[0], 2)}")
 
     
-    def RunConstructive(self, UB_technique, order_item_attractiveness_technique, machine_attractiveness_technique):
+#####################################################################################################################################################################################
+   
+    
+
+    
+    def RunConstructive(self, UB_technique, greedy_technique):
         ''' Run the constructive heuristic and return the solution'''
 
-        self.UpperBound(UB_technique)
+        self.BoundPhase(UB_technique)
 
-        starttime = time.time()
+        startSolution = self.ConstructionPhase(greedy_technique)
 
-        startSolution = self.ConstructionPhase(order_item_attractiveness_technique, machine_attractiveness_technique)
 
-        endtime = time.time()
-        self.RunTime = endtime - starttime
-
-        return startSolution, self.UpperBoundTime, self.ConstructionTime, self.RunTime
+        return startSolution
 
 
 
+    def RunBuilding(self, UB_technique, greedy_technique, building_algorithm):
+        ''' Run the building phase and return the solution'''
 
-    def RunAlgorithm(self, UB_technique, order_item_attractiveness_technique, machine_attractiveness_technique, algorithm:ImprovementAlgorithm):
-        ''' Run local search with chosen algorithm and neighborhoods'''
+        self.BoundPhase(UB_technique)
 
-        self.UpperBound(UB_technique)
+        startSolution = self.ConstructionPhase(greedy_technique)
 
-        starttime = time.time()
+        staffed_solution = self.BuildingPhase(startSolution, building_algorithm)
 
-        startSolution = self.ConstructionPhase(order_item_attractiveness_technique, machine_attractiveness_technique)
 
-        building_time, individual_time, dominance_time, feasibility_check_time = self.ImprovementPhase(startSolution, algorithm)
+        return staffed_solution
 
-        endtime = time.time()
-        self.RunTime = endtime - starttime
 
-        return self.UpperBoundTime, self.ConstructionTime, building_time, individual_time, dominance_time, feasibility_check_time, self.RunTime
+
+
+    def Run(self, UB_technique, greedy_technique, building_algorithm, improvement_algorithm):
+        ''' Run the algorithm and return the solution'''
+
+        start_time = time.time()
+
+        self.BoundPhase(UB_technique)
+
+        bound_time = time.time() - start_time
+
+        startSolution = self.ConstructionPhase(greedy_technique)
+
+        construction_time = time.time() - start_time - bound_time
+
+        staffed_solution = self.BuildingPhase(startSolution, building_algorithm)
+
+        building_time = time.time() - start_time - bound_time - construction_time
+
+        self.ImprovementPhase(staffed_solution, improvement_algorithm)
+
+        improvement_time = time.time() - start_time - bound_time - construction_time - building_time
+
+        total_time = time.time() - start_time
+
+        times = {   "Bound Time": bound_time,
+                    "Construction Time": construction_time,
+                    "Building Time": building_time,
+                    "Improvement Time": improvement_time,
+                    "Total Time": total_time}
+
+        return times
+
+
 
