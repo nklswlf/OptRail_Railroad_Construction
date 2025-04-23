@@ -212,6 +212,8 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
             # Update the temperature
             current_temperature *= self.CoolingRate
 
+        if solution.total_dynamic_percentage != self.InputData.site_fulfillment:
+            raise Exception(f"Solution is not fully staffed after simulated annealing: {solution.total_dynamic_percentage} != {self.InputData.site_fulfillment}")
 
 
 class ParetoSimulatedAnnealing(ImprovementAlgorithm):

@@ -59,7 +59,6 @@ class Solution:
         self.total_dynamic_percentage = -0
 
 
-
     def __str__(self) -> str:
         ''' Define the string representation of the solution'''
         return (f"Instance: {self.data.instance}\n"
@@ -76,9 +75,6 @@ class Solution:
                 f"Number of machines: {self.number_of_machines}\n"
                 f"Number of workers: {self.number_of_workers}\n"
                 f"Number of attachments: {self.number_of_attachments}")
- 
-
-
 
     def feasibility_check(self, verbose=False, allverbose=False):
         """
@@ -833,8 +829,9 @@ class ParetoSolutions:
 
         # Show the DataFrame
         print(df)
-        # Write the DataFrame to a CSV file
-        df.to_csv("ParetoFront.csv", index=False)
+        # Write the DataFrame to a CSV file to self.InputData.solution_path
+        df.to_csv(self.data.solutions_path / "ParetoFront.csv", index=False)
+        
 
 
     def DeleteUnfinishedSites(self):

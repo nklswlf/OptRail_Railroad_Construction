@@ -65,6 +65,17 @@ class Solver:
 #####################################################################################################################################################################################
    
     
+    def RunBound(self, UB_technique):
+        ''' Run the bound phase and return the solution'''
+
+        start_time = time.time()
+
+        self.BoundPhase(UB_technique)
+
+        bound_time = time.time() - start_time
+
+        return bound_time
+
 
     
     def RunConstructive(self, UB_technique, greedy_technique):
@@ -72,10 +83,14 @@ class Solver:
 
         self.BoundPhase(UB_technique)
 
+        start_time = time.time()
+
         startSolution = self.ConstructionPhase(greedy_technique)
 
+        greedy_time = time.time() - start_time
 
-        return startSolution
+
+        return startSolution, greedy_time
 
 
 
@@ -86,10 +101,13 @@ class Solver:
 
         startSolution = self.ConstructionPhase(greedy_technique)
 
+        start_time = time.time()
+
         staffed_solution = self.BuildingPhase(startSolution, building_algorithm)
 
+        building_time = time.time() - start_time
 
-        return staffed_solution
+        return staffed_solution, building_time
 
 
 
@@ -105,20 +123,20 @@ class Solver:
 
         startSolution = self.ConstructionPhase(greedy_technique)
 
-        construction_time = time.time() - start_time - bound_time
+        greedy_time = time.time() - start_time - bound_time
 
         staffed_solution = self.BuildingPhase(startSolution, building_algorithm)
 
-        building_time = time.time() - start_time - bound_time - construction_time
+        building_time = time.time() - start_time - bound_time - greedy_time
 
         self.ImprovementPhase(staffed_solution, improvement_algorithm)
 
-        improvement_time = time.time() - start_time - bound_time - construction_time - building_time
+        improvement_time = time.time() - start_time - bound_time - greedy_time - building_time
 
         total_time = time.time() - start_time
 
         times = {   "Bound Time": bound_time,
-                    "Construction Time": construction_time,
+                    "Greedy Time": greedy_time,
                     "Building Time": building_time,
                     "Improvement Time": improvement_time,
                     "Total Time": total_time}
