@@ -28,7 +28,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-#instances = ["Construction_a10_o107_m5_an57_ar12.json"]
+instances = ["Construction_a10_o107_m5_an57_ar12.json"]
 
 
 
@@ -73,101 +73,103 @@ greedy_technique_b = {'order_item_greedy': {'worker_attractiveness_technique': '
 step = None
 #step = 'Bound'
 #step = 'Greedy'
-step = 'Building'
+#step = 'Building'
 
-algortihm = 'TPSA'
+algortihm = 'DBSA'
+
+algortihms = ['PSA', 'DBSA', 'TPSA']
 
 
 def main():
 
     for i in instances:
-        
-        if step == None:
-            data = InputData(i, algortihm)
-        else:
-            data = InputData(i, step)
+        for algortihm in algortihms:
+            if step == None:
+                data = InputData(i, algortihm)
+            else:
+                data = InputData(i, step)
 
-        solver = Solver(data, 1)
-        
+            solver = Solver(data, 1)
+            
 
-        local_search = IterativeImprovement(inputData=data,
-                                            neighborhoodTypes=neighboorhood_types_local_search)
+            local_search = IterativeImprovement(inputData=data,
+                                                neighborhoodTypes=neighboorhood_types_local_search)
 
 
-        building_sa = BuildingSimulatedAnnealing(   inputData=data,
-                                                    start_temp=20,
-                                                    min_temp=0.1,
-                                                    cooling_rate=0.95,
-                                                    max_iterations=3000,
-                                                    fallback_threshold=25,
-                                                    scaling_energy=30)
-                                                 
-        if algortihm == 'PSA':
-            algo = ParetoSimulatedAnnealing( inputData=data,
-                                            start_temp=20,
-                                            min_temp=0.1,
-                                            cooling_rate=0.95,
-                                            max_iterations=100,
-                                            fallback_threshold=25,
-                                            scaling_energy=30)
+            building_sa = BuildingSimulatedAnnealing(   inputData=data,
+                                                        start_temp=20,
+                                                        min_temp=0.1,
+                                                        cooling_rate=0.95,
+                                                        max_iterations=3000,
+                                                        fallback_threshold=25,
+                                                        scaling_energy=30)
+                                                    
+            if algortihm == 'PSA':
+                algo = ParetoSimulatedAnnealing( inputData=data,
+                                                start_temp=20,
+                                                min_temp=0.1,
+                                                cooling_rate=0.95,
+                                                max_iterations=100,
+                                                fallback_threshold=25,
+                                                scaling_energy=30)
 
-        elif algortihm == 'DBSA':
-            algo = DominanceBasedSimulatedAnnealing( inputData=data,
-                                                    start_temp=20,
-                                                    min_temp=0.1,
-                                                    cooling_rate=0.95,
-                                                    max_iterations=150,
-                                                    fallback_threshold=25,
-                                                    scaling_energy=30)
-
-        
-        elif algortihm == 'TPSA':
-            algo = TwoPhaseSimulatedAnnealing(  inputData=data,
-                                                start_temp_individual=20,
-                                                min_temp_individual=0.1,
-                                                cooling_rate_individual=0.95,
-                                                max_iterations_individual=100,
-                                                fallback_threshold_individual=25,
-                                                scaling_energy_individual=30,
-
-                                                start_temp_dominance=20,
-                                                min_temp_dominance=0.1,
-                                                cooling_rate_dominance=0.95,
-                                                max_iterations_dominance=300,
-                                                fallback_threshold_dominance=25,
-                                                scaling_energy_dominance=30)
-
-        if step == 'Bound':
-            solution, time = solver.RunBound(UB_technique="LP")
-        
-        elif step == 'Greedy':
-            solution, time = solver.RunConstructive(UB_technique="LP",
-                    greedy_technique=greedy_technique_b)
-            print("\nGreedy Time: ", round(time, 2))
+            elif algortihm == 'DBSA':
+                algo = DominanceBasedSimulatedAnnealing( inputData=data,
+                                                        start_temp=20,
+                                                        min_temp=0.1,
+                                                        cooling_rate=0.95,
+                                                        max_iterations=150,
+                                                        fallback_threshold=25,
+                                                        scaling_energy=30)
 
             
-        elif step == 'Building':
-            solution, time = solver.RunBuilding(UB_technique="LP",
-                       greedy_technique=greedy_technique_b,
-                       building_algorithm=building_sa)
-            print("\nBuilding Time: ", round(time, 2))
+            elif algortihm == 'TPSA':
+                algo = TwoPhaseSimulatedAnnealing(  inputData=data,
+                                                    start_temp_individual=20,
+                                                    min_temp_individual=0.1,
+                                                    cooling_rate_individual=0.95,
+                                                    max_iterations_individual=100,
+                                                    fallback_threshold_individual=25,
+                                                    scaling_energy_individual=30,
 
-        else:
-            times = solver.Run( UB_technique="LP",
-                greedy_technique=greedy_technique_b,
-                building_algorithm=building_sa,
-                improvement_algorithm=algo)
+                                                    start_temp_dominance=20,
+                                                    min_temp_dominance=0.1,
+                                                    cooling_rate_dominance=0.95,
+                                                    max_iterations_dominance=300,
+                                                    fallback_threshold_dominance=25,
+                                                    scaling_energy_dominance=30)
 
+            if step == 'Bound':
+                time = solver.RunBound(UB_technique="LP")
+                print("\nBound Time: ", round(time, 2))
+            
+            elif step == 'Greedy':
+                solution, time = solver.RunConstructive(UB_technique="LP",
+                        greedy_technique=greedy_technique_b)
+                print("\nGreedy Time: ", round(time, 2))
 
-            print("\nBound Time: ", round(times["Bound Time"], 2))
-            print("Greedy Time: ", round(times["Greedy Time"], 2))
-            print("Building Time: ", round(times["Building Time"], 2))
-            print("Improvement Time: ", round(times["Improvement Time"], 2))
-            print("Total Time: ", round(times["Total Time"], 2))
+                
+            elif step == 'Building':
+                solution, time = solver.RunBuilding(UB_technique="LP",
+                        greedy_technique=greedy_technique_b,
+                        building_algorithm=building_sa)
+                print("\nBuilding Time: ", round(time, 2))
 
-            output_file = data.solutions_path/"run_times.json"
-            with open(output_file, "w") as f:
-                json.dump(times, f, indent=4)
+            else:
+                times = solver.Run( UB_technique="LP",
+                    greedy_technique=greedy_technique_b,
+                    building_algorithm=building_sa,
+                    improvement_algorithm=algo)
+
+                print("\nBound Time: ", round(times["Bound Time"], 2))
+                print("Greedy Time: ", round(times["Greedy Time"], 2))
+                print("Building Time: ", round(times["Building Time"], 2))
+                print("Improvement Time: ", round(times["Improvement Time"], 2))
+                print("Total Time: ", round(times["Total Time"], 2))
+
+                output_file = data.solutions_path/"run_times.json"
+                with open(output_file, "w") as f:
+                    json.dump(times, f, indent=4)
 
 
 

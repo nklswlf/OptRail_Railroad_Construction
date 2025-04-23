@@ -661,8 +661,7 @@ class ConstructiveHeuristics:
             raise Exception("Solution is not feasible")
 
                 
-
-                    
+       
 
 
                 

@@ -384,6 +384,36 @@ class ParetoSolutions:
         self.ParetoFront = non_dominated
 
 
+    def CalculateParetoFrontMetrics(self):
+        """
+        Calculates the hypervolume and spread of the Pareto Front
+        and write the results to a CSV file.
+        """
+        # Check if Pareto Front is empty
+        if not self.ParetoFront:
+            print("Pareto Front is empty. Cannot calculate metrics.")
+            return
+
+        # Calculate hypervolume
+        hv_value, hv_log, hv_sqrt = self.CalculateHypervolume()
+
+        # Calculate spread
+        spread_value = self.CalculateSpread()
+
+        # Save metrics to CSV file
+        metrics = {
+            "Number of Solutions": len(self.ParetoFront),
+            "Reference Point": self.ReferencePoint.tolist(),
+            "Hypervolume": hv_value,
+            "Hypervolume Log10": hv_log,
+            "Hypervolume Sqrt": hv_sqrt,
+            "Spread": spread_value,
+        }
+        
+        metrics_df = pd.DataFrame([metrics])
+        metrics_df.to_csv(self.data.solutions_path / "pareto_metrics.csv", index=False)
+
+
 
     def SetReferencePoint(self, solution: Solution):
         """
@@ -464,9 +494,51 @@ class ParetoSolutions:
         hv_log = math.log10(hv_value) * 10
         hv_sqrt = math.sqrt(hv_value)
         
-        print(f"Hypervolume: {hv_value}")
-        print(f"Log10 Hypervolume: {hv_log}")
-        print(f"Square Root Hypervolume: {hv_sqrt}")
+        return hv_value, hv_log, hv_sqrt
+
+    def CalculateSpread(self):
+        """
+        Computes the spread (also known as spacing) across all objective values.
+        This metric evaluates how evenly the solutions are distributed across the Pareto front.
+        """
+        if len(self.ParetoFront) < 2:
+            print("Cannot compute spread: not enough solutions.")
+            return None
+
+        # Extract all objective vectors from Pareto front
+        def objective_vector(sol):
+            return np.array([
+                sol.driver_violation,
+                sol.total_commute_distance,
+                sol.total_transport_distance,
+                sol.total_transport_distance_attachments,
+                sol.number_of_workers,
+                sol.number_of_machines,
+                sol.number_of_attachments
+            ])
+
+        # Create a list of all objective vectors
+        points = [objective_vector(sol) for sol in self.ParetoFront]
+
+        # Sort the points by the second objective (commute_distance)
+        points = sorted(points, key=lambda x: x[1])
+
+        # Compute Euclidean distances between consecutive points
+        distances = [np.linalg.norm(points[i + 1] - points[i]) for i in range(len(points) - 1)]
+
+        # Compute the mean of these distances
+        d_mean = np.mean(distances)
+
+        # Compute the sum of absolute deviations from the mean distance
+        d_sum = sum(abs(d - d_mean) for d in distances)
+
+        # Compute distance between extreme points (endpoints of the front)
+        df = np.linalg.norm(points[0] - points[-1])
+
+        # Compute spread using the NSGA-II formula
+        spread = (df + d_sum) / (df + (len(distances) * d_mean))
+
+        return spread
         
 
 
@@ -687,10 +759,6 @@ class ParetoSolutions:
 
         
 
-        
-
-
-    
 
 
     def SortParetoFront(self, criteria: str = None):
@@ -733,7 +801,6 @@ class ParetoSolutions:
             return tuple(key)
 
         self.ParetoFront = sorted(self.ParetoFront, key=sort_key)
-
     
     def SelectRandomBestSolution(self, all_values: bool = False):
         """
@@ -796,7 +863,6 @@ class ParetoSolutions:
 
         return self.RNG.choice(selected_solutions)
 
-
     def ShowFront(self):
         ''' Show the Pareto Front as a DataFrame'''
 
@@ -831,31 +897,5 @@ class ParetoSolutions:
         print(df)
         # Write the DataFrame to a CSV file to self.InputData.solution_path
         df.to_csv(self.data.solutions_path / "ParetoFront.csv", index=False)
-        
-
-
-    def DeleteUnfinishedSites(self):
-        ''' Delete all solutions from the Pareto Front that have unfinished sites'''
-
-        # Create a list of solutions that have finished all sites
-        finished_solutions = [
-                solution
-                for solution in self.ParetoFront
-                if solution.semifinished_orders == []
-            ]
-           
-
-        # Update the Pareto Front
-        self.ParetoFront = finished_solutions
-
-
-        if len(self.ParetoFront) == 0:
-            print(f"\nDeleted all solutions from the Pareto Front because all of them had unfinished sites.")
-        else:
-            print(f"\nPareto Front with solutions that incorporate only finished sites:")
-            self.ShowFront()
-        
-
-
 
 
