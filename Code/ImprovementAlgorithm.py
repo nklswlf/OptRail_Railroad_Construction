@@ -596,19 +596,19 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                     unnormalized_value = self.unnormalize_value(value, objective)
 
                     if objective == 'driver_violation':
-                        objective_dict[objective] = solution.driver_violation - unnormalized_value
+                        objective_dict[objective] = solution.driver_violation + unnormalized_value
                     elif objective == 'commute_distance':
-                        objective_dict[objective] = solution.total_commute_distance - unnormalized_value
+                        objective_dict[objective] = solution.total_commute_distance + unnormalized_value
                     elif objective == 'transport_distance':
-                        objective_dict[objective] = solution.total_transport_distance - unnormalized_value
+                        objective_dict[objective] = solution.total_transport_distance + unnormalized_value
                     elif objective == 'attachment_distance':
-                        objective_dict[objective] = solution.total_transport_distance_attachments - unnormalized_value
+                        objective_dict[objective] = solution.total_transport_distance_attachments + unnormalized_value
                     elif objective == 'machine_count':
-                        objective_dict[objective] = solution.number_of_machines - unnormalized_value
+                        objective_dict[objective] = solution.number_of_machines + unnormalized_value
                     elif objective == 'worker_count':
-                        objective_dict[objective] = solution.number_of_workers - unnormalized_value
+                        objective_dict[objective] = solution.number_of_workers + unnormalized_value
                     elif objective == 'attachment_count':
-                        objective_dict[objective] = solution.number_of_attachments - unnormalized_value
+                        objective_dict[objective] = solution.number_of_attachments + unnormalized_value
                 
                 for objective in not_involved_objectives:
 
@@ -635,9 +635,16 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                 lenght = len(self.ParetoSolutions.ParetoFront) + 2
                 overall_difference = (dominating_count_new - dominating_count_current)/ lenght
 
-        
-                prob =  math.exp(-overall_difference * self.ScalingEnergy_dominance  / current_temperature)
+                if overall_difference <= 0:
+                    prob = 1.0
+                else:
+                    prob =  math.exp(-overall_difference * self.ScalingEnergy_dominance  / current_temperature)
+
                 random_number = self.RNG.random()
+
+                #self.log(f"\n[DBSA] ΔDom: {dominating_count_current} → {dominating_count_new}, ΔE: {overall_difference:.3f}, T: {current_temperature:.2f}, prob: {prob:.3f}")
+                #self.log(f"[Delta] Delta Details: {delta_details}")
+
                 if prob < random_number:
                     continue
 
@@ -800,7 +807,7 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                 neighborhood = self.Neighborhoods[neighborhoodType]
                 objectives = self.NeighborhoodTypes[neighborhoodType]
 
-                move_type = self.RNG.choice(['traversal'])#, 'location'])
+                move_type = self.RNG.choice(['traversal', 'location'])
                 if move_type == 'traversal':
                     move = neighborhood.SingleMove(solution) 
                     if move is None:

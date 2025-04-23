@@ -27,7 +27,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = ["Construction_a15_o170_m9_an80_ar18.json"]
+instances = ["Construction_a10_o107_m5_an57_ar12.json"]
 
 
 
@@ -144,7 +144,7 @@ def main():
             times = solver.Run( UB_technique="LP",
                         greedy_technique=greedy_technique_b,
                         building_algorithm=building_sa,
-                        improvement_algorithm=psa)
+                        improvement_algorithm=tpsa)
 
 
             print("\nBound Time: ", round(times["Bound Time"], 2))
