@@ -9,6 +9,7 @@ import copy
 import cProfile
 import pstats
 import os
+from pathlib import Path
 
 
 class ImprovementAlgorithm:
@@ -376,7 +377,8 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
             current_temperature *= self.CoolingRate
 
-        profile_path_txt = f"psa_profile_{os.getpid()}.txt"
+        (Path("Profiler") / "PSA").mkdir(parents=True, exist_ok=True)
+        profile_path_txt = Path("Profiler") / "PSA" / f"psa_profile_{os.getpid()}.txt"
         with open(profile_path_txt, "w") as f:
             ps = pstats.Stats(profiler, stream=f)
             ps.sort_stats("cumulative").print_stats()
@@ -728,15 +730,19 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                                     'Swap_Shift_Attachment': ['attachment_distance']}
 
     
-        self.log_path = "dbsa_log.txt"
-        with open(self.log_path, "w") as f:  # Reset log at start
+        self.log_path = Path("Profiler") / "DBSA" / "dbsa_log.txt"
+        Path(self.log_path.parent).mkdir(parents=True, exist_ok=True)
+
+        with open(self.log_path, "w") as f:
             f.write("=== DBSA Logging Start ===\n")
+
+
 
     def log(self, text: str):
         with open(self.log_path, "a") as f:
             f.write(text + "\n")
 
-
+ 
     def location_move(self, solution:Solution) -> None:
         
         random_number_of_moves = self.RNG.integers(2, 5)

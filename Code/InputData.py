@@ -69,7 +69,7 @@ class InputData:
         self._transfrom_data()
 
         # Create a folder in .../Data/Solutions/ instance / the current date
-        solutions_path = Path.cwd().parent / "Data" / "Solutions" / self._parent_folder / self.instance / algo
+        solutions_path = Path.cwd().parent / "Data" / "Solutions" / self.instance / algo
         solutions_path.mkdir(parents=True, exist_ok=True)
         self.solutions_path = solutions_path
 

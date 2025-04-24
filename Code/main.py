@@ -180,7 +180,8 @@ def profile_main():
     main()
 
     pr.disable()
-    with open("psa_profile.txt", "w") as f:
+    Path("Profiler").mkdir(parents=True, exist_ok=True)
+    with open(Path("Profiler") / "main_profile.txt", "w") as f:
         ps = pstats.Stats(pr, stream=f).sort_stats("cumtime")
         ps.print_stats(300)
 
