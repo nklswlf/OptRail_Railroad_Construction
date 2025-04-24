@@ -639,7 +639,7 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                 solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
                 self.EvaluationLogic.evaluate(solution)
 
-                if dominating_count_new <= dominating_count_current:
+                if dominating_count_new == 0:
                     added = self.ParetoSolutions.UpdateParetoFront(solution)
                     if not added:
                         fallback_counter += 1

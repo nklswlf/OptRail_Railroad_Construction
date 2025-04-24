@@ -1665,10 +1665,20 @@ class ReplaceShiftAttachmentNeighborhood(TimeNeighborhood):
         self.Moves.clear()
         attempts = 0
 
-        attachment_pairs = [(a1, a2)
-                        for a1 in attachment_ids
-                        for a2 in attachment_ids
-                        if a1 != a2 and solution.data.attachments[a1].type == solution.data.attachments[a2].type]
+        # Gruppiere nach Attachment-Typ
+        type_to_ids = defaultdict(list)
+        for aid in attachment_ids:
+            atype = solution.data.attachments[aid].type
+            type_to_ids[atype].append(aid)
+
+        # Erzeuge vollständige (a1, a2) und (a2, a1) Paare ohne Duplikate wie (a1, a1)
+        attachment_pairs = [
+            (a1, a2)
+            for ids in type_to_ids.values()
+            for a1 in ids
+            for a2 in ids
+            if a1 != a2
+        ]
         
         self.RNG.shuffle(attachment_pairs)  # Shuffle the pairs to ensure randomness
         

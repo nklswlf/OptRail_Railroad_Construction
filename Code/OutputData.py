@@ -803,12 +803,6 @@ class ParetoSolutions:
         self.ParetoFront = sorted(self.ParetoFront, key=sort_key)
     
     def SelectRandomBestSolution(self, all_values: bool = False):
-        """
-        Für jedes Zielkriterium (Minimierungsziele):
-        - Wähle nur **eine** Lösung mit dem besten Wert für dieses Kriterium.
-        - Falls mehrere Lösungen gleich gut: Normalisiere alle anderen Ziele (Min-Max), 
-        bilde den Gesamtscore, wähle die beste.
-        """
         objective_map = {
             "driver_violation": lambda x: x.driver_violation,
             "commute_distance": lambda x: x.total_commute_distance,
@@ -822,26 +816,36 @@ class ParetoSolutions:
         selected_solutions = []
         best_value_dict = {}
 
-        for key, func in objective_map.items():
+        # Precompute all objective values for each solution once
+        solution_values = {sol: {k: func(sol) for k, func in objective_map.items()} for sol in self.ParetoFront}
+
+        
+
+        for key in objective_map:
             try:
-                best_value = min(func(sol) for sol in self.ParetoFront)
+                # Extract values for the current objective
+                values = [vals[key] for vals in solution_values.values()]
+                best_value = min(values)
                 best_value_dict[key] = round(best_value, 2)
-                candidate_solutions = [sol for sol in self.ParetoFront if func(sol) == best_value]
+
+                # Filter candidates that match best_value
+                candidate_solutions = [sol for sol, vals in solution_values.items() if vals[key] == best_value]
 
                 if len(candidate_solutions) == 1:
                     selected_solutions.append(candidate_solutions[0])
                     continue
 
+                # Normalize other objectives
                 normalized_scores = []
+                precomputed_sub_values = {sub_key: [solution_values[s][sub_key] for s in candidate_solutions] for sub_key in objective_map if sub_key != key}
                 for sol in candidate_solutions:
                     score = 0.0
-                    for sub_key, sub_func in objective_map.items():
+                    for sub_key in objective_map:
                         if sub_key == key:
                             continue
-                        values = [sub_func(s) for s in candidate_solutions]
-                        v_min = min(values)
-                        v_max = max(values)
-                        val = sub_func(sol)
+                        v_min = min(precomputed_sub_values[sub_key])
+                        v_max = max(precomputed_sub_values[sub_key])
+                        val = solution_values[sol][sub_key]
                         norm = (val - v_min) / (v_max - v_min) if v_max != v_min else 0.0
                         score += norm
                     normalized_scores.append((score, sol))
@@ -857,7 +861,7 @@ class ParetoSolutions:
             print("\nBest individual values:")
             print(df.to_string(index=False))
             return None
-        
+
         if not selected_solutions:
             raise KeyError("No solutions found.")
 
