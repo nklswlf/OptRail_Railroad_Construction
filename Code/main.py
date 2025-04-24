@@ -83,7 +83,7 @@ algortihms = ['PSA', 'DBSA', 'TPSA']
 def main():
 
     for i in instances:
-        for algortihm in algortihms:
+        #for algortihm in algortihms:
             if step == None:
                 data = InputData(i, algortihm)
             else:

@@ -45,7 +45,7 @@ __pycache__/
 *.old
 
 # Ignoriere alle Dateien in Solutions
-Solutions/*
+Data/Solutions/*
 Data/Solutions/AnzahlAuftraege_NEW_10/a10_o107_m5_an57_ar12/04-23/TPSA/run_times.json
 Data/Solutions/AnzahlAuftraege_NEW_10/a10_o107_m5_an57_ar12/04-23/TPSA/ParetoFront.csv
 Data/Solutions/AnzahlAuftraege_NEW_10/a10_o107_m5_an57_ar12/04-23/TPSA/pareto_metrics.csv
