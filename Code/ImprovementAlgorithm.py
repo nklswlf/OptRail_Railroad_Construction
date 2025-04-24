@@ -253,21 +253,17 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         random_number_of_moves = self.RNG.integers(10, 50)
         current_solution = solution.clone()
+        self.EvaluationLogic.evaluate(current_solution)
 
         for _ in range(random_number_of_moves):
             move = None
-            attempts = 0
-            while move is None and attempts < 10:
+
+            while move is None:
                 random_type = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
                 neighborhood = self.Neighborhoods[random_type]
-                try:
-                    move = neighborhood.SingleMove(current_solution)
-                except KeyError:
-                    move = None
-                attempts += 1
+                move = neighborhood.SingleMove(current_solution)
+                
 
-            if move is None:
-                continue
 
             worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
             current_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
@@ -434,6 +430,263 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         algo_time = time.time() - start_time
 
         return algo_time
+
+
+
+
+
+
+
+class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
+    """ Simulated Annealing algorithm with dominance based energy. """
+
+    def __init__(self, inputData:InputData,
+                 start_temp:int,
+                 min_temp:int,
+                 cooling_rate:float,
+                 max_iterations:int,
+                 fallback_threshold:int,
+                 scaling_energy:int,
+                 max_single_move_tries:int):
+        super().__init__(inputData)
+
+        self.StartTemperature = start_temp
+        self.MinTemperature = min_temp
+        self.CoolingRate = cooling_rate
+        self.MaxIterations = max_iterations
+        self.FallbackThreshold = fallback_threshold
+        self.ScalingEnergy = scaling_energy
+        self.MaxSingleMoveTries = max_single_move_tries
+
+
+
+        self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
+                                    'Replace_Shift_Machine': ['driver_violation', 'transport_distance', 'machine_count'],
+                                    'Replace_Shift_Attachment': ['attachment_distance', 'attachment_count'],
+                                    'Swap_Shift_Worker': ['driver_violation', 'commute_distance'],
+                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance'],
+                                    'Swap_Shift_Attachment': ['attachment_distance']}
+
+        self.None_Move_Counter = {}
+        self.Move_Counter = {}
+        for neighborhoodType in self.NeighborhoodTypes:
+            self.None_Move_Counter[neighborhoodType] = 0
+            self.Move_Counter[neighborhoodType] = 0
+            
+
+    
+        self.log_path = Path("Profiler") / "DBSA" / "dbsa_log.txt"
+        Path(self.log_path.parent).mkdir(parents=True, exist_ok=True)
+
+        with open(self.log_path, "w") as f:
+            f.write("=== DBSA Logging Start ===\n")
+
+
+
+    def log(self, text: str):
+        with open(self.log_path, "a") as f:
+            f.write(text + "\n")
+
+ 
+    def location_move(self, solution:Solution) -> None:
+        
+        random_number_of_moves = self.RNG.integers(2, 5)
+        current_solution = solution.clone()
+        self.EvaluationLogic.evaluate(current_solution)
+        delta_details = dict()
+        objectives = set()
+
+        for _ in range(random_number_of_moves):
+            move = None
+            while move is None:
+                random_type = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
+                neighborhood = self.Neighborhoods[random_type]
+                self.Move_Counter[random_type] += 1
+
+                move = neighborhood.SingleMove(current_solution, self.MaxSingleMoveTries)
+
+                if move is None:
+                    self.None_Move_Counter[random_type] += 1
+    
+
+            for obj, details in move.DeltaDetails.items():
+                if obj not in delta_details:
+                    delta_details[obj] = 0
+                delta_details[obj] += details
+                objectives.add(obj)
+
+
+            worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
+            current_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+            self.EvaluationLogic.calculate_worker_count_and_utilization_time(current_solution)
+
+
+
+        
+        return delta_details,objectives, worker_route_plan, machine_route_plan, attachment_route_plan
+    
+
+    def unnormalize_value(self, value:float, objective:str) -> float:
+
+        ''' Unnormalize the value based on the objective type '''
+
+        if objective == 'transport_distance' or objective == 'attachment_distance':
+            return value * (self.InputData.max_transport_distance - self.InputData.min_transport_distance) + self.InputData.min_transport_distance
+        elif objective == 'commute_distance':
+            return value * (self.InputData.max_work_distance + self.InputData.min_work_distance) + self.InputData.min_work_distance
+        elif objective == 'driver_violation' or objective == 'attachment_count' or objective == 'worker_count' or objective == 'machine_count':
+            return value
+   
+
+        
+        raise Exception(f"Objective {objective} not defined.")
+
+
+
+    def DBSA(self, solution:Solution) -> None:
+        ''' Simulated annealing algorithm with energy dominance neighborhood'''
+        
+        current_temperature = self.StartTemperature
+
+        fallback_counter = 0
+
+        while current_temperature > self.MinTemperature:
+
+            for i in range(self.MaxIterations):
+
+                dominating_count_current, interpolated_points = self.ParetoSolutions.CountDominatingSolutions(solution)
+
+                neighborhoodType = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
+                neighborhood = self.Neighborhoods[neighborhoodType]
+                objectives = self.NeighborhoodTypes[neighborhoodType]
+
+                move_type = self.RNG.choice(['traversal', 'location'])
+                if move_type == 'traversal':
+                    move = neighborhood.SingleMove(solution, self.MaxSingleMoveTries)
+                    self.Move_Counter[neighborhoodType] += 1
+                    if move is None:
+                        self.None_Move_Counter[neighborhoodType] += 1
+                        continue
+                    delta_details = move.DeltaDetails
+                elif move_type == 'location':
+                    delta_details, objectives, worker_route_plan, machine_route_plan, attachment_route_plan = self.location_move(solution)
+
+
+                not_involved_objectives = ['driver_violation', 'commute_distance', 'transport_distance', 'attachment_distance', 'machine_count', 'worker_count', 'attachment_count']
+                objective_dict = dict()
+
+                for objective in objectives:
+                    value = delta_details[objective]
+                    not_involved_objectives.remove(objective)
+
+                    unnormalized_value = self.unnormalize_value(value, objective)
+
+                    if objective == 'driver_violation':
+                        objective_dict[objective] = solution.driver_violation + unnormalized_value
+                    elif objective == 'commute_distance':
+                        objective_dict[objective] = solution.total_commute_distance + unnormalized_value
+                    elif objective == 'transport_distance':
+                        objective_dict[objective] = solution.total_transport_distance + unnormalized_value
+                    elif objective == 'attachment_distance':
+                        objective_dict[objective] = solution.total_transport_distance_attachments + unnormalized_value
+                    elif objective == 'machine_count':
+                        objective_dict[objective] = solution.number_of_machines + unnormalized_value
+                    elif objective == 'worker_count':
+                        objective_dict[objective] = solution.number_of_workers + unnormalized_value
+                    elif objective == 'attachment_count':
+                        objective_dict[objective] = solution.number_of_attachments + unnormalized_value
+                
+                for objective in not_involved_objectives:
+
+                    if objective == 'driver_violation':
+                        objective_dict[objective] = solution.driver_violation
+                    elif objective == 'commute_distance':
+                        objective_dict[objective] = solution.total_commute_distance
+                    elif objective == 'transport_distance':
+                        objective_dict[objective] = solution.total_transport_distance
+                    elif objective == 'attachment_distance':
+                        objective_dict[objective] = solution.total_transport_distance_attachments
+                    elif objective == 'machine_count':
+                        objective_dict[objective] = solution.number_of_machines
+                    elif objective == 'worker_count':
+                        objective_dict[objective] = solution.number_of_workers
+                    elif objective == 'attachment_count':
+                        objective_dict[objective] = solution.number_of_attachments
+
+                # Possible to combine objectives to 3 main topics: distance, ressource count, violation
+
+                dominating_count_new, _ = self.ParetoSolutions.CountDominatingSolutions(objective_dict, interpolated_points=interpolated_points)
+
+
+                lenght = len(self.ParetoSolutions.ParetoFront) + len(interpolated_points) + 2
+                overall_difference = (dominating_count_new - dominating_count_current)/ lenght
+
+                if overall_difference <= 0:
+                    prob = 1.0
+                else:
+                    prob =  math.exp(-overall_difference * self.ScalingEnergy  / current_temperature)
+
+                random_number = self.RNG.random()
+
+                self.log(f"\n[DBSA] ΔDom: {dominating_count_current} → {dominating_count_new}, ΔE: {overall_difference:.3f}, T: {current_temperature:.2f}, prob: {prob:.3f}")
+                self.log(f"[Delta] Delta Details: {delta_details}")
+
+                if prob < random_number:
+                    continue
+
+                if move_type == 'traversal':
+                    worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
+                solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                self.EvaluationLogic.evaluate(solution)
+
+                if dominating_count_new <= dominating_count_current:
+                    added = self.ParetoSolutions.UpdateParetoFront(solution)
+                    if not added:
+                        fallback_counter += 1
+                    else:
+                        fallback_counter = 0
+                else:
+                    fallback_counter += 1
+
+                if fallback_counter >= self.FallbackThreshold:
+                    solution = self.ParetoSolutions.SelectRandomBestSolution()
+
+
+            current_temperature *= self.CoolingRate
+
+        
+
+
+    def Run(self, solution:Solution) -> Solution:
+        ''' Run simulated annealing algorithm with given solutions and parameters'''
+
+        self.InitializeNeighborhoods(list(self.NeighborhoodTypes.keys()))
+
+        self.DBSA(solution)
+
+        self.ParetoSolutions.PurgeParetoFront()
+        self.ParetoSolutions.SortParetoFront()
+
+        for neighborhoodType, count in self.None_Move_Counter.items():
+            print(f"Neighborhood {neighborhoodType} had {count}/{self.Move_Counter[neighborhoodType]} None Moves.")
+
+        for solution_check in self.ParetoSolutions.ParetoFront:
+            feasible = solution_check.feasibility_check()
+            if not feasible:
+                raise Exception('Solution is not feasible after dominance based simulated annealing')
+
+        print("\nPareto Front after Dominance Based Energy Improvement:")
+        self.ParetoSolutions.ShowFront()
+        self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
+        self.ParetoSolutions.CalculateParetoFrontMetrics()
+
+        
+            
+
+
+
+
+
 
 
 
@@ -686,13 +939,15 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         pareto_solution = self.ParetoSolutions.SelectRandomBestSolution()
         self.DominanceBasedEnergyImprovement(pareto_solution)
     
+            
+        self.ParetoSolutions.PurgeParetoFront()
+        self.ParetoSolutions.SortParetoFront()
+
         for solution_check in self.ParetoSolutions.ParetoFront:
             feasible = solution_check.feasibility_check()
             if not feasible:
                 raise Exception('Solution is not feasible after two phase simulated annealing')
-            
-        self.ParetoSolutions.PurgeParetoFront()
-        self.ParetoSolutions.SortParetoFront()
+
         print("\nFinal Pareto Front:")
         self.ParetoSolutions.ShowFront()
 
@@ -700,226 +955,3 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         self.ParetoSolutions.CalculateParetoFrontMetrics()
 
 
-
-
-
-class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
-    """ Simulated Annealing algorithm with dominance based energy. """
-
-    def __init__(self, inputData:InputData,
-                 start_temp:int,
-                 min_temp:int,
-                 cooling_rate:float,
-                 max_iterations:int,
-                 fallback_threshold:int,
-                 scaling_energy:int):
-        super().__init__(inputData)
-
-        self.StartTemperature = start_temp
-        self.MinTemperature = min_temp
-        self.CoolingRate = cooling_rate
-        self.MaxIterations = max_iterations
-        self.FallbackThreshold = fallback_threshold
-        self.ScalingEnergy = scaling_energy
-
-        self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
-                                    'Replace_Shift_Machine': ['driver_violation', 'transport_distance', 'machine_count'],
-                                    'Replace_Shift_Attachment': ['attachment_distance', 'attachment_count'],
-                                    'Swap_Shift_Worker': ['driver_violation', 'commute_distance'],
-                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance'],
-                                    'Swap_Shift_Attachment': ['attachment_distance']}
-
-    
-        self.log_path = Path("Profiler") / "DBSA" / "dbsa_log.txt"
-        Path(self.log_path.parent).mkdir(parents=True, exist_ok=True)
-
-        with open(self.log_path, "w") as f:
-            f.write("=== DBSA Logging Start ===\n")
-
-
-
-    def log(self, text: str):
-        with open(self.log_path, "a") as f:
-            f.write(text + "\n")
-
- 
-    def location_move(self, solution:Solution) -> None:
-        
-        random_number_of_moves = self.RNG.integers(2, 5)
-        current_solution = solution.clone()
-        delta_details = dict()
-        objectives = set()
-
-        for _ in range(random_number_of_moves):
-            move = None
-            attempts = 0
-            while move is None and attempts < 10:
-                random_type = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
-                neighborhood = self.Neighborhoods[random_type]
-                try:
-                    move = neighborhood.SingleMove(current_solution)
-                except KeyError:
-                    move = None
-                attempts += 1
-
-            if move is None:
-                continue
-
-            for obj, details in move.DeltaDetails.items():
-                if obj not in delta_details:
-                    delta_details[obj] = 0
-                delta_details[obj] += details
-                objectives.add(obj)
-
-
-            worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
-            current_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
-
-
-
-        
-        return delta_details,objectives, worker_route_plan, machine_route_plan, attachment_route_plan
-    
-
-    def unnormalize_value(self, value:float, objective:str) -> float:
-
-        ''' Unnormalize the value based on the objective type '''
-
-        if objective == 'transport_distance' or objective == 'attachment_distance':
-            return value * (self.InputData.max_transport_distance - self.InputData.min_transport_distance) + self.InputData.min_transport_distance
-        elif objective == 'commute_distance':
-            return value * (self.InputData.max_work_distance + self.InputData.min_work_distance) + self.InputData.min_work_distance
-        elif objective == 'driver_violation' or objective == 'attachment_count' or objective == 'worker_count' or objective == 'machine_count':
-            return value
-   
-
-        
-        raise Exception(f"Objective {objective} not defined.")
-
-
-
-    def DBSA(self, solution:Solution) -> None:
-        ''' Simulated annealing algorithm with energy dominance neighborhood'''
-        
-        current_temperature = self.StartTemperature
-
-        fallback_counter = 0
-
-        while current_temperature > self.MinTemperature:
-
-            for i in range(self.MaxIterations):
-
-                dominating_count_current, interpolated_points = self.ParetoSolutions.CountDominatingSolutions(solution)
-
-                neighborhoodType = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
-                neighborhood = self.Neighborhoods[neighborhoodType]
-                objectives = self.NeighborhoodTypes[neighborhoodType]
-
-                move_type = self.RNG.choice(['traversal', 'location'])
-                if move_type == 'traversal':
-                    move = neighborhood.SingleMove(solution) 
-                    if move is None:
-                        continue
-                    delta_details = move.DeltaDetails
-                elif move_type == 'location':
-                    delta_details, objectives, worker_route_plan, machine_route_plan, attachment_route_plan = self.location_move(solution)
-
-
-                not_involved_objectives = ['driver_violation', 'commute_distance', 'transport_distance', 'attachment_distance', 'machine_count', 'worker_count', 'attachment_count']
-                objective_dict = dict()
-
-                for objective in objectives:
-                    value = delta_details[objective]
-                    not_involved_objectives.remove(objective)
-
-                    unnormalized_value = self.unnormalize_value(value, objective)
-
-                    if objective == 'driver_violation':
-                        objective_dict[objective] = solution.driver_violation + unnormalized_value
-                    elif objective == 'commute_distance':
-                        objective_dict[objective] = solution.total_commute_distance + unnormalized_value
-                    elif objective == 'transport_distance':
-                        objective_dict[objective] = solution.total_transport_distance + unnormalized_value
-                    elif objective == 'attachment_distance':
-                        objective_dict[objective] = solution.total_transport_distance_attachments + unnormalized_value
-                    elif objective == 'machine_count':
-                        objective_dict[objective] = solution.number_of_machines + unnormalized_value
-                    elif objective == 'worker_count':
-                        objective_dict[objective] = solution.number_of_workers + unnormalized_value
-                    elif objective == 'attachment_count':
-                        objective_dict[objective] = solution.number_of_attachments + unnormalized_value
-                
-                for objective in not_involved_objectives:
-
-                    if objective == 'driver_violation':
-                        objective_dict[objective] = solution.driver_violation
-                    elif objective == 'commute_distance':
-                        objective_dict[objective] = solution.total_commute_distance
-                    elif objective == 'transport_distance':
-                        objective_dict[objective] = solution.total_transport_distance
-                    elif objective == 'attachment_distance':
-                        objective_dict[objective] = solution.total_transport_distance_attachments
-                    elif objective == 'machine_count':
-                        objective_dict[objective] = solution.number_of_machines
-                    elif objective == 'worker_count':
-                        objective_dict[objective] = solution.number_of_workers
-                    elif objective == 'attachment_count':
-                        objective_dict[objective] = solution.number_of_attachments
-
-                # Possible to combine objectives to 3 main topics: distance, ressource count, violation
-
-                dominating_count_new, _ = self.ParetoSolutions.CountDominatingSolutions(objective_dict, interpolated_points=interpolated_points)
-
-
-                lenght = len(self.ParetoSolutions.ParetoFront) + len(interpolated_points) + 2
-                overall_difference = (dominating_count_new - dominating_count_current)/ lenght
-
-                if overall_difference <= 0:
-                    prob = 1.0
-                else:
-                    prob =  math.exp(-overall_difference * self.ScalingEnergy  / current_temperature)
-
-                random_number = self.RNG.random()
-
-                self.log(f"\n[DBSA] ΔDom: {dominating_count_current} → {dominating_count_new}, ΔE: {overall_difference:.3f}, T: {current_temperature:.2f}, prob: {prob:.3f}")
-                self.log(f"[Delta] Delta Details: {delta_details}")
-
-                if prob < random_number:
-                    continue
-
-                if move_type == 'traversal':
-                    worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
-                solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
-                self.EvaluationLogic.evaluate(solution)
-
-                if dominating_count_new <= dominating_count_current:
-                    added = self.ParetoSolutions.UpdateParetoFront(solution)
-                    if not added:
-                        fallback_counter += 1
-                    else:
-                        fallback_counter = 0
-                else:
-                    fallback_counter += 1
-
-                if fallback_counter >= self.FallbackThreshold:
-                    solution = self.ParetoSolutions.SelectRandomBestSolution()
-
-
-            current_temperature *= self.CoolingRate
-
-        
-
-
-    def Run(self, solution:Solution) -> Solution:
-        ''' Run simulated annealing algorithm with given solutions and parameters'''
-
-        self.InitializeNeighborhoods(list(self.NeighborhoodTypes.keys()))
-
-        self.DBSA(solution)
-
-        self.ParetoSolutions.PurgeParetoFront()
-        self.ParetoSolutions.SortParetoFront()
-        print("\nPareto Front after Dominance Based Energy Improvement:")
-        self.ParetoSolutions.ShowFront()
-        self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
-        self.ParetoSolutions.CalculateParetoFrontMetrics()

@@ -28,7 +28,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = ["Construction_a10_o107_m5_an57_ar12.json"]
+instances = ["Construction_a15_o170_m9_an80_ar18.json"]
 
 
 
@@ -89,7 +89,7 @@ def main():
             else:
                 data = InputData(i, step)
 
-            solver = Solver(data, 1)
+            solver = Solver(data, 100)
             
 
             local_search = IterativeImprovement(inputData=data,
@@ -120,7 +120,8 @@ def main():
                                                         cooling_rate=0.95,
                                                         max_iterations=150,
                                                         fallback_threshold=25,
-                                                        scaling_energy=30)
+                                                        scaling_energy=30,
+                                                        max_single_move_tries=5)
 
             
             elif algortihm == 'TPSA':

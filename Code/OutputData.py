@@ -311,7 +311,7 @@ class Solution:
             print("\nFeasibility check completed. Solution is feasible.")
         return True    
 
-    def clone(self, evaluate=True):
+    def clone(self):
         """
         Creates a shallow copy of the solution object with deep-copied route plans.
         This avoids full deepcopy overhead, while preserving route data integrity.
