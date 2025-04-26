@@ -141,7 +141,9 @@ def calculate_dci(method_paths=None, print_debug=False):
     all_data_concat = pd.concat(all_data, ignore_index=True)
 
     debug_print("\n--- All solutions from all methods ---", print_debug)
-    debug_print(all_data_concat, print_debug)
+    for method, df in method_paths.items():
+        debug_print(f"\n--- {method} ---", print_debug)
+        debug_print(df[objectives], print_debug)
 
     # Determine non-dominated solutions (globally across all methods)
     def is_dominated(row, others):
