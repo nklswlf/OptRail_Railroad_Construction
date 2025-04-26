@@ -15,7 +15,7 @@ import pandas as pd
 
 # === Instance ===
 #instance = "a3_o80_m10_an10_ar9_reduced"
-#instance = "a10_o107_m5_an57_ar12"
+instance = "a10_o107_m5_an57_ar12"
 #instance = "a10_o114_m6_an57_ar11"
 #instance = "a10_o128_m6_an51_ar13"
 #instance = "a10_o144_m6_an53_ar12"
@@ -24,7 +24,7 @@ import pandas as pd
 #instance = "a25_o306_m13_an127_ar31"
 #instance = "a30_o355_m18_an148_ar42"
 #instance = "a40_o476_m22_an215_ar51"
-instance = "a50_o578_m28_an276_ar66"
+#instance = "a50_o578_m28_an276_ar66"
 #instance = "Test"
 
 # === Objectives ===
@@ -143,7 +143,7 @@ def calculate_dci(method_paths=None, print_debug=False):
     debug_print("\n--- All solutions from all methods ---", print_debug)
     for method, df in method_paths.items():
         debug_print(f"\n--- {method} ---", print_debug)
-        debug_print(df[objectives], print_debug)
+        debug_print(df, print_debug)
 
     # Determine non-dominated solutions (globally across all methods)
     def is_dominated(row, others):
@@ -593,7 +593,7 @@ def calculate_hypervolume_hypercubes(method_paths=None, print_interim_results=Fa
     }).T
 
     if print_interim_results:
-        print("\n--- Hypervolume values per method (normalized objectives) ---")
+        print("\n--- Hypervolume values per method hypercubes ---")
         print(result_df)
 
     return result_df
@@ -618,8 +618,7 @@ def calculate_hypervolume_monte_carlo(method_paths=None, samples=50000, print_in
     ranges = np.where(max_point - min_point != 0, max_point - min_point, 1)  # avoid division by zero
 
     hypervolume_results = {}
-    # Generate random sample points in [0, 1]^n
-    sample_points = np.random.rand(samples, normalized_front.shape[1])
+    
 
     for method, path in method_paths.items():
         df = pd.read_csv(path)
@@ -627,8 +626,11 @@ def calculate_hypervolume_monte_carlo(method_paths=None, samples=50000, print_in
         normalized_front = (front - min_point) / ranges
         normalized_front = np.clip(normalized_front, 0, 1)
 
+        # Generate random sample points in [0, 1]^n
+        sample_points = np.random.rand(samples, normalized_front.shape[1])
         
-
+        print(f"[DEBUG] {method} - Sample points shape: {sample_points.shape}")
+    
         # Check if each sample point is dominated by at least one solution in the front
         dominated = np.any(np.all(normalized_front <= sample_points[:, None, :], axis=2), axis=1)
 
@@ -647,7 +649,7 @@ def calculate_hypervolume_monte_carlo(method_paths=None, samples=50000, print_in
 
     return result_df
 
-def calculate_average_monte_carlo_hypervolume(method_paths, seeds=[42, 43, 44, 45, 46], samples=50000):
+def calculate_average_monte_carlo_hypervolume(method_paths, print_debug = False, seeds=[42, 43, 44, 45, 46], samples=50000):
     results = []
     for seed in seeds:
         np.random.seed(seed)
@@ -655,6 +657,10 @@ def calculate_average_monte_carlo_hypervolume(method_paths, seeds=[42, 43, 44, 4
         results.append(hv_result.T)
 
     avg_result = pd.concat(results).groupby(level=0).mean().T
+    
+    debug_print("\n--- Average Monte Carlo Hypervolume values per method ---", print_debug)
+    debug_print(avg_result, print_debug)
+
     return avg_result
 
 def calculate_exact_hypervolume(method_paths=None, print_debug=False):
@@ -698,11 +704,7 @@ def calculate_exact_hypervolume(method_paths=None, print_debug=False):
         "Exact Hypervolume": hypervolume_results
     }).T
 
-    debug_print("\n--- Exact Hypervolume values per method ---", print_debug)
-    debug_print(result_df, print_debug)
-
     return result_df
-
 
 
 def plot_aggregated_3d(method_paths, instance_name=None):
@@ -780,7 +782,12 @@ if __name__ == "__main__":
     dci_result = calculate_dci(method_paths, print_debug=True)
     pf_share_result = calculate_pf_share(method_paths, print_debug=True)
     spread_result = calculate_spread(method_paths, print_debug=True)
-    hypervolume_result = calculate_average_monte_carlo_hypervolume(method_paths, print_debug=True)
+    
+    hypervolume_result_2 = calculate_hypervolume_monte_carlo(method_paths, print_interim_results=True)
+    hypervolume_result_3 = calculate_average_monte_carlo_hypervolume(method_paths, print_debug=True)
+    hypervolume_result_4 = calculate_hypervolume_hypercubes(method_paths, print_interim_results=True)
+    hypervolume_result = calculate_exact_hypervolume(method_paths, print_debug=True)
+
 
     # Combine all metrics
     combined_result = pd.concat([pf_share_result, pci_result, dci_result, spread_result, hypervolume_result], axis=0)
