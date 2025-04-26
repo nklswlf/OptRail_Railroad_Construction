@@ -141,8 +141,6 @@ class InputData:
         for order in self.orders:
             order.order_items = [order_item for order_item in self.order_items if order_item.order_number == order.order_number]
 
-
-
     def calculate_complexity(self):
         """
         Generate priorities for all orders based on multiple criteria.

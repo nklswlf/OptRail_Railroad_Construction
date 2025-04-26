@@ -1,8 +1,31 @@
+def debug_print(msg, print_debug=False):
+    if print_debug:
+        print(msg)
+
 import os
 import pandas as pd
 import numpy as np
 from scipy.spatial.distance import cdist
+import matplotlib.pyplot as plt
 
+from pymoo.indicators.hv import HV
+import numpy as np
+import pandas as pd
+
+
+# === Instance ===
+#instance = "a3_o80_m10_an10_ar9_reduced"
+#instance = "a10_o107_m5_an57_ar12"
+#instance = "a10_o114_m6_an57_ar11"
+#instance = "a10_o128_m6_an51_ar13"
+#instance = "a10_o144_m6_an53_ar12"
+#instance = "a15_o170_m9_an80_ar18"
+#instance = "a20_o236_m12_an106_ar24"
+#instance = "a25_o306_m13_an127_ar31"
+#instance = "a30_o355_m18_an148_ar42"
+#instance = "a40_o476_m22_an215_ar51"
+instance = "a50_o578_m28_an276_ar66"
+#instance = "Test"
 
 # === Objectives ===
 objectives = [
@@ -19,24 +42,47 @@ objectives = [
 def get_methdod_paths(instance_folder: str):
     # === Automatically find all methods based on subfolders containing ParetoFront.csv ===
     method_paths = {}
+    all_solutions = []
     for root, dirs, files in os.walk(instance_folder):
         if "ParetoFront.csv" in files:
             method_name = os.path.basename(root)
-            method_paths[method_name] = os.path.join(root, "ParetoFront.csv")
+            path = os.path.join(root, "ParetoFront.csv")
+            method_paths[method_name] = path
+
+            # Load solutions and store them for duplicate analysis
+            df = pd.read_csv(path)
+            if set(objectives).issubset(df.columns):
+                all_solutions.append(df[objectives])
+            else:
+                print(f"⚠️  Warning: {method_name} ParetoFront.csv does not contain all objectives.")
 
     if not method_paths:
         raise FileNotFoundError(f"No ParetoFront.csv files found in {instance_folder}")
+
+    # === Analyze duplicates across methods ===
+    if all_solutions:
+        combined = pd.concat(all_solutions, ignore_index=True)
+        duplicated = combined.duplicated(keep=False)
+        duplicate_entries = combined[duplicated]
+
+        if not duplicate_entries.empty:
+            print("\n=== Duplicate Solutions Across Methods (ignoring method assignment) ===")
+            print(f"Found {len(duplicate_entries)} duplicate entries (counting all appearances).")
+        else:
+            print("\nNo duplicate solutions across methods found.")
 
     return method_paths
 
 
 
-def calculate_pf_share(method_paths=None, print_interim_results=False):
+def calculate_pf_share(method_paths=None, print_debug=False):
     """
     Calculate the percentage share of each method's solutions in the global Pareto front.
     All results are returned as percentages (0–100, float).
     Returns a DataFrame with one row per method.
     """
+
+    debug_print("\n--- PF-Share Calculation Debug---", print_debug)
 
     # Load all method data with objectives
     all_data = []
@@ -73,15 +119,16 @@ def calculate_pf_share(method_paths=None, print_interim_results=False):
         "PF-Share": pf_share_results
     }).T
 
-    if print_interim_results:
-        print("\n--- PF-Share values per method ---")
-        print(result_df)
+    debug_print("\n--- PF-Share values per method ---", print_debug)
+    debug_print(result_df, print_debug)
 
     return result_df
 
 
 
-def calculate_dci(method_paths=None, print_interim_results=False):
+def calculate_dci(method_paths=None, print_debug=False):
+
+    debug_print("\n--- DCI Calculation Debug---", print_debug)
 
     # === 3. Create global Pareto front including method assignment ===
     all_data = []
@@ -93,9 +140,8 @@ def calculate_dci(method_paths=None, print_interim_results=False):
 
     all_data_concat = pd.concat(all_data, ignore_index=True)
 
-    if print_interim_results:
-        print("\n--- All solutions from all methods ---")
-        print(all_data_concat)
+    debug_print("\n--- All solutions from all methods ---", print_debug)
+    debug_print(all_data_concat, print_debug)
 
     # Determine non-dominated solutions (globally across all methods)
     def is_dominated(row, others):
@@ -109,18 +155,16 @@ def calculate_dci(method_paths=None, print_interim_results=False):
 
     pareto_df = all_data_concat.iloc[pareto_rows].reset_index(drop=True)
 
-    if print_interim_results:
-        print("\n--- Combined Pareto Front ---")
-        print(pareto_df)
+    debug_print("\n--- Combined Pareto Front ---", print_debug)
+    debug_print(pareto_df, print_debug)
     # === 3.1. Group Pareto front by method ===
     pareto_groups = {}
     for method in method_paths.keys():
         pareto_groups[method] = pareto_df[pareto_df["Method"] == method].reset_index(drop=True)
-    if print_interim_results:
-        print("\n--- Combined Pareto Front grouped by method ---")
-        for method, group in pareto_groups.items():
-            print(f"\n--- {method} ---")
-            print(group)
+    debug_print("\n--- Combined Pareto Front grouped by method ---", print_debug)
+    for method, group in pareto_groups.items():
+        debug_print(f"\n--- {method} ---", print_debug)
+        debug_print(group, print_debug)
 
     # === 4. Ideal, Nadir, and Upper Bound based on global Pareto front ===
     div = 5
@@ -131,22 +175,20 @@ def calculate_dci(method_paths=None, print_interim_results=False):
 
     box_size = (upper_bound - lower_bound) / div
 
-    if print_interim_results:
-        print("\n--- Ideal Point ---")
-        print(ideal_point)
-        print("\n--- Nadir Point ---")
-        print(nadir_point)
-        print("\n--- Upper Bound ---")
-        print(upper_bound)
-        print("\n--- Box Size ---")
-        print(box_size)
+    debug_print("\n--- Ideal Point ---", print_debug)
+    debug_print(ideal_point, print_debug)
+    debug_print("\n--- Nadir Point ---", print_debug)
+    debug_print(nadir_point, print_debug)
+    debug_print("\n--- Upper Bound ---", print_debug)
+    debug_print(upper_bound, print_debug)
+    debug_print("\n--- Box Size ---", print_debug)
+    debug_print(box_size, print_debug)
 
     # === 4.2 Detect and remove objectives without variation ===
     valid_dims = box_size != 0
     if not valid_dims.all():
         removed = list(box_size[~valid_dims].index)
-        if print_interim_results:
-            print(f"\n⚠️  These objectives have no variation and are removed for DCI calculation: {removed}")
+        debug_print(f"\n⚠️  These objectives have no variation and are removed for DCI calculation: {removed}", print_debug)
 
     # Adjusted grid assignment based on valid dimensions
     def get_grid_index(row):
@@ -190,11 +232,10 @@ def calculate_dci(method_paths=None, print_interim_results=False):
                 cd_matrix[method][cell] = 0.0
 
     # Output: Example CD values
-    if print_interim_results:
-        print("\n--- Example Contribution Degrees ---")
-        for method, contributions in cd_matrix.items():
-            non_zero = {k: v for k, v in contributions.items() if v > 0}
-            print(f"{method}: {list(non_zero.items())[:5]}")
+    debug_print("\n--- Example Contribution Degrees ---", print_debug)
+    for method, contributions in cd_matrix.items():
+        non_zero = {k: v for k, v in contributions.items() if v > 0}
+        debug_print(f"{method}: {list(non_zero.items())[:5]}", print_debug)
 
     # === 4. Diversity Comparison Indicator (DCI) ===
     # === 4.4 Calculate final DCI value per method ===
@@ -210,16 +251,15 @@ def calculate_dci(method_paths=None, print_interim_results=False):
         "DCI": dci_result
     }).T
 
-    if print_interim_results:
-        print("\n--- DCI values per method ---")
-        print(result_df)
+    debug_print("\n--- DCI values per method ---", print_debug)
+    debug_print(result_df, print_debug)
 
     return result_df
 
 
-def calculate_pci(method_paths=None, print_interim_results=False):
+def calculate_pci(method_paths=None, print_debug=False):
 
-
+    debug_print("\n--- PCI Calculation Debug---", print_debug)
 
     # Load all method data with objectives
     all_data = []
@@ -245,6 +285,9 @@ def calculate_pci(method_paths=None, print_interim_results=False):
 
     S_df = all_data_concat.iloc[pareto_rows].reset_index(drop=True)
 
+    debug_print(f"\n[DEBUG] After Pareto selection: S_df shape = {S_df.shape}", print_debug)
+    debug_print(S_df.head(), print_debug)
+
     # === Normalize S_df and each method's solution set for the objectives ===
     # Min-max normalization to [0,1] per objective
     for obj in objectives:
@@ -263,13 +306,15 @@ def calculate_pci(method_paths=None, print_interim_results=False):
             else:
                 method_data[method][obj] = 0.0
 
-    if print_interim_results:
-        print("\n--- Normalized Combined Pareto Front ---")
-        print(S_df)
-        print("\n--- Normalized Solutions per Method ---")
-        for method, df in method_data.items():
-            print(f"\n--- {method} ---")
-            print(df)
+    debug_print("\n--- Normalized Combined Pareto Front ---", print_debug)
+    debug_print(f"[DEBUG] S_df shape: {S_df.shape}", print_debug)
+    debug_print(S_df.head(), print_debug)
+    debug_print("\n--- Normalized Solutions per Method ---", print_debug)
+    for method, df in method_data.items():
+        debug_print(f"\n--- {method} ---", print_debug)
+        debug_print(f"[DEBUG] {method} normalized shape: {df.shape}", print_debug)
+        debug_print(df.head(), print_debug)
+        debug_print(f"[DEBUG] {method} sample values:\n{df[objectives].head(3)}", print_debug)
 
     S_values = S_df[objectives].values
 
@@ -280,8 +325,7 @@ def calculate_pci(method_paths=None, print_interim_results=False):
     N = len(S_values)
     sigma = 1 / (((N * factorial(m - 1, exact=True)) ** (1 / (m - 1))) - (m / 2))
     #sigma = max(sigma, 1e-6)
-    if print_interim_results:
-        print(f"\n--- Calculated sigma threshold for clustering: {sigma:.6f}")
+    debug_print(f"\n--- Calculated sigma threshold for clustering: {sigma:.6f}", print_debug)
 
     def dominance_distance(p, Q):
         # dominance distance of point p to set Q
@@ -306,8 +350,10 @@ def calculate_pci(method_paths=None, print_interim_results=False):
     # Step 2.2: Sort pairs by distance
     pairs.sort()
 
-    if print_interim_results:
-        print(len(pairs), "valid pairs of points with distances for the pareto front length of", len(S_values))
+    debug_print(f"\n[DEBUG] Found {len(pairs)} valid pairs (sigma={sigma:.6f}) for {len(S_values)} Pareto points.", print_debug)
+    debug_print("[DEBUG] Sample pair distances:", print_debug)
+    for sample in pairs[:5]:
+        debug_print(f"  Distance: {sample[0]:.6f}, Indices: ({sample[1]}, {sample[2]})", print_debug)
 
 
     # Step 2.3: Initialize clusters C1 ← s1, C2 ← s2, ..., Cn ← sn
@@ -357,15 +403,44 @@ def calculate_pci(method_paths=None, print_interim_results=False):
 
     cluster_points = [S_values[cluster_idxs] for cluster_idxs in clusters.values()]
 
-    if print_interim_results:
-        print("\n--- Clusters ---")
-        for i, cluster in enumerate(cluster_points):
-            print(f"Cluster {i} ({len(cluster)} points):")
-            for point in cluster:
-                print(f"  {np.round(point, 4).tolist()}")
-            print("-" * 40)
-        print("\nCluster assignments (root index -> point indices):")
-        print(clusters)
+    debug_print("\n--- Clusters ---", print_debug)
+    debug_print(f"[DEBUG] Number of clusters: {len(cluster_points)}", print_debug)
+    for i, cluster in enumerate(cluster_points[:5]):
+        debug_print(f"Cluster {i} ({len(cluster)} points):", print_debug)
+        for point in cluster[:3]:
+            debug_print(f"  {np.round(point, 4).tolist()}", print_debug)
+        if len(cluster) > 3:
+            debug_print("  ...", print_debug)
+        # Add bounding box volume calculation
+        mins = np.min(cluster, axis=0)
+        maxs = np.max(cluster, axis=0)
+        volume = np.prod(maxs - mins)
+        # Add average internal distance calculation
+        if len(cluster) > 1:
+            from scipy.spatial.distance import pdist
+            avg_internal_distance = np.mean(pdist(cluster))
+        else:
+            avg_internal_distance = 0.0
+        debug_print(f"  Bounding Box Volume: {volume:.6f}", print_debug)
+        debug_print(f"  Avg. Internal Distance: {avg_internal_distance:.6f}", print_debug)
+        debug_print("-" * 40, print_debug)
+    debug_print("\n[DEBUG] Cluster assignments (root index -> point indices):", print_debug)
+    for k, v in list(clusters.items())[:5]:
+        debug_print(f"  Root {k}: {v}", print_debug)
+    if len(clusters) > 5:
+        debug_print("  ...", print_debug)
+
+    # --- New Debug Print: Distribution of Methods inside Clusters ---
+    debug_print("\n[DEBUG] Method distribution per cluster:", print_debug)
+    for i, cluster in enumerate(cluster_points):
+        method_counts = {}
+        for point in cluster:
+            for idx, x in enumerate(S_values):
+                if np.allclose(x, point, atol=1e-8):
+                    method = S_df.iloc[idx]["Method"]
+                    method_counts[method] = method_counts.get(method, 0) + 1
+        debug_print(f"Cluster {i} ({len(cluster)} points): {method_counts}", print_debug)
+    debug_print("-" * 50, print_debug)
 
 
     # === Algorithm 1 Step 3–14: Calculate PCI for each method ===
@@ -384,10 +459,12 @@ def calculate_pci(method_paths=None, print_interim_results=False):
             total_distance += min(distances)
         return total_distance
 
+
     for method in method_paths.keys():
         X = S_df[S_df["Method"] == method][objectives].values
         pci_sum = 0.0
-        for cluster in cluster_points:
+
+        for cluster_idx, cluster in enumerate(cluster_points):
             # Get the indices of points from the method that belong to the current cluster
             method_points_in_cluster = []
             for point in cluster:
@@ -396,35 +473,48 @@ def calculate_pci(method_paths=None, print_interim_results=False):
                         method_points_in_cluster.append(x)
             method_points_in_cluster = np.array(method_points_in_cluster)
 
-
             if len(method_points_in_cluster) < 2:
                 # Use minimum dominance distance from X to cluster
                 min_dist = min(dominance_distance(x, cluster) for x in X)
                 pci_sum += min_dist
+  
+                debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): <2 points, Point-to-set distance={min_dist:.6f}", print_debug)
             else:
                 # Use set-to-set dominance distance
-                pci_sum += dominance_distance_set(method_points_in_cluster, cluster)
+                dset = dominance_distance_set(method_points_in_cluster, cluster)
+                min_dist = min(dominance_distance(x, cluster) for x in X)
+                pci_sum += min(dset, min_dist)
+
+                if dset < min_dist:
+                    debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): Set-to-set distance={dset:.6f} < Point-to-set distance={min_dist:.6f}", print_debug)
+                else:
+                    debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): Point-to-set distance={min_dist:.6f} < Set-to-set distance={dset:.6f}", print_debug)
+
 
         pci_result[method] = pci_sum / len(cluster_points) if len(cluster_points) > 0 else 0.0
+
+
+
 
     # === Algorithm 1 Step 15: Return PCI(P1), ..., PCI(Pn) ===
     result_df = pd.DataFrame({
         "PCI": pci_result
     }).T
 
-    if print_interim_results:
-        print("\n--- PCI values per method ---")
-        print(result_df)
+    debug_print("\n--- PCI values per method ---", print_debug)
+    debug_print(result_df, print_debug)
 
     return result_df
 
 
-def calculate_spread(method_paths=None, print_interim_results=False):
+def calculate_spread(method_paths=None, print_debug=False):
     """
     Calculate the spread metric for each method's Pareto front.
     All objectives are min-max normalized to [0, 1] (using global min and max across all methods) before calculating the spread.
     Returns a DataFrame with one row per method.
     """
+    debug_print("\n--- Spread Calculation Debug---", print_debug)
+
     def spread(front):
         front_sorted = front[np.argsort(front[:, 0])]
         distances = [np.linalg.norm(front_sorted[i + 1] - front_sorted[i]) for i in range(len(front_sorted) - 1)]
@@ -454,14 +544,12 @@ def calculate_spread(method_paths=None, print_interim_results=False):
         "Spread": spread_results
     }).T
 
-    if print_interim_results:
-        print("\n--- Spread values per method ---")
-        print(result_df)
+    debug_print("\n--- Spread values per method ---", print_debug)
+    debug_print(result_df, print_debug)
 
     return result_df
 
-
-def calculate_hypervolume(method_paths=None, print_interim_results=False):
+def calculate_hypervolume_hypercubes(method_paths=None, print_interim_results=False):
     """
     Calculate the normalized hypervolume for each method's Pareto front using min-max normalized objectives.
     Returns a DataFrame with one row per method.
@@ -508,18 +596,189 @@ def calculate_hypervolume(method_paths=None, print_interim_results=False):
 
     return result_df
 
+def calculate_hypervolume_monte_carlo(method_paths=None, samples=50000, print_interim_results=False):
+    """
+    Approximate the normalized hypervolume for each method's Pareto front using Monte Carlo sampling.
+    Returns a DataFrame with one row per method.
+    """
+    debug_print("\n--- Monte Carlo Hypervolume Calculation Debug ---", print_interim_results)
+
+    # Load all method data
+    all_data = []
+    for method, path in method_paths.items():
+        df = pd.read_csv(path)
+        all_data.append(df[objectives])
+    all_data_concat = pd.concat(all_data, ignore_index=True)
+
+    # Min-Max Normalization
+    min_point = all_data_concat.min().to_numpy()
+    max_point = all_data_concat.max().to_numpy()
+    ranges = np.where(max_point - min_point != 0, max_point - min_point, 1)  # avoid division by zero
+
+    hypervolume_results = {}
+    # Generate random sample points in [0, 1]^n
+    sample_points = np.random.rand(samples, normalized_front.shape[1])
+
+    for method, path in method_paths.items():
+        df = pd.read_csv(path)
+        front = df[objectives].to_numpy()
+        normalized_front = (front - min_point) / ranges
+        normalized_front = np.clip(normalized_front, 0, 1)
+
+        
+
+        # Check if each sample point is dominated by at least one solution in the front
+        dominated = np.any(np.all(normalized_front <= sample_points[:, None, :], axis=2), axis=1)
+
+        # Hypervolume approximation: fraction of dominated samples
+        hv_approx = np.mean(dominated)
+        hypervolume_results[method] = hv_approx
+
+        debug_print(f"[DEBUG] {method} approximated hypervolume (Monte Carlo, {samples} samples): {hv_approx:.6f}", print_interim_results)
+
+    result_df = pd.DataFrame({
+        "Monte Carlo Hypervolume": hypervolume_results
+    }).T
+
+    debug_print("\n--- Monte Carlo Hypervolume values per method ---", print_interim_results)
+    debug_print(result_df, print_interim_results)
+
+    return result_df
+
+def calculate_average_monte_carlo_hypervolume(method_paths, seeds=[42, 43, 44, 45, 46], samples=50000):
+    results = []
+    for seed in seeds:
+        np.random.seed(seed)
+        hv_result = calculate_hypervolume_monte_carlo(method_paths, samples=samples)
+        results.append(hv_result.T)
+
+    avg_result = pd.concat(results).groupby(level=0).mean().T
+    return avg_result
+
+def calculate_exact_hypervolume(method_paths=None, print_debug=False):
+    """
+    Calculate the exact hypervolume for each method's Pareto front.
+    """
+
+    debug_print("\n--- Exact Hypervolume Calculation Debug ---", print_debug)
+
+    # Load all method data
+    all_data = []
+    for method, path in method_paths.items():
+        df = pd.read_csv(path)
+        all_data.append(df[objectives])
+    all_data_concat = pd.concat(all_data, ignore_index=True)
+
+    # Min-Max Normalization
+    min_point = all_data_concat.min().to_numpy()
+    max_point = all_data_concat.max().to_numpy()
+    ranges = np.where(max_point - min_point != 0, max_point - min_point, 1)  # avoid division by zero
+
+    hypervolume_results = {}
+
+    for method, path in method_paths.items():
+        df = pd.read_csv(path)
+        front = df[objectives].to_numpy()
+        normalized_front = (front - min_point) / ranges
+        normalized_front = np.clip(normalized_front, 0, 1)
+
+        # Reference point for normalized data (all ones)
+        ref_point = np.ones(normalized_front.shape[1])
+
+        # Calculate Hypervolume
+        hv = HV(ref_point)
+        hypervolume_value = hv.do(normalized_front)
+        hypervolume_results[method] = hypervolume_value
+
+        debug_print(f"[DEBUG] {method} hypervolume: {hypervolume_value:.6f}", print_debug)
+
+    result_df = pd.DataFrame({
+        "Exact Hypervolume": hypervolume_results
+    }).T
+
+    debug_print("\n--- Exact Hypervolume values per method ---", print_debug)
+    debug_print(result_df, print_debug)
+
+    return result_df
+
+
+
+def plot_aggregated_3d(method_paths, instance_name=None):
+    """
+    Create 3D scatter plots of the aggregated objectives for each method.
+    - X-axis: Driver Violation
+    - Y-axis: Sum of distance-based objectives (Commute Distance + Transport Machines + Transport Attachments)
+    - Z-axis: Sum of resource-based objectives (Machines + Workers + Attachments)
+    """
+    for method, path in method_paths.items():
+        df = pd.read_csv(path)
+
+        x = df["Driver Violation"]
+        y = df[["Commute Distance", "Transport Machines", "Transport Attachments"]].sum(axis=1)
+        z = df[["Machines", "Workers", "Attachments"]].sum(axis=1)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(x, y, z, c='green', marker='o')
+
+        ax.set_xlabel("Driver Violation")
+        ax.set_ylabel("Total Distance")
+        ax.set_zlabel("Total Resources")
+
+        title = f"{method} - Aggregated 3D Plot"
+        if instance_name:
+            title = f"{instance_name} - {method} Aggregated 3D"
+        ax.set_title(title)
+
+        plt.tight_layout()
+        plt.show()
+
+
+def plot_3d_custom_objectives(method_paths, selected_objectives, instance_name=None):
+    """
+    Create 3D scatter plots of three selected objectives for each method.
+    - X-axis: selected_objectives[0]
+    - Y-axis: selected_objectives[1]
+    - Z-axis: selected_objectives[2]
+    """
+    if len(selected_objectives) != 3:
+        raise ValueError("Exactly three objectives must be selected for 3D plotting.")
+
+    for method, path in method_paths.items():
+        df = pd.read_csv(path)
+
+        x = df[selected_objectives[0]]
+        y = df[selected_objectives[1]]
+        z = df[selected_objectives[2]]
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(x, y, z, c='blue', marker='o')
+
+        ax.set_xlabel(selected_objectives[0])
+        ax.set_ylabel(selected_objectives[1])
+        ax.set_zlabel(selected_objectives[2])
+
+        title = f"{method} - Custom 3D Plot"
+        if instance_name:
+            title = f"{instance_name} - {method} Custom 3D"
+        ax.set_title(title)
+
+        plt.tight_layout()
+        plt.show()
+
 
 
 if __name__ == "__main__":
-    instance = "a10_o107_m5_an57_ar12"
+    np.random.seed(42)
     method_paths = get_methdod_paths(instance)
 
     # Calculate all metrics
-    pci_result = calculate_pci(method_paths)
-    dci_result = calculate_dci(method_paths)
-    pf_share_result = calculate_pf_share(method_paths)
-    spread_result = calculate_spread(method_paths)
-    hypervolume_result = calculate_hypervolume(method_paths)
+    pci_result = calculate_pci(method_paths, print_debug=True)
+    dci_result = calculate_dci(method_paths, print_debug=True)
+    pf_share_result = calculate_pf_share(method_paths, print_debug=True)
+    spread_result = calculate_spread(method_paths, print_debug=True)
+    hypervolume_result = calculate_average_monte_carlo_hypervolume(method_paths, print_debug=True)
 
     # Combine all metrics
     combined_result = pd.concat([pf_share_result, pci_result, dci_result, spread_result, hypervolume_result], axis=0)
@@ -560,7 +819,10 @@ if __name__ == "__main__":
                 annotated_result.at[idx, col] = f"{formatted_result.at[idx, col]} 👎"
 
     # Print final summary with custom formatting for readability
+    
     print("\n=== Combined Metrics Summary ===\n")
+    print("Instance:", instance)
+    print("Methods:", ", ".join(method_paths.keys()), "\n")
     for idx, row in annotated_result.iterrows():
         print(f"{idx}")
         for method in annotated_result.columns:
@@ -568,41 +830,23 @@ if __name__ == "__main__":
         print()  # blank line after each metric
 
 
-# === Aggregated 3D Plotting ===
-import matplotlib.pyplot as plt
+    # Plots of pareto fronts and chosen objectives
+    plot_3d_custom_objectives(method_paths, ["Transport Machines", "Commute Distance", "Transport Attachments"], instance_name=instance)
+    #plot_aggregated_3d(method_paths, instance)
 
-def plot_aggregated_3d(method_paths, instance_name=None):
-    """
-    Create 3D scatter plots of the aggregated objectives for each method.
-    - X-axis: Driver Violation
-    - Y-axis: Sum of distance-based objectives (Commute Distance + Transport Machines + Transport Attachments)
-    - Z-axis: Sum of resource-based objectives (Machines + Workers + Attachments)
-    """
-    for method, path in method_paths.items():
-        df = pd.read_csv(path)
 
-        x = df["Driver Violation"]
-        y = df[["Commute Distance", "Transport Machines", "Transport Attachments"]].sum(axis=1)
-        z = df[["Machines", "Workers", "Attachments"]].sum(axis=1)
 
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(x, y, z, c='green', marker='o')
 
-        ax.set_xlabel("Driver Violation")
-        ax.set_ylabel("Total Distance")
-        ax.set_zlabel("Total Resources")
 
-        title = f"{method} - Aggregated 3D Plot"
-        if instance_name:
-            title = f"{instance_name} - {method} Aggregated 3D"
-        ax.set_title(title)
 
-        plt.tight_layout()
-        plt.show()
 
-# Call plot_aggregated_3d automatically after metrics output
-#plot_aggregated_3d(method_paths, instance)
+
+
+
+
+
+
+
 
 """ === Metrics === 
 
@@ -640,4 +884,19 @@ def plot_aggregated_3d(method_paths, instance_name=None):
 
 # 3. Contribution / Coverage (relative contribution of methods):
 #    - PF-Share
+"""
+
+""" === Interpretation of Clustering Results (PCI) ===
+
+- When many solutions are grouped into large clusters, the PCI tends to be low (good).
+- When solutions are grouped individually or into small clusters, the PCI is higher (bad).
+- Many small clusters indicate weak dominance among solutions and thus a poorer approximation of the Pareto front.
+- A single large cluster suggests that solutions are similar and strong regarding dominance relationships.
+
+In practice:
+- Low PCI: Solutions barely dominate each other but are collectively very close to the ideal front.
+- High PCI: Solutions are scattered or poorly distributed in terms of dominance relationships.
+
+Important:
+- PCI should always be interpreted together with DCI (Diversity) and Hypervolume (Convergence).
 """

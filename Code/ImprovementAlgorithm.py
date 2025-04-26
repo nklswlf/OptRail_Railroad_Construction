@@ -425,7 +425,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         print("\nFinal Pareto Front:")
         self.ParetoSolutions.ShowFront()
         self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
-        self.ParetoSolutions.CalculateParetoFrontMetrics()
+        #self.ParetoSolutions.CalculateParetoFrontMetrics()
 
         algo_time = time.time() - start_time
 
@@ -678,7 +678,7 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         print("\nPareto Front after Dominance Based Energy Improvement:")
         self.ParetoSolutions.ShowFront()
         self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
-        self.ParetoSolutions.CalculateParetoFrontMetrics()
+        #self.ParetoSolutions.CalculateParetoFrontMetrics()
 
         
             
@@ -932,7 +932,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         self.ParetoSolutions.ShowFront()
     
         self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
-        self.ParetoSolutions.CalculateParetoFrontMetrics()
+        #self.ParetoSolutions.CalculateParetoFrontMetrics()
 
 
         # Dominance Phase
@@ -952,6 +952,6 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         self.ParetoSolutions.ShowFront()
 
         self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
-        self.ParetoSolutions.CalculateParetoFrontMetrics()
+        #self.ParetoSolutions.CalculateParetoFrontMetrics()
 
 
