@@ -509,15 +509,15 @@ def calculate_pci(method_paths=None, print_debug=False):
     return result_df
 
 
-def calculate_spread(method_paths=None, print_debug=False):
+def calculate_spacing(method_paths=None, print_debug=False):
     """
-    Calculate the spread metric for each method's Pareto front.
-    All objectives are min-max normalized to [0, 1] (using global min and max across all methods) before calculating the spread.
+    Calculate the spacing metric for each method's Pareto front.
+    All objectives are min-max normalized to [0, 1] (using global min and max across all methods) before calculating the spacing.
     Returns a DataFrame with one row per method.
     """
-    debug_print("\n--- Spread Calculation Debug---", print_debug)
+    debug_print("\n--- Spacing Calculation Debug---", print_debug)
 
-    def spread(front):
+    def spacing(front):
         front_sorted = front[np.argsort(front[:, 0])]
         distances = [np.linalg.norm(front_sorted[i + 1] - front_sorted[i]) for i in range(len(front_sorted) - 1)]
         return np.std(distances) / np.mean(distances) if np.mean(distances) > 0 else 0
@@ -534,19 +534,19 @@ def calculate_spread(method_paths=None, print_debug=False):
     max_point = all_data_concat.max().to_numpy()
     ranges = np.where(max_point - min_point != 0, max_point - min_point, 1)  # avoid division by zero
 
-    spread_results = {}
+    spacing_results = {}
     for method, path in method_paths.items():
         df = pd.read_csv(path)
         front = df[objectives].to_numpy()
         normalized_front = (front - min_point) / ranges
         normalized_front = np.clip(normalized_front, 0, 1)  # Safety
-        spread_results[method] = spread(normalized_front)
+        spacing_results[method] = spacing(normalized_front)
 
     result_df = pd.DataFrame({
-        "Spread": spread_results
+        "Spacing": spacing_results
     }).T
 
-    debug_print("\n--- Spread values per method ---", print_debug)
+    debug_print("\n--- Spacing values per method ---", print_debug)
     debug_print(result_df, print_debug)
 
     return result_df
@@ -600,7 +600,7 @@ def calculate_hypervolume_hypercubes(method_paths=None, print_interim_results=Fa
     return result_df
 
 
-def calculate_hypervolume_monte_carlo(method_paths=None, samples=50000, print_interim_results=False):
+def calculate_hypervolume_monte_carlo(method_paths=None, samples=100000, print_interim_results=False):
     """
     Approximate the normalized hypervolume for each method's Pareto front using Monte Carlo sampling.
     Returns a DataFrame with one row per method.
@@ -656,7 +656,7 @@ def calculate_hypervolume_monte_carlo(method_paths=None, samples=50000, print_in
     return result_df
 
 
-def calculate_average_monte_carlo_hypervolume(method_paths, print_debug = False, seeds=[42, 43, 44, 45, 46], samples=50000):
+def calculate_average_monte_carlo_hypervolume(method_paths, print_debug = False, seeds=[42, 43, 44, 45, 46], samples=100000):
     results = []
     for seed in seeds:
         np.random.seed(seed)
@@ -669,6 +669,55 @@ def calculate_average_monte_carlo_hypervolume(method_paths, print_debug = False,
     debug_print(avg_result, print_debug)
 
     return avg_result
+
+
+
+def calculate_spread(method_paths=None, print_debug=False):
+    """
+    Calculate the Spread (sum of width for each objective) for each method's Pareto front.
+    Objectives are min-max normalized to [0, 1] before calculating the Spread.
+    Spread = sum over objectives of (max value - min value).
+    Returns a DataFrame with one row per method.
+    """
+    debug_print("\n--- Spread Calculation Debug (Normalized) ---", print_debug)
+
+    # Load all method data for objectives to get global min and max
+    all_data = []
+    for method, path in method_paths.items():
+        df = pd.read_csv(path)
+        all_data.append(df[objectives])
+    all_data_concat = pd.concat(all_data, ignore_index=True)
+
+    min_point = all_data_concat.min().to_numpy()
+    max_point = all_data_concat.max().to_numpy()
+    ranges = np.where(max_point - min_point != 0, max_point - min_point, 1)  # avoid division by zero
+
+    spread_results = {}
+
+    for method, path in method_paths.items():
+        df = pd.read_csv(path)
+        front = df[objectives].to_numpy()
+
+        # Min-max normalize the front
+        normalized_front = (front - min_point) / ranges
+        normalized_front = np.clip(normalized_front, 0, 1)
+
+        # Spread: sum over all objectives of (max - min) after normalization
+        spread = np.sum(np.max(normalized_front, axis=0) - np.min(normalized_front, axis=0))
+        spread_results[method] = spread
+
+        debug_print(f"[DEBUG] {method} normalized spread: {spread:.6f}", print_debug)
+
+    result_df = pd.DataFrame({
+        "Spread": spread_results
+    }).T
+
+    debug_print("\n--- Spread values per method (Normalized) ---", print_debug)
+    debug_print(result_df, print_debug)
+
+    return result_df
+
+
 
 
 def calculate_exact_hypervolume(method_paths=None, print_debug=False):
@@ -715,6 +764,8 @@ def calculate_exact_hypervolume(method_paths=None, print_debug=False):
     return result_df
 
 
+
+
 def plot_aggregated_3d(method_paths, instance_name=None):
     """
     Create 3D scatter plots of the aggregated objectives for each method.
@@ -744,6 +795,8 @@ def plot_aggregated_3d(method_paths, instance_name=None):
 
         plt.tight_layout()
         plt.show()
+
+
 
 
 def plot_3d_custom_objectives(method_paths, selected_objectives, instance_name=None):
@@ -789,16 +842,17 @@ if __name__ == "__main__":
     pci_result = calculate_pci(method_paths, print_debug=True)
     dci_result = calculate_dci(method_paths, print_debug=True)
     pf_share_result = calculate_pf_share(method_paths, print_debug=True)
-    spread_result = calculate_spread(method_paths, print_debug=True)
+    spacing_results = calculate_spacing(method_paths, print_debug=True)
+    spread_results = calculate_spread(method_paths, print_debug=True)
     
-    hypervolume_result_2 = calculate_hypervolume_monte_carlo(method_paths, print_interim_results=True)
+    #hypervolume_result_2 = calculate_hypervolume_monte_carlo(method_paths, print_interim_results=True)
     hypervolume_result_3 = calculate_average_monte_carlo_hypervolume(method_paths, print_debug=True)
-    hypervolume_result_4 = calculate_hypervolume_hypercubes(method_paths, print_interim_results=True)
+    #hypervolume_result_4 = calculate_hypervolume_hypercubes(method_paths, print_interim_results=True)
     #hypervolume_result = calculate_exact_hypervolume(method_paths, print_debug=True)
 
 
     # Combine all metrics
-    combined_result = pd.concat([pf_share_result, pci_result, dci_result, spread_result, hypervolume_result_3], axis=0)
+    combined_result = pd.concat([pf_share_result, pci_result, hypervolume_result_3, dci_result, spacing_results, spread_results], axis=0)
 
     # Special formatting
     formatted_result = combined_result.copy()
@@ -822,8 +876,8 @@ if __name__ == "__main__":
         if idx == "PF-Share":
             continue  # Skip annotations for PF-Share
         row = formatted_result.loc[idx]
-        # Determine best/worst: for PCI and Spread, best is min; for others, best is max
-        if idx in ["PCI", "Spread"]:
+        # Determine best/worst: for PCI and Sapcing, best is min; for others, best is max
+        if idx in ["PCI", "Spacing"]:
             best_method = row.astype(float).idxmin()
             worst_method = row.astype(float).idxmax()
         else:
@@ -848,7 +902,7 @@ if __name__ == "__main__":
 
 
     # Plots of pareto fronts and chosen objectives
-    plot_3d_custom_objectives(method_paths, ["Transport Machines", "Commute Distance", "Transport Attachments"], instance_name=instance)
+    #plot_3d_custom_objectives(method_paths, ["Transport Machines", "Commute Distance", "Transport Attachments"], instance_name=instance)
     #plot_aggregated_3d(method_paths, instance)
 
 
@@ -881,9 +935,9 @@ if __name__ == "__main__":
 # Measures the proportion of globally non-dominated solutions that each method contributes.
 # Higher PF-Share values indicate that a method produced more top-quality solutions.
 
-# Spread:
+# Spacing:
 # Measures the uniformity of the spacing between consecutive solutions.
-# Lower Spread values are better, indicating solutions are evenly spread along the Pareto front.
+# Lower Spacing values are better, indicating solutions are evenly spaced along the Pareto front.
 
 # Hypervolume:
 # Measures the volume of the objective space dominated by a solution set relative to a reference point.
@@ -893,7 +947,7 @@ if __name__ == "__main__":
 
 # 1. Diversity (distribution and spread of solutions):
 #    - DCI (Diversity Comparison Indicator)
-#    - Spread
+#    - Spacing
 
 # 2. Convergence (how close solutions are to the ideal front):
 #    - PCI (Performance Comparison Indicator)
