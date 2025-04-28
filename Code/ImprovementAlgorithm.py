@@ -541,8 +541,7 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         
         raise Exception(f"Objective {objective} not defined.")
 
-
-
+    
     def DBSA(self, solution:Solution) -> None:
         ''' Simulated annealing algorithm with energy dominance neighborhood'''
         
@@ -709,7 +708,8 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                 cooling_rate_dominance:float,
                 max_iterations_dominance:int,
                 fallback_threshold_dominance:int,
-                scaling_energy_dominance:int):
+                scaling_energy_dominance:int,
+                max_single_move_tries_dominance:int):
         
         super().__init__(inputData)
 
@@ -726,6 +726,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         self.MaxIterations_dominance = max_iterations_dominance
         self.FallbackThreshold_dominance = fallback_threshold_dominance # Currently not used
         self.ScalingEnergy_dominance = scaling_energy_dominance
+        self.MaxSingleMoveTries_dominance = max_single_move_tries_dominance
 
 
 
@@ -743,6 +744,13 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                                         'worker_count': ['Replace_Shift_Worker'],
                                         'machine_count': ['Replace_Shift_Machine'],
                                         'attachment_count': ['Replace_Shift_Attachment']}
+        
+
+        self.None_Move_Counter = {}
+        self.Move_Counter = {}
+        for neighborhoodType in self.NeighborhoodTypes:
+            self.None_Move_Counter[neighborhoodType] = 0
+            self.Move_Counter[neighborhoodType] = 0
 
 
     def ImproveIndividuals(self, local_solution:Solution, local_pareto_front, objective:str) -> list[Solution]:
@@ -783,7 +791,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
 
         return local_pareto_solutions.ParetoFront
 
-    def ParallelImproveIndividuals(self, solution: Solution) -> None:
+    def FirstPhase(self, solution: Solution) -> None:
         ''' Improve individuals with simulated annealing algorithm in parallel'''
 
         print("\nStarting Parallel Improvement of individual objectives...")
@@ -817,26 +825,67 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         elif objective == 'driver_violation' or objective == 'attachment_count' or objective == 'worker_count' or objective == 'machine_count':
             return value
 
-    def DominanceBasedEnergyImprovement(self, solution:Solution) -> None:
+    def location_move(self, solution:Solution) -> None:
+        
+        random_number_of_moves = self.RNG.integers(2, 5)
+        current_solution = solution.clone()
+        self.EvaluationLogic.evaluate(current_solution)
+        delta_details = dict()
+        objectives = set()
 
+        for _ in range(random_number_of_moves):
+            move = None
+            while move is None:
+                random_type = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
+                neighborhood = self.Neighborhoods[random_type]
+                self.Move_Counter[random_type] += 1
+
+                move = neighborhood.SingleMove(current_solution, self.MaxSingleMoveTries_dominance)
+
+                if move is None:
+                    self.None_Move_Counter[random_type] += 1
+    
+
+            for obj, details in move.DeltaDetails.items():
+                if obj not in delta_details:
+                    delta_details[obj] = 0
+                delta_details[obj] += details
+                objectives.add(obj)
+
+
+            worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
+            current_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+            self.EvaluationLogic.calculate_worker_count_and_utilization_time(current_solution)
+
+
+        return delta_details,objectives, worker_route_plan, machine_route_plan, attachment_route_plan
+    
+
+        
+
+    def SecondPhase(self, solution:Solution) -> None:
         ''' Simulated annealing algorithm with energy dominance neighborhood'''
-
+        
         current_temperature = self.StartTemperature_dominance
+
+        fallback_counter = 0
 
         while current_temperature > self.MinTemperature_dominance:
 
             for i in range(self.MaxIterations_dominance):
 
-                dominating_count_current, _ = self.ParetoSolutions.CountDominatingSolutions(solution, interpolated_points= [])
+                dominating_count_current, interpolated_points = self.ParetoSolutions.CountDominatingSolutions(solution)
 
                 neighborhoodType = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
                 neighborhood = self.Neighborhoods[neighborhoodType]
                 objectives = self.NeighborhoodTypes[neighborhoodType]
 
-                move_type = self.RNG.choice(['traversal'])#, 'location'])
+                move_type = self.RNG.choice(['traversal', 'location'])
                 if move_type == 'traversal':
-                    move = neighborhood.SingleMove(solution) 
+                    move = neighborhood.SingleMove(solution, self.MaxSingleMoveTries_dominance)
+                    self.Move_Counter[neighborhoodType] += 1
                     if move is None:
+                        self.None_Move_Counter[neighborhoodType] += 1
                         continue
                     delta_details = move.DeltaDetails
                 elif move_type == 'location':
@@ -886,10 +935,10 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
 
                 # Possible to combine objectives to 3 main topics: distance, ressource count, violation
 
-                dominating_count_new, _ = self.ParetoSolutions.CountDominatingSolutions(objective_dict, interpolated_points= [])
+                dominating_count_new, _ = self.ParetoSolutions.CountDominatingSolutions(objective_dict, interpolated_points=interpolated_points)
 
 
-                lenght = len(self.ParetoSolutions.ParetoFront) + 2
+                lenght = len(self.ParetoSolutions.ParetoFront) + len(interpolated_points) + 2
                 overall_difference = (dominating_count_new - dominating_count_current)/ lenght
 
                 if overall_difference <= 0:
@@ -899,8 +948,6 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
 
                 random_number = self.RNG.random()
 
-                #self.log(f"\n[DBSA] ΔDom: {dominating_count_current} → {dominating_count_new}, ΔE: {overall_difference:.3f}, T: {current_temperature:.2f}, prob: {prob:.3f}")
-                #self.log(f"[Delta] Delta Details: {delta_details}")
 
                 if prob < random_number:
                     continue
@@ -910,8 +957,17 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                 solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
                 self.EvaluationLogic.evaluate(solution)
 
-                #if dominating_count_new <= dominating_count_current:
-                self.ParetoSolutions.UpdateParetoFront(solution)
+                if dominating_count_new == 0:
+                    added = self.ParetoSolutions.UpdateParetoFront(solution)
+                    if not added:
+                        fallback_counter += 1
+                    else:
+                        fallback_counter = 0
+                else:
+                    fallback_counter += 1
+
+                if fallback_counter >= self.FallbackThreshold_dominance:
+                    solution = self.ParetoSolutions.SelectRandomBestSolution()
 
 
             current_temperature *= self.CoolingRate_dominance
@@ -924,7 +980,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         self.InitializeNeighborhoods()
 
         # Individual Phase
-        self.ParallelImproveIndividuals(solution)
+        self.FirstPhase(solution)
 
         self.ParetoSolutions.PurgeParetoFront()
         self.ParetoSolutions.SortParetoFront()
@@ -937,7 +993,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
 
         # Dominance Phase
         pareto_solution = self.ParetoSolutions.SelectRandomBestSolution()
-        self.DominanceBasedEnergyImprovement(pareto_solution)
+        self.SecondPhase(pareto_solution)
     
             
         self.ParetoSolutions.PurgeParetoFront()

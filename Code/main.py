@@ -28,7 +28,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = ["Construction_a10_o107_m5_an57_ar12.json"]
+instances = ["Construction_a50_o578_m28_an276_ar66.json"]
 
 
 
@@ -75,7 +75,7 @@ step = None
 #step = 'Greedy'
 #step = 'Building'
 
-algortihm = 'DBSA'
+algortihm = 'TPSA'
 
 algortihms = ['PSA', 'DBSA', 'TPSA']
 
@@ -129,16 +129,17 @@ def main():
                                                     start_temp_individual=20,
                                                     min_temp_individual=0.1,
                                                     cooling_rate_individual=0.95,
-                                                    max_iterations_individual=100,
+                                                    max_iterations_individual=500,
                                                     fallback_threshold_individual=25,
                                                     scaling_energy_individual=30,
 
                                                     start_temp_dominance=20,
                                                     min_temp_dominance=0.1,
                                                     cooling_rate_dominance=0.95,
-                                                    max_iterations_dominance=300,
+                                                    max_iterations_dominance=500,
                                                     fallback_threshold_dominance=25,
-                                                    scaling_energy_dominance=30)
+                                                    scaling_energy_dominance=30,
+                                                    max_single_move_tries_dominance=30)
 
             if step == 'Bound':
                 time = solver.RunBound(UB_technique="LP")

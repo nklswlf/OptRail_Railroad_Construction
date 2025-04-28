@@ -103,7 +103,7 @@ import pandas as pd
 
 # === Instance ===
 #instance = "a3_o80_m10_an10_ar9_reduced"
-instance = "a10_o107_m5_an57_ar12"
+#instance = "a10_o107_m5_an57_ar12"
 #instance = "a10_o114_m6_an57_ar11"
 #instance = "a10_o128_m6_an51_ar13"
 #instance = "a10_o144_m6_an53_ar12"
@@ -112,7 +112,7 @@ instance = "a10_o107_m5_an57_ar12"
 #instance = "a25_o306_m13_an127_ar31"
 #instance = "a30_o355_m18_an148_ar42"
 #instance = "a40_o476_m22_an215_ar51"
-#instance = "a50_o578_m28_an276_ar66"
+instance = "a50_o578_m28_an276_ar66"
 #instance = "PCI_Change_Reference"
 
 # === Objectives ===
@@ -131,7 +131,7 @@ def debug_print(msg, print_debug=False):
         print(msg)
 
 
-def get_method_paths(instance_folder: str, print_debug=False):
+def get_method_paths(instance_folder: str,excluded_methods=[], print_debug=False):
     # === Automatically find all methods based on subfolders containing ParetoFront.csv ===
     method_paths = {}
     single_pareto_fronts = {}
@@ -139,6 +139,9 @@ def get_method_paths(instance_folder: str, print_debug=False):
     for root, dirs, files in os.walk(instance_folder):
         if "ParetoFront.csv" in files:
             method_name = os.path.basename(root)
+            if method_name in excluded_methods:
+                print(f"Skipping excluded method: {method_name}")
+                continue
             path = os.path.join(root, "ParetoFront.csv")
             method_paths[method_name] = path
             # Load solutions and store them for duplicate analysis and single_pareto_fronts
@@ -704,14 +707,14 @@ def calculate_exact_hypervolume(single_pareto_fronts=None, print_debug=False):
     return result_df
 
 
-def plot_aggregated_3d(single_pareto_fronts, instance_name=None):
+def plot_aggregated_3d(single_pareto_fronts_normalized, instance_name=None):
     """
     Create 3D scatter plots of the aggregated objectives for each method.
     - X-axis: Driver Violation
     - Y-axis: Sum of distance-based objectives (Commute Distance + Transport Machines + Transport Attachments)
     - Z-axis: Sum of resource-based objectives (Machines + Workers + Attachments)
     """
-    for method, df in single_pareto_fronts.items():
+    for method, df in single_pareto_fronts_normalized.items():
         x = df["Driver Violation"]
         y = df[["Commute Distance", "Transport Machines", "Transport Attachments"]].sum(axis=1)
         z = df[["Machines", "Workers", "Attachments"]].sum(axis=1)
@@ -733,7 +736,92 @@ def plot_aggregated_3d(single_pareto_fronts, instance_name=None):
         plt.show()
 
 
-def plot_3d_custom_objectives(single_pareto_fronts, selected_objectives, instance_name=None):
+
+def plot_aggregated_3d_combined(single_pareto_fronts_normalized, instance_name=None):
+    """
+    Erstellt einen kombinierten 3D-Scatterplot, in dem alle Punkte aller Methoden gemeinsam dargestellt werden.
+    - X-Achse: Driver Violation
+    - Y-Achse: Summe der Distanz-Objectives (Commute Distance + Transport Machines + Transport Attachments)
+    - Z-Achse: Summe der Ressourcen-Objectives (Machines + Workers + Attachments)
+    Jede Methode erhält eine eigene Farbe, und eine Legende wird hinzugefügt.
+    """
+    import matplotlib.pyplot as plt
+    from matplotlib import cm
+    from itertools import cycle
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Farben je Methode
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    color_cycler = cycle(colors)
+    method_to_color = {}
+    for method in single_pareto_fronts_normalized.keys():
+        method_to_color[method] = next(color_cycler)
+
+    handles = []
+    for method, df in single_pareto_fronts_normalized.items():
+        x = df["Driver Violation"]
+        y = df[["Commute Distance", "Transport Machines", "Transport Attachments"]].sum(axis=1)
+        z = df[["Machines", "Workers", "Attachments"]].sum(axis=1)
+        color = method_to_color[method]
+        scatter = ax.scatter(x, y, z, c=color, marker='o', label=method, alpha=0.7)
+        handles.append(scatter)
+
+    ax.set_xlabel("Driver Violation")
+    ax.set_ylabel("Total Distance")
+    ax.set_zlabel("Total Resources")
+
+    title = "Aggregated 3D Plot (All Methods)"
+    if instance_name:
+        title = f"{instance_name} - Aggregated 3D (All Methods)"
+    ax.set_title(title)
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_aggregated_3d_combined_global(global_pareto_front_normalized, instance_name=None):
+    """
+    Create a combined 3D scatterplot for the global Pareto front (normalized), colored by Method.
+    - X-axis: Driver Violation
+    - Y-axis: Sum of distance-based objectives (Commute Distance + Transport Machines + Transport Attachments)
+    - Z-axis: Sum of resource-based objectives (Machines + Workers + Attachments)
+    Each method is shown with a different color and a legend is added.
+    """
+    import matplotlib.pyplot as plt
+    from itertools import cycle
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    if "Method" not in global_pareto_front_normalized.columns:
+        raise ValueError("global_pareto_front_normalized must include a 'Method' column")
+    methods = global_pareto_front_normalized["Method"].unique()
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    color_cycler = cycle(colors)
+    method_to_color = {method: next(color_cycler) for method in methods}
+    handles = []
+    for method in methods:
+        df = global_pareto_front_normalized[global_pareto_front_normalized["Method"] == method]
+        x = df["Driver Violation"]
+        y = df[["Commute Distance", "Transport Machines", "Transport Attachments"]].sum(axis=1)
+        z = df[["Machines", "Workers", "Attachments"]].sum(axis=1)
+        color = method_to_color[method]
+        scatter = ax.scatter(x, y, z, c=color, marker='o', label=method, alpha=0.7)
+        handles.append(scatter)
+    ax.set_xlabel("Driver Violation (normalized)")
+    ax.set_ylabel("Total Distance (normalized)")
+    ax.set_zlabel("Total Resources (normalized)")
+    title = "Aggregated 3D Plot (Global Pareto Front, All Methods)"
+    if instance_name:
+        title = f"{instance_name} - Aggregated 3D (Global Pareto Front, All Methods)"
+    ax.set_title(title)
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_3d_custom_objectives(single_pareto_fronts_normalized, selected_objectives, instance_name=None):
     """
     Create 3D scatter plots of three selected objectives for each method.
     - X-axis: selected_objectives[0]
@@ -743,7 +831,7 @@ def plot_3d_custom_objectives(single_pareto_fronts, selected_objectives, instanc
     if len(selected_objectives) != 3:
         raise ValueError("Exactly three objectives must be selected for 3D plotting.")
 
-    for method, df in single_pareto_fronts.items():
+    for method, df in single_pareto_fronts_normalized.items():
         x = df[selected_objectives[0]]
         y = df[selected_objectives[1]]
         z = df[selected_objectives[2]]
@@ -766,10 +854,100 @@ def plot_3d_custom_objectives(single_pareto_fronts, selected_objectives, instanc
 
 
 
+def plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, selected_objectives, instance_name=None):
+    """
+    Create a combined 3D scatter plot of three selected objectives across all methods.
+    - X-axis: selected_objectives[0]
+    - Y-axis: selected_objectives[1]
+    - Z-axis: selected_objectives[2]
+    Each method is shown with a different color and a legend is added.
+    """
+    if len(selected_objectives) != 3:
+        raise ValueError("Exactly three objectives must be selected for 3D plotting.")
+
+    import matplotlib.pyplot as plt
+    from itertools import cycle
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    color_cycler = cycle(colors)
+    method_to_color = {}
+
+    for method in single_pareto_fronts_normalized.keys():
+        method_to_color[method] = next(color_cycler)
+
+    handles = []
+    for method, df in single_pareto_fronts_normalized.items():
+        x = df[selected_objectives[0]]
+        y = df[selected_objectives[1]]
+        z = df[selected_objectives[2]]
+        color = method_to_color[method]
+        scatter = ax.scatter(x, y, z, c=color, marker='o', label=method, alpha=0.7)
+        handles.append(scatter)
+
+    ax.set_xlabel(selected_objectives[0])
+    ax.set_ylabel(selected_objectives[1])
+    ax.set_zlabel(selected_objectives[2])
+
+    title = f"Combined 3D Plot ({', '.join(selected_objectives)})"
+    if instance_name:
+        title = f"{instance_name} - Combined 3D ({', '.join(selected_objectives)})"
+    ax.set_title(title)
+
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+
+def plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, selected_objectives, instance_name=None):
+    """
+    Create a combined 3D scatter plot of three selected objectives across all methods for the global Pareto front (normalized).
+    - X-axis: selected_objectives[0]
+    - Y-axis: selected_objectives[1]
+    - Z-axis: selected_objectives[2]
+    Each method is shown with a different color and a legend is added.
+    """
+    if len(selected_objectives) != 3:
+        raise ValueError("Exactly three objectives must be selected for 3D plotting.")
+    import matplotlib.pyplot as plt
+    from itertools import cycle
+    if "Method" not in global_pareto_front_normalized.columns:
+        raise ValueError("global_pareto_front_normalized must include a 'Method' column")
+    methods = global_pareto_front_normalized["Method"].unique()
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    color_cycler = cycle(colors)
+    method_to_color = {method: next(color_cycler) for method in methods}
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    handles = []
+    for method in methods:
+        df = global_pareto_front_normalized[global_pareto_front_normalized["Method"] == method]
+        x = df[selected_objectives[0]]
+        y = df[selected_objectives[1]]
+        z = df[selected_objectives[2]]
+        color = method_to_color[method]
+        scatter = ax.scatter(x, y, z, c=color, marker='o', label=method, alpha=0.7)
+        handles.append(scatter)
+    ax.set_xlabel(f"{selected_objectives[0]} (normalized)")
+    ax.set_ylabel(f"{selected_objectives[1]} (normalized)")
+    ax.set_zlabel(f"{selected_objectives[2]} (normalized)")
+    title = f"Combined 3D Plot (Global Pareto Front, {', '.join(selected_objectives)})"
+    if instance_name:
+        title = f"{instance_name} - Combined 3D (Global Pareto Front, {', '.join(selected_objectives)})"
+    ax.set_title(title)
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+
 if __name__ == "__main__":
     np.random.seed(42)
     # Updated: Unpack all four returned values (now includes "with_method" DataFrames)
-    single_pareto_fronts, single_pareto_fronts_normalized, global_pareto_front, global_pareto_front_normalized = get_method_paths(instance, print_debug=False)
+    single_pareto_fronts, single_pareto_fronts_normalized, global_pareto_front, global_pareto_front_normalized = get_method_paths(instance, excluded_methods = [], print_debug=True)
 
 
     # Calculate all metrics with appropriate DataFrames
@@ -840,13 +1018,33 @@ if __name__ == "__main__":
             print(f"  {method.ljust(8)}: {str(row[method]).ljust(15)}")
         print()  # blank line after each metric
 
-    # Plots of pareto fronts and chosen objectives
-    #plot_aggregated_3d(single_pareto_fronts, instance_name=instance)
-    plot_3d_custom_objectives(single_pareto_fronts, ["Transport Machines", "Commute Distance", "Transport Attachments"], instance_name=instance)
-    #plot_3d_custom_objectives(single_pareto_fronts, [ "Machines", "Workers", "Attachments"], instance_name=instance)
-    #plot_3d_custom_objectives(single_pareto_fronts, ["Driver Violation", "Workers", "Commute Distance"], instance_name=instance)ce)
-    #plot_3d_custom_objectives(single_pareto_fronts, ["Driver Violation", "Machines", "Transport Machines"], instance_name=instance)
-    #plot_3d_custom_objectives(single_pareto_fronts, ["Driver Violation", "Attachments", "Transport Attachments"], instance_name=instance)
+    # Plots of single Pareto fronts
+    #plot_aggregated_3d(single_pareto_fronts_normalized, instance_name=instance)
+
+    #plot_3d_custom_objectives(single_pareto_fronts_normalized, ["Transport Machines", "Commute Distance", "Transport Attachments"], instance_name=instance)
+    #plot_3d_custom_objectives(single_pareto_fronts_normalized, [ "Machines", "Workers", "Attachments"], instance_name=instance)
+    #plot_3d_custom_objectives(single_pareto_fronts_normalized, ["Driver Violation", "Workers", "Commute Distance"], instance_name=instance)ce)
+    #plot_3d_custom_objectives(single_pareto_fronts_normalized, ["Driver Violation", "Machines", "Transport Machines"], instance_name=instance)
+    #plot_3d_custom_objectives(single_pareto_fronts_normalized, ["Driver Violation", "Attachments", "Transport Attachments"], instance_name=instance)
+    
+    # Plots of combined Pareto fronts
+    #plot_aggregated_3d_combined(single_pareto_fronts_normalized, instance_name=instance)
+
+    #plot_aggregated_3d_combined_global(global_pareto_front_normalized, instance_name=instance)
+
+
+    plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, ["Transport Machines", "Commute Distance", "Transport Attachments"], instance_name=instance)
+    #plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, ["Machines", "Workers", "Attachments"], instance_name=instance)
+    #plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, ["Driver Violation", "Workers", "Commute Distance"], instance_name=instance)
+    #plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, ["Driver Violation", "Machines", "Transport Machines"], instance_name=instance)
+    #plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, ["Driver Violation", "Attachments", "Transport Attachments"], instance_name=instance)
+
+
+    plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, ["Transport Machines", "Commute Distance", "Transport Attachments"], instance_name=instance)
+    #plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, ["Machines", "Workers", "Attachments"], instance_name=instance)
+    #plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, ["Driver Violation", "Workers", "Commute Distance"], instance_name=instance)
+    #plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, ["Driver Violation", "Machines", "Transport Machines"], instance_name=instance)
+    #plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, ["Driver Violation", "Attachments", "Transport Attachments"], instance_name=instance)
 
 
 
