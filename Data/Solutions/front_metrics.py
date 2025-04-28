@@ -1028,19 +1028,19 @@ if __name__ == "__main__":
     #plot_3d_custom_objectives(single_pareto_fronts_normalized, ["Driver Violation", "Attachments", "Transport Attachments"], instance_name=instance)
     
     # Plots of combined Pareto fronts
-    #plot_aggregated_3d_combined(single_pareto_fronts_normalized, instance_name=instance)
+    plot_aggregated_3d_combined(single_pareto_fronts_normalized, instance_name=instance)
 
-    #plot_aggregated_3d_combined_global(global_pareto_front_normalized, instance_name=instance)
+    plot_aggregated_3d_combined_global(global_pareto_front_normalized, instance_name=instance)
 
 
-    plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, ["Transport Machines", "Commute Distance", "Transport Attachments"], instance_name=instance)
+    #plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, ["Transport Machines", "Commute Distance", "Transport Attachments"], instance_name=instance)
     #plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, ["Machines", "Workers", "Attachments"], instance_name=instance)
     #plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, ["Driver Violation", "Workers", "Commute Distance"], instance_name=instance)
     #plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, ["Driver Violation", "Machines", "Transport Machines"], instance_name=instance)
     #plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, ["Driver Violation", "Attachments", "Transport Attachments"], instance_name=instance)
 
 
-    plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, ["Transport Machines", "Commute Distance", "Transport Attachments"], instance_name=instance)
+    #plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, ["Transport Machines", "Commute Distance", "Transport Attachments"], instance_name=instance)
     #plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, ["Machines", "Workers", "Attachments"], instance_name=instance)
     #plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, ["Driver Violation", "Workers", "Commute Distance"], instance_name=instance)
     #plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, ["Driver Violation", "Machines", "Transport Machines"], instance_name=instance)
