@@ -603,24 +603,8 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                 # Die betroffenen Ziele aktualisieren
                 for objective in objectives:
                     unnormalized_value = self.unnormalize_value(delta_details[objective], objective)
-
-                    if objective == "driver_violation":
-                        objective_dict["driver_violation"] += unnormalized_value
-                    elif objective == "commute_distance":
-                        objective_dict["commute_distance"] += unnormalized_value
-                    elif objective == "transport_distance":
-                        objective_dict["transport_distance"] += unnormalized_value
-                    elif objective == "attachment_distance":
-                        objective_dict["attachment_distance"] += unnormalized_value
-                    elif objective == "machine_count":
-                        objective_dict["machine_count"] += unnormalized_value
-                    elif objective == "worker_count":
-                        objective_dict["worker_count"] += unnormalized_value
-                    elif objective == "attachment_count":
-                        objective_dict["attachment_count"] += unnormalized_value
-                    else:
-                        raise Exception(f"Objective {objective} not defined.")
-
+                    objective_dict[objective] += unnormalized_value
+           
                 # Possible to combine objectives to 3 main topics: distance, ressource count, violation
 
                 dominating_count_new, _ = self.ParetoSolutions.CountDominatingSolutions(objective_dict, interpolated_points=interpolated_points)

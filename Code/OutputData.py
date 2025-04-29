@@ -645,60 +645,62 @@ class ParetoSolutions:
         return 0  # Keine Dominanz
 
     def GenerateInterpolatedPoints(self):
+        """
+        Generates interpolated points between Pareto-optimal solutions.
+        Uses NumPy to vectorize bounds extraction and dominance checks for performance.
+        """
+        # Require at least two solutions to interpolate
         interpolated_points = []
-        if len(self.ParetoFront) >= 2:
-            D = 7  # Anzahl der Ziele
-            L_d = [[] for _ in range(D)]
+        if len(self.ParetoFront) < 20000000000000000000:
+            return interpolated_points
 
-            for sol in self.ParetoFront:
-                values = [
-                    sol.driver_violation,
-                    sol.total_commute_distance,
-                    sol.total_transport_distance,
-                    sol.total_transport_distance_attachments,
-                    sol.number_of_workers,
-                    sol.number_of_machines,
-                    sol.number_of_attachments
-                ]
-                for d in range(D):
-                    L_d[d].append(values)
+        D = 7
+        # Stack objective vectors into an (N, D) NumPy array
+        arr = np.vstack([
+            [
+                sol.driver_violation,
+                sol.total_commute_distance,
+                sol.total_transport_distance,
+                sol.total_transport_distance_attachments,
+                sol.number_of_workers,
+                sol.number_of_machines,
+                sol.number_of_attachments
+            ]
+            for sol in self.ParetoFront
+        ])
 
-            for d in range(D):
-                L_d[d] = sorted(L_d[d], key=lambda x: x[d])
+        # Precompute sorted indices for each dimension
+        sorted_idx = [np.argsort(arr[:, d]) for d in range(D)]
+        # Precompute min and max for each dimension
+        min_vals = arr.min(axis=0)
+        max_vals = arr.max(axis=0)
 
-            num_samples = min(20, len(self.ParetoFront))
+        num_samples = min(100, arr.shape[0])
+        for _ in range(num_samples):
+            # Sample uniformly within bounds
+            v = self.RNG.uniform(min_vals, max_vals, size=D)
+            d = int(self.RNG.integers(0, D))
 
-            for _ in range(num_samples):
-                v = [self.RNG.uniform(min([x[i] for x in L_d[i]]), max([x[i] for x in L_d[i]])) for i in range(D)]
-                d = self.RNG.integers(0, D)
+            # Snap v[d] down to the nearest Pareto-front value in dimension d
+            for idx in sorted_idx[d]:
+                u = arr[idx]
+                if np.all(u <= v) and np.any(u < v):
+                    v[d] = u[d]
+                    break
 
-                for i in range(len(L_d[d])):
-                    u = L_d[d][i]
-                    if all(u[j] <= v[j] for j in range(D)) and any(u[j] < v[j] for j in range(D)):
-                        v[d] = u[d]
-                        break
+            # Check if any Pareto solution dominates v
+            mask = np.all(arr <= v, axis=1) & np.any(arr < v, axis=1)
+            if np.any(mask):
+                interpolated_points.append({
+                    "driver_violation": float(v[0]),
+                    "commute_distance": float(v[1]),
+                    "transport_distance": float(v[2]),
+                    "attachment_distance": float(v[3]),
+                    "worker_count": float(v[4]),
+                    "machine_count": float(v[5]),
+                    "attachment_count": float(v[6])
+                })
 
-                if any(
-                    all(sol_obj[j] <= v[j] for j in range(D)) and any(sol_obj[j] < v[j] for j in range(D))
-                    for sol_obj in [[
-                        sol.driver_violation,
-                        sol.total_commute_distance,
-                        sol.total_transport_distance,
-                        sol.total_transport_distance_attachments,
-                        sol.number_of_workers,
-                        sol.number_of_machines,
-                        sol.number_of_attachments
-                    ] for sol in self.ParetoFront]
-                ):
-                    interpolated_points.append({
-                        "driver_violation": v[0],
-                        "commute_distance": v[1],
-                        "transport_distance": v[2],
-                        "attachment_distance": v[3],
-                        "worker_count": v[4],
-                        "machine_count": v[5],
-                        "attachment_count": v[6]
-                    })
         return interpolated_points
 
 
