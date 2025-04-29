@@ -103,8 +103,8 @@ import pandas as pd
 
 # === Instance ===
 #instance = "a3_o80_m10_an10_ar9_reduced"
-#instance = "a10_o107_m5_an57_ar12"
-instance = "a10_o114_m6_an57_ar11"
+instance = "a10_o107_m5_an57_ar12"
+#instance = "a10_o114_m6_an57_ar11"
 #instance = "a10_o128_m6_an51_ar13"
 #instance = "a10_o144_m6_an53_ar12"
 #instance = "a15_o170_m9_an80_ar18"

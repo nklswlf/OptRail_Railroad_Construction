@@ -644,52 +644,87 @@ class ParetoSolutions:
 
         return 0  # Keine Dominanz
 
+    def GenerateInterpolatedPoints(self):
+        interpolated_points = []
+        if len(self.ParetoFront) >= 2:
+            D = 7  # Anzahl der Ziele
+            L_d = [[] for _ in range(D)]
 
+            for sol in self.ParetoFront:
+                values = [
+                    sol.driver_violation,
+                    sol.total_commute_distance,
+                    sol.total_transport_distance,
+                    sol.total_transport_distance_attachments,
+                    sol.number_of_workers,
+                    sol.number_of_machines,
+                    sol.number_of_attachments
+                ]
+                for d in range(D):
+                    L_d[d].append(values)
+
+            for d in range(D):
+                L_d[d] = sorted(L_d[d], key=lambda x: x[d])
+
+            num_samples = min(20, len(self.ParetoFront))
+
+            for _ in range(num_samples):
+                v = [self.RNG.uniform(min([x[i] for x in L_d[i]]), max([x[i] for x in L_d[i]])) for i in range(D)]
+                d = self.RNG.integers(0, D)
+
+                for i in range(len(L_d[d])):
+                    u = L_d[d][i]
+                    if all(u[j] <= v[j] for j in range(D)) and any(u[j] < v[j] for j in range(D)):
+                        v[d] = u[d]
+                        break
+
+                if any(
+                    all(sol_obj[j] <= v[j] for j in range(D)) and any(sol_obj[j] < v[j] for j in range(D))
+                    for sol_obj in [[
+                        sol.driver_violation,
+                        sol.total_commute_distance,
+                        sol.total_transport_distance,
+                        sol.total_transport_distance_attachments,
+                        sol.number_of_workers,
+                        sol.number_of_machines,
+                        sol.number_of_attachments
+                    ] for sol in self.ParetoFront]
+                ):
+                    interpolated_points.append({
+                        "driver_violation": v[0],
+                        "commute_distance": v[1],
+                        "transport_distance": v[2],
+                        "attachment_distance": v[3],
+                        "worker_count": v[4],
+                        "machine_count": v[5],
+                        "attachment_count": v[6]
+                    })
+        return interpolated_points
 
 
     def CountDominatingSolutions(self, new_solution, interpolated_points=None):
         """
         Zählt, wie viele Lösungen aus der Pareto-Front die new_solution dominieren.
-
-        Args:
-        pareto_front (list): Liste der Lösungen, die zur Pareto-Front gehören.
-        new_solution (Solution): Die neue Lösung, die überprüft wird.
-
-        Returns:
-        int: Anzahl der Lösungen aus der Pareto-Front, die die new_solution dominieren.
+        Implementiert Algorithmus 2 mit slices und Feasibility-Check für interpolierte Punkte.
         """
         if isinstance(new_solution, Solution):
-            objective_dict = {}
-            objective_dict["driver_violation"] = new_solution.driver_violation
-            objective_dict["commute_distance"] = new_solution.total_commute_distance
-            objective_dict["transport_distance"] = new_solution.total_transport_distance
-            objective_dict["attachment_distance"] = new_solution.total_transport_distance_attachments
-            objective_dict["machine_count"] = new_solution.number_of_machines
-            objective_dict["worker_count"] = new_solution.number_of_workers
-            objective_dict["attachment_count"] = new_solution.number_of_attachments
+            objective_dict = {
+                "driver_violation": new_solution.driver_violation,
+                "commute_distance": new_solution.total_commute_distance,
+                "transport_distance": new_solution.total_transport_distance,
+                "attachment_distance": new_solution.total_transport_distance_attachments,
+                "worker_count": new_solution.number_of_workers,
+                "machine_count": new_solution.number_of_machines,
+                "attachment_count": new_solution.number_of_attachments
+            }
         elif isinstance(new_solution, dict):
             objective_dict = new_solution
         else:
             raise ValueError("new_solution must be of type Solution or dict.")
 
-        # Interpolierte Punkte erzeugen
+        # Interpolierte Punkte erzeugen (Algorithmus 2 mit Slicing und Feasibility)
         if interpolated_points is None:
-            interpolated_points = []
-            if len(self.ParetoFront) >= 2 and len(self.ParetoFront) < 50:
-                num_samples = min(20, len(self.ParetoFront))
-                for _ in range(num_samples):
-                    a, b = self.RNG.choice(self.ParetoFront, size=2, replace=False)
-                    alpha = self.RNG.uniform(0.1, 0.9)
-                    point = {
-                        "driver_violation": alpha * a.driver_violation + (1 - alpha) * b.driver_violation,
-                        "commute_distance": alpha * a.total_commute_distance + (1 - alpha) * b.total_commute_distance,
-                        "transport_distance": alpha * a.total_transport_distance + (1 - alpha) * b.total_transport_distance,
-                        "attachment_distance": alpha * a.total_transport_distance_attachments + (1 - alpha) * b.total_transport_distance_attachments,
-                        "machine_count": alpha * a.number_of_machines + (1 - alpha) * b.number_of_machines,
-                        "worker_count": alpha * a.number_of_workers + (1 - alpha) * b.number_of_workers,
-                        "attachment_count": alpha * a.number_of_attachments + (1 - alpha) * b.number_of_attachments
-                    }
-                    interpolated_points.append(point)
+            interpolated_points = self.GenerateInterpolatedPoints()
 
         count = 0
         for solution in self.ParetoFront:

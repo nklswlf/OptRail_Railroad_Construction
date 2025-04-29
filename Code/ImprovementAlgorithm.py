@@ -559,7 +559,8 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         raise Exception(f"Objective {objective} not defined.")
 
     
-    def DBSA(self, solution:Solution) -> None:
+    def DBSA(self, solution:Solution, local_pareto_front: list = None) -> None:
+        ''' Run simulated annealing algorithm with given solutions and parameters'''
         ''' Simulated annealing algorithm with energy dominance neighborhood'''
         
         current_temperature = self.StartTemperature
@@ -588,54 +589,45 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                     delta_details, objectives, worker_route_plan, machine_route_plan, attachment_route_plan = self.location_move(solution)
 
 
-                not_involved_objectives = ['driver_violation', 'commute_distance', 'transport_distance', 'attachment_distance', 'machine_count', 'worker_count', 'attachment_count']
-                objective_dict = dict()
+                # Alle Ziele initial aus der aktuellen Lösung übernehmen
+                objective_dict = {
+                    "driver_violation": solution.driver_violation,
+                    "commute_distance": solution.total_commute_distance,
+                    "transport_distance": solution.total_transport_distance,
+                    "attachment_distance": solution.total_transport_distance_attachments,
+                    "worker_count": solution.number_of_workers,
+                    "machine_count": solution.number_of_machines,
+                    "attachment_count": solution.number_of_attachments
+                }
 
+                # Die betroffenen Ziele aktualisieren
                 for objective in objectives:
-                    value = delta_details[objective]
-                    not_involved_objectives.remove(objective)
+                    unnormalized_value = self.unnormalize_value(delta_details[objective], objective)
 
-                    unnormalized_value = self.unnormalize_value(value, objective)
-
-                    if objective == 'driver_violation':
-                        objective_dict[objective] = solution.driver_violation + unnormalized_value
-                    elif objective == 'commute_distance':
-                        objective_dict[objective] = solution.total_commute_distance + unnormalized_value
-                    elif objective == 'transport_distance':
-                        objective_dict[objective] = solution.total_transport_distance + unnormalized_value
-                    elif objective == 'attachment_distance':
-                        objective_dict[objective] = solution.total_transport_distance_attachments + unnormalized_value
-                    elif objective == 'machine_count':
-                        objective_dict[objective] = solution.number_of_machines + unnormalized_value
-                    elif objective == 'worker_count':
-                        objective_dict[objective] = solution.number_of_workers + unnormalized_value
-                    elif objective == 'attachment_count':
-                        objective_dict[objective] = solution.number_of_attachments + unnormalized_value
-                
-                for objective in not_involved_objectives:
-
-                    if objective == 'driver_violation':
-                        objective_dict[objective] = solution.driver_violation
-                    elif objective == 'commute_distance':
-                        objective_dict[objective] = solution.total_commute_distance
-                    elif objective == 'transport_distance':
-                        objective_dict[objective] = solution.total_transport_distance
-                    elif objective == 'attachment_distance':
-                        objective_dict[objective] = solution.total_transport_distance_attachments
-                    elif objective == 'machine_count':
-                        objective_dict[objective] = solution.number_of_machines
-                    elif objective == 'worker_count':
-                        objective_dict[objective] = solution.number_of_workers
-                    elif objective == 'attachment_count':
-                        objective_dict[objective] = solution.number_of_attachments
+                    if objective == "driver_violation":
+                        objective_dict["driver_violation"] += unnormalized_value
+                    elif objective == "commute_distance":
+                        objective_dict["commute_distance"] += unnormalized_value
+                    elif objective == "transport_distance":
+                        objective_dict["transport_distance"] += unnormalized_value
+                    elif objective == "attachment_distance":
+                        objective_dict["attachment_distance"] += unnormalized_value
+                    elif objective == "machine_count":
+                        objective_dict["machine_count"] += unnormalized_value
+                    elif objective == "worker_count":
+                        objective_dict["worker_count"] += unnormalized_value
+                    elif objective == "attachment_count":
+                        objective_dict["attachment_count"] += unnormalized_value
+                    else:
+                        raise Exception(f"Objective {objective} not defined.")
 
                 # Possible to combine objectives to 3 main topics: distance, ressource count, violation
 
                 dominating_count_new, _ = self.ParetoSolutions.CountDominatingSolutions(objective_dict, interpolated_points=interpolated_points)
 
 
-                lenght = len(self.ParetoSolutions.ParetoFront) + len(interpolated_points) + 2
-                overall_difference = (dominating_count_new - dominating_count_current)/ lenght
+                lenght = len(self.ParetoSolutions.ParetoFront) + len(interpolated_points) + 1e-16
+                overall_difference = (dominating_count_new - dominating_count_current) / lenght
 
                 if overall_difference <= 0:
                     prob = 1.0

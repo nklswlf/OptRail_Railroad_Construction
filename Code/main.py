@@ -75,7 +75,7 @@ step = None
 #step = 'Greedy'
 #step = 'Building'
 
-algortihm = 'PSA'
+algortihm = 'DBSA'
 
 algortihms = ['PSA', 'DBSA', 'TPSA']
 
