@@ -226,7 +226,9 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                  cooling_rate:float,
                  max_iterations:int,
                  fallback_threshold:int,
-                 scaling_energy:int):
+                 scaling_energy:int,
+                 weight_alpha:float,
+                 start_size_population:int):
         super().__init__(inputData)
 
         self.StartTemperature = start_temp
@@ -236,8 +238,8 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.FallbackThreshold = fallback_threshold # Currently not used
         self.ScalingEnergy = scaling_energy
 
-        self.SizeStartPopulation = 3
-        self.WeightAlpha = 1.1
+        self.SizeStartPopulation = start_size_population
+        self.WeightAlpha = weight_alpha
 
 
         self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
@@ -251,7 +253,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
     def MutateSolution(self, solution: Solution) -> None:
         ''' Mutate the solution by applying multiple moves on a copy of the original '''
 
-        random_number_of_moves = self.RNG.integers(10, 50)
+        random_number_of_moves = self.RNG.integers(2, 50)
         current_solution = solution.clone()
         self.EvaluationLogic.evaluate(current_solution)
 
@@ -271,12 +273,28 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         self.ParetoSolutions.UpdateParetoFront(current_solution)
  
-    def update_weights(self, x, population, objectives):
-        """
-        Berechnet dynamische Gewichtung der Ziele basierend auf Dominanz-Relationen
-        """
 
-        # Mapping für interne Attributnamen in Solution
+    def normalize_objectives(self, population, objectives, attr_mapping):
+        min_vals = {}
+        max_vals = {}
+        for obj in objectives:
+            values = [getattr(sol, attr_mapping.get(obj, obj), 0) for sol in population]
+            min_vals[obj] = min(values)
+            max_vals[obj] = max(values)
+        return min_vals, max_vals
+
+    def get_normalized_values(self, solution, objectives, attr_mapping, min_vals, max_vals):
+        norm_values = {}
+        for obj in objectives:
+            raw = getattr(solution, attr_mapping.get(obj, obj), 0)
+            range_ = max_vals[obj] - min_vals[obj]
+            norm_values[obj] = (raw - min_vals[obj]) / range_ if range_ > 0 else 0.0
+        return norm_values
+
+
+    def update_weights(self, x, population, objectives):
+        ''' Update weights for the objectives based on the current solution and the population '''
+
         attr_mapping = {
             'commute_distance': 'total_commute_distance',
             'transport_distance': 'total_transport_distance',
@@ -287,56 +305,52 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             'driver_violation': 'driver_violation'
         }
 
-        def dominates(a, b):
-            better_in_at_least_one = False
+        def non_dominating(a, b):
+            better_in_a = False
+            better_in_b = False
             for obj in objectives:
-                if a[obj] > b[obj]:
-                    return False
                 if a[obj] < b[obj]:
-                    better_in_at_least_one = True
-            return better_in_at_least_one
+                    better_in_a = True
+                elif a[obj] > b[obj]:
+                    better_in_b = True
+
+            # non-dominating == True
+            return better_in_a and better_in_b
 
         def distance(a, b):
             return sum(abs(a[obj] - b[obj]) for obj in objectives)
 
-        # Aktuelle Lösung
-        x_values = {
-            obj: getattr(x, attr_mapping.get(obj, obj), 0)
-            for obj in objectives
-        }
+        min_vals, max_vals = self.normalize_objectives(population + [x], objectives, attr_mapping)
+        x_values = self.get_normalized_values(x, objectives, attr_mapping, min_vals, max_vals)
 
         candidates = []
         for x_ in population:
             if x_ == x:
                 continue
-            x__values = {
-                obj: getattr(x_, attr_mapping.get(obj, obj), 0)
-                for obj in objectives
-            }
-            if not dominates(x_values, x__values):
+            x__values = self.get_normalized_values(x_, objectives, attr_mapping, min_vals, max_vals)
+            if non_dominating(x_values, x__values):
                 candidates.append((x_, distance(x_values, x__values)))
 
         if not candidates:
-            weights = weights = {obj: self.RNG.random() for obj in objectives}
+            weights = {obj: self.RNG.random() for obj in objectives}
         else:
             x_prime, _ = min(candidates, key=lambda tup: tup[1])
-            x_prime_values = {
-                obj: getattr(x_prime, attr_mapping.get(obj, obj), 0)
-                for obj in objectives
-            }
+            x_prime_values = self.get_normalized_values(x_prime, objectives, attr_mapping, min_vals, max_vals)
 
             weights = {}
             for obj in objectives:
-                if x_values[obj] > x_prime_values[obj]:
+                if x_values[obj] >= x_prime_values[obj]:
                     weights[obj] = self.WeightAlpha
                 elif x_values[obj] < x_prime_values[obj]:
                     weights[obj] = 1 / self.WeightAlpha
                 else:
+                    raise Exception(f"Objective {obj} not defined.")
                     weights[obj] = 1.0
 
         # Normalisierung
         total = sum(weights.values())
         normalized_weights = {k: v / total for k, v in weights.items()}
+
         return normalized_weights
 
     def PSA(self, local_solution: Solution, local_pareto_front: list) -> list[Solution]:
@@ -349,19 +363,21 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         while current_temperature > self.MinTemperature:
             for i in range(self.MaxIterations):
-                random_type = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
-                neighborhood = self.Neighborhoods[random_type]
-                move = neighborhood.SingleMove(local_solution)
+                
+                move = None
+                while move is None:
+                    random_type = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
+                    neighborhood = self.Neighborhoods[random_type]
+                    move = neighborhood.SingleMove(local_solution)
 
-                if move is None:
-                    continue
+                
 
                 objectives = self.NeighborhoodTypes[random_type]
                 weights = self.update_weights(local_solution, local_pareto_solutions.ParetoFront, objectives)
 
                 value = sum(weights[obj] * move.DeltaDetails[obj] for obj in objectives)
 
-                if value > 0:
+                if value >= 0:
                     prob = math.exp(-value * self.ScalingEnergy / current_temperature)
                     if self.RNG.random() > prob:
                         continue
@@ -381,13 +397,14 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         return local_pareto_solutions.ParetoFront
 
-
     def Run(self, solution: Solution) -> Solution:
         ''' Run simulated annealing algorithm with given solutions and parameters '''
 
         start_time = time.time()
 
         self.InitializeNeighborhoods(list(self.NeighborhoodTypes.keys()))
+
+        self.ParetoSolutions.UpdateParetoFront(solution)
 
         while len(self.ParetoSolutions.ParetoFront) < self.SizeStartPopulation:
             self.MutateSolution(solution)

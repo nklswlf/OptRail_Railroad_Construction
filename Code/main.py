@@ -28,7 +28,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = ["Construction_a50_o578_m28_an276_ar66.json"]
+instances = ["Construction_a10_o107_m5_an57_ar12.json"]
 
 
 
@@ -75,7 +75,7 @@ step = None
 #step = 'Greedy'
 #step = 'Building'
 
-algortihm = 'TPSA'
+algortihm = 'PSA'
 
 algortihms = ['PSA', 'DBSA', 'TPSA']
 
@@ -111,7 +111,9 @@ def main():
                                                 cooling_rate=0.95,
                                                 max_iterations=500,
                                                 fallback_threshold=25,
-                                                scaling_energy=30)
+                                                scaling_energy=30,
+                                                weight_alpha=1.1,
+                                                start_size_population=5)
 
             elif algortihm == 'DBSA':
                 algo = DominanceBasedSimulatedAnnealing( inputData=data,
