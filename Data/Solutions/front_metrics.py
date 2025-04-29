@@ -104,7 +104,7 @@ import pandas as pd
 # === Instance ===
 #instance = "a3_o80_m10_an10_ar9_reduced"
 #instance = "a10_o107_m5_an57_ar12"
-#instance = "a10_o114_m6_an57_ar11"
+instance = "a10_o114_m6_an57_ar11"
 #instance = "a10_o128_m6_an51_ar13"
 #instance = "a10_o144_m6_an53_ar12"
 #instance = "a15_o170_m9_an80_ar18"
@@ -112,7 +112,7 @@ import pandas as pd
 #instance = "a25_o306_m13_an127_ar31"
 #instance = "a30_o355_m18_an148_ar42"
 #instance = "a40_o476_m22_an215_ar51"
-instance = "a50_o578_m28_an276_ar66"
+#instance = "a50_o578_m28_an276_ar66"
 #instance = "PCI_Change_Reference"
 
 # === Objectives ===
@@ -126,11 +126,12 @@ objectives = [
     "Attachments"
 ]
 
+# === Debugging ===
 def debug_print(msg, print_debug=False):
     if print_debug:
         print(msg)
 
-
+# === Load function of ParetoFront.csv ===
 def get_method_paths(instance_folder: str,excluded_methods=[], print_debug=False):
     # === Automatically find all methods based on subfolders containing ParetoFront.csv ===
     method_paths = {}
@@ -244,9 +245,6 @@ def get_method_paths(instance_folder: str,excluded_methods=[], print_debug=False
     for method, df in single_pareto_fronts.items():
         print(f"Method: {method}, Solutions: {len(df)}")
     print(f"Global Pareto Front: {len(global_pareto_front)} solutions")
-    print(f"Global Pareto Front Normalized: {len(global_pareto_front_normalized)} solutions")
-    print(f"Single Pareto Fronts: {len(single_pareto_fronts)} methods")
-    print(f"Single Pareto Fronts Normalized: {len(single_pareto_fronts_normalized)} methods")
 
     debug_print("\n--- Single Pareto Fronts ---", print_debug)
     for method, df in single_pareto_fronts.items():
@@ -271,6 +269,7 @@ def get_method_paths(instance_folder: str,excluded_methods=[], print_debug=False
     return single_pareto_fronts, single_pareto_fronts_normalized, global_pareto_front, global_pareto_front_normalized
 
 
+# === Metrics for Convergence and Coverage ===
 def calculate_pf_share(global_pareto_front, print_debug=False):
     """
     Calculate the percentage share of each method's solutions in the global Pareto front.
@@ -293,7 +292,223 @@ def calculate_pf_share(global_pareto_front, print_debug=False):
     debug_print(result_df, print_debug)
     return result_df
 
+def calculate_pci(global_pareto_front_normalized, print_debug=False):
+    """
+    Calculate the PCI (Performance Comparison Indicator) using normalized data.
+    - global_pareto_front_normalized: normalized global Pareto front with "Method" column
+    """
+    debug_print("\n--- PCI Calculation Debug (Normalized Data) ---", print_debug)
+    S_df = global_pareto_front_normalized
+    S_values = S_df[objectives].values
+    methods = S_df["Method"].unique()
+    debug_print(f"\n[DEBUG] Normalized global Pareto front merged with methods: {S_df.shape}", print_debug)
+    debug_print(S_df.head(), print_debug)
+    # === Clustering Step ===
+    from scipy.special import factorial
+    m = len(objectives)
+    N = len(S_values)
+    sigma = 1 / (((N * factorial(m - 1, exact=True)) ** (1 / (m - 1))) - (m / 2))
+    debug_print(f"\n--- Calculated sigma threshold for clustering: {sigma:.6f}", print_debug)
+    def dominance_distance(p, Q):
+        if len(Q) == 0:
+            return 0.0
+        min_q = np.min(Q, axis=0)
+        diffs = np.where(p > min_q, p - min_q, 0)
+        return np.linalg.norm(diffs)
+    pairs = []
+    for i in range(N):
+        for j in range(i + 1, N):
+            d_ij = dominance_distance(S_values[i], S_values[j:j+1])
+            d_ji = dominance_distance(S_values[j], S_values[i:i+1])
+            dist = max(d_ij, d_ji)
+            if dist <= sigma:
+                pairs.append((dist, i, j))
+    pairs.sort()
+    debug_print(f"\n[DEBUG] Found {len(pairs)} valid pairs for clustering.", print_debug)
+    parent = list(range(N))
+    def find(u):
+        while parent[u] != u:
+            parent[u] = parent[parent[u]]
+            u = parent[u]
+        return u
+    def union(u, v):
+        pu, pv = find(u), find(v)
+        if pu != pv:
+            parent[pu] = pv
+    for dist, i, j in pairs:
+        union(i, j)
 
+    clusters = {}
+    for idx in range(N):
+        root = find(idx)
+        if root not in clusters:
+            clusters[root] = []
+        clusters[root].append(idx)
+    cluster_points = [S_values[cluster_idxs] for cluster_idxs in clusters.values()]
+    # --- Debug print for cluster composition ---
+    if print_debug:
+        print("\n--- Cluster Composition ---")
+        for cluster_idx, cluster_idxs in enumerate(clusters.values()):
+            methods_in_cluster = S_df.iloc[cluster_idxs]["Method"].value_counts()
+            methods_summary = ", ".join([f"{method}: {count} solutions" for method, count in methods_in_cluster.items()])
+            print(f"Cluster {cluster_idx}: {len(cluster_idxs)} solutions | {methods_summary}")
+    debug_print(f"\n--- Number of clusters formed: {len(cluster_points)} ---", print_debug)
+    pci_result = {}
+    def dominance_distance_set(P, Q):
+        total_distance = 0.0
+        for q in Q:
+            distances = []
+            for p in P:
+                diffs = np.where(p > q, p - q, 0)
+                distances.append(np.linalg.norm(diffs))
+            total_distance += min(distances)
+        return total_distance
+    for method in methods:
+        X = S_df[S_df["Method"] == method][objectives].values
+        pci_sum = 0.0
+        for cluster_idx, cluster in enumerate(cluster_points):
+            method_points_in_cluster = []
+            for point in cluster:
+                for idx, x in enumerate(X):
+                    if np.allclose(x, point, atol=1e-8):
+                        method_points_in_cluster.append(x)
+            method_points_in_cluster = np.array(method_points_in_cluster)
+            if len(method_points_in_cluster) < 2:
+                min_dist = min(dominance_distance(x, cluster) for x in X) if len(X) > 0 else 0.0
+                pci_sum += min_dist
+                debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): <2 points, Point-to-set distance={min_dist:.6f}", print_debug)
+            else:
+                dset = dominance_distance_set(method_points_in_cluster, cluster)
+                min_dist = min(dominance_distance(x, cluster) for x in X) if len(X) > 0 else 0.0
+                pci_sum += min(dset, min_dist)
+                if dset < min_dist:
+                    debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): Set-to-set distance={dset:.6f} < Point-to-set distance={min_dist:.6f}", print_debug)
+                else:
+                    debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): Point-to-set distance={min_dist:.6f} < Set-to-set distance={dset:.6f}", print_debug)
+        pci_result[method] = pci_sum / len(cluster_points) if len(cluster_points) > 0 else 0.0
+    result_df = pd.DataFrame({
+        "PCI": pci_result
+    }).T
+    debug_print("\n--- PCI values per method ---", print_debug)
+    debug_print(result_df, print_debug)
+    return result_df
+
+def calculate_hypervolume_hypercubes(single_pareto_fronts=None, print_interim_results=False):
+    """
+    Calculate the normalized hypervolume for each method's Pareto front using min-max normalized objectives.
+    Returns a DataFrame with one row per method.
+    The hypervolume is computed after min-max normalizing all objectives to [0, 1] based on the global min and max.
+    NOTE: This function expects normalized data to be passed directly.
+    """
+    # Helper: compute the hypervolume using shifted (1 - normalized) front, reference point at (1,...,1)
+    def shifted_hypervolume(front):
+        # Here, front is already normalized and shifted (1 - normalized)
+        return np.sum(np.prod(front, axis=1))
+
+    hypervolume_results = {}
+    for method, df in single_pareto_fronts.items():
+        front = df[objectives].to_numpy()
+        shifted_front = 1 - front
+        normalized_hv = np.sum(np.prod(shifted_front, axis=1))
+        hypervolume_results[method] = normalized_hv
+
+    result_df = pd.DataFrame({
+        "Hypervolume": hypervolume_results
+    }).T
+
+    if print_interim_results:
+        print("\n--- Hypervolume values per method hypercubes ---")
+        print(result_df)
+
+    return result_df
+
+def calculate_hypervolume_monte_carlo(single_pareto_fronts_normalized=None, samples=100000, print_interim_results=False):
+    """
+    Approximate the normalized hypervolume for each method's Pareto front using Monte Carlo sampling.
+    Returns a DataFrame with one row per method.
+    NOTE: This function expects normalized data to be passed directly.
+    """
+    debug_print("\n--- Monte Carlo Hypervolume Calculation Debug ---", print_interim_results)
+
+    hypervolume_results = {}
+    sample_points_1 = None
+
+    for method, df in single_pareto_fronts_normalized.items():
+        front = df[objectives].to_numpy()
+        # Generate random sample points in [0, 1]^n
+        sample_points = np.random.rand(samples, front.shape[1])
+
+        if sample_points_1 is not None:
+            if sample_points.all() != sample_points_1.all():
+                raise ValueError("Sample points are not equal to the previous sample points.")
+
+        sample_points_1 = sample_points.copy()
+    
+        # Check if each sample point is dominated by at least one solution in the front
+        dominated = np.any(np.all(front <= sample_points[:, None, :], axis=2), axis=1)
+
+        # Hypervolume approximation: fraction of dominated samples
+        hv_approx = np.mean(dominated)
+        hypervolume_results[method] = hv_approx
+
+        debug_print(f"[DEBUG] {method} approximated hypervolume (Monte Carlo, {samples} samples): {hv_approx:.6f}", print_interim_results)
+
+    result_df = pd.DataFrame({
+        "Hypevolume (Monte Carlo)": hypervolume_results
+    }).T
+
+    debug_print("\n--- Hypervolume (Monte Carlo) values per method ---", print_interim_results)
+    debug_print(result_df, print_interim_results)
+
+    return result_df
+
+def calculate_average_monte_carlo_hypervolume(single_pareto_fronts_normalized, print_debug = False, seeds=[42, 43, 44, 45, 46], samples=100000):
+    """
+    Compute the average Monte Carlo hypervolume across multiple seeds.
+    Only DataFrames are passed; method_paths are not used.
+    NOTE: This function expects normalized data to be passed directly.
+    """
+    results = []
+    for seed in seeds:
+        np.random.seed(seed)
+        hv_result = calculate_hypervolume_monte_carlo(single_pareto_fronts_normalized, samples=samples)
+        results.append(hv_result.T)
+
+    avg_result = pd.concat(results).groupby(level=0).mean().T
+    
+    debug_print("\n--- Average Monte Carlo Hypervolume values per method ---", print_debug)
+    debug_print(avg_result, print_debug)
+
+    return avg_result
+
+def calculate_exact_hypervolume(single_pareto_fronts=None, print_debug=False):
+    """
+    Calculate the exact hypervolume for each method's Pareto front.
+    NOTE: This function expects normalized data to be passed directly.
+    """
+
+    debug_print("\n--- Exact Hypervolume Calculation Debug ---", print_debug)
+
+    hypervolume_results = {}
+    for method, df in single_pareto_fronts.items():
+        front = df[objectives].to_numpy()
+        # Reference point for normalized data (all ones)
+        ref_point = np.ones(front.shape[1])
+        # Calculate Hypervolume
+        hv = HV(ref_point)
+        hypervolume_value = hv.do(front)
+        hypervolume_results[method] = hypervolume_value
+        debug_print(f"[DEBUG] {method} hypervolume: {hypervolume_value:.6f}", print_debug)
+
+    result_df = pd.DataFrame({
+        "Exact Hypervolume": hypervolume_results
+    }).T
+
+    return result_df
+
+
+
+# === Metrics for Diversity and Distribution ===
 def calculate_dci(global_pareto_front, print_debug=False):
     """
     Calculate the DCI (Diversity Comparison Indicator) for each method using the global Pareto front with "Method" column.
@@ -372,101 +587,37 @@ def calculate_dci(global_pareto_front, print_debug=False):
     debug_print(result_df, print_debug)
     return result_df
 
-
-def calculate_pci(global_pareto_front_normalized, print_debug=False):
+def calculate_spread(single_pareto_fronts=None, print_debug=False):
     """
-    Calculate the PCI (Performance Comparison Indicator) using normalized data.
-    - global_pareto_front_normalized: normalized global Pareto front with "Method" column
+    Calculate the Spread (sum of width for each objective) for each method's Pareto front.
+    Objectives are min-max normalized to [0, 1] before calculating the Spread.
+    Spread = sum over objectives of (max value - min value).
+    Returns a DataFrame with one row per method.
+    NOTE: This function expects normalized data to be passed directly.
     """
-    debug_print("\n--- PCI Calculation Debug (Normalized Data) ---", print_debug)
-    S_df = global_pareto_front_normalized
-    S_values = S_df[objectives].values
-    methods = S_df["Method"].unique()
-    debug_print(f"\n[DEBUG] Normalized global Pareto front merged with methods: {S_df.shape}", print_debug)
-    debug_print(S_df.head(), print_debug)
-    # === Clustering Step ===
-    from scipy.special import factorial
-    m = len(objectives)
-    N = len(S_values)
-    sigma = 1 / (((N * factorial(m - 1, exact=True)) ** (1 / (m - 1))) - (m / 2))
-    debug_print(f"\n--- Calculated sigma threshold for clustering: {sigma:.6f}", print_debug)
-    def dominance_distance(p, Q):
-        if len(Q) == 0:
-            return 0.0
-        min_q = np.min(Q, axis=0)
-        diffs = np.where(p > min_q, p - min_q, 0)
-        return np.linalg.norm(diffs)
-    pairs = []
-    for i in range(N):
-        for j in range(i + 1, N):
-            d_ij = dominance_distance(S_values[i], S_values[j:j+1])
-            d_ji = dominance_distance(S_values[j], S_values[i:i+1])
-            dist = max(d_ij, d_ji)
-            if dist <= sigma:
-                pairs.append((dist, i, j))
-    pairs.sort()
-    debug_print(f"\n[DEBUG] Found {len(pairs)} valid pairs for clustering.", print_debug)
-    parent = list(range(N))
-    def find(u):
-        while parent[u] != u:
-            parent[u] = parent[parent[u]]
-            u = parent[u]
-        return u
-    def union(u, v):
-        pu, pv = find(u), find(v)
-        if pu != pv:
-            parent[pu] = pv
-    for dist, i, j in pairs:
-        union(i, j)
+    debug_print("\n--- Spread Calculation Debug (Normalized) ---", print_debug)
 
-    clusters = {}
-    for idx in range(N):
-        root = find(idx)
-        if root not in clusters:
-            clusters[root] = []
-        clusters[root].append(idx)
-    cluster_points = [S_values[cluster_idxs] for cluster_idxs in clusters.values()]
-    debug_print(f"\n--- Number of clusters formed: {len(cluster_points)} ---", print_debug)
-    pci_result = {}
-    def dominance_distance_set(P, Q):
-        total_distance = 0.0
-        for q in Q:
-            distances = []
-            for p in P:
-                diffs = np.where(p > q, p - q, 0)
-                distances.append(np.linalg.norm(diffs))
-            total_distance += min(distances)
-        return total_distance
-    for method in methods:
-        X = S_df[S_df["Method"] == method][objectives].values
-        pci_sum = 0.0
-        for cluster_idx, cluster in enumerate(cluster_points):
-            method_points_in_cluster = []
-            for point in cluster:
-                for idx, x in enumerate(X):
-                    if np.allclose(x, point, atol=1e-8):
-                        method_points_in_cluster.append(x)
-            method_points_in_cluster = np.array(method_points_in_cluster)
-            if len(method_points_in_cluster) < 2:
-                min_dist = min(dominance_distance(x, cluster) for x in X) if len(X) > 0 else 0.0
-                pci_sum += min_dist
-                debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): <2 points, Point-to-set distance={min_dist:.6f}", print_debug)
-            else:
-                dset = dominance_distance_set(method_points_in_cluster, cluster)
-                min_dist = min(dominance_distance(x, cluster) for x in X) if len(X) > 0 else 0.0
-                pci_sum += min(dset, min_dist)
-                if dset < min_dist:
-                    debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): Set-to-set distance={dset:.6f} < Point-to-set distance={min_dist:.6f}", print_debug)
-                else:
-                    debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): Point-to-set distance={min_dist:.6f} < Set-to-set distance={dset:.6f}", print_debug)
-        pci_result[method] = pci_sum / len(cluster_points) if len(cluster_points) > 0 else 0.0
+    spread_results = {}
+
+    for method, df in single_pareto_fronts.items():
+        front = df[objectives].to_numpy()
+        # Print per-objective spread before summing
+        for i, obj in enumerate(objectives):
+            objective_spread = np.max(front[:, i]) - np.min(front[:, i])
+            debug_print(f"[DEBUG] {method} spread for {obj}: {objective_spread:.6f}", print_debug)
+        # Spread: sum over all objectives of (max - min) after normalization
+        spread = np.mean(np.max(front, axis=0) - np.min(front, axis=0))
+        spread_results[method] = spread
+        debug_print(f"[DEBUG] {method} normalized spread: {spread:.6f}", print_debug)
+
     result_df = pd.DataFrame({
-        "PCI": pci_result
+        "Spread": spread_results
     }).T
-    debug_print("\n--- PCI values per method ---", print_debug)
-    debug_print(result_df, print_debug)
-    return result_df
 
+    debug_print("\n--- Spread values per method (Normalized) ---", print_debug)
+    debug_print(result_df, print_debug)
+
+    return result_df
 
 def calculate_spacing(single_pareto_fronts_normalized=None, print_debug=False):
     """
@@ -503,15 +654,13 @@ def calculate_spacing(single_pareto_fronts_normalized=None, print_debug=False):
 
     return result_df
 
-
 def calculate_distribution_metric(single_pareto_fronts_normalized=None, print_debug=False):
     """
-    Calculate the Distribution Metric (DM) for each method's Pareto front.
-    DM combines uniformity (variance-to-mean ratio of distances) and spread (based on range of each objective).
+    Calculate the Distribution Metric (DM) for each method's Pareto front according to the Wu and Azarm (2001) definition.
+    Handles normalized [0,1] or unnormalized data.
     Returns a DataFrame with one row per method.
-    NOTE: This function expects normalized data to be passed directly.
     """
-    debug_print("\n--- Distribution Metric (DM) Calculation Debug ---", print_debug)
+    debug_print("\n--- Distribution Metric (DM) Calculation Debug (Updated) ---", print_debug)
 
     dm_results = {}
 
@@ -523,26 +672,43 @@ def calculate_distribution_metric(single_pareto_fronts_normalized=None, print_de
             # Sort the front by the current objective
             sorted_values = np.sort(front[:, i])
 
-            # Calculate gaps between successive sorted solutions
+            # Calculate distances between consecutive solutions
             gaps = np.diff(sorted_values)
-            
+
             if len(gaps) == 0:
                 mean_gap = 1e-10  # avoid division by zero
                 std_gap = 0.0
             else:
                 mean_gap = np.mean(gaps)
-                std_gap = np.std(gaps)
+                std_gap = np.std(gaps, ddof=1)  # sample standard deviation (ddof=1)
 
-            # Range of the objective (already normalized 0-1, but safety)
-            range_h = max(1e-10, np.max(sorted_values) - np.min(sorted_values))  # avoid zero division
+            # Range R_h of objective
+            R_h = np.max(sorted_values) - np.min(sorted_values)
+            R_h = max(R_h, 1e-10)  # avoid division by zero
 
-            # Contribution to DM
-            dm_h = (std_gap / mean_gap) / range_h
-            per_objective_dm.append(dm_h)
+            # Assume objectives are normalized [0,1], but if not, the R_h will capture the real range
 
-            debug_print(f"[DEBUG] {method} objective {obj}: mean_gap={mean_gap:.6f}, std_gap={std_gap:.6f}, range={range_h:.6f}, dm_h={dm_h:.6f}", print_debug)
+            # Calculate σ_h / μ_h
+            if mean_gap > 0:
+                sigma_over_mu = std_gap / mean_gap
+            else:
+                sigma_over_mu = 0.0
 
-        dm_value = np.mean(per_objective_dm)
+            # Normalization factor |f_h(P_G) - f_h(P_B)|:
+            # Since we work normalized [0,1], |1-0|=1, otherwise approximate using R_h
+            normalization_factor = 1.0  # because global normalization should ensure [0,1] spread
+            term_h = (sigma_over_mu) / (R_h / normalization_factor)
+
+            per_objective_dm.append(term_h)
+
+            debug_print(f"[DEBUG] {method} objective {obj}: mean_gap={mean_gap:.6f}, std_gap={std_gap:.6f}, range={R_h:.6f}, term_h={term_h:.6f}", print_debug)
+
+        # Sum terms over all objectives and divide by |S|
+        if len(front) > 0:
+            dm_value = (1 / len(front)) * np.sum(per_objective_dm)
+        else:
+            dm_value = np.nan
+
         dm_results[method] = dm_value
 
         debug_print(f"[DEBUG] {method} final DM value: {dm_value:.6f}", print_debug)
@@ -557,156 +723,8 @@ def calculate_distribution_metric(single_pareto_fronts_normalized=None, print_de
     return result_df
 
 
-def calculate_hypervolume_hypercubes(single_pareto_fronts=None, print_interim_results=False):
-    """
-    Calculate the normalized hypervolume for each method's Pareto front using min-max normalized objectives.
-    Returns a DataFrame with one row per method.
-    The hypervolume is computed after min-max normalizing all objectives to [0, 1] based on the global min and max.
-    NOTE: This function expects normalized data to be passed directly.
-    """
-    # Helper: compute the hypervolume using shifted (1 - normalized) front, reference point at (1,...,1)
-    def shifted_hypervolume(front):
-        # Here, front is already normalized and shifted (1 - normalized)
-        return np.sum(np.prod(front, axis=1))
 
-    hypervolume_results = {}
-    for method, df in single_pareto_fronts.items():
-        front = df[objectives].to_numpy()
-        shifted_front = 1 - front
-        normalized_hv = np.sum(np.prod(shifted_front, axis=1))
-        hypervolume_results[method] = normalized_hv
-
-    result_df = pd.DataFrame({
-        "Hypervolume": hypervolume_results
-    }).T
-
-    if print_interim_results:
-        print("\n--- Hypervolume values per method hypercubes ---")
-        print(result_df)
-
-    return result_df
-
-
-def calculate_hypervolume_monte_carlo(single_pareto_fronts_normalized=None, samples=100000, print_interim_results=False):
-    """
-    Approximate the normalized hypervolume for each method's Pareto front using Monte Carlo sampling.
-    Returns a DataFrame with one row per method.
-    NOTE: This function expects normalized data to be passed directly.
-    """
-    debug_print("\n--- Monte Carlo Hypervolume Calculation Debug ---", print_interim_results)
-
-    hypervolume_results = {}
-    sample_points_1 = None
-
-    for method, df in single_pareto_fronts_normalized.items():
-        front = df[objectives].to_numpy()
-        # Generate random sample points in [0, 1]^n
-        sample_points = np.random.rand(samples, front.shape[1])
-
-        if sample_points_1 is not None:
-            if sample_points.all() != sample_points_1.all():
-                raise ValueError("Sample points are not equal to the previous sample points.")
-
-        sample_points_1 = sample_points.copy()
-    
-        # Check if each sample point is dominated by at least one solution in the front
-        dominated = np.any(np.all(front <= sample_points[:, None, :], axis=2), axis=1)
-
-        # Hypervolume approximation: fraction of dominated samples
-        hv_approx = np.mean(dominated)
-        hypervolume_results[method] = hv_approx
-
-        debug_print(f"[DEBUG] {method} approximated hypervolume (Monte Carlo, {samples} samples): {hv_approx:.6f}", print_interim_results)
-
-    result_df = pd.DataFrame({
-        "Hypevolume (Monte Carlo)": hypervolume_results
-    }).T
-
-    debug_print("\n--- Hypervolume (Monte Carlo) values per method ---", print_interim_results)
-    debug_print(result_df, print_interim_results)
-
-    return result_df
-
-
-def calculate_average_monte_carlo_hypervolume(single_pareto_fronts_normalized, print_debug = False, seeds=[42, 43, 44, 45, 46], samples=100000):
-    """
-    Compute the average Monte Carlo hypervolume across multiple seeds.
-    Only DataFrames are passed; method_paths are not used.
-    NOTE: This function expects normalized data to be passed directly.
-    """
-    results = []
-    for seed in seeds:
-        np.random.seed(seed)
-        hv_result = calculate_hypervolume_monte_carlo(single_pareto_fronts_normalized, samples=samples)
-        results.append(hv_result.T)
-
-    avg_result = pd.concat(results).groupby(level=0).mean().T
-    
-    debug_print("\n--- Average Monte Carlo Hypervolume values per method ---", print_debug)
-    debug_print(avg_result, print_debug)
-
-    return avg_result
-
-
-def calculate_spread(single_pareto_fronts=None, print_debug=False):
-    """
-    Calculate the Spread (sum of width for each objective) for each method's Pareto front.
-    Objectives are min-max normalized to [0, 1] before calculating the Spread.
-    Spread = sum over objectives of (max value - min value).
-    Returns a DataFrame with one row per method.
-    NOTE: This function expects normalized data to be passed directly.
-    """
-    debug_print("\n--- Spread Calculation Debug (Normalized) ---", print_debug)
-
-    spread_results = {}
-
-    for method, df in single_pareto_fronts.items():
-        front = df[objectives].to_numpy()
-        # Print per-objective spread before summing
-        for i, obj in enumerate(objectives):
-            objective_spread = np.max(front[:, i]) - np.min(front[:, i])
-            debug_print(f"[DEBUG] {method} spread for {obj}: {objective_spread:.6f}", print_debug)
-        # Spread: sum over all objectives of (max - min) after normalization
-        spread = np.sum(np.max(front, axis=0) - np.min(front, axis=0))
-        spread_results[method] = spread
-        debug_print(f"[DEBUG] {method} normalized spread: {spread:.6f}", print_debug)
-
-    result_df = pd.DataFrame({
-        "Spread": spread_results
-    }).T
-
-    debug_print("\n--- Spread values per method (Normalized) ---", print_debug)
-    debug_print(result_df, print_debug)
-
-    return result_df
-
-
-def calculate_exact_hypervolume(single_pareto_fronts=None, print_debug=False):
-    """
-    Calculate the exact hypervolume for each method's Pareto front.
-    NOTE: This function expects normalized data to be passed directly.
-    """
-
-    debug_print("\n--- Exact Hypervolume Calculation Debug ---", print_debug)
-
-    hypervolume_results = {}
-    for method, df in single_pareto_fronts.items():
-        front = df[objectives].to_numpy()
-        # Reference point for normalized data (all ones)
-        ref_point = np.ones(front.shape[1])
-        # Calculate Hypervolume
-        hv = HV(ref_point)
-        hypervolume_value = hv.do(front)
-        hypervolume_results[method] = hypervolume_value
-        debug_print(f"[DEBUG] {method} hypervolume: {hypervolume_value:.6f}", print_debug)
-
-    result_df = pd.DataFrame({
-        "Exact Hypervolume": hypervolume_results
-    }).T
-
-    return result_df
-
-
+# === Plotting Functions for single Pareto fronts ===
 def plot_aggregated_3d(single_pareto_fronts_normalized, instance_name=None):
     """
     Create 3D scatter plots of the aggregated objectives for each method.
@@ -735,8 +753,39 @@ def plot_aggregated_3d(single_pareto_fronts_normalized, instance_name=None):
         plt.tight_layout()
         plt.show()
 
+def plot_3d_custom_objectives(single_pareto_fronts_normalized, selected_objectives, instance_name=None):
+    """
+    Create 3D scatter plots of three selected objectives for each method.
+    - X-axis: selected_objectives[0]
+    - Y-axis: selected_objectives[1]
+    - Z-axis: selected_objectives[2]
+    """
+    if len(selected_objectives) != 3:
+        raise ValueError("Exactly three objectives must be selected for 3D plotting.")
+
+    for method, df in single_pareto_fronts_normalized.items():
+        x = df[selected_objectives[0]]
+        y = df[selected_objectives[1]]
+        z = df[selected_objectives[2]]
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(x, y, z, c='blue', marker='o')
+
+        ax.set_xlabel(selected_objectives[0])
+        ax.set_ylabel(selected_objectives[1])
+        ax.set_zlabel(selected_objectives[2])
+
+        title = f"{method} - Custom 3D Plot"
+        if instance_name:
+            title = f"{instance_name} - {method} Custom 3D"
+        ax.set_title(title)
+
+        plt.tight_layout()
+        plt.show()
 
 
+# === Plotting Functions for combined plots but single Pareto fronts ===
 def plot_aggregated_3d_combined(single_pareto_fronts_normalized, instance_name=None):
     """
     Erstellt einen kombinierten 3D-Scatterplot, in dem alle Punkte aller Methoden gemeinsam dargestellt werden.
@@ -780,7 +829,6 @@ def plot_aggregated_3d_combined(single_pareto_fronts_normalized, instance_name=N
     plt.tight_layout()
     plt.show()
 
-
 def plot_aggregated_3d_combined_global(global_pareto_front_normalized, instance_name=None):
     """
     Create a combined 3D scatterplot for the global Pareto front (normalized), colored by Method.
@@ -820,40 +868,7 @@ def plot_aggregated_3d_combined_global(global_pareto_front_normalized, instance_
     plt.tight_layout()
     plt.show()
 
-
-def plot_3d_custom_objectives(single_pareto_fronts_normalized, selected_objectives, instance_name=None):
-    """
-    Create 3D scatter plots of three selected objectives for each method.
-    - X-axis: selected_objectives[0]
-    - Y-axis: selected_objectives[1]
-    - Z-axis: selected_objectives[2]
-    """
-    if len(selected_objectives) != 3:
-        raise ValueError("Exactly three objectives must be selected for 3D plotting.")
-
-    for method, df in single_pareto_fronts_normalized.items():
-        x = df[selected_objectives[0]]
-        y = df[selected_objectives[1]]
-        z = df[selected_objectives[2]]
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(x, y, z, c='blue', marker='o')
-
-        ax.set_xlabel(selected_objectives[0])
-        ax.set_ylabel(selected_objectives[1])
-        ax.set_zlabel(selected_objectives[2])
-
-        title = f"{method} - Custom 3D Plot"
-        if instance_name:
-            title = f"{instance_name} - {method} Custom 3D"
-        ax.set_title(title)
-
-        plt.tight_layout()
-        plt.show()
-
-
-
+# === Plotting Functions for combined plots with global Pareto front ===
 def plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, selected_objectives, instance_name=None):
     """
     Create a combined 3D scatter plot of three selected objectives across all methods.
@@ -900,8 +915,6 @@ def plot_3d_custom_objectives_combined(single_pareto_fronts_normalized, selected
     plt.tight_layout()
     plt.show()
 
-
-
 def plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, selected_objectives, instance_name=None):
     """
     Create a combined 3D scatter plot of three selected objectives across all methods for the global Pareto front (normalized).
@@ -947,12 +960,12 @@ def plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, se
 if __name__ == "__main__":
     np.random.seed(42)
     # Updated: Unpack all four returned values (now includes "with_method" DataFrames)
-    single_pareto_fronts, single_pareto_fronts_normalized, global_pareto_front, global_pareto_front_normalized = get_method_paths(instance, excluded_methods = [], print_debug=True)
+    single_pareto_fronts, single_pareto_fronts_normalized, global_pareto_front, global_pareto_front_normalized = get_method_paths(instance, excluded_methods = ['TPSA'], print_debug=False)
 
 
     # Calculate all metrics with appropriate DataFrames
     # PCI expects normalized global Pareto front
-    pci_result = calculate_pci(global_pareto_front_normalized, print_debug=False)
+    pci_result = calculate_pci(global_pareto_front_normalized, print_debug=True)
     # DCI expects unnormalized global Pareto front
     dci_result = calculate_dci(global_pareto_front, print_debug=False)
     # PF-Share expects unnormalized global Pareto front
@@ -970,51 +983,90 @@ if __name__ == "__main__":
     #hypervolume_results_3 = calculate_hypervolume_hypercubes(single_pareto_fronts_normalized, print_interim_results=True)
     #hypervolume_result_4 = calculate_exact_hypervolume(single_pareto_fronts_normalized, print_debug=True)
 
-    # Combine all metrics
-    combined_result = pd.concat([pf_share_result, pci_result, hypervolume_results, dci_result, distribution_metric_results, spacing_results, spread_results], axis=0)
+    # Split metrics into convergence and diversity groups
+    convergence_metrics = ["PF-Share", "PCI", "Hypervolume"]
+    diversity_metrics = ["DCI", "Distribution Metric (DM)", "Spacing", "Spread"]
 
-    # Special formatting
-    formatted_result = combined_result.copy()
+    # Create DataFrames for each group (preserving order)
+    convergence_result = pd.concat(
+        [df for name, df in [("PF-Share", pf_share_result), ("PCI", pci_result), ("Hypervolume", hypervolume_results)] if name in convergence_metrics],
+        axis=0
+    )
+    diversity_result = pd.concat(
+        [df for name, df in [("DCI", dci_result), ("Distribution Metric (DM)", distribution_metric_results), ("Spacing", spacing_results), ("Spread", spread_results)] if name in diversity_metrics],
+        axis=0
+    )
 
-    # Format PF-Share: integer + percent sign
-    if "PF-Share" in formatted_result.index:
-        pf_row = formatted_result.loc["PF-Share"]
+    # Special formatting for convergence metrics
+    formatted_convergence = convergence_result.copy()
+    if "PF-Share" in formatted_convergence.index:
+        pf_row = formatted_convergence.loc["PF-Share"]
         formatted_pf_row = pf_row.round(0).astype(int).astype(str) + "%"
-        # Convert DataFrame to object dtype before inserting text values to avoid FutureWarning
-        formatted_result = formatted_result.astype(object)
-        formatted_result.loc["PF-Share"] = formatted_pf_row
-
-    # Round other metrics to 4 decimals
-    for idx in formatted_result.index:
+        formatted_convergence = formatted_convergence.astype(object)
+        formatted_convergence.loc["PF-Share"] = formatted_pf_row
+    formatted_convergence = formatted_convergence.astype(object)
+    for idx in formatted_convergence.index:
         if idx != "PF-Share":
-            formatted_result.loc[idx] = formatted_result.loc[idx].astype(float).round(4)
+            formatted_convergence.loc[idx] = formatted_convergence.loc[idx].astype(float).round(4)
 
-    # Add thumbs up/down per metric
-    annotated_result = formatted_result.copy()
-    for idx in formatted_result.index:
+    # Special formatting for diversity metrics
+    formatted_diversity = diversity_result.copy()
+    formatted_diversity = formatted_diversity.astype(object)
+    for idx in formatted_diversity.index:
+        formatted_diversity.loc[idx] = formatted_diversity.loc[idx].astype(float).round(4)
+
+    # Annotate convergence metrics (thumbs up/down)
+    annotated_convergence = formatted_convergence.copy()
+    for idx in formatted_convergence.index:
         if idx == "PF-Share":
             continue  # Skip annotations for PF-Share
-        row = formatted_result.loc[idx]
-        # Determine best/worst: for PCI and Spacing, best is min; for others, best is max
-        if idx in ["PCI", "Spacing"]:
+        row = formatted_convergence.loc[idx]
+        # Determine best/worst: for PCI, best is min; for others, best is max
+        if idx in ["PCI"]:
             best_method = row.astype(float).idxmin()
             worst_method = row.astype(float).idxmax()
         else:
             best_method = row.astype(float).idxmax()
             worst_method = row.astype(float).idxmin()
-        for col in formatted_result.columns:
+        for col in formatted_convergence.columns:
             if col == best_method:
-                annotated_result.at[idx, col] = f"{formatted_result.at[idx, col]} 👍"
+                annotated_convergence.at[idx, col] = f"{formatted_convergence.at[idx, col]} 👍"
             if col == worst_method:
-                annotated_result.at[idx, col] = f"{formatted_result.at[idx, col]} 👎"
+                annotated_convergence.at[idx, col] = f"{formatted_convergence.at[idx, col]} 👎"
 
-    # Print final summary with custom formatting for readability
-    print("\n=== Combined Metrics Summary ===\n")
+    # Annotate diversity metrics (thumbs up/down)
+    annotated_diversity = formatted_diversity.copy()
+    for idx in formatted_diversity.index:
+        row = formatted_diversity.loc[idx]
+        # For Spacing and Distribution Metric (DM), best is min; for others, best is max
+        if idx in ["Spacing", "Distribution Metric (DM)"]:
+            best_method = row.astype(float).idxmin()
+            worst_method = row.astype(float).idxmax()
+        else:
+            best_method = row.astype(float).idxmax()
+            worst_method = row.astype(float).idxmin()
+        for col in formatted_diversity.columns:
+            if col == best_method:
+                annotated_diversity.at[idx, col] = f"{formatted_diversity.at[idx, col]} 👍"
+            if col == worst_method:
+                annotated_diversity.at[idx, col] = f"{formatted_diversity.at[idx, col]} 👎"
+
+    print("\n=== Instance Information ===\n")
     print("Instance:", instance)
     print("Methods:", ", ".join(single_pareto_fronts.keys()), "\n")
-    for idx, row in annotated_result.iterrows():
+
+    # Print final summary split into convergence and diversity metrics
+    print("\n=== Convergence Metrics ===\n")
+    for idx, row in annotated_convergence.iterrows():
         print(f"{idx}")
-        for method in annotated_result.columns:
+        for method in annotated_convergence.columns:
+            print(f"  {method.ljust(8)}: {str(row[method]).ljust(15)}")
+        print()  # blank line after each metric
+
+    print("\n=== Diversity Metrics ===\n")  
+    for idx, row in annotated_diversity.iterrows():
+        print(f"{idx}")
+        for method in annotated_diversity.columns:
             print(f"  {method.ljust(8)}: {str(row[method]).ljust(15)}")
         print()  # blank line after each metric
 
