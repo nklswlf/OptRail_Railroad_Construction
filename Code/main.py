@@ -121,7 +121,7 @@ def main():
                                                         min_temp=0.1,
                                                         cooling_rate=0.95,
                                                         max_iterations=500,
-                                                        fallback_threshold=50,
+                                                        fallback_threshold=25,
                                                         scaling_energy=30,
                                                         max_single_move_tries=30)
 
