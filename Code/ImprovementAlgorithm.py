@@ -475,6 +475,9 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         self.ScalingEnergy = scaling_energy
         self.MaxSingleMoveTries = max_single_move_tries
 
+        self.max_traversal_moves = 1
+        self.max_location_moves = 4
+        self.fallback_strategy = 'best'  # 'random' or 'best'
 
 
         self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
@@ -505,9 +508,18 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
             f.write(text + "\n")
 
  
-    def location_move(self, solution:Solution) -> None:
+    def multiple_moves(self, solution:Solution, move_type:str):
+
+        if move_type == 'traversal':
+            possible_moves = list(range(1, self.max_traversal_moves + 1))
+            move_probs = [1.0 / len(possible_moves)] * len(possible_moves)
+        elif move_type == 'location':
+            possible_moves = list(range(self.max_traversal_moves+1, self.max_location_moves + 1))
+            move_probs = [1.0 / len(possible_moves)] * len(possible_moves)
+
         
-        random_number_of_moves = self.RNG.integers(2, 5)
+        random_number_of_moves = self.RNG.choice(possible_moves, p=move_probs)
+
         current_solution = solution.clone()
         self.EvaluationLogic.evaluate(current_solution)
         delta_details = dict()
@@ -578,17 +590,10 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                 objectives = self.NeighborhoodTypes[neighborhoodType]
 
                 move_type = self.RNG.choice(['traversal', 'location'])
-                if move_type == 'traversal':
-                    move = neighborhood.SingleMove(solution, self.MaxSingleMoveTries)
-                    self.Move_Counter[neighborhoodType] += 1
-                    if move is None:
-                        self.None_Move_Counter[neighborhoodType] += 1
-                        continue
-                    delta_details = move.DeltaDetails
-                elif move_type == 'location':
-                    delta_details, objectives, worker_route_plan, machine_route_plan, attachment_route_plan = self.location_move(solution)
-
-
+    
+                delta_details, objectives, worker_route_plan, machine_route_plan, attachment_route_plan = self.multiple_moves(solution, move_type)
+ 
+            
                 # Alle Ziele initial aus der aktuellen Lösung übernehmen
                 objective_dict = {
                     "driver_violation": solution.driver_violation,
@@ -622,12 +627,13 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
 
                 self.log(f"\n[DBSA] ΔDom: {dominating_count_current} → {dominating_count_new}, ΔE: {overall_difference:.3f}, T: {current_temperature:.2f}, prob: {prob:.3f}")
                 self.log(f"[Delta] Delta Details: {delta_details}")
+                
+
+
 
                 if prob < random_number:
                     continue
 
-                if move_type == 'traversal':
-                    worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
                 solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
                 self.EvaluationLogic.evaluate(solution)
 
@@ -641,7 +647,12 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                     fallback_counter += 1
 
                 if fallback_counter >= self.FallbackThreshold:
-                    solution = self.ParetoSolutions.SelectRandomBestSolution()
+                    if self.fallback_strategy == 'random':
+                        # Select a random solution from the Pareto front
+                        solution = self.RNG.choice(self.ParetoSolutions.ParetoFront)
+                    elif self.fallback_strategy == 'best':
+                        # Select the best solution from the Pareto front
+                        solution = self.ParetoSolutions.SelectRandomBestSolution()
 
 
             current_temperature *= self.CoolingRate
