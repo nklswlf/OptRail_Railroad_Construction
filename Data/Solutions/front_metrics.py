@@ -103,8 +103,8 @@ import pandas as pd
 
 # === Instance ===
 #instance = "a3_o80_m10_an10_ar9_reduced"
-instance = "a10_o107_m5_an57_ar12"
-#instance = "a10_o114_m6_an57_ar11"
+#instance = "a10_o107_m5_an57_ar12"
+instance = "a10_o114_m6_an57_ar11"
 #instance = "a10_o128_m6_an51_ar13"
 #instance = "a10_o144_m6_an53_ar12"
 #instance = "a15_o170_m9_an80_ar18"
@@ -436,7 +436,9 @@ def calculate_hypervolume_monte_carlo(single_pareto_fronts_normalized=None, samp
     for method, df in single_pareto_fronts_normalized.items():
         front = df[objectives].to_numpy()
         # Generate random sample points in [0, 1]^n
-        sample_points = np.random.rand(samples, front.shape[1])
+        # sample_points = np.random.rand(samples, front.shape[1])
+        # New Reference point for normalized data (1.01, 1.01, ..., 1.01)
+        sample_points = np.random.uniform(0, 1.01, size=(samples, front.shape[1]))
 
         if sample_points_1 is not None:
             if sample_points.all() != sample_points_1.all():
@@ -481,7 +483,7 @@ def calculate_average_monte_carlo_hypervolume(single_pareto_fronts_normalized, p
 
     return avg_result
 
-def calculate_exact_hypervolume(single_pareto_fronts=None, print_debug=False):
+def calculate_exact_hypervolume(single_pareto_fronts_normalized=None, print_debug=False):
     """
     Calculate the exact hypervolume for each method's Pareto front.
     NOTE: This function expects normalized data to be passed directly.
@@ -490,10 +492,10 @@ def calculate_exact_hypervolume(single_pareto_fronts=None, print_debug=False):
     debug_print("\n--- Exact Hypervolume Calculation Debug ---", print_debug)
 
     hypervolume_results = {}
-    for method, df in single_pareto_fronts.items():
+    for method, df in single_pareto_fronts_normalized.items():
         front = df[objectives].to_numpy()
-        # Reference point for normalized data (all ones)
-        ref_point = np.ones(front.shape[1])
+        # Reference point for normalized data (all ones) --> New Reference point for normalized data (1.01, 1.01, ..., 1.01)
+        ref_point = np.ones(front.shape[1]) * 1.01
         # Calculate Hypervolume
         hv = HV(ref_point)
         hypervolume_value = hv.do(front)
@@ -960,14 +962,21 @@ def plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, se
 if __name__ == "__main__":
     np.random.seed(42)
     # Updated: Unpack all four returned values (now includes "with_method" DataFrames)
-    single_pareto_fronts, single_pareto_fronts_normalized, global_pareto_front, global_pareto_front_normalized = get_method_paths(instance, excluded_methods = ['TPSA'], print_debug=False)
+    single_pareto_fronts, single_pareto_fronts_normalized, global_pareto_front, global_pareto_front_normalized = get_method_paths(instance, excluded_methods = [], print_debug=False)
 
+    # Insert check for number of methods in global Pareto front
+    methods_in_global_pf = global_pareto_front["Method"].unique()
+    calculate_pci_dci = len(methods_in_global_pf) > 1
 
     # Calculate all metrics with appropriate DataFrames
-    # PCI expects normalized global Pareto front
-    pci_result = calculate_pci(global_pareto_front_normalized, print_debug=True)
-    # DCI expects unnormalized global Pareto front
-    dci_result = calculate_dci(global_pareto_front, print_debug=False)
+    # PCI and DCI only if more than one method in global Pareto front
+    if calculate_pci_dci:
+        pci_result = calculate_pci(global_pareto_front_normalized, print_debug=False)
+        dci_result = calculate_dci(global_pareto_front, print_debug=False)
+    else:
+        print("⚠️  Skipping PCI and DCI: Only one method contributes to the global Pareto front.")
+        pci_result = pd.DataFrame()
+        dci_result = pd.DataFrame()
     # PF-Share expects unnormalized global Pareto front
     pf_share_result = calculate_pf_share(global_pareto_front, print_debug=False)
     # Spacing expects normalized single Pareto fronts
@@ -987,13 +996,13 @@ if __name__ == "__main__":
     convergence_metrics = ["PF-Share", "PCI", "Hypervolume"]
     diversity_metrics = ["DCI", "Distribution Metric (DM)", "Spacing", "Spread"]
 
-    # Create DataFrames for each group (preserving order)
+    # Create DataFrames for each group (preserving order), only include non-empty DataFrames
     convergence_result = pd.concat(
-        [df for name, df in [("PF-Share", pf_share_result), ("PCI", pci_result), ("Hypervolume", hypervolume_results)] if name in convergence_metrics],
+        [df for name, df in [("PF-Share", pf_share_result), ("PCI", pci_result), ("Hypervolume", hypervolume_results)] if not df.empty],
         axis=0
     )
     diversity_result = pd.concat(
-        [df for name, df in [("DCI", dci_result), ("Distribution Metric (DM)", distribution_metric_results), ("Spacing", spacing_results), ("Spread", spread_results)] if name in diversity_metrics],
+        [df for name, df in [("DCI", dci_result), ("Distribution Metric (DM)", distribution_metric_results), ("Spacing", spacing_results), ("Spread", spread_results)] if not df.empty],
         axis=0
     )
 
@@ -1001,7 +1010,9 @@ if __name__ == "__main__":
     formatted_convergence = convergence_result.copy()
     if "PF-Share" in formatted_convergence.index:
         pf_row = formatted_convergence.loc["PF-Share"]
-        formatted_pf_row = pf_row.round(0).astype(int).astype(str) + "%"
+        formatted_pf_row = pf_row.apply(
+            lambda x: f"{int(round(x))}%" if pd.notna(x) else "0%"
+        )
         formatted_convergence = formatted_convergence.astype(object)
         formatted_convergence.loc["PF-Share"] = formatted_pf_row
     formatted_convergence = formatted_convergence.astype(object)

@@ -171,7 +171,7 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
                 if solution.total_dynamic_percentage == self.InputData.site_fulfillment:
                     print("\nFound fully staffed solution:")
                     print(solution)
-                    self.ParetoSolutions.SetReferencePoint(solution)
+                    #self.ParetoSolutions.SetReferencePoint(solution)
                     return solution
 
                 # Randomly select a neighborhood type and create a move
@@ -616,7 +616,7 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                 if overall_difference <= 0:
                     prob = 1.0
                 else:
-                    prob =  math.exp(-overall_difference * self.ScalingEnergy  / current_temperature)
+                    prob =  math.exp(-overall_difference / current_temperature)
 
                 random_number = self.RNG.random()
 
