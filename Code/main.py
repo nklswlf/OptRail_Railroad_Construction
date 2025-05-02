@@ -28,7 +28,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = ["Construction_a10_o114_m6_an57_ar11.json"]
+instances = ["Construction_a10_o107_m5_an57_ar12.json"]
 
 
 
@@ -123,7 +123,8 @@ def main():
                                                         max_iterations=500,
                                                         fallback_threshold=25,
                                                         scaling_energy=30,
-                                                        max_single_move_tries=30)
+                                                        max_single_move_tries=30,
+                                                        parallel_runs=5)
 
             
             elif algortihm == 'TPSA':
