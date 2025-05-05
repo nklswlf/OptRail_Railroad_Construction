@@ -28,7 +28,6 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = ["Construction_a10_o107_m5_an57_ar12.json"]
 
 
 
@@ -77,13 +76,13 @@ step = None
 
 algortihm = 'DBSA'
 
-algortihms = ['PSA', 'DBSA', 'TPSA']
+algortihms = ['PSA', 'DBSA']#, 'TPSA']
 
 
 def main():
 
     for i in instances:
-        #for algortihm in algortihms:
+        for algortihm in algortihms:
             if step == None:
                 data = InputData(i, algortihm)
             else:

@@ -103,8 +103,9 @@ import pandas as pd
 
 # === Instance ===
 #instance = "a3_o80_m10_an10_ar9_reduced"
-instance = "a10_o107_m5_an57_ar12"
-#instance = "a10_o114_m6_an57_ar11"
+#instance = "a5_o96_m10_an10_ar10_reduced"
+#instance = "a10_o107_m5_an57_ar12"
+instance = "a10_o114_m6_an57_ar11"
 #instance = "a10_o128_m6_an51_ar13"
 #instance = "a10_o144_m6_an53_ar12"
 #instance = "a15_o170_m9_an80_ar18"
@@ -432,13 +433,14 @@ def calculate_hypervolume_monte_carlo(single_pareto_fronts_normalized=None, samp
 
     hypervolume_results = {}
     sample_points_1 = None
+    ref = 1.01
 
     for method, df in single_pareto_fronts_normalized.items():
         front = df[objectives].to_numpy()
         # Generate random sample points in [0, 1]^n
         # sample_points = np.random.rand(samples, front.shape[1])
-        # New Reference point for normalized data (1.01, 1.01, ..., 1.01)
-        sample_points = np.random.uniform(0, 1.01, size=(samples, front.shape[1]))
+        # New Reference point for normalized data (ref, ref, ..., ref)
+        sample_points = np.random.uniform(0, ref, size=(samples, front.shape[1]))
 
         if sample_points_1 is not None:
             if sample_points.all() != sample_points_1.all():
@@ -450,8 +452,9 @@ def calculate_hypervolume_monte_carlo(single_pareto_fronts_normalized=None, samp
         dominated = np.any(np.all(front <= sample_points[:, None, :], axis=2), axis=1)
 
         # Hypervolume approximation: fraction of dominated samples
-        hv_approx = np.mean(dominated)
-        hypervolume_results[method] = hv_approx
+        U = ref ** front.shape[1]
+        hv_approx_volume = U * np.mean(dominated)
+        hypervolume_results[method] = hv_approx_volume
 
         debug_print(f"[DEBUG] {method} approximated hypervolume (Monte Carlo, {samples} samples): {hv_approx:.6f}", print_interim_results)
 
@@ -490,12 +493,13 @@ def calculate_exact_hypervolume(single_pareto_fronts_normalized=None, print_debu
     """
 
     debug_print("\n--- Exact Hypervolume Calculation Debug ---", print_debug)
+    ref = 1.01
 
     hypervolume_results = {}
     for method, df in single_pareto_fronts_normalized.items():
         front = df[objectives].to_numpy()
-        # Reference point for normalized data (all ones) --> New Reference point for normalized data (1.01, 1.01, ..., 1.01)
-        ref_point = np.ones(front.shape[1]) * 1.01
+        # Reference point for normalized data (all ones) --> New Reference point for normalized data (ref, ref, ..., ref)
+        ref_point = np.ones(front.shape[1]) * ref
         # Calculate Hypervolume
         hv = HV(ref_point)
         hypervolume_value = hv.do(front)
