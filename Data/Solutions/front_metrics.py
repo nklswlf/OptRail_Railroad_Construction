@@ -456,7 +456,7 @@ def calculate_hypervolume_monte_carlo(single_pareto_fronts_normalized=None, samp
         hv_approx_volume = U * np.mean(dominated)
         hypervolume_results[method] = hv_approx_volume
 
-        debug_print(f"[DEBUG] {method} approximated hypervolume (Monte Carlo, {samples} samples): {hv_approx:.6f}", print_interim_results)
+        debug_print(f"[DEBUG] {method} approximated hypervolume (Monte Carlo, {samples} samples): {hv_approx_volume:.6f}", print_interim_results)
 
     result_df = pd.DataFrame({
         "Hypevolume (Monte Carlo)": hypervolume_results
