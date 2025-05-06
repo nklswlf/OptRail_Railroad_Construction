@@ -60,7 +60,7 @@ Construction_a50_o578_m28_an276_ar66.json
 
 def experiments():
 
-    bound_technique = "MIP"
+    bound_technique = "BIP"
 
     instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a5_o96_m10_an10_ar10_reduced.json",
@@ -79,10 +79,7 @@ def experiments():
         
         data = InputData.InputData(instance)
 
-        if bound_technique == "LP":
-            optimizer = MIP_UB.UpperBound(data, bound_technique=bound_technique)
-        elif bound_technique == "MIP":
-            optimizer = MIP_UB.UpperBound(data, bound_technique=bound_technique)
+        optimizer = MIP_UB.UpperBound(data, bound_technique=bound_technique)
 
         obj_value, order_count, order_item_count, runtime, status, gap = optimizer.execute()
 
@@ -104,8 +101,8 @@ def single_run():
 
     data = InputData.InputData(instance)
     
-    if strategy == "MIP":
-        optimizer = MIP_UB.UpperBound(data,bound_technique='MIP' ,upper_bound="all")
+    if strategy == "BIP":
+        optimizer = MIP_UB.UpperBound(data,bound_technique='BIP' ,upper_bound="all")
     elif strategy == "LP":
         optimizer = MIP_UB.UpperBound(data,bound_technique='LP' ,upper_bound="all")
 
@@ -117,7 +114,7 @@ def single_run():
     print(f"Order List: {solution[3]}")
     print(f"Length of Order List: {len(solution[3])}")
 
-    if strategy == "MIP":
+    if strategy == "BIP":
         route = optimizer.extract_routes_from_solution()
         Solution = OutputData.Solution(route[1], route[0], route[2], data)
         feasible = Solution.feasibility_check()
@@ -129,8 +126,8 @@ def single_run():
 
 
 if __name__ == "__main__":
-    #experiments()
-    single_run()
+    experiments()
+    #single_run()
 
 
 

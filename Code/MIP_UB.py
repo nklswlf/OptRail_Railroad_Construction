@@ -92,7 +92,7 @@ class UpperBound:
         
     def preprocess_data(self):
         """Preprocess the input data for optimization."""
-        print("\n Preprocessing data for MIP...")
+        print("\n Preprocessing data for BIP...")
         current_time = time.time()
         
         # ========================
@@ -354,7 +354,7 @@ class UpperBound:
 
 
         current_time = time.time()
-        print("\n Creating MIP...")
+        print("\n Creating BIP...")
         self.model = gp.Model("Flow_Formulation")
 
         
@@ -378,7 +378,7 @@ class UpperBound:
             indices_4 = [(m, self.start, self.end) for m in self.M]  # (m, start, end)
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
 
-            if self.bound_techique == 'MIP':
+            if self.bound_techique == 'BIP':
                 x = self.model.addVars(all_indices, vtype=GRB.BINARY, name="x")
             elif self.bound_techique == 'LP':
                 x = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="x")
@@ -391,7 +391,7 @@ class UpperBound:
             indices_3 = [(w, i, self.end) for w in self.W for i in self.N_w[w]]  # (w, i, end)
             indices_4 = [(w, self.start, self.end) for w in self.W]  # (w, start, end)
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
-            if self.bound_techique == 'MIP':
+            if self.bound_techique == 'BIP':
                 y = self.model.addVars(all_indices, vtype=GRB.BINARY, name="y")
             elif self.bound_techique == 'LP':
                 y = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="y")
@@ -405,13 +405,13 @@ class UpperBound:
             indices_4 = [(a, self.start, self.end) for a in self.A]
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
             
-            if self.bound_techique == 'MIP':
+            if self.bound_techique == 'BIP':
                 z = self.model.addVars(all_indices, vtype=GRB.BINARY, name="z")
             elif self.bound_techique == 'LP':
                 z = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="z")
 
         # Site completion variables
-        if self.bound_techique == 'MIP':
+        if self.bound_techique == 'BIP':
             u = self.model.addVars(self.C, vtype=GRB.BINARY, name="u")
         elif self.bound_techique == 'LP':
             u = self.model.addVars(self.C, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="u")
@@ -595,10 +595,10 @@ class UpperBound:
 
     def solve_model(self):
         """Solve the optimization model."""
-        print("\n Solving MIP...")
+        print("\n Solving BIP...")
         self.model.optimize()
 
-        print(" MIP solved after {:.2f} seconds".format(self.model.Runtime))
+        print(" BIP solved after {:.2f} seconds".format(self.model.Runtime))
    
             
     def extract_routes_from_solution(self):
