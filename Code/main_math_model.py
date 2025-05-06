@@ -5,6 +5,7 @@ import pandas as pd
 from pathlib import Path
 import MIP_UB as MIP_UB
 import OutputData
+import EvaluationLogic
 
 
 
@@ -72,25 +73,62 @@ def experiments():
                 "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
     
-    dict_upper_bound = dict()
+    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
+                "Construction_a5_o96_m10_an10_ar10_reduced.json",
+                "Construction_a10_o107_m5_an57_ar12.json"]
+    
+    dict_solution = dict()
 
 
-    for instance in instances:
+    for i in instances:
         
-        data = InputData.InputData(instance)
+        data = InputData.InputData(i, 'UB')
+        instance = data.instance
+        evaluation = EvaluationLogic.EvaluationLogic(data)
 
         optimizer = MIP_UB.UpperBound(data, bound_technique=bound_technique)
 
-        obj_value, order_count, order_item_count, runtime, status, gap = optimizer.execute()
+        solution, obj_value, order_count, runtime, status, gap = optimizer.execute()
 
-        dict_upper_bound[instance] = [obj_value, order_count, order_item_count, runtime, status, gap]
+        if solution is not None:
+            feasible = solution.feasibility_check()
+            if not feasible:
+                raise Exception(f"Infeasible solution for instance {instance}")
+            else:
+                print(f"Feasible solution for instance {instance}")
+            evaluation.evaluate(solution)
+
+            order_item_count = solution.number_of_finished_order_items
+            driver_violation = solution.driver_violation
+            commute_distance = solution.total_commute_distance
+            transport_distance = solution.total_transport_distance
+            attachment_distance = solution.total_transport_distance_attachments
+            machine_count = solution.number_of_machines
+            worker_count = solution.number_of_workers
+            attachment_count = solution.number_of_attachments
+
+        else:
+            order_item_count = None
+            driver_violation = None
+            commute_distance = None
+            transport_distance = None
+            attachment_distance = None
+            machine_count = None
+            worker_count = None
+            attachment_count = None
+
+        
+            
+
+        dict_solution[instance] = [obj_value, order_count, runtime, status, gap, order_item_count, driver_violation, commute_distance, transport_distance, attachment_distance, machine_count, worker_count, attachment_count]
 
 
-    df_upper_bound = pd.DataFrame.from_dict(dict_upper_bound,orient="index",columns=["Objective Value", "Order Count", "Order Item Count", "Runtime (s)", "Status", "Gap"])
+    df_upper_bound = pd.DataFrame.from_dict(dict_solution,orient="index",columns=["Objective Value", "Order Count", "Runtime (s)", "Status", "Gap", "Order Item Count", "Driver Violation", "Commute Distance", "Transport Distance", "Attachment Distance", "Machine Count", "Worker Count", "Attachment Count"])
     df_upper_bound.index.name = "Instance"
-    upper_bound_path = Path.cwd().parent / "Data" / "Solution_math_model" / "Upper_Bound"
+    df_upper_bound.reset_index(inplace=True)
+    upper_bound_path = Path.cwd().parent / "Data" / "Solution_math_model"
     upper_bound_path.mkdir(parents=True, exist_ok=True)
-    df_upper_bound.to_csv(upper_bound_path / f"upper_bound_{bound_technique}.csv", index=False)
+    df_upper_bound.to_csv(upper_bound_path / f"{bound_technique}_full_solution.csv", index=False)
     print(df_upper_bound)
 
 

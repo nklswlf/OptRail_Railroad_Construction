@@ -1,0 +1,4 @@
+Instance,Objective Value,Order Count,Runtime (s),Status,Gap,Order Item Count,Driver Violation,Commute Distance,Transport Distance,Attachment Distance,Machine Count,Worker Count,Attachment Count
+a3_o80_m10_an10_ar9_reduced,3.0,3.0,0.9464049339294434,2,0,80,66,6780.53238256101,1091.023471725983,0.0,2,9,3
+a5_o96_m10_an10_ar10_reduced,5.0,5.0,2.629159927368164,2,0,96,76,8439.127896245114,313.98969010129974,29.732137494637012,6,10,4
+a10_o107_m5_an57_ar12,9.0,9.0,10.248193979263306,2,0,67,50,7464.4636730715665,2229.938437952274,13.416407864998739,5,12,8

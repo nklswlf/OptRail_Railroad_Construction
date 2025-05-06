@@ -17,7 +17,7 @@ class UpperBound:
         self.data = data
         self.model = None
         self.upper_bound = upper_bound
-        self.bound_techique = bound_technique
+        self.bound_technique = bound_technique
 
         # ========================
         # 1. Sets
@@ -358,10 +358,19 @@ class UpperBound:
         self.model = gp.Model("Flow_Formulation")
 
         
-    
-        self.model.setParam('OutputFlag', 0)
 
-        self.model.setParam('TimeLimit', 3600)
+
+        if self.bound_technique == 'BIP':
+            save_path = Path.cwd().parent / "Data" / "ModelFiles" / self.bound_technique / self.data.instance
+            save_path.mkdir(parents=True, exist_ok=True)
+            log_file = save_path / "gurobi.log"
+            self.model.setParam("LogFile", str(log_file))
+            self.model.setParam('TimeLimit', 10800)
+            self.model.setParam("Threads", 12)
+        else:
+            self.model.setParam('OutputFlag', 0)
+            self.model.setParam('TimeLimit', 3600)
+            self.model.setParam("Threads", 12)
 
 
 
@@ -378,9 +387,9 @@ class UpperBound:
             indices_4 = [(m, self.start, self.end) for m in self.M]  # (m, start, end)
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
 
-            if self.bound_techique == 'BIP':
+            if self.bound_technique == 'BIP':
                 x = self.model.addVars(all_indices, vtype=GRB.BINARY, name="x")
-            elif self.bound_techique == 'LP':
+            elif self.bound_technique == 'LP':
                 x = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="x")
 
         if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
@@ -391,9 +400,9 @@ class UpperBound:
             indices_3 = [(w, i, self.end) for w in self.W for i in self.N_w[w]]  # (w, i, end)
             indices_4 = [(w, self.start, self.end) for w in self.W]  # (w, start, end)
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
-            if self.bound_techique == 'BIP':
+            if self.bound_technique == 'BIP':
                 y = self.model.addVars(all_indices, vtype=GRB.BINARY, name="y")
-            elif self.bound_techique == 'LP':
+            elif self.bound_technique == 'LP':
                 y = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="y")
 
         if self.upper_bound == 'attachment' or self.upper_bound == "all":
@@ -405,15 +414,15 @@ class UpperBound:
             indices_4 = [(a, self.start, self.end) for a in self.A]
             all_indices = indices_1 + indices_2 + indices_3 + indices_4
             
-            if self.bound_techique == 'BIP':
+            if self.bound_technique == 'BIP':
                 z = self.model.addVars(all_indices, vtype=GRB.BINARY, name="z")
-            elif self.bound_techique == 'LP':
+            elif self.bound_technique == 'LP':
                 z = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="z")
 
         # Site completion variables
-        if self.bound_techique == 'BIP':
+        if self.bound_technique == 'BIP':
             u = self.model.addVars(self.C, vtype=GRB.BINARY, name="u")
-        elif self.bound_techique == 'LP':
+        elif self.bound_technique == 'LP':
             u = self.model.addVars(self.C, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="u")
 
         # ========================
@@ -698,20 +707,25 @@ class UpperBound:
             int_order_count = int(order_count)
             order_list = [c for c, _, _ in u_vars_sorted[:int_order_count]]
 
-            if False:
+            if self.bound_technique == 'BIP':
                 # Optionales Logging / spätere Erweiterung
                 objective_value = self.model.objVal
-                x_count = sum(val for name, val in zip(var_names, var_values) if name.startswith("x["))
-                order_item_count = x_count - len(self.M)
                 gap = self.model.MIPGap if self.model.status == GRB.TIME_LIMIT else 0
 
                 filename = f"model_{self.data.instance}.lp"
                 solution_filename = f"solution_{self.data.instance}.sol"
-                save_path = Path.cwd().parent / "Data" / "ModelFiles"/ self.bound_techique /  f"ModelStatus_{self.model.status}"  / self.data._parent_folder / self.data.instance
+                save_path = Path.cwd().parent / "Data" / "ModelFiles"/ self.bound_technique / self.data.instance
                 save_path.mkdir(parents=True, exist_ok=True)
                 self.model.write(str(save_path / solution_filename))
                 self.model.write(str(save_path / filename))
-                return objective_value, order_count, order_item_count, order_list, self.model.Runtime, self.model.status, gap
+                
+                if self.model.status == GRB.OPTIMAL or self.model.status == GRB.TIME_LIMIT:
+                    routes = self.extract_routes_from_solution()
+                    solution = Solution(routes['y'], routes['x'], routes['z'], self.data)
+                elif self.model.status == GRB.INFEASIBLE:
+                    solution = None
+
+                return solution, objective_value, order_count, self.model.Runtime, self.model.status, gap
         else:
             order_list = []
 
