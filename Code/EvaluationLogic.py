@@ -784,15 +784,15 @@ class EvaluationLogic:
     def evaluate(self, solution:Solution):
         
         self.categorizing_orders(solution)
-        self.categorizing_machine_worker(solution)
         self.calculate_finished_order_items(solution)
         self.calculate_commute_distance(solution)
         self.calculate_transport_distance(solution)
         self.calculate_driver_violation(solution)
-        self.calculate_machine_worker_attachment_count_and_utilization_time(solution)
+        self.calculate_worker_count_and_utilization_time(solution)
         self.calculate_dynamic_percentage_order(solution)
         self.calculate_attachment_distance(solution)
         self.calculate_cummulative_distance(solution)
+        self.calculate_machine_attachment_count_and_utilization_time(solution)
 
     
     def calculate_cummulative_distance(self, solution:Solution):
@@ -810,25 +810,24 @@ class EvaluationLogic:
             solution.total_transport_distance_attachments = sum(solution.transport_distance_per_attachment.values())
 
 
-    def calculate_dynamic_percentage_order(self, solution:Solution):
-        ''' Calculate the dynamic percentage of the solution'''
+    def calculate_dynamic_percentage_order(self, solution: Solution):
+        """Efficiently calculates the dynamic percentage of the solution."""
+        finished_order_item_ids = {
+            order_item_id
+            for route in solution.route_plan_worker.values()
+            for order_item_id in route
+        }
 
-
-        finished_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
-       
-        for order in self.data.orders:
-            solution.dynamic_percentage_order[order.order_number] = 0
-            for order_item_id in order.order_item_ids:
-                if order_item_id in finished_order_item_ids:
-                    solution.dynamic_percentage_order[order.order_number] += 1
-
-            solution.dynamic_percentage_order[order.order_number] = solution.dynamic_percentage_order[order.order_number] / len(order.order_item_ids)
+        solution.dynamic_percentage_order = {
+            order.order_number: sum(1 for oid in order.order_item_ids if oid in finished_order_item_ids) / len(order.order_item_ids)
+            for order in self.data.orders
+        }
 
         solution.total_dynamic_percentage = sum(solution.dynamic_percentage_order.values())
                 
-    def categorizing_orders(self, solution:Solution):
-        ''' Categorize the orders into finished, semi-finished and not started orders'''
-
+    def categorizing_orders(self, solution: Solution):
+        ''' Categorize the orders into finished, semi-finished and not started orders '''
+        
         solution.finished_orders = []
         solution.not_started_orders = []
         solution.not_recognized_orders = []
@@ -836,72 +835,34 @@ class EvaluationLogic:
         solution.not_started_order_item_ids = []
         solution.not_recognized_order_item_ids = []
 
+        all_planned_order_item_ids = set(order_item_id for route in solution.route_plan_worker.values() for order_item_id in route)
 
-        all_planned_order_item_ids = [order_item_id for route in solution.route_plan_worker.values() for order_item_id in route]
-
+        # Categorize order items
         for order_item in self.data.order_items:
             if order_item.id not in all_planned_order_item_ids:
-                if order_item.status == True:
+                if order_item.status:
                     solution.not_started_order_item_ids.append(order_item.id)
-                elif order_item.status == False:
+                else:
                     solution.not_recognized_order_item_ids.append(order_item.id)
-        
 
+        # Categorize orders
         for order in self.data.orders:
-            if order.status == True:
-                solution.finished_orders.append(order)
-                solution.not_started_orders.append(order)
-            elif order.status == False:
+            if not order.status:
                 solution.not_recognized_orders.append(order)
-
-        for order in self.data.orders:
-            if order.status == False:
                 continue
-            for order_item_id in order.order_item_ids:
-                if order_item_id not in all_planned_order_item_ids:
-                    solution.finished_orders.remove(order)
-                    break
 
-        for order in self.data.orders:
-            if order.status == False:
-                continue
-            for order_item_id in order.order_item_ids:
-                if order_item_id in all_planned_order_item_ids:
-                    solution.not_started_orders.remove(order)
-                    break
-
-        solution.semifinished_orders = [order for order in self.data.orders if order not in solution.finished_orders and order not in solution.not_started_orders and order not in solution.not_recognized_orders]
+            planned_count = sum(1 for oid in order.order_item_ids if oid in all_planned_order_item_ids)
+            if planned_count == 0:
+                solution.not_started_orders.append(order)
+            elif planned_count == len(order.order_item_ids):
+                solution.finished_orders.append(order)
+            else:
+                solution.semifinished_orders.append(order)
 
         solution.share_finished_orders = len(solution.finished_orders) / len(self.data.orders) * 100
-
         solution.number_of_finished_orders = len(solution.finished_orders)
-
         solution.number_of_unrecognized_orders = len(solution.not_recognized_orders)
 
-
-
-    def categorizing_machine_worker(self, solution:Solution):
-        ''' Categorize the machines and workers into finished, semi-finished and not started machines and workers'''
-
-        solution.used_machines = []
-        solution.unused_machines = []
-        solution.used_workers = []
-        solution.unused_workers = []
-        solution.used_attachments = []
-        solution.unused_attachments = []
-        
-        
-        for machine, route in solution.route_plan_machine.items():
-            if len(route) == 0:
-                solution.unused_machines.append(machine)
-            elif len(route) > 0:
-                solution.used_machines.append(machine)
-
-        for worker, route in solution.route_plan_worker.items():
-            if len(route) == 0:
-                solution.unused_workers.append(worker)
-            elif len(route) > 0:
-                solution.used_workers.append(worker)
 
     def calculate_finished_order_items(self, solution:Solution):
         ''' Calculate the number of finished order items'''
@@ -946,40 +907,79 @@ class EvaluationLogic:
 
         solution.total_transport_distance = sum(solution.transport_distance_per_machine.values())
 
-    def calculate_driver_violation(self, solution:Solution):
-        ''' Calculate the total driver violation time of the workers'''
+    def calculate_driver_violation(self, solution: Solution):
+        """Calculate the total driver violation time of the workers"""
+
+        # Precompute mapping from order_item_id to machine_id
+        order_to_machine = {
+            order_item_id: machine_id
+            for machine_id, route in solution.route_plan_machine.items()
+            for order_item_id in route
+        }
+
+        # Precompute machine_id → machine
+        machine_dict = {machine.id: machine for machine in self.data.machines}
 
         solution.driver_violation = 0
 
         for worker_id, route in solution.route_plan_worker.items():
-            for i in range(len(route)):
-                involved_machine_id = next((machine_id for machine_id in solution.route_plan_machine.keys() if route[i] in solution.route_plan_machine[machine_id]), None)
-                involved_machine = next((machine for machine in self.data.machines if machine.id == involved_machine_id), None)
-                if worker_id not in involved_machine.default_drivers:
-                    solution.driver_violation += 1
-  
-    def calculate_machine_worker_attachment_count_and_utilization_time(self, solution:Solution):
-        ''' Calculate the number of workers and machines'''
-
-        for machine_id, route in solution.route_plan_machine.items():
-            solution.machine_utilization_time[machine_id] = 0
-            if len(route) > 0:
-                solution.number_of_machines += 1
             for order_item_id in route:
-                solution.machine_utilization_time[machine_id] += self.data.order_items[order_item_id].duration
+                machine_id = order_to_machine.get(order_item_id)
+                if machine_id is not None:
+                    if worker_id not in machine_dict[machine_id].default_drivers:
+                        solution.driver_violation += 1
+  
 
+
+    def calculate_worker_count_and_utilization_time(self, solution: Solution) -> None:
+        solution.number_of_workers = 0
 
         for worker_id, route in solution.route_plan_worker.items():
-            solution.worker_work_time[worker_id] = 0
-            if len(route) > 0:
+            duration = sum(self.data.order_items[oid].duration for oid in route)
+            solution.worker_work_time[worker_id] = duration
+            if duration > 0:
                 solution.number_of_workers += 1
-            for order_item_id in route:
-                solution.worker_work_time[worker_id] += self.data.order_items[order_item_id].duration
+
+    def calculate_machine_attachment_count_and_utilization_time(self, solution: Solution) -> None:
+        solution.number_of_machines = 0
+        solution.number_of_attachments = 0
+
+        for machine_id, route in solution.route_plan_machine.items():
+            duration = sum(self.data.order_items[oid].duration for oid in route)
+            solution.machine_utilization_time[machine_id] = duration
+            if duration > 0:
+                solution.number_of_machines += 1
 
 
         for attachment_id, route in solution.route_plan_attachment.items():
-            solution.attachment_utilization_time[attachment_id] = 0
-            if len(route) > 0:
+            duration = sum(self.data.order_items[oid].duration for oid in route)
+            solution.attachment_utilization_time[attachment_id] = duration
+            if duration > 0:
                 solution.number_of_attachments += 1
-            for order_item_id in route:
-                solution.attachment_utilization_time[attachment_id] += self.data.order_items[order_item_id].duration
+
+
+
+### NOT IN USE
+
+    def categorizing_machine_worker(self, solution:Solution):
+        ''' Categorize the machines and workers into finished, semi-finished and not started machines and workers'''
+
+        solution.used_machines = []
+        solution.unused_machines = []
+        solution.used_workers = []
+        solution.unused_workers = []
+        solution.used_attachments = []
+        solution.unused_attachments = []
+        
+        
+        for machine, route in solution.route_plan_machine.items():
+            if len(route) == 0:
+                solution.unused_machines.append(machine)
+            elif len(route) > 0:
+                solution.used_machines.append(machine)
+
+        for worker, route in solution.route_plan_worker.items():
+            if len(route) == 0:
+                solution.unused_workers.append(worker)
+            elif len(route) > 0:
+                solution.used_workers.append(worker)

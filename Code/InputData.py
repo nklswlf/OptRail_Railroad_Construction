@@ -7,7 +7,7 @@ import itertools
 class InputData:
     '''Class for creating Data objects based on formatted JSON Files containing the information of orders, machines, workers, attachments, and routes'''
 
-    def __init__(self, instance_filename: str) -> None:
+    def __init__(self, instance_filename: str, algo:str):
         '''
         Initialize the InputData object with paths to the JSON file.
 
@@ -67,6 +67,12 @@ class InputData:
 
         # Transform data for easier access and usage
         self._transfrom_data()
+
+        # Create a folder in .../Data/Solutions/ instance / the current date
+        solutions_path = Path.cwd().parent / "Data" / "Solutions" / self.instance / algo
+        solutions_path.mkdir(parents=True, exist_ok=True)
+        self.solutions_path = solutions_path
+
 
         print(f"Data loaded from '{self.instance_filename}' in folder '{self._parent_folder}'.")
 
@@ -134,8 +140,6 @@ class InputData:
         '''
         for order in self.orders:
             order.order_items = [order_item for order_item in self.order_items if order_item.order_number == order.order_number]
-
-
 
     def calculate_complexity(self):
         """

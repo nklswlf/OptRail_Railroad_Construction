@@ -8,6 +8,8 @@ from collections import Counter
 import numpy as np
 import pygmo as pg
 import math
+from numba import njit
+
 
 
 
@@ -59,7 +61,6 @@ class Solution:
         self.total_dynamic_percentage = -0
 
 
-
     def __str__(self) -> str:
         ''' Define the string representation of the solution'''
         return (f"Instance: {self.data.instance}\n"
@@ -76,9 +77,6 @@ class Solution:
                 f"Number of machines: {self.number_of_machines}\n"
                 f"Number of workers: {self.number_of_workers}\n"
                 f"Number of attachments: {self.number_of_attachments}")
- 
-
-
 
     def feasibility_check(self, verbose=False, allverbose=False):
         """
@@ -315,7 +313,7 @@ class Solution:
             print("\nFeasibility check completed. Solution is feasible.")
         return True    
 
-    def clone(self, evaluate=True):
+    def clone(self):
         """
         Creates a shallow copy of the solution object with deep-copied route plans.
         This avoids full deepcopy overhead, while preserving route data integrity.
@@ -339,6 +337,13 @@ class ParetoSolutions:
         self.data = data
         self.RNG = rng
         self.ParetoFront = []
+        self._front_version = 0
+        self._last_front_version_for_cache = -1
+        self._interpolated_points_cache = []
+        # Minimum number of front-version increments before regenerating samples
+        self._min_version_delta = 1
+        # Maximum Pareto front size beyond which no interpolation is done
+        self.S_threshold = 200
 
     def PurgeParetoFront(self):
         """
@@ -387,94 +392,6 @@ class ParetoSolutions:
         
         self.ParetoFront = non_dominated
 
-
-
-    def SetReferencePoint(self, solution: Solution):
-        """
-        Sets the reference point for hypervolume calculation based on a given solution.
-        
-        Args:
-            solution (Solution): A solution object containing the objectives.
-        
-        Raises:
-            ValueError: If the solution is None or if the objectives are not set.
-        """
-        if solution is None:
-            raise ValueError("Solution cannot be None.")
-        
-        epsilon = 4
-        epsilon_2 = 8
-        driver = solution.driver_violation * epsilon
-        commute = solution.total_commute_distance * epsilon_2
-        transport = solution.total_transport_distance * epsilon_2
-        attachments = solution.total_transport_distance_attachments * epsilon_2
-        workers = solution.number_of_workers * epsilon
-        machines = solution.number_of_machines * epsilon
-        attach_count = solution.number_of_attachments * epsilon
-
-        epsilon = 1e-6  # Small value to avoid numerical issues
-        self.ReferencePoint = np.array([
-            driver + epsilon,
-            commute + epsilon,
-            transport + epsilon,
-            attachments + epsilon,
-            workers + epsilon,
-            machines + epsilon,
-            attach_count + epsilon
-        ])
-
-
-    def CalculateHypervolume(self) -> float:
-        """
-        Calculates the hypervolume of the Pareto Front using pygmo.
-        
-        Assumptions:
-        - The Pareto Front is stored in self.ParetoFront.
-        - Each solution in the Pareto Front has the following attributes:
-            driver_violation,
-            total_commute_distance,
-            total_transport_distance,
-            total_transport_distance_attachments,
-            number_of_workers,
-            number_of_machines,
-            number_of_attachments.
-        - The reference point is set via SetReferencePoint and stored in self.ReferencePoint
-            as a NumPy array with the same order of objectives.
-        
-        Returns:
-            float: The computed hypervolume.
-        """
-
-        objs = []
-        for sol in self.ParetoFront:
-            objs.append([
-                sol.driver_violation,
-                sol.total_commute_distance,
-                sol.total_transport_distance,
-                sol.total_transport_distance_attachments,
-                sol.number_of_workers,
-                sol.number_of_machines,
-                sol.number_of_attachments
-            ])
-        objs = np.array(objs)
-        
-        # Create a Hypervolume object with the objectives
-        hv = pg.hypervolume(objs)
-        
-        # Calculate the hypervolume using the reference point
-        hv_value = hv.compute(self.ReferencePoint)
-
-        # Adjust hypervolume for comparison
-        hv_log = math.log10(hv_value) * 10
-        hv_sqrt = math.sqrt(hv_value)
-        
-        print(f"Hypervolume: {hv_value}")
-        print(f"Log10 Hypervolume: {hv_log}")
-        print(f"Square Root Hypervolume: {hv_sqrt}")
-        
-
-
-
     def UpdateParetoFront(self, new_solution: Solution) -> bool:
         """
         Compares new_solution with all solutions in the Pareto Front.
@@ -514,6 +431,7 @@ class ParetoSolutions:
 
         # Add new_solution to the Pareto Front.
         self.ParetoFront.append(new_solution)
+        self._front_version += 1
         return True
     
     def CompareSolutions(self, current_solution: Solution, new_solution: Solution) -> int:
@@ -576,52 +494,120 @@ class ParetoSolutions:
 
         return 0  # Keine Dominanz
 
+    def GenerateInterpolatedPoints(self):
+        """
+        Generates interpolated points between Pareto-optimal solutions.
+        Uses NumPy to vectorize bounds extraction and dominance checks for performance.
+        """
+        # Require at least two solutions to interpolate
+        interpolated_points = []
+        if len(self.ParetoFront) < 2:
+            return interpolated_points
 
+        D = 7
+        # Stack objective vectors into an (N, D) NumPy array
+        arr = np.vstack([
+            [
+                sol.driver_violation,
+                sol.total_commute_distance,
+                sol.total_transport_distance,
+                sol.total_transport_distance_attachments,
+                sol.number_of_workers,
+                sol.number_of_machines,
+                sol.number_of_attachments
+            ]
+            for sol in self.ParetoFront
+        ])
 
+        # Precompute sorted indices for each dimension
+        sorted_idx = [np.argsort(arr[:, d]) for d in range(D)]
+        # Precompute min and max for each dimension
+        min_vals = arr.min(axis=0)
+        max_vals = arr.max(axis=0)
+
+        num_samples = min(100, arr.shape[0])
+        for _ in range(num_samples):
+            # Sample uniformly within bounds
+            v = self.RNG.uniform(min_vals, max_vals, size=D)
+            d = int(self.RNG.integers(0, D))
+
+            # Snap v[d] down to the nearest Pareto-front value in dimension d
+            for idx in sorted_idx[d]:
+                u = arr[idx]
+                if np.all(u <= v) and np.any(u < v):
+                    v[d] = u[d]
+                    break
+
+            # Check if any Pareto solution dominates v using JIT-compiled function
+            if self.dominates_any(arr, v):
+                interpolated_points.append({
+                    "driver_violation": float(v[0]),
+                    "commute_distance": float(v[1]),
+                    "transport_distance": float(v[2]),
+                    "attachment_distance": float(v[3]),
+                    "worker_count": float(v[4]),
+                    "machine_count": float(v[5]),
+                    "attachment_count": float(v[6])
+                })
+
+        return interpolated_points
+
+    def get_interpolated_points(self):
+        """
+        Returns cached interpolated points, regenerating only if enough version increments have accumulated.
+        """
+        # If the Pareto front has grown too large, skip interpolation
+        if len(self.ParetoFront) >= self.S_threshold:
+            return []
+        # Regenerate only if enough version increments have accumulated
+        if (self._front_version - self._last_front_version_for_cache) >= self._min_version_delta:
+            self._interpolated_points_cache = self.GenerateInterpolatedPoints()
+            self._last_front_version_for_cache = self._front_version
+        return self._interpolated_points_cache
+
+    @staticmethod
+    @njit
+    def dominates_any(arr: np.ndarray, v: np.ndarray) -> bool:
+        """
+        Returns True if any row of arr dominates vector v (arr[i] <= v componentwise and < v in at least one component).
+        """
+        N, D = arr.shape
+        for i in range(N):
+            less_equal = True
+            strictly_less = False
+            for d in range(D):
+                if arr[i, d] > v[d]:
+                    less_equal = False
+                    break
+                if arr[i, d] < v[d]:
+                    strictly_less = True
+            if less_equal and strictly_less:
+                return True
+        return False
 
     def CountDominatingSolutions(self, new_solution, interpolated_points=None):
         """
         Zählt, wie viele Lösungen aus der Pareto-Front die new_solution dominieren.
-
-        Args:
-        pareto_front (list): Liste der Lösungen, die zur Pareto-Front gehören.
-        new_solution (Solution): Die neue Lösung, die überprüft wird.
-
-        Returns:
-        int: Anzahl der Lösungen aus der Pareto-Front, die die new_solution dominieren.
+        Implementiert Algorithmus 2 mit slices und Feasibility-Check für interpolierte Punkte.
         """
         if isinstance(new_solution, Solution):
-            objective_dict = {}
-            objective_dict["driver_violation"] = new_solution.driver_violation
-            objective_dict["commute_distance"] = new_solution.total_commute_distance
-            objective_dict["transport_distance"] = new_solution.total_transport_distance
-            objective_dict["attachment_distance"] = new_solution.total_transport_distance_attachments
-            objective_dict["machine_count"] = new_solution.number_of_machines
-            objective_dict["worker_count"] = new_solution.number_of_workers
-            objective_dict["attachment_count"] = new_solution.number_of_attachments
+            objective_dict = {
+                "driver_violation": new_solution.driver_violation,
+                "commute_distance": new_solution.total_commute_distance,
+                "transport_distance": new_solution.total_transport_distance,
+                "attachment_distance": new_solution.total_transport_distance_attachments,
+                "worker_count": new_solution.number_of_workers,
+                "machine_count": new_solution.number_of_machines,
+                "attachment_count": new_solution.number_of_attachments
+            }
         elif isinstance(new_solution, dict):
             objective_dict = new_solution
         else:
             raise ValueError("new_solution must be of type Solution or dict.")
 
-        # Interpolierte Punkte erzeugen
+        # Interpolierte Punkte erzeugen (Algorithmus 2 mit Slicing und Feasibility)
         if interpolated_points is None:
-            interpolated_points = []
-            if len(self.ParetoFront) >= 2 and len(self.ParetoFront) < 50:
-                num_samples = min(20, len(self.ParetoFront))
-                for _ in range(num_samples):
-                    a, b = self.RNG.choice(self.ParetoFront, size=2, replace=False)
-                    alpha = self.RNG.uniform(0.1, 0.9)
-                    point = {
-                        "driver_violation": alpha * a.driver_violation + (1 - alpha) * b.driver_violation,
-                        "commute_distance": alpha * a.total_commute_distance + (1 - alpha) * b.total_commute_distance,
-                        "transport_distance": alpha * a.total_transport_distance + (1 - alpha) * b.total_transport_distance,
-                        "attachment_distance": alpha * a.total_transport_distance_attachments + (1 - alpha) * b.total_transport_distance_attachments,
-                        "machine_count": alpha * a.number_of_machines + (1 - alpha) * b.number_of_machines,
-                        "worker_count": alpha * a.number_of_workers + (1 - alpha) * b.number_of_workers,
-                        "attachment_count": alpha * a.number_of_attachments + (1 - alpha) * b.number_of_attachments
-                    }
-                    interpolated_points.append(point)
+            interpolated_points = self.get_interpolated_points()
 
         count = 0
         for solution in self.ParetoFront:
@@ -691,10 +677,6 @@ class ParetoSolutions:
 
         
 
-        
-
-
-    
 
 
     def SortParetoFront(self, criteria: str = None):
@@ -737,15 +719,8 @@ class ParetoSolutions:
             return tuple(key)
 
         self.ParetoFront = sorted(self.ParetoFront, key=sort_key)
-
     
     def SelectRandomBestSolution(self, all_values: bool = False):
-        """
-        Für jedes Zielkriterium (Minimierungsziele):
-        - Wähle nur **eine** Lösung mit dem besten Wert für dieses Kriterium.
-        - Falls mehrere Lösungen gleich gut: Normalisiere alle anderen Ziele (Min-Max), 
-        bilde den Gesamtscore, wähle die beste.
-        """
         objective_map = {
             "driver_violation": lambda x: x.driver_violation,
             "commute_distance": lambda x: x.total_commute_distance,
@@ -759,26 +734,36 @@ class ParetoSolutions:
         selected_solutions = []
         best_value_dict = {}
 
-        for key, func in objective_map.items():
+        # Precompute all objective values for each solution once
+        solution_values = {sol: {k: func(sol) for k, func in objective_map.items()} for sol in self.ParetoFront}
+
+        
+
+        for key in objective_map:
             try:
-                best_value = min(func(sol) for sol in self.ParetoFront)
+                # Extract values for the current objective
+                values = [vals[key] for vals in solution_values.values()]
+                best_value = min(values)
                 best_value_dict[key] = round(best_value, 2)
-                candidate_solutions = [sol for sol in self.ParetoFront if func(sol) == best_value]
+
+                # Filter candidates that match best_value
+                candidate_solutions = [sol for sol, vals in solution_values.items() if vals[key] == best_value]
 
                 if len(candidate_solutions) == 1:
                     selected_solutions.append(candidate_solutions[0])
                     continue
 
+                # Normalize other objectives
                 normalized_scores = []
+                precomputed_sub_values = {sub_key: [solution_values[s][sub_key] for s in candidate_solutions] for sub_key in objective_map if sub_key != key}
                 for sol in candidate_solutions:
                     score = 0.0
-                    for sub_key, sub_func in objective_map.items():
+                    for sub_key in objective_map:
                         if sub_key == key:
                             continue
-                        values = [sub_func(s) for s in candidate_solutions]
-                        v_min = min(values)
-                        v_max = max(values)
-                        val = sub_func(sol)
+                        v_min = min(precomputed_sub_values[sub_key])
+                        v_max = max(precomputed_sub_values[sub_key])
+                        val = solution_values[sol][sub_key]
                         norm = (val - v_min) / (v_max - v_min) if v_max != v_min else 0.0
                         score += norm
                     normalized_scores.append((score, sol))
@@ -794,12 +779,11 @@ class ParetoSolutions:
             print("\nBest individual values:")
             print(df.to_string(index=False))
             return None
-        
+
         if not selected_solutions:
             raise KeyError("No solutions found.")
 
         return self.RNG.choice(selected_solutions)
-
 
     def ShowFront(self):
         ''' Show the Pareto Front as a DataFrame'''
@@ -833,32 +817,163 @@ class ParetoSolutions:
 
         # Show the DataFrame
         print(df)
-        # Write the DataFrame to a CSV file
-        df.to_csv("ParetoFront.csv", index=False)
+        # Write the DataFrame to a CSV file to self.InputData.solution_path
+        df.to_csv(self.data.solutions_path / "ParetoFront.csv", index=False)
 
 
-    def DeleteUnfinishedSites(self):
-        ''' Delete all solutions from the Pareto Front that have unfinished sites'''
-
-        # Create a list of solutions that have finished all sites
-        finished_solutions = [
-                solution
-                for solution in self.ParetoFront
-                if solution.semifinished_orders == []
-            ]
-           
-
-        # Update the Pareto Front
-        self.ParetoFront = finished_solutions
 
 
-        if len(self.ParetoFront) == 0:
-            print(f"\nDeleted all solutions from the Pareto Front because all of them had unfinished sites.")
-        else:
-            print(f"\nPareto Front with solutions that incorporate only finished sites:")
-            self.ShowFront()
+# Not in use
+    def CalculateParetoFrontMetrics(self):
+        """
+        Calculates the hypervolume and spread of the Pareto Front
+        and write the results to a CSV file.
+        """
+        # Check if Pareto Front is empty
+        if not self.ParetoFront:
+            print("Pareto Front is empty. Cannot calculate metrics.")
+            return
+
+        # Calculate hypervolume
+        hv_value, hv_log, hv_sqrt = self.CalculateHypervolume()
+
+        # Calculate spread
+        spread_value = self.CalculateSpread()
+
+        # Save metrics to CSV file
+        metrics = {
+            "Number of Solutions": len(self.ParetoFront),
+            "Reference Point": self.ReferencePoint.tolist(),
+            "Hypervolume": hv_value,
+            "Hypervolume Log10": hv_log,
+            "Hypervolume Sqrt": hv_sqrt,
+            "Spread": spread_value,
+        }
         
+        metrics_df = pd.DataFrame([metrics])
+        metrics_df.to_csv(self.data.solutions_path / "pareto_metrics.csv", index=False)
 
+    def SetReferencePoint(self, solution: Solution):
+        """
+        Sets the reference point for hypervolume calculation based on a given solution.
+        
+        Args:
+            solution (Solution): A solution object containing the objectives.
+        
+        Raises:
+            ValueError: If the solution is None or if the objectives are not set.
+        """
+        if solution is None:
+            raise ValueError("Solution cannot be None.")
+        
+        epsilon = 4
+        epsilon_2 = 8
+        driver = solution.driver_violation * epsilon
+        commute = solution.total_commute_distance * epsilon_2
+        transport = solution.total_transport_distance * epsilon_2
+        attachments = solution.total_transport_distance_attachments * epsilon_2
+        workers = solution.number_of_workers * epsilon
+        machines = solution.number_of_machines * epsilon
+        attach_count = solution.number_of_attachments * epsilon
 
+        epsilon = 1e-6  # Small value to avoid numerical issues
+        self.ReferencePoint = np.array([
+            driver + epsilon,
+            commute + epsilon,
+            transport + epsilon,
+            attachments + epsilon,
+            workers + epsilon,
+            machines + epsilon,
+            attach_count + epsilon
+        ])
 
+    def CalculateHypervolume(self) -> float:
+        """
+        Calculates the hypervolume of the Pareto Front using pygmo.
+        
+        Assumptions:
+        - The Pareto Front is stored in self.ParetoFront.
+        - Each solution in the Pareto Front has the following attributes:
+            driver_violation,
+            total_commute_distance,
+            total_transport_distance,
+            total_transport_distance_attachments,
+            number_of_workers,
+            number_of_machines,
+            number_of_attachments.
+        - The reference point is set via SetReferencePoint and stored in self.ReferencePoint
+            as a NumPy array with the same order of objectives.
+        
+        Returns:
+            float: The computed hypervolume.
+        """
 
+        objs = []
+        for sol in self.ParetoFront:
+            objs.append([
+                sol.driver_violation,
+                sol.total_commute_distance,
+                sol.total_transport_distance,
+                sol.total_transport_distance_attachments,
+                sol.number_of_workers,
+                sol.number_of_machines,
+                sol.number_of_attachments
+            ])
+        objs = np.array(objs)
+        
+        # Create a Hypervolume object with the objectives
+        hv = pg.hypervolume(objs)
+        
+        # Calculate the hypervolume using the reference point
+        hv_value = hv.compute(self.ReferencePoint)
+
+        # Adjust hypervolume for comparison
+        hv_log = math.log10(hv_value) * 10
+        hv_sqrt = math.sqrt(hv_value)
+        
+        return hv_value, hv_log, hv_sqrt
+
+    def CalculateSpread(self):
+        """
+        Computes the spread (also known as spacing) across all objective values.
+        This metric evaluates how evenly the solutions are distributed across the Pareto front.
+        """
+        if len(self.ParetoFront) < 2:
+            print("Cannot compute spread: not enough solutions.")
+            return None
+
+        # Extract all objective vectors from Pareto front
+        def objective_vector(sol):
+            return np.array([
+                sol.driver_violation,
+                sol.total_commute_distance,
+                sol.total_transport_distance,
+                sol.total_transport_distance_attachments,
+                sol.number_of_workers,
+                sol.number_of_machines,
+                sol.number_of_attachments
+            ])
+
+        # Create a list of all objective vectors
+        points = [objective_vector(sol) for sol in self.ParetoFront]
+
+        # Sort the points by the second objective (commute_distance)
+        points = sorted(points, key=lambda x: x[1])
+
+        # Compute Euclidean distances between consecutive points
+        distances = [np.linalg.norm(points[i + 1] - points[i]) for i in range(len(points) - 1)]
+
+        # Compute the mean of these distances
+        d_mean = np.mean(distances)
+
+        # Compute the sum of absolute deviations from the mean distance
+        d_sum = sum(abs(d - d_mean) for d in distances)
+
+        # Compute distance between extreme points (endpoints of the front)
+        df = np.linalg.norm(points[0] - points[-1])
+
+        # Compute spread using the NSGA-II formula
+        spread = (df + d_sum) / (df + (len(distances) * d_mean))
+
+        return spread
+        
