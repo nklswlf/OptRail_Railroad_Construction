@@ -366,7 +366,7 @@ class UpperBound:
             log_file = save_path / "gurobi.log"
             self.model.setParam("LogFile", str(log_file))
             self.model.setParam('TimeLimit', 10800)
-            self.model.setParam("Threads", 12)
+            self.model.setParam("Threads", 8)
         else:
             self.model.setParam('OutputFlag', 0)
             self.model.setParam('TimeLimit', 3600)
