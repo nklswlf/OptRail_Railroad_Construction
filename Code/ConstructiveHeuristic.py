@@ -24,6 +24,9 @@ class ConstructiveHeuristics:
 
         self.data = input_data
 
+        for order in self.data.orders:
+            print(f"Order {order.order_number} has priority {order.priority}")
+
         self.GreedyTechnique = next(iter(greedy_technique))
         settings = greedy_technique[self.GreedyTechnique]
 
@@ -105,7 +108,8 @@ class ConstructiveHeuristics:
                                 time_difference = order_item.start_time - self.data.start_date
                                 time_difference = time_difference.total_seconds() / self.data._seconds_a_day
                                 # Attractiveness function can be tuned
-                                attractiveness[order_item] = {"order_priority": order.priority["borda_count_ahp"], "dynamic_percentage": order.dynamic_percentage, "time_difference": time_difference}
+                                #attractiveness[order_item] = {"order_priority": order.priority["borda_count_ahp"], "dynamic_percentage": order.dynamic_percentage, "time_difference": time_difference}
+                                attractiveness[order_item] = {"dynamic_percentage": order.dynamic_percentage, "time_difference": time_difference}
 
             # Activate Attractiveness function and break to continue with next worker if no suitable order item is left
             if len(attractiveness) > 0:
@@ -361,7 +365,8 @@ class ConstructiveHeuristics:
                                 if order_item in worker._successors[best_order_item]:
                                     time_difference = order_item.start_time - best_order_item.end_time
                                     time_difference = time_difference.total_seconds() / self.data._seconds_a_day
-                                    attractiveness[order_item] = {"order_priority": order.priority["borda_count_ahp"], "dynamic_percentage": order.dynamic_percentage, "time_difference": time_difference}
+                                    #attractiveness[order_item] = {"order_priority": order.priority["borda_count_ahp"], "dynamic_percentage": order.dynamic_percentage, "time_difference": time_difference}
+                                    attractiveness[order_item] = {"dynamic_percentage": order.dynamic_percentage, "time_difference": time_difference}
 
                     # Activate Attractiveness function and break to next worker if no suitable order item is left
                     if len(attractiveness) > 0:
@@ -768,6 +773,106 @@ class ConstructiveHeuristics:
     def machine_attractiveness_function(self, attractiveness):
         ''' Attractiveness function for machines with tie-breaking '''
 
+
+        if self.machine_attractiveness_technique == "balanced_greedy":
+            for machine, attr in attractiveness.items():
+                mp = 1 if attr["machine_planned"] else 0
+                dd = 1 if attr["worker_default_driver"] else 0
+
+                attractiveness[machine] = mp + dd
+
+            unique_values = set(attractiveness.values())
+            value_to_machines = {v: [m for m in attractiveness if attractiveness[m] == v] for v in unique_values}
+            for machines in value_to_machines.values():
+                self.RNG.shuffle(machines)
+
+            return sorted(attractiveness.keys(), key=lambda m: (attractiveness[m], value_to_machines[attractiveness[m]].index(m)), reverse=True)
+
+        elif self.machine_attractiveness_technique == "machine_planned_importance":
+            for machine, attr in attractiveness.items():
+                mp = 1 if attr["machine_planned"] else 0
+                dd = 1 if attr["worker_default_driver"] else 0
+
+                attractiveness[machine] = {"machine_planned": mp, "value": dd}
+
+            value_tuples = {m: (attractiveness[m]["machine_planned"], attractiveness[m]["value"]) for m in attractiveness}
+            unique_pairs = set(value_tuples.values())
+            tie_map = {pair: [m for m in value_tuples if value_tuples[m] == pair] for pair in unique_pairs}
+            for machines in tie_map.values():
+                self.RNG.shuffle(machines)
+
+            return sorted(attractiveness.keys(), key=lambda m: (value_tuples[m], tie_map[value_tuples[m]].index(m)), reverse=True)
+
+        elif self.machine_attractiveness_technique == "worker_default_driver_importance":
+            for machine, attr in attractiveness.items():
+                mp = 1 if attr["machine_planned"] else 0
+                dd = 1 if attr["worker_default_driver"] else 0
+                attractiveness[machine] = {"worker_default_driver": dd, "value": mp}
+
+            value_tuples = {m: (attractiveness[m]["worker_default_driver"], attractiveness[m]["value"]) for m in attractiveness}
+            unique_pairs = set(value_tuples.values())
+            tie_map = {pair: [m for m in value_tuples if value_tuples[m] == pair] for pair in unique_pairs}
+            for machines in tie_map.values():
+                self.RNG.shuffle(machines)
+
+            return sorted(attractiveness.keys(), key=lambda m: (value_tuples[m], tie_map[value_tuples[m]].index(m)), reverse=True)
+
+
+
+
+    def order_item_attractiveness_function(self, attractiveness):
+        ''' Attractiveness function for order items with tie-breaking '''
+
+
+        min_time_difference = min(attr["time_difference"] for attr in attractiveness.values())
+        max_time_difference = max(attr["time_difference"] for attr in attractiveness.values())
+
+        if self.order_item_attractiveness_technique == "balanced_greedy":
+            for item, attr in attractiveness.items():
+                dp = attr["dynamic_percentage"]
+                td = (max_time_difference - attr["time_difference"]) / (max_time_difference - min_time_difference + 1e-6)
+                attractiveness[item] = dp + td
+
+            values = set(attractiveness.values())
+            tie_map = {v: [i for i in attractiveness if attractiveness[i] == v] for v in values}
+            for tied_items in tie_map.values():
+                self.RNG.shuffle(tied_items)
+
+            return sorted(attractiveness.keys(), key=lambda i: (attractiveness[i], tie_map[attractiveness[i]].index(i)), reverse=True)
+
+        elif self.order_item_attractiveness_technique == "dynamic_percentage_importance":
+            for item, attr in attractiveness.items():
+                dp = attr["dynamic_percentage"]
+                td = (max_time_difference - attr["time_difference"]) / (max_time_difference - min_time_difference + 1e-6)
+                attractiveness[item] = {"dynamic_percentage": dp, "value": td}
+
+            tuples = {i: (attractiveness[i]["dynamic_percentage"], attractiveness[i]["value"]) for i in attractiveness}
+            tie_map = {v: [i for i in tuples if tuples[i] == v] for v in set(tuples.values())}
+            for items in tie_map.values():
+                self.RNG.shuffle(items)
+
+            return sorted(attractiveness.keys(), key=lambda i: (tuples[i], tie_map[tuples[i]].index(i)), reverse=True)
+
+        elif self.order_item_attractiveness_technique == "time_difference_importance":
+            for item, attr in attractiveness.items():
+                dp = attr["dynamic_percentage"]
+                td = (max_time_difference - attr["time_difference"]) / (max_time_difference - min_time_difference + 1e-6)
+                attractiveness[item] = {"time_difference": td, "value": dp}
+
+            tuples = {i: (attractiveness[i]["time_difference"], attractiveness[i]["value"]) for i in attractiveness}
+            tie_map = {v: [i for i in tuples if tuples[i] == v] for v in set(tuples.values())}
+            for items in tie_map.values():
+                self.RNG.shuffle(items)
+
+            return sorted(attractiveness.keys(), key=lambda i: (tuples[i], tie_map[tuples[i]].index(i)), reverse=True)
+
+
+
+'''
+
+    def machine_attractiveness_function_with_possible_default_driver(self, attractiveness):
+            Attractiveness function for machines with tie-breaking 
+
         min_drivers = min(attr["possible_default_drivers"] for attr in attractiveness.values())
         max_drivers = max(attr["possible_default_drivers"] for attr in attractiveness.values())
 
@@ -832,8 +937,8 @@ class ConstructiveHeuristics:
 
 
 
-    def order_item_attractiveness_function(self, attractiveness):
-        ''' Attractiveness function for order items with tie-breaking '''
+    def order_item_attractiveness_function_with_order_priority(self, attractiveness):
+            Attractiveness function for order items with tie-breaking 
 
         min_order_priority = min(attr["order_priority"] for attr in attractiveness.values())
         max_order_priority = max(attr["order_priority"] for attr in attractiveness.values())
@@ -895,3 +1000,5 @@ class ConstructiveHeuristics:
                 self.RNG.shuffle(items)
 
             return sorted(attractiveness.keys(), key=lambda i: (tuples[i], tie_map[tuples[i]].index(i)), reverse=True)
+
+'''

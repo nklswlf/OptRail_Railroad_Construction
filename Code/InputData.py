@@ -141,6 +141,10 @@ class InputData:
         for order in self.orders:
             order.order_items = [order_item for order_item in self.order_items if order_item.order_number == order.order_number]
 
+
+
+
+
     def calculate_complexity(self):
         """
         Generate priorities for all orders based on multiple criteria.
@@ -553,21 +557,21 @@ class InputData:
         self.check_order_usability()
 
 
-        # Complexity for orders
+        # Complexity for orders --> not used in the current version
         #self.calculate_complexity()
 
 
         # Greedy "WorkerGreedy" Data Preparation
 
-        # Priorities for orders
+        # Priorities for orders --> not used in the current version
         #self.create_priorities_orders()
 
         # Dynamic dictionary for planned shifts
-        #self.planned_shifts_worker = dict()
-        #self.planned_shifts_machine = dict()
-        #for order in self.orders:
-        #    self.planned_shifts_worker[order] = list()
-        #    self.planned_shifts_machine[order] = list()
+        self.planned_shifts_worker = dict()
+        self.planned_shifts_machine = dict()
+        for order in self.orders:
+            self.planned_shifts_worker[order] = list()
+            self.planned_shifts_machine[order] = list()
             
 
 

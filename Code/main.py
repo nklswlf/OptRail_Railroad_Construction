@@ -28,7 +28,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-
+instances = [   "Construction_a10_o107_m5_an57_ar12.json"]
 
 
 
@@ -46,11 +46,9 @@ neighboorhood_types_local_search = ['Swap_Shift_External']
 
 machine_attractiveness_techniques = ["balanced_greedy",
                                      "machine_planned_importance",
-                                     "worker_default_driver_importance",
-                                     "possible_default_drivers_importance"]
+                                     "worker_default_driver_importance"]
 
 order_item_attractiveness_techniques = ["balanced_greedy",
-                                        "order_priority_importance",
                                         "dynamic_percentage_importance",
                                         "time_difference_importance"]
 
@@ -59,11 +57,11 @@ worker_attractiveness_techniques = ["balanced_greedy",
                                     "qualifications_importance"]
 
 
-greedy_technique_a = {'worker_greedy': {'order_item_attractiveness_technique': 'time_difference_importance',
+greedy_technique_a = {'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy',
                                         'machine_attractiveness_technique': 'balanced_greedy'}}
 
 
-greedy_technique_b = {'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy',
+greedy_technique_b = {'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 
                                             'machine_attractiveness_technique': 'balanced_greedy'}}
 
 
@@ -161,7 +159,7 @@ def main():
 
             else:
                 times = solver.Run( UB_technique="LP",
-                    greedy_technique=greedy_technique_b,
+                    greedy_technique=greedy_technique_a,
                     building_algorithm=building_sa,
                     improvement_algorithm=algo)
 
