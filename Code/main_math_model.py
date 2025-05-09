@@ -63,8 +63,8 @@ def experiments():
 
     bound_technique = "BIP"
 
-    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json"]
-    hallo = [            "Construction_a5_o96_m10_an10_ar10_reduced.json",
+    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
+                "Construction_a5_o96_m10_an10_ar10_reduced.json",
                 "Construction_a10_o107_m5_an57_ar12.json",
                 "Construction_a10_o114_m6_an57_ar11.json",
                 "Construction_a10_o128_m6_an51_ar13.json", # UB not reached!!! because not enough worker with qualification (q = 9,4) are available for shifts at the same time
@@ -74,10 +74,10 @@ def experiments():
                 "Construction_a20_o236_m12_an106_ar24.json", # UB not reached!!! because not enough attachment types (type = 8) are available for shifts at the same time
                                                             # Check with UB LP Relaxation including ATTACHMENTS
                 "Construction_a25_o306_m13_an127_ar31.json",
-                "Construction_a30_o355_m18_an148_ar42.json",
-                "Construction_a40_o476_m22_an215_ar51.json", # UB not reached!!! because machine type 2 does not exist for a machine in the instance
+                "Construction_a30_o355_m18_an148_ar42.json"]
+                #"Construction_a40_o476_m22_an215_ar51.json", # UB not reached!!! because machine type 2 does not exist for a machine in the instance
                                                             # Reached after pre-processing in InputData
-                "Construction_a50_o578_m28_an276_ar66.json"]
+                #"Construction_a50_o578_m28_an276_ar66.json"]
         
     dict_solution = dict()
 
