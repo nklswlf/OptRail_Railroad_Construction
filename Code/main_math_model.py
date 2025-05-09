@@ -81,59 +81,59 @@ def experiments():
         
     dict_solution = dict()
 
-    exp = 2
+    experimentos = [2,3]
 
-
-    for i in instances:
-        
-        data = InputData.InputData(i, 'UB')
-        instance = data.instance
-        evaluation = EvaluationLogic.EvaluationLogic(data)
-
-        optimizer = MIP_UB.UpperBound(data, bound_technique=bound_technique, testing=True, experiment=exp)
-
-        solution, obj_value, order_count, runtime, status, gap = optimizer.execute()
-
-        if solution is not None:
-            feasible = solution.feasibility_check()
-            if not feasible:
-                raise Exception(f"Infeasible solution for instance {instance}")
-            else:
-                print(f"Feasible solution for instance {instance}")
-            evaluation.evaluate(solution)
-
-            order_item_count = solution.number_of_finished_order_items
-            driver_violation = solution.driver_violation
-            commute_distance = solution.total_commute_distance
-            transport_distance = solution.total_transport_distance
-            attachment_distance = solution.total_transport_distance_attachments
-            machine_count = solution.number_of_machines
-            worker_count = solution.number_of_workers
-            attachment_count = solution.number_of_attachments
-
-        else:
-            order_item_count = None
-            driver_violation = None
-            commute_distance = None
-            transport_distance = None
-            attachment_distance = None
-            machine_count = None
-            worker_count = None
-            attachment_count = None
-
-        
+    for exp in experimentos:
+        for i in instances:
             
+            data = InputData.InputData(i, 'UB')
+            instance = data.instance
+            evaluation = EvaluationLogic.EvaluationLogic(data)
 
-        dict_solution[instance] = [obj_value, order_count, runtime, status, gap, order_item_count, driver_violation, commute_distance, transport_distance, attachment_distance, machine_count, worker_count, attachment_count]
+            optimizer = MIP_UB.UpperBound(data, bound_technique=bound_technique, testing=True, experiment=exp)
+
+            solution, obj_value, order_count, runtime, status, gap = optimizer.execute()
+
+            if solution is not None:
+                feasible = solution.feasibility_check()
+                if not feasible:
+                    raise Exception(f"Infeasible solution for instance {instance}")
+                else:
+                    print(f"Feasible solution for instance {instance}")
+                evaluation.evaluate(solution)
+
+                order_item_count = solution.number_of_finished_order_items
+                driver_violation = solution.driver_violation
+                commute_distance = solution.total_commute_distance
+                transport_distance = solution.total_transport_distance
+                attachment_distance = solution.total_transport_distance_attachments
+                machine_count = solution.number_of_machines
+                worker_count = solution.number_of_workers
+                attachment_count = solution.number_of_attachments
+
+            else:
+                order_item_count = None
+                driver_violation = None
+                commute_distance = None
+                transport_distance = None
+                attachment_distance = None
+                machine_count = None
+                worker_count = None
+                attachment_count = None
+
+            
+                
+
+            dict_solution[instance] = [obj_value, order_count, runtime, status, gap, order_item_count, driver_violation, commute_distance, transport_distance, attachment_distance, machine_count, worker_count, attachment_count]
 
 
-    df_upper_bound = pd.DataFrame.from_dict(dict_solution,orient="index",columns=["Objective Value", "Order Count", "Runtime (s)", "Status", "Gap", "Order Item Count", "Driver Violation", "Commute Distance", "Transport Distance", "Attachment Distance", "Machine Count", "Worker Count", "Attachment Count"])
-    df_upper_bound.index.name = "Instance"
-    df_upper_bound.reset_index(inplace=True)
-    upper_bound_path = Path.cwd().parent / "Data" / "Solution_math_model"
-    upper_bound_path.mkdir(parents=True, exist_ok=True)
-    df_upper_bound.to_csv(upper_bound_path / f"{bound_technique}_experiment_{exp}_full_solution.csv", index=False)
-    print(df_upper_bound)
+        df_upper_bound = pd.DataFrame.from_dict(dict_solution,orient="index",columns=["Objective Value", "Order Count", "Runtime (s)", "Status", "Gap", "Order Item Count", "Driver Violation", "Commute Distance", "Transport Distance", "Attachment Distance", "Machine Count", "Worker Count", "Attachment Count"])
+        df_upper_bound.index.name = "Instance"
+        df_upper_bound.reset_index(inplace=True)
+        upper_bound_path = Path.cwd().parent / "Data" / "Solution_math_model"
+        upper_bound_path.mkdir(parents=True, exist_ok=True)
+        df_upper_bound.to_csv(upper_bound_path / f"{bound_technique}_experiment_{exp}_full_solution.csv", index=False)
+        print(df_upper_bound)
 
 
 
