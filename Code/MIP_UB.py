@@ -27,6 +27,7 @@ class UpperBound:
         if self.upper_bound == 'machine' or self.upper_bound == "both" or self.upper_bound == 'all':
             self.M = []  # List of machine IDs
             self.N_m = {}  # Dictionary: Machine -> Order items
+            self.W_m = {}  # Dictionary: Machine -> Regular drivers
         if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
             self.W = []  # List of worker IDs
             self.N_w = {}  # Dictionary: Worker -> Order items
@@ -104,6 +105,7 @@ class UpperBound:
 
             for machine in self.data.machines:
                 self.M.append(machine.name)
+                self.W_m[machine.name] = [int(driver) for driver in machine.default_drivers]
                 self.N_m[machine.name] = []
                 for orderItem in self.data.order_items:
                     if orderItem.machine_type == machine.type:
@@ -450,7 +452,7 @@ class UpperBound:
             if self.experiment == 2:
                 self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 3, reltol = 0, abstol = 0)
                 self.model.setObjectiveN(self.non_regular_driver_usage, index=1, priority = 2, reltol = 0, abstol = 0)
-                self.model.setObjectiveN(self.distances, index=2, priority = 1, reltol = 0, abstol = 0)
+                #self.model.setObjectiveN(self.distances, index=2, priority = 1, reltol = 0, abstol = 0)
 
             elif self.experiment == 3:
                 self.machine_usage = gp.quicksum(x[m, self.start, j] for m in self.M for j in self.N_m[m])
@@ -466,7 +468,14 @@ class UpperBound:
             elif self.experiment == None:
                 raise Exception("Experiment not defined. Please set the experiment parameter to 2 or 3.")
 
-
+            # Regular driver constraints
+            for m in self.M:
+                for i in self.N_m[m]:
+                    self.model.addConstr(
+                        gp.quicksum(x[m, i, j] for j in self.S_mn[m, i]) <=
+                        gp.quicksum(y[w, i, j] for w in self.W_m[m] if (w, i) in self.S_wn for j in self.S_wn[w, i]) + r[i],
+                        name=f"regular_driver_constraint_{m}_{i}"
+                )
 
 
 
