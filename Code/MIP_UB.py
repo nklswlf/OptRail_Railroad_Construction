@@ -13,11 +13,13 @@ import re
 
 class UpperBound:
     
-    def __init__(self, data, bound_technique = "LP", upper_bound = 'all'):
+    def __init__(self, data, bound_technique = "LP", upper_bound = 'all', testing = False, experiment = None):
         self.data = data
         self.model = None
         self.upper_bound = upper_bound
         self.bound_technique = bound_technique
+        self.testing = testing
+        self.experiment = experiment
 
         # ========================
         # 1. Sets
@@ -432,36 +434,37 @@ class UpperBound:
 
         # Definition of the objective criteria/functions
         #self.construction_fulfillment_complexity = gp.quicksum(u[c] * self.q_c[c] for c in self.C)
-
         self.construction_fulfillment = gp.quicksum(u[c] for c in self.C)
 
-        if self.Testing == False:
+        if self.testing == False:
             self.model.setObjective(self.construction_fulfillment, GRB.MAXIMIZE)
         else:
             r = self.model.addVars(self.N, vtype=GRB.BINARY, name="r")
             self.machine_transport_distance = gp.quicksum(self.d_ij[i][j] * x[m, i, j] for m in self.M for i in self.N_m[m] for j in self.N_m[m])
             self.worker_work_distance = gp.quicksum(2 * self.d_wi[w][i] * y[w, i, j] for w in self.W for i in self.N_w[w] for j in (self.N_w[w] + [self.end]))
             self.attachment_transport_distance = gp.quicksum(self.d_ij[i][j] * z[a, i, j] for a in self.A for i in self.N_a[a] for j in self.N_a[a])
-            self.distances = gp.quicksum(self.machine_transport_distance + self.worker_work_distance + self.attachment_transport_distance)
-
-            self.machine_usage = gp.quicksum(x[m, self.start, j] for m in self.M for j in self.N_m[m])
-            self.worker_usage = gp.quicksum(y[w, self.start, j] for w in self.W for j in self.N_w[w])
-            self.attachment_usage = gp.quicksum(z[a, self.start, j] for a in self.A for j in self.N_a[a])
-            self.resource_usage = gp.quicksum(self.machine_usage + self.worker_usage + self.attachment_usage)
+            self.distances = self.machine_transport_distance + self.worker_work_distance + self.attachment_transport_distance
             
             self.non_regular_driver_usage = gp.quicksum(r[i] for i in self.N)
 
-        
             if self.experiment == 2:
                 self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 3, reltol = 0, abstol = 0)
                 self.model.setObjectiveN(self.non_regular_driver_usage, index=1, priority = 2, reltol = 0, abstol = 0)
                 self.model.setObjectiveN(self.distances, index=2, priority = 1, reltol = 0, abstol = 0)
 
             elif self.experiment == 3:
+                self.machine_usage = gp.quicksum(x[m, self.start, j] for m in self.M for j in self.N_m[m])
+                self.worker_usage = gp.quicksum(y[w, self.start, j] for w in self.W for j in self.N_w[w])
+                self.attachment_usage = gp.quicksum(z[a, self.start, j] for a in self.A for j in self.N_a[a])
+                self.resource_usage = self.machine_usage + self.worker_usage + self.attachment_usage
+
                 self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 4, reltol = 0, abstol = 0)
                 self.model.setObjectiveN(self.non_regular_driver_usage, index=1, priority = 3, reltol = 0, abstol = 0)
                 self.model.setObjectiveN(self.distances, index=2, priority = 2, reltol = 0, abstol = 0)
                 self.model.setObjectiveN(self.resource_usage, index=3, priority = 1, reltol = 0, abstol = 0)
+            
+            elif self.experiment == None:
+                raise Exception("Experiment not defined. Please set the experiment parameter to 2 or 3.")
 
 
 

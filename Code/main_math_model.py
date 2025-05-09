@@ -63,8 +63,8 @@ def experiments():
 
     bound_technique = "BIP"
 
-    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
-                "Construction_a5_o96_m10_an10_ar10_reduced.json",
+    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json"]
+    hallo = [            "Construction_a5_o96_m10_an10_ar10_reduced.json",
                 "Construction_a10_o107_m5_an57_ar12.json",
                 "Construction_a10_o114_m6_an57_ar11.json",
                 "Construction_a10_o128_m6_an51_ar13.json", # UB not reached!!! because not enough worker with qualification (q = 9,4) are available for shifts at the same time
@@ -81,6 +81,8 @@ def experiments():
         
     dict_solution = dict()
 
+    exp = 2
+
 
     for i in instances:
         
@@ -88,7 +90,7 @@ def experiments():
         instance = data.instance
         evaluation = EvaluationLogic.EvaluationLogic(data)
 
-        optimizer = MIP_UB.UpperBound(data, bound_technique=bound_technique)
+        optimizer = MIP_UB.UpperBound(data, bound_technique=bound_technique, testing=True, experiment=exp)
 
         solution, obj_value, order_count, runtime, status, gap = optimizer.execute()
 
@@ -130,7 +132,7 @@ def experiments():
     df_upper_bound.reset_index(inplace=True)
     upper_bound_path = Path.cwd().parent / "Data" / "Solution_math_model"
     upper_bound_path.mkdir(parents=True, exist_ok=True)
-    df_upper_bound.to_csv(upper_bound_path / f"{bound_technique}_full_solution.csv", index=False)
+    df_upper_bound.to_csv(upper_bound_path / f"{bound_technique}_experiment_{exp}_full_solution.csv", index=False)
     print(df_upper_bound)
 
 
