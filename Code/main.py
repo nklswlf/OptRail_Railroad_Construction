@@ -65,12 +65,11 @@ greedy_technique_b = {'order_item_greedy': {'worker_attractiveness_technique': '
                                             'machine_attractiveness_technique': 'balanced_greedy'}}
 
 
-
+greedy_techniques = [greedy_technique_a, greedy_technique_b]
 
 step = None
-step = 'Bound'
-df_bound = pd.DataFrame()
-#step = 'Greedy'
+#step = 'Bound'
+step = 'Greedy'
 #step = 'Building'
 
 algortihm = 'DBSA'
@@ -79,10 +78,11 @@ algortihm = 'DBSA'
 
 
 def main():
-    global df_bound
+    df_greedy = pd.DataFrame()
 
     for i in instances:
         #for algortihm in algortihms:
+        for gt in greedy_techniques:
             if step == None:
                 data = InputData(i, algortihm)
             else:
@@ -149,8 +149,24 @@ def main():
             
             elif step == 'Greedy':
                 solution, time = solver.RunConstructive(UB_technique="LP",
-                        greedy_technique=greedy_technique_b)
+                        greedy_technique=gt)
                 print("\nGreedy Time: ", round(time, 2))
+
+                # Extract relevant solution attributes
+                solution_attributes = {
+                    "Instance": data.instance,
+                    "Greedy_Technique": gt,
+                    "Finished_Orders": solution.number_of_finished_orders,
+                    "Finished_Order_Items": solution.number_of_finished_order_items,
+                    "Total_Time": round(time, 2)
+                }
+
+                # Append the solution attributes to the DataFrame
+                df_greedy = pd.concat([df_greedy, pd.DataFrame([solution_attributes])], ignore_index=True)
+
+                # Save the DataFrame to a CSV file
+                df_greedy.to_csv("Greedy.csv", index=False)
+
 
                 
             elif step == 'Building':
