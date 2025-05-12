@@ -28,7 +28,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = [   "Construction_a30_o355_m18_an148_ar42.json"]
+#instances = [   "Construction_a30_o355_m18_an148_ar42.json"]
 
 
 
@@ -68,19 +68,21 @@ greedy_technique_b = {'order_item_greedy': {'worker_attractiveness_technique': '
 
 
 step = None
-#step = 'Bound'
+step = 'Bound'
+df_bound = pd.DataFrame()
 #step = 'Greedy'
 #step = 'Building'
 
 algortihm = 'DBSA'
 
-algortihms = ['PSA', 'DBSA']#, 'TPSA']
+#algortihms = ['PSA', 'DBSA']#, 'TPSA']
 
 
 def main():
+    global df_bound
 
     for i in instances:
-        for algortihm in algortihms:
+        #for algortihm in algortihms:
             if step == None:
                 data = InputData(i, algortihm)
             else:
@@ -142,8 +144,29 @@ def main():
                                                     max_single_move_tries_dominance=30)
 
             if step == 'Bound':
-                time = solver.RunBound(UB_technique="LP")
-                print("\nBound Time: ", round(time, 2))
+                bound_time, runtime, objValue, best_orders, len_bo = solver.RunBound(UB_technique="LP")
+                print(f"\nInstance: {i}")
+                print("Bound Time:", round(bound_time, 2))
+
+                sorted_orders = sorted(best_orders)
+
+                # Ergebnisse in ein Zwischen-Dict packen
+                results = {
+                    "Instance": data.instance,
+                    "BoundTime": round(bound_time, 2),
+                    "Runtime": round(runtime, 2),
+                    "ObjValue": objValue,
+                    "BestOrders": sorted_orders,
+                    "OrderCount": len_bo
+                }
+
+                # DataFrame mit einer Zeile erzeugen und zu df_bound hinzufügen
+                df_bound = pd.concat([df_bound, pd.DataFrame([results])], ignore_index=True)
+
+                # Am Ende jeder Iteration speichern
+                df_bound.to_csv("Bound.csv", index=False)
+
+
             
             elif step == 'Greedy':
                 solution, time = solver.RunConstructive(UB_technique="LP",

@@ -770,4 +770,9 @@ class UpperBound:
         else:
             order_list = []
 
-        return order_list
+        filename = f"model_{self.data.instance}.lp"
+        solution_filename = f"solution_{self.data.instance}.sol"
+        save_path = Path.cwd().parent / "Data" / "ModelFiles"/ self.bound_technique / self.data.instance
+        save_path.mkdir(parents=True, exist_ok=True)
+
+        return order_list, self.model.Runtime, self.model.objVal
