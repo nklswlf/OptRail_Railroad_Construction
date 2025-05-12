@@ -452,7 +452,7 @@ class UpperBound:
             if self.experiment == 2:
                 self.model.setObjectiveN(-self.construction_fulfillment, index=0, priority = 3, reltol = 0, abstol = 0)
                 self.model.setObjectiveN(self.non_regular_driver_usage, index=1, priority = 2, reltol = 0, abstol = 0)
-                #self.model.setObjectiveN(self.distances, index=2, priority = 1, reltol = 0, abstol = 0)
+                self.model.setObjectiveN(self.distances, index=2, priority = 1, reltol = 0, abstol = 0)
 
             elif self.experiment == 3:
                 self.machine_usage = gp.quicksum(x[m, self.start, j] for m in self.M for j in self.N_m[m])
@@ -750,7 +750,8 @@ class UpperBound:
             if self.bound_technique == 'BIP':
                 # Optionales Logging / spätere Erweiterung
                 objective_value = self.model.objVal
-                gap = self.model.MIPGap if self.model.status == GRB.TIME_LIMIT else 0
+                #gap = self.model.MIPGap if self.model.status == GRB.TIME_LIMIT else 0
+                gap = 0
 
                 filename = f"model_{self.data.instance}.lp"
                 solution_filename = f"solution_{self.data.instance}.sol"

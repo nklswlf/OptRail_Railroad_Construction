@@ -63,7 +63,7 @@ def experiments():
 
     bound_technique = "BIP"
 
-    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json"
+    instances = ["Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a5_o96_m10_an10_ar10_reduced.json",
                 "Construction_a10_o107_m5_an57_ar12.json",
                 "Construction_a10_o114_m6_an57_ar11.json",
