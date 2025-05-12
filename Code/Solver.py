@@ -25,12 +25,11 @@ class Solver:
         print("\nCalculating Upper Bound...")
 
         optimizer = UpperBound(self.InputData, bound_technique=UB_technique)
-        best_orders, runtime, objValue = optimizer.execute()
+        best_orders = optimizer.execute()
 
         for order_number in best_orders:
             self.InputData.activate_order(order_number)
 
-        return runtime, objValue, best_orders
     
 
     def ConstructionPhase(self, greedy_technique) -> Solution:
@@ -72,11 +71,11 @@ class Solver:
 
         start_time = time.time()
 
-        runtime, objValue, best_orders = self.BoundPhase(UB_technique)
+        self.BoundPhase(UB_technique)
 
         bound_time = time.time() - start_time
 
-        return bound_time, runtime, objValue, best_orders, len(best_orders)
+        return bound_time
 
 
     

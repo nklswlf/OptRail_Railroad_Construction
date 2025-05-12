@@ -144,29 +144,8 @@ def main():
                                                     max_single_move_tries_dominance=30)
 
             if step == 'Bound':
-                bound_time, runtime, objValue, best_orders, len_bo = solver.RunBound(UB_technique="LP")
-                print(f"\nInstance: {i}")
+                bound_time = solver.RunBound(UB_technique="LP")
                 print("Bound Time:", round(bound_time, 2))
-
-                sorted_orders = sorted(best_orders)
-
-                # Ergebnisse in ein Zwischen-Dict packen
-                results = {
-                    "Instance": data.instance,
-                    "BoundTime": round(bound_time, 2),
-                    "Runtime": round(runtime, 2),
-                    "ObjValue": objValue,
-                    "BestOrders": sorted_orders,
-                    "OrderCount": len_bo
-                }
-
-                # DataFrame mit einer Zeile erzeugen und zu df_bound hinzufügen
-                df_bound = pd.concat([df_bound, pd.DataFrame([results])], ignore_index=True)
-
-                # Am Ende jeder Iteration speichern
-                df_bound.to_csv("Bound.csv", index=False)
-
-
             
             elif step == 'Greedy':
                 solution, time = solver.RunConstructive(UB_technique="LP",
