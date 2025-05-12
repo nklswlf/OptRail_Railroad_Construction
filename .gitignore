@@ -44,9 +44,3 @@ __pycache__/
 # ❌ Sonstiges
 *.old
 
-# Ignoriere alles in Data/Solutions/
-Data/Solutions/*
-
-# Aber nimm .py-Dateien wieder rein
-!Data/Solutions/**/*.py
-
