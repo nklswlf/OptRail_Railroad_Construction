@@ -774,5 +774,7 @@ class UpperBound:
         solution_filename = f"solution_{self.data.instance}.sol"
         save_path = Path.cwd().parent / "Data" / "ModelFiles"/ self.bound_technique / self.data.instance
         save_path.mkdir(parents=True, exist_ok=True)
+        self.model.write(str(save_path / solution_filename))
+        self.model.write(str(save_path / filename))
 
         return order_list, self.model.Runtime, self.model.objVal
