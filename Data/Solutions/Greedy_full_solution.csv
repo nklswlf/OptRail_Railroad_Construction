@@ -22,3 +22,4 @@ a30_o355_m18_an148_ar42,"{'order_item_greedy': {'worker_attractiveness_technique
 a40_o476_m22_an215_ar51,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",31,400,1.95
 a40_o476_m22_an215_ar51,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",23,388,0.44
 a50_o578_m28_an276_ar66,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",34,407,2.1
+a50_o578_m28_an276_ar66,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",27,419,0.49
