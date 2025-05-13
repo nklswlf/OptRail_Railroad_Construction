@@ -656,8 +656,8 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
 
                 random_number = self.RNG.random()
 
-                self.log(f"\n[DBSA] ΔDom: {dominating_count_current} → {dominating_count_new}, ΔE: {overall_difference:.3f}, T: {current_temperature:.2f}, prob: {prob:.3f}")
-                self.log(f"[Delta] Delta Details: {delta_details}")
+                #self.log(f"\n[DBSA] ΔDom: {dominating_count_current} → {dominating_count_new}, ΔE: {overall_difference:.3f}, T: {current_temperature:.2f}, prob: {prob:.3f}")
+                #self.log(f"[Delta] Delta Details: {delta_details}")
                 
 
 
