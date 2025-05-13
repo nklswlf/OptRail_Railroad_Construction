@@ -69,8 +69,8 @@ greedy_techniques = [greedy_technique_a, greedy_technique_b]
 
 step = None
 #step = 'Bound'
-step = 'Greedy'
-#step = 'Building'
+#step = 'Greedy'
+step = 'Building'
 
 algortihm = 'DBSA'
 
@@ -174,6 +174,21 @@ def main():
                         greedy_technique=greedy_technique_a,
                         building_algorithm=building_sa)
                 print("\nBuilding Time: ", round(time, 2))
+
+
+                # Extract relevant solution attributes
+                solution_attributes = {
+                    "Instance": data.instance,
+                    "Finished_Orders": solution.number_of_finished_orders,
+                    "Finished_Order_Items": solution.number_of_finished_order_items,
+                    "Total_Time": round(time, 2)
+                }
+                # Append the solution attributes to the DataFrame
+                df_testing = pd.concat([df_testing, pd.DataFrame([solution_attributes])], ignore_index=True)
+
+                # Save the DataFrame to a CSV file
+                df_testing.to_csv("Building.csv", index=False)
+
 
             else:
                 times = solver.Run( UB_technique="LP",
