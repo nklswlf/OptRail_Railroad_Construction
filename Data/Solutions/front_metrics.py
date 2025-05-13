@@ -102,7 +102,7 @@ import pandas as pd
 
 def Run(instance):
     # === Paths ===
-    instance_folder = os.path.join("..", "Data", "Solutions", instance)
+    instance_folder = os.path.join("..", "OptRail_Railroad_Construction" ,"Data", "Solutions", instance)
     excluded_methods = []
     np.random.seed(42)
 

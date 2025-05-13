@@ -23,6 +23,7 @@ class InputData:
         print(f"\nLoading data from '{instance_filename}'...")
 
         # AHP weights for the different criteria
+        '''
         self._ahp_weights = {"order_item_count": 0.54437184,
                             "regular_driver_count": 0.1707523,
                             "worker_distance": 0.12839376,
@@ -38,6 +39,7 @@ class InputData:
                                "worker_qualification_count": 0.03916249634728554,
                                "attachment_count": 0.03916249634728554
                                }
+        '''
     
         # Default values for Occupational Safety
         self._max_consecutive_night_shifts = 5 # Max consecutive night shifts
@@ -69,7 +71,7 @@ class InputData:
         self._transfrom_data()
 
         # Create a folder in .../Data/Solutions/ instance / the current date
-        solutions_path = Path.cwd().parent / "Data" / "Solutions" / self.instance / algo
+        solutions_path = Path.cwd().parent / "OptRail_Railroad_Construction" / "Data" / "Solutions" / self.instance / algo
         solutions_path.mkdir(parents=True, exist_ok=True)
         self.solutions_path = solutions_path
 
@@ -495,6 +497,8 @@ class InputData:
         '''
         base_path = Path.cwd().parent / "OptRail_Railroad_Construction" / "Data" / "Instanzen"
         for file_path in base_path.rglob(self.instance_filename):  # Recursively search for the file
+            print(f"Found file: {file_path}")
+            print(f"Parent folder: {file_path.parent.name}")
             return str(file_path.resolve()), file_path.parent.name  # Return file path and parent folder name
 
         raise FileNotFoundError(f"File '{self.instance_filename}' not found in directory '{base_path}'.")
