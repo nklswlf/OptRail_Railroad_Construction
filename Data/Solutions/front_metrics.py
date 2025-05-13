@@ -123,32 +123,49 @@ def Run(instance):
 
     # Insert check for number of methods in global Pareto front
     methods_in_global_pf = global_pareto_front["Method"].unique()
+    methods_in_single_pf = single_pareto_fronts.keys()
     calculate_pci_dci = len(methods_in_global_pf) > 1
 
-    # Calculate all metrics with appropriate DataFrames
+    # === Calculate Metrics ===
     # PCI and DCI only if more than one method in global Pareto front
     if calculate_pci_dci:
         pci_df = calculate_pci(global_pareto_front_normalized, print_debug=False)
         dci_df = calculate_dci(global_pareto_front, print_debug=False)
     else:
         print("⚠️  Skipping PCI and DCI: Only one method contributes to the global Pareto front.")
-        pci_df = pd.DataFrame()
-        dci_df = pd.DataFrame()
+        methods_in_single_pf = single_pareto_fronts.keys()
+        pci_df = pd.DataFrame({
+            "PCI": {method: None for method in methods_in_single_pf}
+        }).T
+        dci_df = pd.DataFrame({
+            "DCI": {method: None for method in methods_in_single_pf}
+        }).T
 
-    # === Calculate Metrics ===
     pf_share_df = calculate_pf_share(global_pareto_front)
-    hypervolume_hypercubes_df = calculate_hypervolume_hypercubes(single_pareto_fronts_normalized)
     hypervolume_monte_carlo_df = calculate_hypervolume_monte_carlo(single_pareto_fronts_normalized)
-    hypervolume_exact_df = calculate_exact_hypervolume(single_pareto_fronts_normalized)
     spread_df = calculate_spread(single_pareto_fronts_normalized)
     spacing_df = calculate_spacing(single_pareto_fronts_normalized)
     distribution_metric_df = calculate_distribution_metric(single_pareto_fronts_normalized)
 
-    # === Combine Results into a Single DataFrame ===
-    combined_results = pd.concat([pf_share_df, pci_df, dci_df, hypervolume_hypercubes_df, hypervolume_monte_carlo_df, hypervolume_exact_df, spread_df, spacing_df, distribution_metric_df], axis=1)
+    # === Standardize all DataFrames to a unified format: columns = ["Algorithm", "Metric", "Value"] ===
+    def standardize(df, metric_name):
+        df_copy = df.copy()
+        df_copy = df_copy.T.reset_index()
+        df_copy.columns = ["Algorithm", "Value"]
+        df_copy["Metric"] = metric_name
+        return df_copy[["Algorithm", "Metric", "Value"]]
 
-    # === Save Results to CSV ===
-    return combined_results
+    result_df = pd.concat([
+        standardize(pf_share_df, "PF-Share"),
+        standardize(pci_df, "PCI"),
+        standardize(dci_df, "DCI"),
+        standardize(hypervolume_monte_carlo_df, "Hypevolume (Monte Carlo)"),
+        standardize(spread_df, "Spread"),
+        standardize(spacing_df, "Spacing"),
+        standardize(distribution_metric_df, "Distribution Metric (DM)")
+    ], ignore_index=True)
+
+    return result_df
 
 
 
@@ -999,7 +1016,7 @@ if __name__ == "__main__":
     #instance = "a10_o144_m6_an53_ar12"
     #instance = "a15_o170_m9_an80_ar18"
     #instance = "a20_o236_m12_an106_ar24"
-    #instance = "a25_o306_m13_an127_ar31"
+    instance = "a25_o306_m13_an127_ar31"
     #instance = "a30_o355_m18_an148_ar42"
     #instance = "a40_o476_m22_an215_ar51"
     #instance = "a50_o578_m28_an276_ar66"

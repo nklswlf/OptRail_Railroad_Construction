@@ -31,7 +31,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-#instances = [   "Construction_a30_o355_m18_an148_ar42.json"]
+#instances = [   "Construction_a5_o96_m10_an10_ar10_reduced.json"]
 
 
 
@@ -82,6 +82,7 @@ algortihms = ['PSA', 'DBSA']#, 'TPSA']
 
 def main():
     df_testing = pd.DataFrame()
+    # This DataFrame will collect both runtime and front metrics
 
     for i in instances:
         for algortihm in algortihms:
@@ -111,7 +112,7 @@ def main():
                                                 start_temp=20,
                                                 min_temp=0.1,
                                                 cooling_rate=0.95,
-                                                max_iterations=1,
+                                                max_iterations=500,
                                                 fallback_threshold=25,
                                                 scaling_energy=30,
                                                 weight_alpha=1.1,
@@ -123,7 +124,7 @@ def main():
                                                         start_temp=20,
                                                         min_temp=0.1,
                                                         cooling_rate=0.95,
-                                                        max_iterations=1,
+                                                        max_iterations=500,
                                                         fallback_threshold=25,
                                                         scaling_energy=30,
                                                         max_single_move_tries=30,
@@ -217,21 +218,42 @@ def main():
                 df_testing = pd.concat([df_testing, pd.DataFrame([run_attributes])], ignore_index=True)
 
                 # Save the DataFrame to a CSV file
-                df_testing.to_csv("Improvement_Times.csv", index=False)
+                #df_testing.to_csv("Improvement_Times.csv", index=False)
 
                 output_file = data.solutions_path/"run_times.json"
                 with open(output_file, "w") as f:
                     json.dump(times, f, indent=4)
 
-        if step == None:
-            combined_results = Run(data.instance)
-            # Append metric data to the DataFrame
-            metric_data = combined_results.get_metrics()
-            metric_data["Instance"] = data.instance
-            df_testing = pd.concat([df_testing, pd.DataFrame([metric_data])], ignore_index=True)
 
-            # Save the updated DataFrame to a CSV file
-            df_testing.to_csv(f"Metrics_{data.instance}.csv", index=False)
+        if step is None:
+            metrics_df = Run(data.instance)
+            # Add the instance name to the metrics DataFrame
+            metrics_df["Instance"] = data.instance
+
+            # Pivot to wide format: each metric becomes a column
+            metric_data_pivot = metrics_df.pivot(index=["Instance", "Algorithm"],
+                                                 columns="Metric", values="Value").reset_index()
+
+            # Normalize both key columns
+            df_testing["Instance"] = df_testing["Instance"].astype(str).str.strip()
+            df_testing["Algorithm"] = df_testing["Algorithm"].astype(str).str.strip()
+            metric_data_pivot["Instance"] = metric_data_pivot["Instance"].astype(str).str.strip()
+            metric_data_pivot["Algorithm"] = metric_data_pivot["Algorithm"].astype(str).str.strip()
+
+            # Ensure metric data is correctly added or updated
+            df_testing = df_testing.set_index(["Instance", "Algorithm"])
+            metric_data_pivot = metric_data_pivot.set_index(["Instance", "Algorithm"])
+
+            # Add or update all metrics, even if NaN
+            df_testing.loc[metric_data_pivot.index, metric_data_pivot.columns] = metric_data_pivot
+
+            # Reset the index
+            df_testing = df_testing.reset_index()
+            metric_data_pivot = metric_data_pivot.reset_index()
+
+            # Save to CSV
+            df_testing.to_csv("Metrics.csv", index=False)
+            print("\nMetrics:\n", df_testing)
 
 
 def profile_main():
