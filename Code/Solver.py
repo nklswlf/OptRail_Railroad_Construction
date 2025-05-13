@@ -29,6 +29,7 @@ class Solver:
 
         for order_number in best_orders:
             self.InputData.activate_order(order_number)
+
     
 
     def ConstructionPhase(self, greedy_technique) -> Solution:
