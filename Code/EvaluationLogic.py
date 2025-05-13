@@ -1,5 +1,5 @@
-from InputData import InputData
-from OutputData import Solution
+from Code.InputData import InputData
+from Code.OutputData import Solution
 
 class EvaluationLogic:
     ''' Evalution Objects to calculate objectives of the given solutions'''

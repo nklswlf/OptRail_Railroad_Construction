@@ -1,7 +1,7 @@
-from OutputData import Solution
-from OutputData import *
+from Code.OutputData import Solution
+from Code.OutputData import *
 import itertools        
-from EvaluationLogic import EvaluationLogic
+from Code.EvaluationLogic import EvaluationLogic
 import concurrent.futures  # For parallelism
 from copy import deepcopy
 from itertools import chain

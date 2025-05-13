@@ -100,32 +100,57 @@ from pymoo.indicators.hv import HV
 import numpy as np
 import pandas as pd
 
+def Run(instance):
+    # === Paths ===
+    instance_folder = os.path.join("..", "Data", "Solutions", instance)
+    excluded_methods = []
+    np.random.seed(42)
 
-# === Instance ===
-#instance = "a3_o80_m10_an10_ar9_reduced"
-#instance = "a5_o96_m10_an10_ar10_reduced"
-#instance = "a10_o107_m5_an57_ar12"
-instance = "a10_o114_m6_an57_ar11"
-#instance = "a10_o128_m6_an51_ar13"
-#instance = "a10_o144_m6_an53_ar12"
-#instance = "a15_o170_m9_an80_ar18"
-#instance = "a20_o236_m12_an106_ar24"
-#instance = "a25_o306_m13_an127_ar31"
-#instance = "a30_o355_m18_an148_ar42"
-#instance = "a40_o476_m22_an215_ar51"
-#instance = "a50_o578_m28_an276_ar66"
-#instance = "PCI_Change_Reference"
+    # === Objectives ===
+    global objectives
+    objectives = [
+        "Driver Violation",
+        "Commute Distance",
+        "Transport Machines",
+        "Transport Attachments",
+        "Machines",
+        "Workers",
+        "Attachments"
+    ]
 
-# === Objectives ===
-objectives = [
-    "Driver Violation",
-    "Commute Distance",
-    "Transport Machines",
-    "Transport Attachments",
-    "Machines",
-    "Workers",
-    "Attachments"
-]
+    # === Load Pareto Fronts ===
+    single_pareto_fronts, single_pareto_fronts_normalized, global_pareto_front, global_pareto_front_normalized = get_method_paths(instance_folder, excluded_methods)
+
+    # Insert check for number of methods in global Pareto front
+    methods_in_global_pf = global_pareto_front["Method"].unique()
+    calculate_pci_dci = len(methods_in_global_pf) > 1
+
+    # Calculate all metrics with appropriate DataFrames
+    # PCI and DCI only if more than one method in global Pareto front
+    if calculate_pci_dci:
+        pci_df = calculate_pci(global_pareto_front_normalized, print_debug=False)
+        dci_df = calculate_dci(global_pareto_front, print_debug=False)
+    else:
+        print("⚠️  Skipping PCI and DCI: Only one method contributes to the global Pareto front.")
+        pci_df = pd.DataFrame()
+        dci_df = pd.DataFrame()
+
+    # === Calculate Metrics ===
+    pf_share_df = calculate_pf_share(global_pareto_front)
+    hypervolume_hypercubes_df = calculate_hypervolume_hypercubes(single_pareto_fronts_normalized)
+    hypervolume_monte_carlo_df = calculate_hypervolume_monte_carlo(single_pareto_fronts_normalized)
+    hypervolume_exact_df = calculate_exact_hypervolume(single_pareto_fronts_normalized)
+    spread_df = calculate_spread(single_pareto_fronts_normalized)
+    spacing_df = calculate_spacing(single_pareto_fronts_normalized)
+    distribution_metric_df = calculate_distribution_metric(single_pareto_fronts_normalized)
+
+    # === Combine Results into a Single DataFrame ===
+    combined_results = pd.concat([pf_share_df, pci_df, dci_df, hypervolume_hypercubes_df, hypervolume_monte_carlo_df, hypervolume_exact_df, spread_df, spacing_df, distribution_metric_df], axis=1)
+
+    # === Save Results to CSV ===
+    return combined_results
+
+
 
 # === Debugging ===
 def debug_print(msg, print_debug=False):
@@ -964,6 +989,35 @@ def plot_3d_custom_objectives_combined_global(global_pareto_front_normalized, se
 
 
 if __name__ == "__main__":
+
+    # === Instance ===
+    #instance = "a3_o80_m10_an10_ar9_reduced"
+    #instance = "a5_o96_m10_an10_ar10_reduced"
+    #instance = "a10_o107_m5_an57_ar12"
+    #instance = "a10_o114_m6_an57_ar11"
+    #instance = "a10_o128_m6_an51_ar13"
+    #instance = "a10_o144_m6_an53_ar12"
+    #instance = "a15_o170_m9_an80_ar18"
+    #instance = "a20_o236_m12_an106_ar24"
+    #instance = "a25_o306_m13_an127_ar31"
+    #instance = "a30_o355_m18_an148_ar42"
+    #instance = "a40_o476_m22_an215_ar51"
+    #instance = "a50_o578_m28_an276_ar66"
+    #instance = "PCI_Change_Reference"
+
+    # === Objectives ===
+    objectives = [
+        "Driver Violation",
+        "Commute Distance",
+        "Transport Machines",
+        "Transport Attachments",
+        "Machines",
+        "Workers",
+        "Attachments"
+    ]
+
+
+
     np.random.seed(42)
     # Updated: Unpack all four returned values (now includes "with_method" DataFrames)
     single_pareto_fronts, single_pareto_fronts_normalized, global_pareto_front, global_pareto_front_normalized = get_method_paths(instance, excluded_methods = [], print_debug=False)

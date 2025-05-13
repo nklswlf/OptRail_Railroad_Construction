@@ -1,4 +1,4 @@
-from InputData import InputData
+from Code.InputData import InputData
 import json
 import pandas as pd
 import plotly.express as px

@@ -493,7 +493,7 @@ class InputData:
         :return: A tuple containing the absolute path to the found file and the parent folder name.
         :raises FileNotFoundError: If the file is not found in the directory.
         '''
-        base_path = Path.cwd().parent / "Data" / "Instanzen"
+        base_path = Path.cwd().parent / "OptRail_Railroad_Construction" / "Data" / "Instanzen"
         for file_path in base_path.rglob(self.instance_filename):  # Recursively search for the file
             return str(file_path.resolve()), file_path.parent.name  # Return file path and parent folder name
 

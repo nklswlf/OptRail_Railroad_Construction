@@ -1,9 +1,9 @@
-from InputData import InputData
-from ConstructiveHeuristic import *
-from ImprovementAlgorithm import *
-from EvaluationLogic import *
+from Code.InputData import InputData
+from Code.ConstructiveHeuristic import *
+from Code.ImprovementAlgorithm import *
+from Code.EvaluationLogic import *
 import time
-from MIP_UB import *
+from Code.MIP_UB import *
 import numpy
 
 class Solver:

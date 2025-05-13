@@ -1,4 +1,4 @@
-from Neighborhood import *
+from Code.Neighborhood import *
 import math
 from copy import deepcopy
 import numpy as np
@@ -228,6 +228,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                  fallback_threshold:int,
                  scaling_energy:int,
                  weight_alpha:float,
+                 max_single_move_tries:int,
                  start_size_population:int):
         super().__init__(inputData)
 
@@ -238,6 +239,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.FallbackThreshold = fallback_threshold # Currently not used
         self.ScalingEnergy = scaling_energy
 
+        self.MaxSingleMoveTries = max_single_move_tries
         self.SizeStartPopulation = start_size_population
         self.WeightAlpha = weight_alpha
 
@@ -368,7 +370,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 while move is None:
                     random_type = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
                     neighborhood = self.Neighborhoods[random_type]
-                    move = neighborhood.SingleMove(local_solution)
+                    move = neighborhood.SingleMove(local_solution, self.MaxSingleMoveTries)
 
                 
 

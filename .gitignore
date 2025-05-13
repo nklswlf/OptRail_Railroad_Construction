@@ -43,4 +43,5 @@ __pycache__/
 
 # ❌ Sonstiges
 *.old
+*.txt
 

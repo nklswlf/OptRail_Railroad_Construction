@@ -1,7 +1,7 @@
 
-from OutputData import *
-from InputData import *
-from EvaluationLogic import *
+from Code.OutputData import *
+from Code.InputData import *
+from Code.EvaluationLogic import *
 from copy import deepcopy
 
 class ConstructiveHeuristics:

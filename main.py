@@ -1,15 +1,18 @@
-from InputData import InputData
-import OutputData
-from ConstructiveHeuristic import *
-import pandas as pd
-from pathlib import Path
-from EvaluationLogic import *
-from time import time
-from ImprovementAlgorithm import *
-from Solver import *
+from Code.InputData import InputData
+from Code.OutputData import *
+from Code.ConstructiveHeuristic import *
+from Code.EvaluationLogic import *
+from Code.ImprovementAlgorithm import *
+from Code.Solver import *
+from Data.Solutions.front_metrics import Run
+
 import cProfile
 import pstats
 import json
+from time import time
+import pandas as pd
+from pathlib import Path
+
 
 instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a5_o96_m10_an10_ar10_reduced.json",
@@ -70,18 +73,18 @@ greedy_techniques = [greedy_technique_a, greedy_technique_b]
 step = None
 #step = 'Bound'
 #step = 'Greedy'
-step = 'Building'
+#step = 'Building'
 
 algortihm = 'DBSA'
 
-#algortihms = ['PSA', 'DBSA']#, 'TPSA']
+algortihms = ['PSA', 'DBSA']#, 'TPSA']
 
 
 def main():
     df_testing = pd.DataFrame()
 
     for i in instances:
-        #for algortihm in algortihms:
+        for algortihm in algortihms:
         #for gt in greedy_techniques:
             if step == None:
                 data = InputData(i, algortihm)
@@ -108,22 +111,23 @@ def main():
                                                 start_temp=20,
                                                 min_temp=0.1,
                                                 cooling_rate=0.95,
-                                                max_iterations=500,
+                                                max_iterations=1,
                                                 fallback_threshold=25,
                                                 scaling_energy=30,
                                                 weight_alpha=1.1,
-                                                start_size_population=5)
+                                                max_single_move_tries=30,
+                                                start_size_population=8)
 
             elif algortihm == 'DBSA':
                 algo = DominanceBasedSimulatedAnnealing( inputData=data,
                                                         start_temp=20,
                                                         min_temp=0.1,
                                                         cooling_rate=0.95,
-                                                        max_iterations=500,
+                                                        max_iterations=1,
                                                         fallback_threshold=25,
                                                         scaling_energy=30,
                                                         max_single_move_tries=30,
-                                                        parallel_runs=5)
+                                                        parallel_runs=8)
 
             
             elif algortihm == 'TPSA':
@@ -202,10 +206,32 @@ def main():
                 print("Improvement Time: ", round(times["Improvement Time"], 2))
                 print("Total Time: ", round(times["Total Time"], 2))
 
+                # Extract relevant attributes for the current run
+                run_attributes = {
+                    "Instance": data.instance,
+                    "Algorithm": algortihm,
+                    "Improvement_Time": round(times["Improvement Time"], 2)
+                }
+
+                # Append the attributes to the DataFrame
+                df_testing = pd.concat([df_testing, pd.DataFrame([run_attributes])], ignore_index=True)
+
+                # Save the DataFrame to a CSV file
+                df_testing.to_csv("Improvement_Times.csv", index=False)
+
                 output_file = data.solutions_path/"run_times.json"
                 with open(output_file, "w") as f:
                     json.dump(times, f, indent=4)
 
+        if step == None:
+            combined_results = Run(data.instance)
+            # Append metric data to the DataFrame
+            metric_data = combined_results.get_metrics()
+            metric_data["Instance"] = data.instance
+            df_testing = pd.concat([df_testing, pd.DataFrame([metric_data])], ignore_index=True)
+
+            # Save the updated DataFrame to a CSV file
+            df_testing.to_csv(f"Metrics_{data.instance}.csv", index=False)
 
 
 def profile_main():
