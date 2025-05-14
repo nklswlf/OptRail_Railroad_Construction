@@ -1,0 +1,25 @@
+Instance,Greedy_Technique,Finished_Orders,Finished_Order_Items,Total_Time
+a3_o80_m10_an10_ar9_reduced,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",3,80,0.06
+a3_o80_m10_an10_ar9_reduced,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",3,80,0.02
+a5_o96_m10_an10_ar10_reduced,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",5,96,0.06
+a5_o96_m10_an10_ar10_reduced,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",5,96,0.05
+a10_o107_m5_an57_ar12,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",9,67,0.04
+a10_o107_m5_an57_ar12,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",8,66,0.02
+a10_o114_m6_an57_ar11,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",4,69,0.06
+a10_o114_m6_an57_ar11,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",6,75,0.03
+a10_o128_m6_an51_ar13,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",8,90,0.06
+a10_o128_m6_an51_ar13,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",7,88,0.03
+a10_o144_m6_an53_ar12,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",5,43,0.04
+a10_o144_m6_an53_ar12,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",6,46,0.04
+a15_o170_m9_an80_ar18,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",9,143,0.2
+a15_o170_m9_an80_ar18,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",10,144,0.07
+a20_o236_m12_an106_ar24,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",14,145,0.22
+a20_o236_m12_an106_ar24,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",9,146,0.08
+a25_o306_m13_an127_ar31,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",20,200,0.45
+a25_o306_m13_an127_ar31,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",14,188,0.13
+a30_o355_m18_an148_ar42,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",20,315,0.93
+a30_o355_m18_an148_ar42,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",19,320,0.25
+a40_o476_m22_an215_ar51,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",31,400,1.95
+a40_o476_m22_an215_ar51,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",23,388,0.44
+a50_o578_m28_an276_ar66,"{'worker_greedy': {'order_item_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",34,407,2.1
+a50_o578_m28_an276_ar66,"{'order_item_greedy': {'worker_attractiveness_technique': 'balanced_greedy', 'machine_attractiveness_technique': 'balanced_greedy'}}",27,419,0.49
