@@ -99,7 +99,7 @@ def main():
                                                 neighborhoodTypes=neighboorhood_types_local_search)
 
 
-            building_sa = BuildingSimulatedAnnealing(   inputData=data,
+            building_sa = BuildingSimulatedAnnealing(  inputData=data,
                                                         start_temp=20,
                                                         min_temp=0.1,
                                                         cooling_rate=0.95,
