@@ -24,8 +24,8 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a15_o170_m9_an80_ar18.json",
                 "Construction_a20_o236_m12_an106_ar24.json", # UB not reached!!! because not enough attachment types (type = 8) are available for shifts at the same time
                                                             # Check with UB LP Relaxation including ATTACHMENTS
-                "Construction_a25_o306_m13_an127_ar31.json"]
-instances=  [              "Construction_a30_o355_m18_an148_ar42.json",
+                "Construction_a25_o306_m13_an127_ar31.json",
+             "Construction_a30_o355_m18_an148_ar42.json",
                 "Construction_a40_o476_m22_an215_ar51.json", # UB not reached!!! because machine type 2 does not exist for a machine in the instance
                                                             # Reached after pre-processing in InputData
                 "Construction_a50_o578_m28_an276_ar66.json"]
@@ -109,10 +109,10 @@ def main():
                                                     
             if algortihm == 'PSA':
                 algo = ParetoSimulatedAnnealing( inputData=data,
-                                                start_temp=20,
+                                                start_temp=10,
                                                 min_temp=0.1,
-                                                cooling_rate=0.95,
-                                                max_iterations=100,
+                                                cooling_rate=0.99,
+                                                max_iterations=200,
                                                 fallback_threshold=25,
                                                 scaling_energy=30,
                                                 weight_alpha=1.1,
@@ -121,10 +121,10 @@ def main():
 
             elif algortihm == 'DBSA':
                 algo = DominanceBasedSimulatedAnnealing( inputData=data,
-                                                        start_temp=20,
+                                                        start_temp=10,
                                                         min_temp=0.1,
-                                                        cooling_rate=0.95,
-                                                        max_iterations=100,
+                                                        cooling_rate=0.99,
+                                                        max_iterations=200,
                                                         fallback_threshold=25,
                                                         scaling_energy=30,
                                                         max_single_move_tries=30,
