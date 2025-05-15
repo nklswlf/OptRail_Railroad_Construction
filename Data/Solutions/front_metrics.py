@@ -53,6 +53,25 @@
     - Higher Hypervolume values are better.
     - Combines convergence (closeness to ideal) and coverage (spread across objectives).
 
+    
+# DM (Distribution Metric)
+- Purpose: Evaluates how evenly and broadly the solutions are distributed across the Pareto front.
+- Calculation: Combines spacing and spread into a single metric:
+   1. Sort solutions by objective values for each objective.
+   2. Compute distances between adjacent solutions per objective.
+   3. For each objective h:
+       - Compute mean (μ_h) and standard deviation (σ_h) of distances.
+       - Compute range R_h of values in the objective space.
+       - Normalize using (σ_h / μ_h) / R_h
+   4. Average over all objectives and normalize by the number of solutions:
+       DM = (1 / |S|) * sum_h [ (σ_h / μ_h) / R_h ]
+- Interpretation:
+   - Lower DM values are better.
+   - Low DM → Solutions are evenly spaced and well distributed across the objective space.
+   - High DM → Solutions are clustered or unevenly distributed.
+   - Advantage: Combines spread and uniformity into one interpretable value and aligns well with expert assessments.
+
+
 # Spacing
 - Purpose: Measures the uniformity of distances between consecutive solutions along the front.
 - Calculation: Based on the variance and mean of pairwise distances between consecutive sorted points.
@@ -88,6 +107,7 @@
 - PCI should always be interpreted **together** with DCI and Hypervolume.
 - A method could have a low PCI but poor DCI (good convergence but bad diversity).
 """
+
 
 
 import os
