@@ -31,7 +31,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-#instances = [   "Construction_a5_o96_m10_an10_ar10_reduced.json"]
+#instances = [   "Construction_a15_o170_m9_an80_ar18.json"]
 
 
 
@@ -77,7 +77,8 @@ step = None
 
 algortihm = 'DBSA'
 
-algortihms = ['PSA', 'DBSA']#, 'TPSA']
+algortihms = ['PSA_1_previous_weights', 
+             'DBSA']
 
 
 def main():
@@ -107,7 +108,30 @@ def main():
                                                         fallback_threshold=25,
                                                         scaling_energy=30)
                                                     
-            if algortihm == 'PSA':
+            if algortihm == 'PSA_1_previous_weights':
+                algo = ParetoSimulatedAnnealing( inputData=data,
+                                                start_temp=20,
+                                                min_temp=0.1,
+                                                cooling_rate=0.95,
+                                                max_iterations=500,
+                                                fallback_threshold=25,
+                                                scaling_energy=30,
+                                                weight_alpha=1.1,
+                                                max_single_move_tries=30,
+                                                start_size_population=8)
+                
+            elif algortihm == 'PSA_2_previous_weights':
+                algo = ParetoSimulatedAnnealing( inputData=data,
+                                                start_temp=50,
+                                                min_temp=0.1,
+                                                cooling_rate=0.95,
+                                                max_iterations=100,
+                                                fallback_threshold=25,
+                                                scaling_energy=30,
+                                                weight_alpha=1.1,
+                                                max_single_move_tries=30,
+                                                start_size_population=8)
+            elif algortihm == 'PSA_2_previous_weights':
                 algo = ParetoSimulatedAnnealing( inputData=data,
                                                 start_temp=10,
                                                 min_temp=0.1,
@@ -121,10 +145,10 @@ def main():
 
             elif algortihm == 'DBSA':
                 algo = DominanceBasedSimulatedAnnealing( inputData=data,
-                                                        start_temp=10,
+                                                        start_temp=20,
                                                         min_temp=0.1,
-                                                        cooling_rate=0.99,
-                                                        max_iterations=200,
+                                                        cooling_rate=0.95,
+                                                        max_iterations=500,
                                                         fallback_threshold=25,
                                                         scaling_energy=30,
                                                         max_single_move_tries=30,

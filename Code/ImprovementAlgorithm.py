@@ -250,6 +250,14 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                                     'Swap_Shift_Worker': ['driver_violation', 'commute_distance'],
                                     'Swap_Shift_Machine': ['driver_violation', 'transport_distance'],
                                     'Swap_Shift_Attachment': ['attachment_distance']}
+        
+        self.PreviousWeight = {  'driver_violation': 1.0,
+                                'commute_distance': 1.0,
+                                'transport_distance': 1.0,
+                                'attachment_distance': 1.0,
+                                'worker_count': 1.0,
+                                'machine_count': 1.0,
+                                'attachment_count': 1.0}
 
 
     def MutateSolution(self, solution: Solution) -> None:
@@ -342,16 +350,21 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
             weights = {}
             for obj in objectives:
                 if x_values[obj] >= x_prime_values[obj]:
-                    weights[obj] = self.WeightAlpha
+                    weights[obj] = self.WeightAlpha * self.PreviousWeight[obj]
                 elif x_values[obj] < x_prime_values[obj]:
-                    weights[obj] = 1 / self.WeightAlpha
+                    weights[obj] = self.PreviousWeight[obj] / self.WeightAlpha
                 else:
                     raise Exception(f"Objective {obj} not defined.")
                     weights[obj] = 1.0
 
+    
         # Normalisierung
         total = sum(weights.values())
         normalized_weights = {k: v / total for k, v in weights.items()}
+
+        # Update previous weights
+        for obj in objectives:
+            self.PreviousWeight[obj] = normalized_weights[obj]
 
         return normalized_weights
 

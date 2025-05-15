@@ -13,7 +13,8 @@ class InputData:
 
         :param instance_filename: Name of the JSON file containing the data.
         '''
-        
+        self.algo = algo
+
         # File name and instance number
         self.instance_filename = instance_filename
         self.instance = instance_filename.split('Construction_')[1].split('.json')[0]
@@ -71,7 +72,7 @@ class InputData:
         self._transfrom_data()
 
         # Create a folder in .../Data/Solutions/ instance / the current date
-        solutions_path = Path.cwd().parent / "OptRail_Railroad_Construction" / "Data" / "Solutions" / self.instance / algo
+        solutions_path = Path.cwd().parent / "OptRail_Railroad_Construction" / "Data" / "Solutions" / self.instance / self.algo
         solutions_path.mkdir(parents=True, exist_ok=True)
         self.solutions_path = solutions_path
 

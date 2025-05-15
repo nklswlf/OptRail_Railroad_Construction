@@ -55,7 +55,7 @@ class Solver:
     def ImprovementPhase(self, startSolution:Solution, algorithm:ImprovementAlgorithm) -> Solution:
         ''' Start the improvement phase by choosing a algorithm'''
 
-        print("\nImprovement Phase started...")
+        print("\nImprovement Phase with", self.InputData.algo, "started...")
 
         algorithm.Initialize(self.EvaluationLogic, self.ParetoSolutions, self.RNG)
         algorithm.Run(startSolution)
