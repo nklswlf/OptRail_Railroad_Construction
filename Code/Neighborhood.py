@@ -1514,13 +1514,16 @@ class TimeNeighborhood(BaseNeighborhood):
 
         return bestNeighborhoodSolution
     
-    def SingleMove(self, solution: Solution, max_attempts: int = 100) -> BaseMove:
+    def SingleMove(self, solution: Solution, max_attempts: int = 100, local_rng = None) -> BaseMove:
         """ Generate a single move for the given solution. """
         
 
         self.Update()
         
-        move = self.MakeOneMove(solution, max_attempts)
+        if local_rng is not None:
+            move = self.MakeOneMove(solution, max_attempts, local_rng)
+        else:
+            move = self.MakeOneMove(solution, max_attempts)
 
         if move:
             self.EvaluateMove(move)
@@ -1635,7 +1638,7 @@ class ReplaceShiftAttachmentNeighborhood(TimeNeighborhood):
                     self.Moves.append(ReplaceShiftAttachmentMove(attachment_id_1, attachment_id_2, attachment_route_1, attachment_route_2, attachment_route_index_2_1[0], attachment_route_index_2_1[1], order_item_id))
 
 
-    def MakeOneMove(self, solution: Solution, max_attempts: int = 100) -> BaseMove:
+    def MakeOneMove(self, solution: Solution, max_attempts: int = 100, local_rng = None) -> BaseMove:
         """
         Chooses a random valid attachment move using self.RNG.
         
@@ -1680,7 +1683,10 @@ class ReplaceShiftAttachmentNeighborhood(TimeNeighborhood):
             if a1 != a2
         ]
         
-        self.RNG.shuffle(attachment_pairs)  # Shuffle the pairs to ensure randomness
+        if local_rng is not None:
+            local_rng.shuffle(attachment_pairs)  # Shuffle the pairs to ensure randomness
+        else:
+            self.RNG.shuffle(attachment_pairs)  # Shuffle the pairs to ensure randomness
         
   
         for attachment_id_1, attachment_id_2 in attachment_pairs:          
@@ -1755,7 +1761,10 @@ class ReplaceShiftAttachmentNeighborhood(TimeNeighborhood):
             
             # If any valid moves have been found for the chosen attachment pair, return one randomly using self.RNG.
             if valid_moves:
-                return self.RNG.choice(valid_moves)
+                if local_rng is not None:
+                    return local_rng.choice(valid_moves)
+                else:
+                    return self.RNG.choice(valid_moves)
         
         # If no valid move is found after max_attempts, return None.
         return None
@@ -1962,7 +1971,7 @@ class SwapShiftAttachmentNeighborhood(TimeNeighborhood):
                             if order_item_id_2 == attachment_route_index_2_and_order_item_id_2_and_taken_index_1[1]:
                                 self.Moves.append(SwapShiftAttachmentMove(attachment_id_1, attachment_id_2, attachment_route_1, attachment_route_2, attachment_route_index_1_taken_index_2[0], attachment_route_index_2_and_order_item_id_2_and_taken_index_1[0], order_item_id_1, order_item_id_2, attachment_route_index_2_and_order_item_id_2_and_taken_index_1[2], attachment_route_index_1_taken_index_2[1]))
 
-    def MakeOneMove(self, solution: Solution, max_attempts: int = 100) -> BaseMove:
+    def MakeOneMove(self, solution: Solution, max_attempts: int = 100, local_rng = None) -> BaseMove:
         """
         Chooses a random valid swap move for attachments using self.RNG.
         
@@ -1995,7 +2004,10 @@ class SwapShiftAttachmentNeighborhood(TimeNeighborhood):
             if solution.data.attachments[id1].type == solution.data.attachments[id2].type
         ]
 
-        self.RNG.shuffle(attachment_pairs)  # Shuffle the pairs to ensure randomness
+        if local_rng is not None:
+            local_rng.shuffle(attachment_pairs)
+        else:
+            self.RNG.shuffle(attachment_pairs)  # Shuffle the pairs to ensure randomness
 
 
         for attachment_id_1, attachment_id_2 in attachment_pairs:
@@ -2125,7 +2137,10 @@ class SwapShiftAttachmentNeighborhood(TimeNeighborhood):
                         valid_moves.append(move)
 
             if valid_moves:
-                return self.RNG.choice(valid_moves)
+                if local_rng is not None:
+                    return local_rng.choice(valid_moves)
+                else:
+                    return self.RNG.choice(valid_moves)
             
         return None
 
@@ -2250,7 +2265,7 @@ class ReplaceShiftMachineNeighborhood(TimeNeighborhood):
                     self.Moves.append(ReplaceShiftMachineMove(machine_id_1, machine_id_2, machine_route_1, machine_route_2, machine_route_index_2_1[0], machine_route_index_2_1[1], order_item_id, worker_id))
 
 
-    def MakeOneMove(self, solution: Solution, max_attempts: int = 100) -> BaseMove:
+    def MakeOneMove(self, solution: Solution, max_attempts: int = 100, local_rng = None) -> BaseMove:
         """
         Chooses a random valid machine move using self.RNG.
 
@@ -2277,7 +2292,10 @@ class ReplaceShiftMachineNeighborhood(TimeNeighborhood):
                         for m2 in machine_ids
                         if m1 != m2 and solution.data.machines[m1].type == solution.data.machines[m2].type]
         
-        self.RNG.shuffle(machine_pairs)  # Shuffle the pairs to ensure randomness
+        if local_rng is not None:
+            local_rng.shuffle(machine_pairs)
+        else:
+            self.RNG.shuffle(machine_pairs)  # Shuffle the pairs to ensure randomness
         
   
         for machine_id_1, machine_id_2 in machine_pairs:
@@ -2346,7 +2364,10 @@ class ReplaceShiftMachineNeighborhood(TimeNeighborhood):
             
             # If any valid moves have been found for the chosen pair, return one randomly using self.RNG.
             if valid_moves:
-                return self.RNG.choice(valid_moves)
+                if local_rng is not None:
+                    return local_rng.choice(valid_moves)
+                else:
+                    return self.RNG.choice(valid_moves)
         
         # If no valid move is found after max_attempts, return None.
         return None
@@ -2560,7 +2581,7 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
                             self.Moves.append(SwapShiftMachineMove(machine_id_1, machine_id_2, machine_route_1, machine_route_2, machine_route_index_1_taken_index_2[0], machine_route_index_2_and_order_item_id_2_and_taken_index_1[0], order_item_id_1, order_item_id_2, worker_id_1, worker_id_2, machine_route_index_2_and_order_item_id_2_and_taken_index_1[2], machine_route_index_1_taken_index_2[1]))
     
     
-    def MakeOneMove(self, solution: Solution, max_attempts: int = 100) -> BaseMove:
+    def MakeOneMove(self, solution: Solution, max_attempts: int = 100, local_rng = None) -> BaseMove:
         """
         Chooses a random valid swap move for machines using self.RNG.
 
@@ -2586,7 +2607,10 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
             if solution.data.machines[id1].type == solution.data.machines[id2].type
         ]
 
-        self.RNG.shuffle(machine_pairs)  # Shuffle the pairs to ensure randomness
+        if local_rng is not None:
+            local_rng.shuffle(machine_pairs)
+        else:
+            self.RNG.shuffle(machine_pairs)  # Shuffle the pairs to ensure randomness
 
         self.Moves.clear()  # Clear any previously stored moves
         attempts = 0
@@ -2731,7 +2755,10 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
                         valid_moves.append(move)
             
             if valid_moves:
-                return self.RNG.choice(valid_moves)
+                if local_rng is not None:
+                    return local_rng.choice(valid_moves)
+                else:
+                    return self.RNG.choice(valid_moves)
             
         return None
 
@@ -3138,7 +3165,7 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
                     self.Moves.append(ReplaceShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index_2, order_item_id, machine_id))
 
 
-    def MakeOneMove(self, solution: Solution, max_attempts: int = 100) -> BaseMove:
+    def MakeOneMove(self, solution: Solution, max_attempts: int = 100, local_rng = None) -> BaseMove:
         """
         Chooses a random valid move by:
         1. Randomly selecting a pair of workers (worker_1 and worker_2) using self.RNG.
@@ -3157,7 +3184,11 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
 
         worker_ids = list(solution.route_plan_worker.keys())
         worker_id_pairs = [(w1, w2) for w1 in worker_ids for w2 in worker_ids if w1 != w2]
-        self.RNG.shuffle(worker_id_pairs)  # Shuffle the pairs to randomize selection
+
+        if local_rng is not None:
+            local_rng.shuffle(worker_id_pairs)
+        else:
+            self.RNG.shuffle(worker_id_pairs)  # Shuffle the pairs to randomize selection
 
 
         # Clear any previously stored moves
@@ -3229,7 +3260,10 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
 
             # If we have found any valid moves for the chosen pair, select one randomly
             while self.Moves:
-                move = self.RNG.choice(self.Moves)
+                if local_rng is not None:
+                    move = local_rng.choice(self.Moves)
+                else:
+                    move = self.RNG.choice(self.Moves)
                 if self.WorkerRouteFeasibilityCheck(move.WorkerID1, move.WorkerRoute1) and self.WorkerRouteFeasibilityCheck(move.WorkerID2, move.WorkerRoute2):
                     return move
                 else:
@@ -3457,7 +3491,7 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
                             self.Moves.append(SwapShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index_1, worker_route_index_2_and_order_item_id_2[0], order_item_id_1, order_item_id_2, machine_id_1, machine_id_2))
 
 
-    def MakeOneMove(self, solution: Solution, max_attempts: int = 100) -> BaseMove:
+    def MakeOneMove(self, solution: Solution, max_attempts: int = 100, local_rng = None) -> BaseMove:
         """
         Chooses a random valid swap move for workers using self.RNG.
         
@@ -3478,7 +3512,10 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
         attempts = 0
 
         worker_id_pairs = list(combinations(worker_ids, 2))
-        self.RNG.shuffle(worker_id_pairs)  # Shuffle the pairs to randomize selection
+        if local_rng is not None:
+            local_rng.shuffle(worker_id_pairs)
+        else:
+            self.RNG.shuffle(worker_id_pairs)  # Shuffle the pairs to randomize selection
 
         for worker_id_1, worker_id_2 in worker_id_pairs:
 
@@ -3632,7 +3669,10 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
                         valid_moves.append(move)
 
             while valid_moves != []:
-                move = self.RNG.choice(valid_moves)
+                if local_rng is not None:
+                    move = local_rng.choice(valid_moves)
+                else:
+                    move = self.RNG.choice(valid_moves)
                 if self.WorkerRouteFeasibilityCheck(move.WorkerID1, move.WorkerRoute1) and self.WorkerRouteFeasibilityCheck(move.WorkerID2, move.WorkerRoute2):
                     return move
                 else:

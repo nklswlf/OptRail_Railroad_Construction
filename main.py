@@ -31,7 +31,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-#instances = [   "Construction_a15_o170_m9_an80_ar18.json"]
+instances = [   "Construction_a10_o107_m5_an57_ar12.json"]
 
 
 
@@ -77,8 +77,8 @@ step = None
 
 algortihm = 'DBSA'
 
-algortihms = ['PSA_1_previous_weights', 
-             'DBSA']
+algortihms = 5* [
+              'PSA_generating_setter']
 
 
 def main():
@@ -108,47 +108,37 @@ def main():
                                                         fallback_threshold=25,
                                                         scaling_energy=30)
                                                     
-            if algortihm == 'PSA_1_previous_weights':
-                algo = ParetoSimulatedAnnealing( inputData=data,
+            if algortihm == 'PSA_generating_setter':
+                algo = ParetoSimulatedAnnealing_generating_setter( inputData=data,
                                                 start_temp=20,
                                                 min_temp=0.1,
                                                 cooling_rate=0.95,
-                                                max_iterations=500,
+                                                max_iterations=10,
                                                 fallback_threshold=25,
                                                 scaling_energy=30,
                                                 weight_alpha=1.1,
                                                 max_single_move_tries=30,
-                                                start_size_population=8)
+                                                start_size_population=4)
                 
-            elif algortihm == 'PSA_2_previous_weights':
-                algo = ParetoSimulatedAnnealing( inputData=data,
-                                                start_temp=50,
+            elif algortihm == 'PSA_archive_setter':
+                algo = ParetoSimulatedAnnealing_archive_setter( inputData=data,
+                                                start_temp=20,
                                                 min_temp=0.1,
                                                 cooling_rate=0.95,
-                                                max_iterations=100,
+                                                max_iterations=1,
                                                 fallback_threshold=25,
                                                 scaling_energy=30,
                                                 weight_alpha=1.1,
                                                 max_single_move_tries=30,
-                                                start_size_population=8)
-            elif algortihm == 'PSA_2_previous_weights':
-                algo = ParetoSimulatedAnnealing( inputData=data,
-                                                start_temp=10,
-                                                min_temp=0.1,
-                                                cooling_rate=0.99,
-                                                max_iterations=200,
-                                                fallback_threshold=25,
-                                                scaling_energy=30,
-                                                weight_alpha=1.1,
-                                                max_single_move_tries=30,
-                                                start_size_population=8)
+                                                start_size_population=4)
+                
 
             elif algortihm == 'DBSA':
                 algo = DominanceBasedSimulatedAnnealing( inputData=data,
                                                         start_temp=20,
                                                         min_temp=0.1,
                                                         cooling_rate=0.95,
-                                                        max_iterations=500,
+                                                        max_iterations=50,
                                                         fallback_threshold=25,
                                                         scaling_energy=30,
                                                         max_single_move_tries=30,
