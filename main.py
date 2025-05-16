@@ -31,7 +31,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = [   "Construction_a10_o107_m5_an57_ar12.json"]
+instances = [   "Construction_a40_o476_m22_an215_ar51.json"]
 
 
 
@@ -77,8 +77,8 @@ step = None
 
 algortihm = 'DBSA'
 
-algortihms = 5* [
-              'PSA_generating_setter']
+algortihms = ['PSA_archive_setter']
+                
 
 
 def main():
@@ -113,7 +113,7 @@ def main():
                                                 start_temp=20,
                                                 min_temp=0.1,
                                                 cooling_rate=0.95,
-                                                max_iterations=10,
+                                                max_iterations=50,
                                                 fallback_threshold=25,
                                                 scaling_energy=30,
                                                 weight_alpha=1.1,
@@ -125,7 +125,19 @@ def main():
                                                 start_temp=20,
                                                 min_temp=0.1,
                                                 cooling_rate=0.95,
-                                                max_iterations=1,
+                                                max_iterations=50,
+                                                fallback_threshold=25,
+                                                scaling_energy=30,
+                                                weight_alpha=1.1,
+                                                max_single_move_tries=30,
+                                                start_size_population=4)
+                
+            elif algortihm == 'PSA_global_archive_setter':
+                algo = ParetoSimulatedAnnealing_global_archive_setter( inputData=data,
+                                                start_temp=20,
+                                                min_temp=0.1,
+                                                cooling_rate=0.95,
+                                                max_iterations=500,
                                                 fallback_threshold=25,
                                                 scaling_energy=30,
                                                 weight_alpha=1.1,
@@ -240,7 +252,11 @@ def main():
 
 
         if step is None:
-            metrics_df = Run(data.instance)
+            algortihms.append('PSA_generating_setter')
+            algortihms.append('PSA_archive_setter') 
+
+                             
+            metrics_df = Run(data.instance, algortihms)
             # Add the instance name to the metrics DataFrame
             metrics_df["Instance"] = data.instance
 

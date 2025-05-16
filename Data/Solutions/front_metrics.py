@@ -120,7 +120,7 @@ from pymoo.indicators.hv import HV
 import numpy as np
 import pandas as pd
 
-def Run(instance):
+def Run(instance, algorithms):
     # === Paths ===
     instance_folder = os.path.join("..", "OptRail_Railroad_Construction" ,"Data", "Solutions", instance)
     excluded_methods = []
@@ -139,7 +139,7 @@ def Run(instance):
     ]
 
     # === Load Pareto Fronts ===
-    single_pareto_fronts, single_pareto_fronts_normalized, global_pareto_front, global_pareto_front_normalized = get_method_paths(instance_folder, excluded_methods)
+    single_pareto_fronts, single_pareto_fronts_normalized, global_pareto_front, global_pareto_front_normalized = get_method_paths(instance_folder, excluded_methods, included_methods=algorithms)
 
     # Insert check for number of methods in global Pareto front
     methods_in_global_pf = global_pareto_front["Method"].unique()
@@ -195,7 +195,7 @@ def debug_print(msg, print_debug=False):
         print(msg)
 
 # === Load function of ParetoFront.csv ===
-def get_method_paths(instance_folder: str,excluded_methods=[], print_debug=False):
+def get_method_paths(instance_folder: str,excluded_methods=[], print_debug=False, included_methods = None):
     # === Automatically find all methods based on subfolders containing ParetoFront.csv ===
     method_paths = {}
     single_pareto_fronts = {}
@@ -203,6 +203,10 @@ def get_method_paths(instance_folder: str,excluded_methods=[], print_debug=False
     for root, dirs, files in os.walk(instance_folder):
         if "ParetoFront.csv" in files:
             method_name = os.path.basename(root)
+            if included_methods is not None:
+                if method_name not in included_methods:
+                    print(f"Skipping excluded method: {method_name}")
+                    continue
             if method_name in excluded_methods:
                 print(f"Skipping excluded method: {method_name}")
                 continue

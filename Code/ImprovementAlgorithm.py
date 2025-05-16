@@ -487,7 +487,296 @@ class ParetoSimulatedAnnealing_archive_setter(ImprovementAlgorithm):
         #self.ParetoSolutions.CalculateParetoFrontMetrics()
 
 
+class ParetoSimulatedAnnealing_global_archive_setter(ImprovementAlgorithm):
+    """ Simulated Annealing algorithm to find a fully staffed solution. """
 
+    def __init__(self, inputData:InputData,
+                 start_temp:int,
+                 min_temp:int,
+                 cooling_rate:float,
+                 max_iterations:int,
+                 fallback_threshold:int,
+                 scaling_energy:int,
+                 weight_alpha:float,
+                 max_single_move_tries:int,
+                 start_size_population:int):
+        super().__init__(inputData)
+
+        self.StartTemperature = start_temp
+        self.MinTemperature = min_temp
+        self.CoolingRate = cooling_rate
+        self.MaxIterations = max_iterations
+        self.FallbackThreshold = fallback_threshold # Currently not used
+        self.ScalingEnergy = scaling_energy
+
+        self.MaxSingleMoveTries = max_single_move_tries
+        self.SizeStartPopulation = start_size_population
+        self.WeightAlpha = weight_alpha
+
+
+        self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
+                                    'Replace_Shift_Machine': ['driver_violation', 'transport_distance', 'machine_count'],
+                                    'Replace_Shift_Attachment': ['attachment_distance', 'attachment_count'],
+                                    'Swap_Shift_Worker': ['driver_violation', 'commute_distance'],
+                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance'],
+                                    'Swap_Shift_Attachment': ['attachment_distance']}
+        
+        self.objectives = ['driver_violation', 'commute_distance', 'transport_distance', 'attachment_distance', 'worker_count', 'machine_count', 'attachment_count']
+
+
+
+    def MutateSolution(self, solution: Solution) -> None:
+        ''' Mutate the solution by applying multiple moves on a copy of the original '''
+
+        random_number_of_moves = self.RNG.integers(2, 50)
+        current_solution = solution.clone()
+        self.EvaluationLogic.evaluate(current_solution)
+
+        for _ in range(random_number_of_moves):
+            move = None
+
+            while move is None:
+                random_type = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
+                neighborhood = self.Neighborhoods[random_type]
+                move = neighborhood.SingleMove(current_solution)
+                
+
+
+            worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
+            current_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+            self.EvaluationLogic.evaluate(current_solution)
+
+        self.ParetoSolutions.UpdateParetoFront(current_solution)
+ 
+
+    def normalize_objectives(self, population, objectives, attr_mapping):
+        min_vals = {}
+        max_vals = {}
+        for obj in objectives:
+            values = [getattr(sol, attr_mapping.get(obj, obj), 0) for sol in population]
+            min_vals[obj] = min(values)
+            max_vals[obj] = max(values)
+        return min_vals, max_vals
+
+    def get_normalized_values(self, solution, objectives, attr_mapping, min_vals, max_vals):
+        norm_values = {}
+        for obj in objectives:
+            raw = getattr(solution, attr_mapping.get(obj, obj), 0)
+            range_ = max_vals[obj] - min_vals[obj]
+            norm_values[obj] = (raw - min_vals[obj]) / range_ if range_ > 0 else 0.0
+        return norm_values
+
+
+    def update_weights(self, x, population, objectives, previous_weights, local_rng):
+        ''' Update weights for the objectives based on the current solution and the population '''
+
+        attr_mapping = {
+            'commute_distance': 'total_commute_distance',
+            'transport_distance': 'total_transport_distance',
+            'attachment_distance': 'total_transport_distance_attachments',
+            'worker_count': 'number_of_workers',
+            'machine_count': 'number_of_machines',
+            'attachment_count': 'number_of_attachments',
+            'driver_violation': 'driver_violation'
+        }
+
+        def non_dominating(a, b):
+            better_in_a = False
+            better_in_b = False
+            for obj in objectives:
+                if a[obj] < b[obj]:
+                    better_in_a = True
+                elif a[obj] > b[obj]:
+                    better_in_b = True
+
+            # non-dominating == True
+            return better_in_a and better_in_b
+
+        def distance(a, b):
+            return sum(abs(a[obj] - b[obj]) for obj in objectives)
+
+        min_vals, max_vals = self.normalize_objectives(population + [x], objectives, attr_mapping)
+        x_values = self.get_normalized_values(x, objectives, attr_mapping, min_vals, max_vals)
+
+        candidates = []
+        for x_ in population:
+            if x_ == x:
+                continue
+            x__values = self.get_normalized_values(x_, objectives, attr_mapping, min_vals, max_vals)
+            if non_dominating(x_values, x__values):
+                candidates.append((x_, distance(x_values, x__values)))
+
+        if not candidates:
+            weights = {obj: local_rng.random() for obj in objectives}
+        else:
+            x_prime, _ = min(candidates, key=lambda tup: tup[1])
+            x_prime_values = self.get_normalized_values(x_prime, objectives, attr_mapping, min_vals, max_vals)
+
+            weights = {}
+            for obj in objectives:
+                if x_values[obj] >= x_prime_values[obj]:
+                    weights[obj] = self.WeightAlpha * previous_weights[obj]
+                elif x_values[obj] < x_prime_values[obj]:
+                    weights[obj] = previous_weights[obj] / self.WeightAlpha
+                else:
+                    raise Exception(f"Objective {obj} not defined.")
+                    weights[obj] = 1.0
+
+        for obj in self.objectives:
+            if obj not in weights:
+                weights[obj] = previous_weights[obj] * self.WeightAlpha
+    
+        # Normalisierung
+        total = sum(weights.values())
+        normalized_weights = {k: v / total for k, v in weights.items()}
+
+        #print(f"Normalized weights: {normalized_weights}")
+
+
+        return normalized_weights
+
+
+
+    def psa_iteration(self, info: dict, T: float, S_snapshot: list):
+        x = info["solution"]
+        weights_dict = info["weights"]
+        seed = info["seed"]
+        agent_id = info["id"]
+        local_rng = np.random.default_rng(seed)
+
+        identifier = getattr(x, "id", os.getpid())
+        profile = cProfile.Profile()
+        profile.enable()
+
+        move = None
+        tries = 0
+        while move is None and tries < self.MaxSingleMoveTries:
+            n_type = local_rng.choice(list(self.NeighborhoodTypes.keys()))
+            neighborhood = self.CreateNeighborhood(n_type, local_rng)
+            move = neighborhood.SingleMove(x, self.MaxSingleMoveTries, local_rng)
+            tries += 1
+
+        objectives = self.NeighborhoodTypes[n_type]
+        weights = self.update_weights(x, S_snapshot, objectives, weights_dict, local_rng)
+        delta = sum(weights[obj] * move.DeltaDetails[obj] for obj in objectives)
+
+        if delta >= 0:
+            p = math.exp(-delta * self.ScalingEnergy / T)
+            if local_rng.random() > p:
+                profile.disable()
+                return {
+                        "solution": x,
+                        "new_solution": None,
+                        "weights": weights,
+                        "seed": seed + 1,
+                        "id": agent_id
+                    }
+
+        w, m, a = neighborhood.constructCompleteRoutes(move, x)
+        x_new = Solution(w, m, a, self.InputData)
+        self.EvaluationLogic.evaluate(x_new)
+
+        profile.disable()
+        Path("Profiler/Agents").mkdir(parents=True, exist_ok=True)
+        profile_path = Path(f"Profiler/Agents/agent_{identifier}_seed_{seed}.prof")
+
+        # Kumulativ zusammenführen, falls Datei existiert
+        if profile_path.exists():
+            existing_stats = pstats.Stats(str(profile_path))
+            new_stats = pstats.Stats(profile)
+            existing_stats.add(new_stats)
+            existing_stats.dump_stats(str(profile_path))  # Überschreiben mit kumulierter Version
+        else:
+            profile.dump_stats(str(profile_path))
+
+        # Optional: zusätzlich als lesbare Textdatei
+        txt_path = Path(f"Profiler/Agents/agent_{identifier}.txt")
+        with open(txt_path, "w") as f:
+            ps = pstats.Stats(str(profile_path), stream=f)
+            ps.strip_dirs().sort_stats("cumulative").print_stats(50)
+
+        return {
+                    "solution": x,
+                    "new_solution": x_new,
+                    "weights": weights,
+                    "seed": seed + 1,
+                    "id": agent_id
+                }
+
+    def Run(self, solution: Solution) -> Solution:
+        profiler = cProfile.Profile()
+        profiler.enable()
+        ''' Run simulated annealing algorithm with given solutions and parameters '''
+        self.InitializeNeighborhoods(list(self.NeighborhoodTypes.keys()))
+        self.ParetoSolutions.UpdateParetoFront(solution)
+        
+
+        while len(self.ParetoSolutions.ParetoFront) < self.SizeStartPopulation:
+            self.MutateSolution(solution)
+        print(f"Initial Solution Pool:")
+        self.ParetoSolutions.SortParetoFront()
+        self.ParetoSolutions.ShowFront()
+
+        current_temperature = self.StartTemperature
+
+        S_info = []
+
+        for i, x in enumerate(self.ParetoSolutions.ParetoFront):
+            x.id = i
+            weights = {obj: self.RNG.random() for obj in self.objectives}
+            seed = self.RNG.integers(0, 1_000_000)
+
+            S_info.append({
+                "solution": deepcopy(x),
+                "weights": weights,
+                "seed": seed,
+                "id": i
+            })
+        
+        while current_temperature > self.MinTemperature:
+            
+            for i in range(self.MaxIterations):
+                tasks = []
+
+                with ThreadPoolExecutor(max_workers=self.SizeStartPopulation) as executor:
+                    futures = [
+                        executor.submit(
+                            self.psa_iteration,
+                            info,
+                            current_temperature,
+                            self.ParetoSolutions.ParetoFront
+                        )
+                        for info in S_info
+                    ]
+                    results = [f.result() for f in futures]
+                
+
+                new_S_info = results
+
+                for info in new_S_info:
+                    if info["new_solution"] is not None:
+                        self.ParetoSolutions.UpdateParetoFront(info["new_solution"])
+                        info["solution"] = info["new_solution"]
+
+                S_info = new_S_info
+
+            
+            current_temperature *= self.CoolingRate
+
+        print("\nFinal Pareto Approximation:")
+        self.ParetoSolutions.PurgeParetoFront()
+        self.ParetoSolutions.SortParetoFront()
+        self.ParetoSolutions.ShowFront()
+
+        self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
+
+        profiler.disable()
+        Path("Profiler/Run").mkdir(parents=True, exist_ok=True)
+        profile_path = Path("Profiler/Run") / "run_profile.txt"
+        with open(profile_path, "w") as f:
+            ps = pstats.Stats(profiler, stream=f)
+            ps.strip_dirs().sort_stats("cumulative").print_stats(50)
+        
 
 
 class ParetoSimulatedAnnealing_generating_setter(ImprovementAlgorithm):
