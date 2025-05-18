@@ -1152,7 +1152,7 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
             f.write(text + "\n")
 
  
-    def multiple_moves(self, solution:Solution, move_type:str):
+    def multiple_moves(self, solution:Solution, move_type:str, local_rng):
 
         if move_type == 'traversal':
             possible_moves = list(range(1, self.max_traversal_moves + 1))
@@ -1162,7 +1162,7 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
             move_probs = [1.0 / len(possible_moves)] * len(possible_moves)
 
         
-        random_number_of_moves = self.RNG.choice(possible_moves, p=move_probs)
+        random_number_of_moves = local_rng.choice(possible_moves, p=move_probs)
 
         current_solution = solution.clone()
         self.EvaluationLogic.evaluate(current_solution)
@@ -1172,11 +1172,11 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         for _ in range(random_number_of_moves):
             move = None
             while move is None:
-                random_type = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
+                random_type = local_rng.choice(list(self.NeighborhoodTypes.keys()))
                 neighborhood = self.Neighborhoods[random_type]
                 self.Move_Counter[random_type] += 1
 
-                move = neighborhood.SingleMove(current_solution, self.MaxSingleMoveTries)
+                move = neighborhood.SingleMove(current_solution, self.MaxSingleMoveTries, local_rng)
 
                 if move is None:
                     self.None_Move_Counter[random_type] += 1
@@ -1215,14 +1215,16 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         raise Exception(f"Objective {objective} not defined.")
 
     
-    def DBSA(self, local_solution:Solution, local_pareto_front: list = None) -> None:
+    def DBSA(self, local_solution:Solution, local_pareto_front: list = None, seed = None) -> list[Solution]:
         ''' Run simulated annealing algorithm with given solutions and parameters'''
         ''' Simulated annealing algorithm with energy dominance neighborhood'''
         profiler = cProfile.Profile()
         profiler.enable()
 
+        local_rng = np.random.default_rng(seed)
+
         current_temperature = self.StartTemperature
-        local_pareto_solutions = ParetoSolutions(self.InputData,  self.RNG)
+        local_pareto_solutions = ParetoSolutions(self.InputData,  local_rng)
         local_pareto_solutions.ParetoFront = local_pareto_front
 
         current_temperature = self.StartTemperature
@@ -1235,13 +1237,13 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
 
                 dominating_count_current, interpolated_points = local_pareto_solutions.CountDominatingSolutions(local_solution)
 
-                neighborhoodType = self.RNG.choice(list(self.NeighborhoodTypes.keys()))
+                neighborhoodType = local_rng.choice(list(self.NeighborhoodTypes.keys()))
                 neighborhood = self.Neighborhoods[neighborhoodType]
                 objectives = self.NeighborhoodTypes[neighborhoodType]
 
-                move_type = self.RNG.choice(['traversal', 'location'])
+                move_type = local_rng.choice(['traversal', 'location'])
     
-                delta_details, objectives, worker_route_plan, machine_route_plan, attachment_route_plan = self.multiple_moves(local_solution, move_type)
+                delta_details, objectives, worker_route_plan, machine_route_plan, attachment_route_plan = self.multiple_moves(local_solution, move_type, local_rng)
  
             
                 # Alle Ziele initial aus der aktuellen Lösung übernehmen
@@ -1271,9 +1273,9 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                 if overall_difference <= 0:
                     prob = 1.0
                 else:
-                    prob =  math.exp(-overall_difference / current_temperature)
+                    prob =  math.exp(-overall_difference * self.ScalingEnergy/ current_temperature)
 
-                random_number = self.RNG.random()
+                random_number = local_rng.random()
 
                 #self.log(f"\n[DBSA] ΔDom: {dominating_count_current} → {dominating_count_new}, ΔE: {overall_difference:.3f}, T: {current_temperature:.2f}, prob: {prob:.3f}")
                 #self.log(f"[Delta] Delta Details: {delta_details}")
@@ -1299,7 +1301,7 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                 if fallback_counter >= self.FallbackThreshold:
                     if self.fallback_strategy == 'random':
                         # Select a random solution from the Pareto front
-                        local_solution = self.RNG.choice(local_pareto_solutions.ParetoFront)
+                        local_solution = local_rng.choice(local_pareto_solutions.ParetoFront)
                     elif self.fallback_strategy == 'best':
                         # Select the best solution from the Pareto front
                         local_solution = local_pareto_solutions.SelectRandomBestSolution()
@@ -1309,12 +1311,12 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
 
         return local_pareto_solutions.ParetoFront
         
-    def _dbsa_with_counts(self, solution: Solution, pareto_front: list) -> tuple[list[Solution], dict, dict]:
+    def _dbsa_with_counts(self, solution: Solution, pareto_front: list, seed) -> tuple[list[Solution], dict, dict]:
         """
         Wrapper to run DBSA in-process and capture the Move counters.
         Returns: (pareto_front, Move_Counter copy, None_Move_Counter copy)
         """
-        result_front = self.DBSA(solution, pareto_front)
+        result_front = self.DBSA(solution, pareto_front, seed)
         # copy counters to send back to the parent
         mov = self.Move_Counter.copy()
         none = self.None_Move_Counter.copy()
@@ -1339,13 +1341,14 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         with ProcessPoolExecutor() as executor:
             for sol in self.ParetoSolutions.ParetoFront:
                 local_solution = sol.clone()
+                seed = self.RNG.integers(0, 1_000_000)
                 self.EvaluationLogic.evaluate(local_solution)
                 local_pareto_front = [s for s in self.ParetoSolutions.ParetoFront if s != local_solution]
                 for s in local_pareto_front:
                     self.EvaluationLogic.evaluate(s)
                 # submit wrapper that returns both front and counters
                 tasks.append(
-                    executor.submit(self._dbsa_with_counts, local_solution, local_pareto_front)
+                    executor.submit(self._dbsa_with_counts, local_solution, local_pareto_front, seed)
                 )
 
         combined_solutions = []

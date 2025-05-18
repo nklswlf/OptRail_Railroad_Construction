@@ -31,7 +31,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = [   "Construction_a40_o476_m22_an215_ar51.json"]
+instances = [   "Construction_a30_o355_m18_an148_ar42.json"]
 
 
 
@@ -77,7 +77,7 @@ step = None
 
 algortihm = 'DBSA'
 
-algortihms = ['PSA_archive_setter']
+algortihms = ['DBSA','PSA_generating_setter']
                 
 
 
@@ -154,7 +154,7 @@ def main():
                                                         fallback_threshold=25,
                                                         scaling_energy=30,
                                                         max_single_move_tries=30,
-                                                        parallel_runs=8)
+                                                        parallel_runs=4)
 
             
             elif algortihm == 'TPSA':
@@ -251,11 +251,7 @@ def main():
                     json.dump(times, f, indent=4)
 
 
-        if step is None:
-            algortihms.append('PSA_generating_setter')
-            algortihms.append('PSA_archive_setter') 
-
-                             
+        if step is None:                             
             metrics_df = Run(data.instance, algortihms)
             # Add the instance name to the metrics DataFrame
             metrics_df["Instance"] = data.instance
