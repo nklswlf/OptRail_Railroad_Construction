@@ -615,12 +615,6 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
             self.Move_Counter[neighborhoodType] = 0
             
 
-    
-        self.log_path = Path("Profiler") / "DBSA" / "dbsa_log.txt"
-        Path(self.log_path.parent).mkdir(parents=True, exist_ok=True)
-
-        with open(self.log_path, "w") as f:
-            f.write("=== DBSA Logging Start ===\n")
 
     def MutateSolution(self, solution: Solution) -> None:
         ''' Mutate the solution by applying multiple moves on a copy of the original '''
@@ -714,6 +708,8 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
 
     
     def DBSA(self, local_solution:Solution, local_pareto_front: list = None, seed = None) -> list[Solution]:
+        profiler = cProfile.Profile()
+        profiler.enable()
         ''' Run simulated annealing algorithm with given solutions and parameters'''
         ''' Simulated annealing algorithm with energy dominance neighborhood'''
         profiler = cProfile.Profile()
@@ -779,8 +775,6 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
 
                 random_number = local_rng.random()
 
-                #self.log(f"\n[DBSA] ΔDom: {dominating_count_current} → {dominating_count_new}, ΔE: {overall_difference:.3f}, T: {current_temperature:.2f}, prob: {prob:.3f}")
-                #self.log(f"[Delta] Delta Details: {delta_details}")
                 
                 if prob < random_number:
                     continue
@@ -808,6 +802,19 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
 
             current_temperature *= self.CoolingRate
 
+        profiler.disable()
+        Path("Profiler/DBSA/Agents").mkdir(parents=True, exist_ok=True)
+        profile_path = Path(f"Profiler/DBSA/Agents/agent_{os.getpid()}.prof")
+
+        # Profil anhängen oder neu speichern
+        if profile_path.exists():
+            existing = pstats.Stats(str(profile_path))
+            new = pstats.Stats(profiler)
+            existing.add(new)
+            existing.dump_stats(str(profile_path))
+        else:
+            profiler.dump_stats(str(profile_path))
+
         return local_pareto_solutions.ParetoFront
         
     def _dbsa_with_counts(self, solution: Solution, pareto_front: list, seed) -> tuple[list[Solution], dict, dict]:
@@ -819,9 +826,12 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         # copy counters to send back to the parent
         mov = self.Move_Counter.copy()
         none = self.None_Move_Counter.copy()
+
         return result_front, mov, none
 
     def Run(self, solution: Solution) -> Solution:
+        profiler = cProfile.Profile()
+        profiler.enable()
         ''' Run simulated annealing algorithm with given solutions and parameters '''
         self.InitializeNeighborhoods(list(self.NeighborhoodTypes.keys()))
         self.ParetoSolutions.UpdateParetoFront(solution)
@@ -878,6 +888,32 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         self.ParetoSolutions.ShowFront()
         self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
         #self.ParetoSolutions.CalculateParetoFrontMetrics()
+
+        # Kombinierte Agentenprofile erzeugen
+        combined_stats = None
+        profile_files = list(Path("Profiler/DBSA/Agents").glob("agent_*.prof"))
+        for file in profile_files:
+            stats = pstats.Stats(str(file))
+            if combined_stats is None:
+                combined_stats = stats
+            else:
+                combined_stats.add(stats)
+
+        with open("Profiler/DBSA/combined_agents.txt", "w") as f:
+            combined_stats.stream = f
+            combined_stats.strip_dirs().sort_stats("cumulative").print_stats(50)
+
+        # Nach Zusammenfassung: alle Einzelprofile löschen
+        for file in profile_files:
+            os.remove(file)
+
+
+
+        profiler.disable()
+        Path("Profiler/DBSA").mkdir(parents=True, exist_ok=True)
+        with open("Profiler/DBSA/run_profile.txt", "w") as f:
+            ps = pstats.Stats(profiler, stream=f)
+            ps.strip_dirs().sort_stats("cumulative").print_stats(50)
 
         
             
