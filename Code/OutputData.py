@@ -538,7 +538,7 @@ class ParetoSolutions:
                     v[d] = u[d]
                     break
 
-            # Check if any Pareto solution dominates v using JIT-compiled function
+            # Check if any Pareto solution dominates v
             if self.dominates_any(arr, v):
                 interpolated_points.append({
                     "driver_violation": float(v[0]),
@@ -585,7 +585,7 @@ class ParetoSolutions:
                 return True
         return False
 
-    def CountDominatingSolutions(self, new_solution, interpolated_points=None):
+    def CountDominatingSolutions(self, new_solution, interpolated_points=None, objective_dict_point=None, solution_point=None):
         """
         Zählt, wie viele Lösungen aus der Pareto-Front die new_solution dominieren.
         Implementiert Algorithmus 2 mit slices und Feasibility-Check für interpolierte Punkte.
@@ -600,6 +600,7 @@ class ParetoSolutions:
                 "machine_count": new_solution.number_of_machines,
                 "attachment_count": new_solution.number_of_attachments
             }
+
         elif isinstance(new_solution, dict):
             objective_dict = new_solution
         else:
@@ -609,12 +610,28 @@ class ParetoSolutions:
         if interpolated_points is None:
             interpolated_points = self.get_interpolated_points()
 
+        # Falls die Lösung bereits in der Pareto-Front ist, return 0
+        if new_solution in self.ParetoFront:
+            return 0, interpolated_points
+
         count = 0
+        # Pareto-Archive
         for solution in self.ParetoFront:
             if self.ShortCompareSolutions(solution, objective_dict):
                 count += 1
+        # Interpolierte Punkte
         for point in interpolated_points:
             if self.ShortCompareSolutions(point, objective_dict):
+                count += 1
+        # New solution
+        if objective_dict_point is not None:
+            # Check if the objective_dict_point dominates the new_solution
+            if self.ShortCompareSolutions(objective_dict_point, objective_dict):
+                count += 1
+        # Existing solution
+        if solution_point is not None:
+            # Check if the solution_point dominates the new_solution
+            if self.ShortCompareSolutions(solution_point, objective_dict):
                 count += 1
 
         return count, interpolated_points

@@ -1235,7 +1235,7 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
 
             for i in range(self.MaxIterations):
 
-                dominating_count_current, interpolated_points = local_pareto_solutions.CountDominatingSolutions(local_solution)
+                
 
                 neighborhoodType = local_rng.choice(list(self.NeighborhoodTypes.keys()))
                 neighborhood = self.Neighborhoods[neighborhoodType]
@@ -1264,10 +1264,14 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
            
                 # Possible to combine objectives to 3 main topics: distance, ressource count, violation
 
-                dominating_count_new, _ = local_pareto_solutions.CountDominatingSolutions(objective_dict, interpolated_points=interpolated_points)
+                dominating_count_current, interpolated_points = local_pareto_solutions.CountDominatingSolutions(local_solution, objective_dict_point=objective_dict)
+                dominating_count_new, _ = local_pareto_solutions.CountDominatingSolutions(objective_dict, interpolated_points=interpolated_points, solution_point=local_solution)
 
+                if local_solution in local_pareto_solutions.ParetoFront:
+                    lenght = len(local_pareto_solutions.ParetoFront) + len(interpolated_points) + 1
+                else:
+                    lenght = len(local_pareto_solutions.ParetoFront) + len(interpolated_points) + 2
 
-                lenght = len(local_pareto_solutions.ParetoFront) + len(interpolated_points) + 1e-16
                 overall_difference = (dominating_count_new - dominating_count_current) / lenght
 
                 if overall_difference <= 0:
