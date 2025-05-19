@@ -345,6 +345,16 @@ class ParetoSolutions:
         # Maximum Pareto front size beyond which no interpolation is done
         self.S_threshold = len(self.data.orders * 10)
 
+        self.objectives = [
+            ("total_commute_distance", "min"),
+            ("total_transport_distance", "min"),
+            ("total_transport_distance_attachments", "min"),
+            ("driver_violation", "min"),
+            ("number_of_workers", "min"),
+            ("number_of_machines", "min"),
+            ("number_of_attachments", "min")
+        ]
+
     def PurgeParetoFront(self):
         """
         Iterates over all solutions in the Pareto Front (self.ParetoFront) and removes any solution 
@@ -449,21 +459,13 @@ class ParetoSolutions:
         
         A solution dominates another if it is not worse in any objective and is strictly better in at least one.
         """
-        objectives = [
-            ("total_commute_distance", "min"),
-            ("total_transport_distance", "min"),
-            ("total_transport_distance_attachments", "min"),
-            ("driver_violation", "min"),
-            ("number_of_workers", "min"),
-            ("number_of_machines", "min"),
-            ("number_of_attachments", "min")
-        ]
+        
         
         new_better_count = 0  # Anzahl der Ziele, in denen new_solution besser ist
         current_better_count = 0  # Anzahl der Ziele, in denen current_solution besser ist
         identical_count = 0  # Anzahl der identischen Werte
 
-        for attr, goal in objectives:
+        for attr, goal in self.objectives:
             new_val = getattr(new_solution, attr)
             curr_val = getattr(current_solution, attr)
             
@@ -481,7 +483,7 @@ class ParetoSolutions:
                     current_better_count += 1
 
         # Falls alle Werte identisch sind, return 100
-        if identical_count == len(objectives):
+        if identical_count == len(self.objectives):
             return 100
 
         # new_solution dominiert current_solution
