@@ -110,10 +110,10 @@ def main():
                                                     
             if algortihm == 'PSA':
                 algo = ParetoSimulatedAnnealing( inputData=data,
-                                                start_temp=50,
+                                                start_temp=20,
                                                 min_temp=0.1,
                                                 cooling_rate=0.95,
-                                                max_iterations=100,
+                                                max_iterations=10,
                                                 fallback_threshold=0, # Currently not used
                                                 scaling_energy=50,
                                                 weight_alpha=1.1,

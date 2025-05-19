@@ -395,8 +395,19 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         x = info["solution"]
         weights_dict = info["weights"]
         seed = info["seed"]
+        same_seed = info["same seed"]
         agent_id = info["id"]
         local_rng = np.random.default_rng(seed)
+        #local_same_rng = np.random.default_rng(same_seed)
+
+        profiled = info.get("profiled", False)
+
+        # Wenn profiled==False → einmalig Profiling aktivieren
+        if not profiled:
+            profiler = cProfile.Profile()
+            profiler.enable()
+        else:
+            profiler = None
 
 
         move = None
@@ -420,12 +431,27 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                         "new_solution": None,
                         "weights": weights,
                         "seed": seed + 1,
+                        "same seed": same_seed + 1,
                         "id": agent_id
                     }
 
         w, m, a = neighborhood.constructCompleteRoutes(move, x)
         x_new = Solution(w, m, a, self.InputData)
         self.EvaluationLogic.evaluate(x_new)
+
+        # Falls Profiling aktiviert war
+        if profiler is not None:
+            profiler.disable()
+            Path("Profiler/PSA/Agents").mkdir(parents=True, exist_ok=True)
+            profile_path = Path(f"Profiler/PSA/Agents/agent_{agent_id}.prof")
+
+            if profile_path.exists():
+                existing_stats = pstats.Stats(str(profile_path))
+                new_stats = pstats.Stats(profiler)
+                existing_stats.add(new_stats)
+                existing_stats.dump_stats(str(profile_path))
+            else:
+                profiler.dump_stats(str(profile_path))
 
 
 
@@ -434,10 +460,14 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                     "new_solution": x_new,
                     "weights": weights,
                     "seed": seed + 1,
-                    "id": agent_id
+                    "same seed": same_seed + 1,
+                    "id": agent_id,
+                    "profiled": True  # <- hinzugefügt
                 }
 
     def Run(self, solution: Solution) -> Solution:
+        profiler = cProfile.Profile()
+        profiler.enable()
         ''' Run simulated annealing algorithm with given solutions and parameters '''
         self.InitializeNeighborhoods(list(self.NeighborhoodTypes.keys()))
         self.ParetoSolutions.UpdateParetoFront(solution)
@@ -452,7 +482,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         current_temperature = self.StartTemperature
 
         S_info = []
-
+        same_seed = self.RNG.integers(0, 1_000_000)
         for i, x in enumerate(self.ParetoSolutions.ParetoFront):
             x.id = i
             weights = {obj: self.RNG.random() for obj in self.objectives}
@@ -462,7 +492,9 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 "solution": deepcopy(x),
                 "weights": weights,
                 "seed": seed,
-                "id": i
+                "same seed": same_seed,
+                "id": i,
+                "profiled": False  # <- hinzugefügt
             })
         with ThreadPoolExecutor(max_workers=self.SizeStartPopulation) as executor:
             while current_temperature > self.MinTemperature:
@@ -481,8 +513,8 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                         for info in S_info
                     ]
                     results = [f.result() for f in futures]
-                    
 
+                    
                     new_S_info = results
 
                     for info in new_S_info:
@@ -507,6 +539,32 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.ParetoSolutions.ShowFront()
 
         self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
+
+        profiler.disable()
+        Path("Profiler/PSA").mkdir(parents=True, exist_ok=True)
+        profile_path = Path("Profiler/PSA") / "run_profile.txt"
+
+        with open(profile_path, "w") as f:
+            ps = pstats.Stats(profiler, stream=f)
+            ps.strip_dirs().sort_stats("cumulative").print_stats(50)
+
+        combined_stats = None
+        profile_files = list(Path("Profiler/PSA/Agents").glob("agent_*.prof"))
+
+        for file in profile_files:
+            stats = pstats.Stats(str(file))
+            if combined_stats is None:
+                combined_stats = stats
+            else:
+                combined_stats.add(stats)
+
+        with open("Profiler/PSA/combined_agents.txt", "w") as f:
+            combined_stats.stream = f
+            combined_stats.strip_dirs().sort_stats("cumulative").print_stats(50)
+
+        # Nach Zusammenfassung: alle Einzelprofile löschen
+        for file in profile_files:
+            os.remove(file)
 
         
 
