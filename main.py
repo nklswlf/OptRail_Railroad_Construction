@@ -31,7 +31,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = [   "Construction_a15_o170_m9_an80_ar18.json"]
+#instances = [   "Construction_a15_o170_m9_an80_ar18.json"]
 
 
 
@@ -110,10 +110,10 @@ def main():
                                                     
             if algortihm == 'PSA':
                 algo = ParetoSimulatedAnnealing( inputData=data,
-                                                start_temp=20,
+                                                start_temp=50,
                                                 min_temp=0.1,
                                                 cooling_rate=0.95,
-                                                max_iterations=10,
+                                                max_iterations=100,
                                                 fallback_threshold=0, # Currently not used
                                                 scaling_energy=50,
                                                 weight_alpha=1.1,
