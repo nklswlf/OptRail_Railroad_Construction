@@ -559,7 +559,7 @@ class InputData:
         self.connect_order_item_to_order()
 
         # Check orders for usability
-        self.check_order_usability()
+        #self.check_order_usability()
 
 
         # Complexity for orders --> not used in the current version

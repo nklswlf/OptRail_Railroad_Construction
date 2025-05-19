@@ -779,7 +779,7 @@ class ParetoSimulatedAnnealing_global_archive_setter(ImprovementAlgorithm):
         
 
 
-class ParetoSimulatedAnnealing_generating_setter(ImprovementAlgorithm):
+class ParetoSimulatedAnnealing(ImprovementAlgorithm):
     """ Simulated Annealing algorithm to find a fully staffed solution. """
 
     def __init__(self, inputData:InputData,
@@ -798,7 +798,7 @@ class ParetoSimulatedAnnealing_generating_setter(ImprovementAlgorithm):
         self.MinTemperature = min_temp
         self.CoolingRate = cooling_rate
         self.MaxIterations = max_iterations
-        self.FallbackThreshold = fallback_threshold # Currently not used
+        self.FallbackThreshold = 0 # Currently not used
         self.ScalingEnergy = scaling_energy
 
         self.MaxSingleMoveTries = max_single_move_tries
@@ -952,7 +952,7 @@ class ParetoSimulatedAnnealing_generating_setter(ImprovementAlgorithm):
         weights = self.update_weights(x, S_snapshot, objectives, weights_dict, local_rng)
         delta = sum(weights[obj] * move.DeltaDetails[obj] for obj in objectives)
 
-        if delta >= 0:
+        if delta > 0:
             p = math.exp(-delta * self.ScalingEnergy / T)
             if local_rng.random() > p:
                 profile.disable()
@@ -1093,14 +1093,14 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         self.MinTemperature = min_temp
         self.CoolingRate = cooling_rate
         self.MaxIterations = max_iterations
-        self.FallbackThreshold = fallback_threshold
-        self.ScalingEnergy = scaling_energy
+        self.FallbackThreshold = 0 # Currently not used
+        self.ScalingEnergy = None # Currently not used
         self.MaxSingleMoveTries = max_single_move_tries
         self.ParallelRuns = parallel_runs
 
         self.max_traversal_moves = 1
         self.max_location_moves = 4
-        self.fallback_strategy = 'best'  # 'random' or 'best'
+        self.fallback_strategy = None # Currently not used # 'random' or 'best'
 
 
         self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
@@ -1235,8 +1235,6 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
 
             for i in range(self.MaxIterations):
 
-                
-
                 neighborhoodType = local_rng.choice(list(self.NeighborhoodTypes.keys()))
                 neighborhood = self.Neighborhoods[neighborhoodType]
                 objectives = self.NeighborhoodTypes[neighborhoodType]
@@ -1272,21 +1270,20 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                 else:
                     lenght = len(local_pareto_solutions.ParetoFront) + len(interpolated_points) + 2
 
-                overall_difference = (dominating_count_new - dominating_count_current) / lenght
+                overall_difference = (dominating_count_new - dominating_count_current) #/ lenght
+
 
                 if overall_difference <= 0:
                     prob = 1.0
                 else:
-                    prob =  math.exp(-overall_difference * self.ScalingEnergy/ current_temperature)
+                    prob =  math.exp(-overall_difference / current_temperature)
+
 
                 random_number = local_rng.random()
 
                 #self.log(f"\n[DBSA] ΔDom: {dominating_count_current} → {dominating_count_new}, ΔE: {overall_difference:.3f}, T: {current_temperature:.2f}, prob: {prob:.3f}")
                 #self.log(f"[Delta] Delta Details: {delta_details}")
                 
-
-
-
                 if prob < random_number:
                     continue
 

@@ -24,8 +24,6 @@ class ConstructiveHeuristics:
 
         self.data = input_data
 
-        for order in self.data.orders:
-            print(f"Order {order.order_number} has priority {order.priority}")
 
         self.GreedyTechnique = next(iter(greedy_technique))
         settings = greedy_technique[self.GreedyTechnique]

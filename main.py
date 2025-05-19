@@ -77,7 +77,7 @@ step = None
 
 algortihm = 'DBSA'
 
-algortihms = ['DBSA','PSA_generating_setter']
+algortihms = ['PSA','DBSA']
                 
 
 
@@ -108,53 +108,28 @@ def main():
                                                         fallback_threshold=25,
                                                         scaling_energy=30)
                                                     
-            if algortihm == 'PSA_generating_setter':
-                algo = ParetoSimulatedAnnealing_generating_setter( inputData=data,
-                                                start_temp=20,
+            if algortihm == 'PSA':
+                algo = ParetoSimulatedAnnealing( inputData=data,
+                                                start_temp=50,
                                                 min_temp=0.1,
                                                 cooling_rate=0.95,
-                                                max_iterations=50,
-                                                fallback_threshold=25,
-                                                scaling_energy=30,
+                                                max_iterations=100,
+                                                fallback_threshold=0, # Currently not used
+                                                scaling_energy=50,
                                                 weight_alpha=1.1,
                                                 max_single_move_tries=30,
-                                                start_size_population=4)
-                
-            elif algortihm == 'PSA_archive_setter':
-                algo = ParetoSimulatedAnnealing_archive_setter( inputData=data,
-                                                start_temp=20,
-                                                min_temp=0.1,
-                                                cooling_rate=0.95,
-                                                max_iterations=50,
-                                                fallback_threshold=25,
-                                                scaling_energy=30,
-                                                weight_alpha=1.1,
-                                                max_single_move_tries=30,
-                                                start_size_population=4)
-                
-            elif algortihm == 'PSA_global_archive_setter':
-                algo = ParetoSimulatedAnnealing_global_archive_setter( inputData=data,
-                                                start_temp=20,
-                                                min_temp=0.1,
-                                                cooling_rate=0.95,
-                                                max_iterations=500,
-                                                fallback_threshold=25,
-                                                scaling_energy=30,
-                                                weight_alpha=1.1,
-                                                max_single_move_tries=30,
-                                                start_size_population=4)
-                
+                                                start_size_population=8)
 
             elif algortihm == 'DBSA':
                 algo = DominanceBasedSimulatedAnnealing( inputData=data,
-                                                        start_temp=20,
+                                                        start_temp=50,
                                                         min_temp=0.1,
                                                         cooling_rate=0.95,
-                                                        max_iterations=50,
-                                                        fallback_threshold=25,
-                                                        scaling_energy=30,
+                                                        max_iterations=100,
+                                                        fallback_threshold=0, # Currently not used
+                                                        scaling_energy=0, # Currently not used
                                                         max_single_move_tries=30,
-                                                        parallel_runs=4)
+                                                        parallel_runs=8)
 
             
             elif algortihm == 'TPSA':
@@ -297,3 +272,33 @@ def profile_main():
 
 if __name__ == "__main__":
     profile_main()
+
+
+    '''
+                    
+            elif algortihm == 'PSA_archive_setter':
+                algo = ParetoSimulatedAnnealing_archive_setter( inputData=data,
+                                                start_temp=20,
+                                                min_temp=0.1,
+                                                cooling_rate=0.95,
+                                                max_iterations=50,
+                                                fallback_threshold=25,
+                                                scaling_energy=30,
+                                                weight_alpha=1.1,
+                                                max_single_move_tries=30,
+                                                start_size_population=4)
+                
+            elif algortihm == 'PSA_global_archive_setter':
+                algo = ParetoSimulatedAnnealing_global_archive_setter( inputData=data,
+                                                start_temp=20,
+                                                min_temp=0.1,
+                                                cooling_rate=0.95,
+                                                max_iterations=500,
+                                                fallback_threshold=25,
+                                                scaling_energy=30,
+                                                weight_alpha=1.1,
+                                                max_single_move_tries=30,
+                                                start_size_population=4)
+                
+
+    '''

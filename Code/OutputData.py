@@ -343,7 +343,7 @@ class ParetoSolutions:
         # Minimum number of front-version increments before regenerating samples
         self._min_version_delta = 1
         # Maximum Pareto front size beyond which no interpolation is done
-        self.S_threshold = 200
+        self.S_threshold = len(self.data.orders * 10)
 
     def PurgeParetoFront(self):
         """
