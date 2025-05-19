@@ -403,11 +403,11 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         profiled = info.get("profiled", False)
 
         # Wenn profiled==False → einmalig Profiling aktivieren
-        if not profiled:
-            profiler = cProfile.Profile()
-            profiler.enable()
-        else:
-            profiler = None
+        #if not profiled:
+        #    profiler = cProfile.Profile()
+        #    profiler.enable()
+        #else:
+        #    profiler = None
 
 
         move = None
@@ -440,18 +440,18 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.EvaluationLogic.evaluate(x_new)
 
         # Falls Profiling aktiviert war
-        if profiler is not None:
-            profiler.disable()
-            Path("Profiler/PSA/Agents").mkdir(parents=True, exist_ok=True)
-            profile_path = Path(f"Profiler/PSA/Agents/agent_{agent_id}.prof")
+        #if profiler is not None:
+        #    profiler.disable()
+        #    Path("Profiler/PSA/Agents").mkdir(parents=True, exist_ok=True)
+        #    profile_path = Path(f"Profiler/PSA/Agents/agent_{agent_id}.prof")
 
-            if profile_path.exists():
-                existing_stats = pstats.Stats(str(profile_path))
-                new_stats = pstats.Stats(profiler)
-                existing_stats.add(new_stats)
-                existing_stats.dump_stats(str(profile_path))
-            else:
-                profiler.dump_stats(str(profile_path))
+        #    if profile_path.exists():
+        #        existing_stats = pstats.Stats(str(profile_path))
+        #        new_stats = pstats.Stats(profiler)
+        #        existing_stats.add(new_stats)
+        #        existing_stats.dump_stats(str(profile_path))
+        #    else:
+        #        profiler.dump_stats(str(profile_path))
 
 
 
@@ -466,8 +466,8 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 }
 
     def Run(self, solution: Solution) -> Solution:
-        profiler = cProfile.Profile()
-        profiler.enable()
+        #profiler = cProfile.Profile()
+        #profiler.enable()
         ''' Run simulated annealing algorithm with given solutions and parameters '''
         self.InitializeNeighborhoods(list(self.NeighborhoodTypes.keys()))
         self.ParetoSolutions.UpdateParetoFront(solution)
@@ -540,31 +540,31 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
 
         self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
 
-        profiler.disable()
-        Path("Profiler/PSA").mkdir(parents=True, exist_ok=True)
-        profile_path = Path("Profiler/PSA") / "run_profile.txt"
+        #profiler.disable()
+        #Path("Profiler/PSA").mkdir(parents=True, exist_ok=True)
+        #profile_path = Path("Profiler/PSA") / "run_profile.txt"
 
-        with open(profile_path, "w") as f:
-            ps = pstats.Stats(profiler, stream=f)
-            ps.strip_dirs().sort_stats("cumulative").print_stats(50)
+        #with open(profile_path, "w") as f:
+        #    ps = pstats.Stats(profiler, stream=f)
+        #    ps.strip_dirs().sort_stats("cumulative").print_stats(50)
 
-        combined_stats = None
-        profile_files = list(Path("Profiler/PSA/Agents").glob("agent_*.prof"))
+        #combined_stats = None
+        #profile_files = list(Path("Profiler/PSA/Agents").glob("agent_*.prof"))
 
-        for file in profile_files:
-            stats = pstats.Stats(str(file))
-            if combined_stats is None:
-                combined_stats = stats
-            else:
-                combined_stats.add(stats)
+        #for file in profile_files:
+        #    stats = pstats.Stats(str(file))
+        #    if combined_stats is None:
+        #        combined_stats = stats
+        #    else:
+        #        combined_stats.add(stats)
 
-        with open("Profiler/PSA/combined_agents.txt", "w") as f:
-            combined_stats.stream = f
-            combined_stats.strip_dirs().sort_stats("cumulative").print_stats(50)
+        #with open("Profiler/PSA/combined_agents.txt", "w") as f:
+        #    combined_stats.stream = f
+        #    combined_stats.strip_dirs().sort_stats("cumulative").print_stats(50)
 
         # Nach Zusammenfassung: alle Einzelprofile löschen
-        for file in profile_files:
-            os.remove(file)
+       # for file in profile_files:
+         #   os.remove(file)
 
         
 
@@ -708,12 +708,12 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
 
     
     def DBSA(self, local_solution:Solution, local_pareto_front: list = None, seed = None) -> list[Solution]:
-        profiler = cProfile.Profile()
-        profiler.enable()
+        #profiler = cProfile.Profile()
+        #profiler.enable()
         ''' Run simulated annealing algorithm with given solutions and parameters'''
         ''' Simulated annealing algorithm with energy dominance neighborhood'''
-        profiler = cProfile.Profile()
-        profiler.enable()
+        #profiler = cProfile.Profile()
+        #profiler.enable()
 
         local_rng = np.random.default_rng(seed)
 
@@ -802,18 +802,18 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
 
             current_temperature *= self.CoolingRate
 
-        profiler.disable()
-        Path("Profiler/DBSA/Agents").mkdir(parents=True, exist_ok=True)
-        profile_path = Path(f"Profiler/DBSA/Agents/agent_{os.getpid()}.prof")
+        #profiler.disable()
+        #Path("Profiler/DBSA/Agents").mkdir(parents=True, exist_ok=True)
+        #profile_path = Path(f"Profiler/DBSA/Agents/agent_{os.getpid()}.prof")
 
         # Profil anhängen oder neu speichern
-        if profile_path.exists():
-            existing = pstats.Stats(str(profile_path))
-            new = pstats.Stats(profiler)
-            existing.add(new)
-            existing.dump_stats(str(profile_path))
-        else:
-            profiler.dump_stats(str(profile_path))
+        #if profile_path.exists():
+        #    existing = pstats.Stats(str(profile_path))
+        #    new = pstats.Stats(profiler)
+        #    existing.add(new)
+        #    existing.dump_stats(str(profile_path))
+        #else:
+        #    profiler.dump_stats(str(profile_path))
 
         return local_pareto_solutions.ParetoFront
         
@@ -830,8 +830,8 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         return result_front, mov, none
 
     def Run(self, solution: Solution) -> Solution:
-        profiler = cProfile.Profile()
-        profiler.enable()
+        #profiler = cProfile.Profile()
+        #profiler.enable()
         ''' Run simulated annealing algorithm with given solutions and parameters '''
         self.InitializeNeighborhoods(list(self.NeighborhoodTypes.keys()))
         self.ParetoSolutions.UpdateParetoFront(solution)
@@ -890,30 +890,30 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         #self.ParetoSolutions.CalculateParetoFrontMetrics()
 
         # Kombinierte Agentenprofile erzeugen
-        combined_stats = None
-        profile_files = list(Path("Profiler/DBSA/Agents").glob("agent_*.prof"))
-        for file in profile_files:
-            stats = pstats.Stats(str(file))
-            if combined_stats is None:
-                combined_stats = stats
-            else:
-                combined_stats.add(stats)
+        #combined_stats = None
+        #profile_files = list(Path("Profiler/DBSA/Agents").glob("agent_*.prof"))
+        #for file in profile_files:
+        #    stats = pstats.Stats(str(file))
+        #    if combined_stats is None:
+        #        combined_stats = stats
+        #    else:
+        #        combined_stats.add(stats)
 
-        with open("Profiler/DBSA/combined_agents.txt", "w") as f:
-            combined_stats.stream = f
-            combined_stats.strip_dirs().sort_stats("cumulative").print_stats(50)
+        #with open("Profiler/DBSA/combined_agents.txt", "w") as f:
+        #    combined_stats.stream = f
+        #    combined_stats.strip_dirs().sort_stats("cumulative").print_stats(50)
 
         # Nach Zusammenfassung: alle Einzelprofile löschen
-        for file in profile_files:
-            os.remove(file)
+        #for file in profile_files:
+        #    os.remove(file)
 
 
 
-        profiler.disable()
-        Path("Profiler/DBSA").mkdir(parents=True, exist_ok=True)
-        with open("Profiler/DBSA/run_profile.txt", "w") as f:
-            ps = pstats.Stats(profiler, stream=f)
-            ps.strip_dirs().sort_stats("cumulative").print_stats(50)
+        #profiler.disable()
+        #Path("Profiler/DBSA").mkdir(parents=True, exist_ok=True)
+        #with open("Profiler/DBSA/run_profile.txt", "w") as f:
+        #    ps = pstats.Stats(profiler, stream=f)
+        #    ps.strip_dirs().sort_stats("cumulative").print_stats(50)
 
         
             
