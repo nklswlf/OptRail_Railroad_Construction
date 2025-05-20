@@ -536,21 +536,19 @@ class ParetoSolutions:
             # Snap v[d] down to the nearest Pareto-front value in dimension d
             for idx in sorted_idx[d]:
                 u = arr[idx]
-                if np.all(u <= v) and np.any(u < v):
-                    v[d] = u[d]
+                v[d] = u[d]
+                # Check if any Pareto solution dominates v
+                if self.dominates_any(arr, v):
+                    interpolated_points.append({
+                        "driver_violation": float(v[0]),
+                        "commute_distance": float(v[1]),
+                        "transport_distance": float(v[2]),
+                        "attachment_distance": float(v[3]),
+                        "worker_count": float(v[4]),
+                        "machine_count": float(v[5]),
+                        "attachment_count": float(v[6])
+                    })
                     break
-
-            # Check if any Pareto solution dominates v
-            if self.dominates_any(arr, v):
-                interpolated_points.append({
-                    "driver_violation": float(v[0]),
-                    "commute_distance": float(v[1]),
-                    "transport_distance": float(v[2]),
-                    "attachment_distance": float(v[3]),
-                    "worker_count": float(v[4]),
-                    "machine_count": float(v[5]),
-                    "attachment_count": float(v[6])
-                })
 
         return interpolated_points
 
