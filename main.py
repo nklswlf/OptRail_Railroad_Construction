@@ -79,182 +79,181 @@ algortihm = 'DBSA'
 
 algortihms = ['PSA','DBSA']
                 
+seeds = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
 
-
-def main():
-    df_testing = pd.DataFrame()
-    # This DataFrame will collect both runtime and front metrics
-
-    for i in instances:
-        for algortihm in algortihms:
-        #for gt in greedy_techniques:
-            if step == None:
-                data = InputData(i, algortihm)
-            else:
-                data = InputData(i, step)
-
-            solver = Solver(data, 100)
+def main(): 
+    for seed in seeds:
+        df_testing = pd.DataFrame()
+        for i in instances:
+            for algortihm in algortihms:
             
+                if step == None:
+                    data = InputData(i, algortihm)
+                else:
+                    data = InputData(i, step)
 
-            local_search = IterativeImprovement(inputData=data,
-                                                neighborhoodTypes=neighboorhood_types_local_search)
+                solver = Solver(data, seed)
+                
+
+                local_search = IterativeImprovement(inputData=data,
+                                                    neighborhoodTypes=neighboorhood_types_local_search)
 
 
-            building_sa = BuildingSimulatedAnnealing(  inputData=data,
-                                                        start_temp=20,
-                                                        min_temp=0.1,
-                                                        cooling_rate=0.95,
-                                                        max_iterations=3000,
-                                                        fallback_threshold=25,
-                                                        scaling_energy=30)
-                                                    
-            if algortihm == 'PSA':
-                algo = ParetoSimulatedAnnealing( inputData=data,
-                                                start_temp=50,
-                                                min_temp=0.1,
-                                                cooling_rate=0.95,
-                                                max_iterations=100,
-                                                fallback_threshold=0, # Currently not used
-                                                scaling_energy=50,
-                                                weight_alpha=1.1,
-                                                max_single_move_tries=30,
-                                                start_size_population=8)
+                building_sa = BuildingSimulatedAnnealing(  inputData=data,
+                                                            start_temp=20,
+                                                            min_temp=0.1,
+                                                            cooling_rate=0.95,
+                                                            max_iterations=3000,
+                                                            fallback_threshold=25,
+                                                            scaling_energy=30)
+                                                        
+                if algortihm == 'PSA':
+                    algo = ParetoSimulatedAnnealing( inputData=data,
+                                                    start_temp=50,
+                                                    min_temp=0.1,
+                                                    cooling_rate=0.95,
+                                                    max_iterations=100,
+                                                    fallback_threshold=0, # Currently not used
+                                                    scaling_energy=50,
+                                                    weight_alpha=1.1,
+                                                    max_single_move_tries=30,
+                                                    start_size_population=8)
 
-            elif algortihm == 'DBSA':
-                algo = DominanceBasedSimulatedAnnealing( inputData=data,
-                                                        start_temp=50,
-                                                        min_temp=0.1,
-                                                        cooling_rate=0.95,
-                                                        max_iterations=100,
-                                                        fallback_threshold=0, # Currently not used
-                                                        scaling_energy=0, # Currently not used
-                                                        max_single_move_tries=30,
-                                                        parallel_runs=8)
-
-            
-            elif algortihm == 'TPSA':
-                algo = TwoPhaseSimulatedAnnealing(  inputData=data,
-                                                    start_temp_individual=20,
-                                                    min_temp_individual=0.1,
-                                                    cooling_rate_individual=0.95,
-                                                    max_iterations_individual=500,
-                                                    fallback_threshold_individual=25,
-                                                    scaling_energy_individual=30,
-
-                                                    start_temp_dominance=20,
-                                                    min_temp_dominance=0.1,
-                                                    cooling_rate_dominance=0.95,
-                                                    max_iterations_dominance=500,
-                                                    fallback_threshold_dominance=25,
-                                                    scaling_energy_dominance=30,
-                                                    max_single_move_tries_dominance=30)
-
-            if step == 'Bound':
-                bound_time = solver.RunBound(UB_technique="LP")
-                print("Bound Time:", round(bound_time, 2))
-            
-            elif step == 'Greedy':
-                solution, time = solver.RunConstructive(UB_technique="LP",
-                        greedy_technique=None)
-                print("\nGreedy Time: ", round(time, 2))
-
-                # Extract relevant solution attributes
-                solution_attributes = {
-                    "Instance": data.instance,
-                    "Greedy_Technique": None,
-                    "Finished_Orders": solution.number_of_finished_orders,
-                    "Finished_Order_Items": solution.number_of_finished_order_items,
-                    "Total_Time": round(time, 2)
-                }
-
-                # Append the solution attributes to the DataFrame
-                df_testing = pd.concat([df_testing, pd.DataFrame([solution_attributes])], ignore_index=True)
-
-                # Save the DataFrame to a CSV file
-                df_testing.to_csv("Greedy.csv", index=False)
-
+                elif algortihm == 'DBSA':
+                    algo = DominanceBasedSimulatedAnnealing( inputData=data,
+                                                            start_temp=50,
+                                                            min_temp=0.1,
+                                                            cooling_rate=0.95,
+                                                            max_iterations=100,
+                                                            fallback_threshold=0, # Currently not used
+                                                            scaling_energy=0, # Currently not used
+                                                            max_single_move_tries=30,
+                                                            parallel_runs=8)
 
                 
-            elif step == 'Building':
-                solution, time = solver.RunBuilding(UB_technique="LP",
+                elif algortihm == 'TPSA':
+                    algo = TwoPhaseSimulatedAnnealing(  inputData=data,
+                                                        start_temp_individual=20,
+                                                        min_temp_individual=0.1,
+                                                        cooling_rate_individual=0.95,
+                                                        max_iterations_individual=500,
+                                                        fallback_threshold_individual=25,
+                                                        scaling_energy_individual=30,
+
+                                                        start_temp_dominance=20,
+                                                        min_temp_dominance=0.1,
+                                                        cooling_rate_dominance=0.95,
+                                                        max_iterations_dominance=500,
+                                                        fallback_threshold_dominance=25,
+                                                        scaling_energy_dominance=30,
+                                                        max_single_move_tries_dominance=30)
+
+                if step == 'Bound':
+                    bound_time = solver.RunBound(UB_technique="LP")
+                    print("Bound Time:", round(bound_time, 2))
+                
+                elif step == 'Greedy':
+                    solution, time = solver.RunConstructive(UB_technique="LP",
+                            greedy_technique=None)
+                    print("\nGreedy Time: ", round(time, 2))
+
+                    # Extract relevant solution attributes
+                    solution_attributes = {
+                        "Instance": data.instance,
+                        "Greedy_Technique": None,
+                        "Finished_Orders": solution.number_of_finished_orders,
+                        "Finished_Order_Items": solution.number_of_finished_order_items,
+                        "Total_Time": round(time, 2)
+                    }
+
+                    # Append the solution attributes to the DataFrame
+                    df_testing = pd.concat([df_testing, pd.DataFrame([solution_attributes])], ignore_index=True)
+
+                    # Save the DataFrame to a CSV file
+                    df_testing.to_csv("Greedy.csv", index=False)
+
+
+                    
+                elif step == 'Building':
+                    solution, time = solver.RunBuilding(UB_technique="LP",
+                            greedy_technique=greedy_technique_a,
+                            building_algorithm=building_sa)
+                    print("\nBuilding Time: ", round(time, 2))
+
+
+                    # Extract relevant solution attributes
+                    solution_attributes = {
+                        "Instance": data.instance,
+                        "Finished_Orders": solution.number_of_finished_orders,
+                        "Finished_Order_Items": solution.number_of_finished_order_items,
+                        "Total_Time": round(time, 2)
+                    }
+                    # Append the solution attributes to the DataFrame
+                    df_testing = pd.concat([df_testing, pd.DataFrame([solution_attributes])], ignore_index=True)
+
+                    # Save the DataFrame to a CSV file
+                    df_testing.to_csv("Building.csv", index=False)
+
+
+                else:
+                    times = solver.Run( UB_technique="LP",
                         greedy_technique=greedy_technique_a,
-                        building_algorithm=building_sa)
-                print("\nBuilding Time: ", round(time, 2))
+                        building_algorithm=building_sa,
+                        improvement_algorithm=algo)
+
+                    print("\nBound Time: ", round(times["Bound Time"], 2))
+                    print("Greedy Time: ", round(times["Greedy Time"], 2))
+                    print("Building Time: ", round(times["Building Time"], 2))
+                    print("Improvement Time: ", round(times["Improvement Time"], 2))
+                    print("Total Time: ", round(times["Total Time"], 2))
+
+                    # Extract relevant attributes for the current run
+                    run_attributes = {
+                        "Instance": data.instance,
+                        "Algorithm": algortihm,
+                        "Improvement_Time": round(times["Improvement Time"], 2)
+                    }
+
+                    # Append the attributes to the DataFrame
+                    df_testing = pd.concat([df_testing, pd.DataFrame([run_attributes])], ignore_index=True)
+
+                    # Save the DataFrame to a CSV file
+                    #df_testing.to_csv("Improvement_Times.csv", index=False)
+
+                    output_file = data.solutions_path/"run_times.json"
+                    with open(output_file, "w") as f:
+                        json.dump(times, f, indent=4)
 
 
-                # Extract relevant solution attributes
-                solution_attributes = {
-                    "Instance": data.instance,
-                    "Finished_Orders": solution.number_of_finished_orders,
-                    "Finished_Order_Items": solution.number_of_finished_order_items,
-                    "Total_Time": round(time, 2)
-                }
-                # Append the solution attributes to the DataFrame
-                df_testing = pd.concat([df_testing, pd.DataFrame([solution_attributes])], ignore_index=True)
+            if step is None:                             
+                metrics_df = Run(data.instance, algortihms)
+                # Add the instance name to the metrics DataFrame
+                metrics_df["Instance"] = data.instance
 
-                # Save the DataFrame to a CSV file
-                df_testing.to_csv("Building.csv", index=False)
+                # Pivot to wide format: each metric becomes a column
+                metric_data_pivot = metrics_df.pivot(index=["Instance", "Algorithm"],
+                                                    columns="Metric", values="Value").reset_index()
 
+                # Normalize both key columns
+                df_testing["Instance"] = df_testing["Instance"].astype(str).str.strip()
+                df_testing["Algorithm"] = df_testing["Algorithm"].astype(str).str.strip()
+                metric_data_pivot["Instance"] = metric_data_pivot["Instance"].astype(str).str.strip()
+                metric_data_pivot["Algorithm"] = metric_data_pivot["Algorithm"].astype(str).str.strip()
 
-            else:
-                times = solver.Run( UB_technique="LP",
-                    greedy_technique=greedy_technique_a,
-                    building_algorithm=building_sa,
-                    improvement_algorithm=algo)
+                # Ensure metric data is correctly added or updated
+                df_testing = df_testing.set_index(["Instance", "Algorithm"])
+                metric_data_pivot = metric_data_pivot.set_index(["Instance", "Algorithm"])
 
-                print("\nBound Time: ", round(times["Bound Time"], 2))
-                print("Greedy Time: ", round(times["Greedy Time"], 2))
-                print("Building Time: ", round(times["Building Time"], 2))
-                print("Improvement Time: ", round(times["Improvement Time"], 2))
-                print("Total Time: ", round(times["Total Time"], 2))
+                # Add or update all metrics, even if NaN
+                df_testing.loc[metric_data_pivot.index, metric_data_pivot.columns] = metric_data_pivot
 
-                # Extract relevant attributes for the current run
-                run_attributes = {
-                    "Instance": data.instance,
-                    "Algorithm": algortihm,
-                    "Improvement_Time": round(times["Improvement Time"], 2)
-                }
+                # Reset the index
+                df_testing = df_testing.reset_index()
+                metric_data_pivot = metric_data_pivot.reset_index()
 
-                # Append the attributes to the DataFrame
-                df_testing = pd.concat([df_testing, pd.DataFrame([run_attributes])], ignore_index=True)
-
-                # Save the DataFrame to a CSV file
-                #df_testing.to_csv("Improvement_Times.csv", index=False)
-
-                output_file = data.solutions_path/"run_times.json"
-                with open(output_file, "w") as f:
-                    json.dump(times, f, indent=4)
-
-
-        if step is None:                             
-            metrics_df = Run(data.instance, algortihms)
-            # Add the instance name to the metrics DataFrame
-            metrics_df["Instance"] = data.instance
-
-            # Pivot to wide format: each metric becomes a column
-            metric_data_pivot = metrics_df.pivot(index=["Instance", "Algorithm"],
-                                                 columns="Metric", values="Value").reset_index()
-
-            # Normalize both key columns
-            df_testing["Instance"] = df_testing["Instance"].astype(str).str.strip()
-            df_testing["Algorithm"] = df_testing["Algorithm"].astype(str).str.strip()
-            metric_data_pivot["Instance"] = metric_data_pivot["Instance"].astype(str).str.strip()
-            metric_data_pivot["Algorithm"] = metric_data_pivot["Algorithm"].astype(str).str.strip()
-
-            # Ensure metric data is correctly added or updated
-            df_testing = df_testing.set_index(["Instance", "Algorithm"])
-            metric_data_pivot = metric_data_pivot.set_index(["Instance", "Algorithm"])
-
-            # Add or update all metrics, even if NaN
-            df_testing.loc[metric_data_pivot.index, metric_data_pivot.columns] = metric_data_pivot
-
-            # Reset the index
-            df_testing = df_testing.reset_index()
-            metric_data_pivot = metric_data_pivot.reset_index()
-
-            # Save to CSV
-            df_testing.to_csv("Metrics.csv", index=False)
-            print("\nMetrics:\n", df_testing)
+                # Save to CSV
+                df_testing.to_csv(f"Metrics_{seed}.csv", index=False)
+                print("\nMetrics:\n", df_testing)
 
 
 def profile_main():
