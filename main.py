@@ -79,7 +79,7 @@ algortihm = 'DBSA'
 
 algortihms = ['PSA','DBSA']
                 
-seeds = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+seeds = [109,110,111,112,113]
 
 def main(): 
     for seed in seeds:
