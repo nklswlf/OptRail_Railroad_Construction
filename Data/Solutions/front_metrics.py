@@ -422,14 +422,15 @@ def calculate_pci(global_pareto_front_normalized, print_debug=False):
     debug_print(f"\n--- Number of clusters formed: {len(cluster_points)} ---", print_debug)
     pci_result = {}
     def dominance_distance_set(P, Q):
-        total_distance = 0.0
+        max_min_distance = 0.0
         for q in Q:
-            distances = []
+            min_distance = float("inf")
             for p in P:
                 diffs = np.where(p > q, p - q, 0)
-                distances.append(np.linalg.norm(diffs))
-            total_distance += min(distances)
-        return total_distance
+                dist = np.linalg.norm(diffs)
+                min_distance = min(min_distance, dist)
+            max_min_distance = max(max_min_distance, min_distance)
+        return max_min_distance
     for method in methods:
         X = S_df[S_df["Method"] == method][objectives].values
         pci_sum = 0.0
@@ -440,14 +441,19 @@ def calculate_pci(global_pareto_front_normalized, print_debug=False):
                     if np.allclose(x, point, atol=1e-8):
                         method_points_in_cluster.append(x)
             method_points_in_cluster = np.array(method_points_in_cluster)
+            other_points_in_cluster = np.array([
+                                    point for point in cluster_points
+                                    if not any(np.array_equal(point, mp) for mp in method_points_in_cluster)
+                                ])
             if len(method_points_in_cluster) < 2:
                 min_dist = min(dominance_distance(x, cluster) for x in X) if len(X) > 0 else 0.0
                 pci_sum += min_dist
                 debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): <2 points, Point-to-set distance={min_dist:.6f}", print_debug)
             else:
-                dset = dominance_distance_set(method_points_in_cluster, cluster)
-                min_dist = min(dominance_distance(x, cluster) for x in X) if len(X) > 0 else 0.0
-                pci_sum += min(dset, min_dist)
+                dset = dominance_distance_set(method_points_in_cluster, other_points_in_cluster)
+                #min_dist = min(dominance_distance(x, cluster) for x in X) if len(X) > 0 else 0.0
+                #pci_sum += min(dset, min_dist)
+                pci_sum += dset
                 if dset < min_dist:
                     debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): Set-to-set distance={dset:.6f} < Point-to-set distance={min_dist:.6f}", print_debug)
                 else:
