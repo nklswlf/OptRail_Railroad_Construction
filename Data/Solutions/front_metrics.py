@@ -434,17 +434,20 @@ def calculate_pci(global_pareto_front_normalized, print_debug=False):
     for method in methods:
         X = S_df[S_df["Method"] == method][objectives].values
         pci_sum = 0.0
+
         for cluster_idx, cluster in enumerate(cluster_points):
             method_points_in_cluster = []
+            other_points_in_cluster = []
+
             for point in cluster:
-                for idx, x in enumerate(X):
-                    if np.allclose(x, point, atol=1e-8):
-                        method_points_in_cluster.append(x)
+                if any(np.allclose(point, x, atol=1e-8) for x in X):
+                    method_points_in_cluster.append(point)
+                else:
+                    other_points_in_cluster.append(point)
+
             method_points_in_cluster = np.array(method_points_in_cluster)
-            other_points_in_cluster = np.array([
-                                    point for point in cluster_points
-                                    if not any(np.array_equal(point, mp) for mp in method_points_in_cluster)
-                                ])
+            other_points_in_cluster = np.array(other_points_in_cluster)
+            
             if len(method_points_in_cluster) < 2:
                 min_dist = min(dominance_distance(x, cluster) for x in X) if len(X) > 0 else 0.0
                 pci_sum += min_dist
@@ -454,10 +457,11 @@ def calculate_pci(global_pareto_front_normalized, print_debug=False):
                 #min_dist = min(dominance_distance(x, cluster) for x in X) if len(X) > 0 else 0.0
                 #pci_sum += min(dset, min_dist)
                 pci_sum += dset
-                if dset < min_dist:
-                    debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): Set-to-set distance={dset:.6f} < Point-to-set distance={min_dist:.6f}", print_debug)
-                else:
-                    debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): Point-to-set distance={min_dist:.6f} < Set-to-set distance={dset:.6f}", print_debug)
+                #if dset < min_dist:
+                #    debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): Set-to-set distance={dset:.6f} < Point-to-set distance={min_dist:.6f}", print_debug)
+                #else:
+                #    debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): Point-to-set distance={min_dist:.6f} < Set-to-set distance={dset:.6f}", print_debug)
+                debug_print(f"[DEBUG] {method} cluster {cluster_idx} (len={len(cluster)}): Set-to-set distance={dset:.6f}", print_debug)
         pci_result[method] = pci_sum / len(cluster_points) if len(cluster_points) > 0 else 0.0
     result_df = pd.DataFrame({
         "PCI": pci_result
