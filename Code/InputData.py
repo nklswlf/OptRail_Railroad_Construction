@@ -885,7 +885,7 @@ class Attachment:
         seconds_per_day = input_data._seconds_a_day
         speed_kmh = input_data._transport_speed_kmh
         transport_matrix = input_data._transport_routes_order_item
-        break_time = input_data._hours_between_shifts / 24
+
 
         times = {
             oi.id: (
@@ -912,9 +912,6 @@ class Attachment:
                     continue
                 st2, et2 = times[oi2.id]
                 transport_time = transport_matrix[oi1.id][oi2.id] / speed_kmh / 24
-
-                if transport_time > break_time:
-                    raise ValueError(f"Attachment transport time ({transport_time:.2f}) > break ({break_time:.2f}) between {oi1.id} and {oi2.id}")
 
                 if st1 >= et2 + transport_time:
                     self._predecessors[oi1].append(oi2)
@@ -1027,14 +1024,16 @@ class Worker:
 
                 st2, et2 = rtimes[oi2.id]
                 transport_time = transport_matrix[oi1.id][oi2.id] / speed_kmh / 24
+                added_time = max(transport_time, break_time)
 
-                if transport_time > break_time:
-                    raise Exception(f"Transport time {transport_time:.2f} > break {break_time:.2f} between {oi1.id} and {oi2.id}.")
+                if added_time == transport_time:
+                    print(f"Transport time {transport_time} for {oi1.id} to {oi2.id} is used as added time.")
 
-                if st1 >= et2 + break_time:
+
+                if st1 >= et2 + added_time:
                     self._predecessors[oi1].append(oi2)
                     self._predecessor_ids[oi1.id].append(oi2.id)
-                if st2 >= et1 + break_time:
+                if st2 >= et1 + added_time:
                     self._successors[oi1].append(oi2)
                     self._successor_ids[oi1.id].append(oi2.id)
 

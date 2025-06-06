@@ -31,7 +31,15 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-#instances = [   "Construction_a15_o170_m9_an80_ar18.json"]
+instances = ["Construction_RealLife_2024_3.json",
+            "Construction_RealLife_2024_4.json",
+            "Construction_RealLife_2024_5.json",
+            "Construction_RealLife_2024_6.json",
+            "Construction_RealLife_2024_7.json",
+            "Construction_RealLife_2024_8.json",
+            "Construction_RealLife_2024_9.json",
+            "Construction_RealLife_2024_10.json",
+            "Construction_RealLife_2024_11.json"]
 
 
 
@@ -79,7 +87,7 @@ algortihm = 'DBSA'
 
 algortihms = ['PSA','DBSA']
                 
-seeds = [100,101,102,103,104,105,107,109,110,111,112,113]
+seeds = [100]#,101,102,103,104,105,107,109,110,111,112,113]
 
 def main(): 
     for seed in seeds:
