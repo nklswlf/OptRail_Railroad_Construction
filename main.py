@@ -31,7 +31,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 
-instances = ["Construction_RealLife_2024_7.json",
+instances = ["Construction_RealLife_2024_3.json",
             "Construction_RealLife_2024_4.json",
             "Construction_RealLife_2024_5.json",
             "Construction_RealLife_2024_6.json",
