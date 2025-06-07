@@ -37,7 +37,7 @@
       ]
     },
     {
-      "ID": 4,
+      "ID": 3,
       "Baujahr": 0,
       "Name": "dispositionresource-name-254",
       "Typ": 1,
@@ -47,7 +47,7 @@
       ]
     },
     {
-      "ID": 5,
+      "ID": 4,
       "Baujahr": 0,
       "Name": "dispositionresource-name-255",
       "Typ": 1,
@@ -56,7 +56,7 @@
       ]
     },
     {
-      "ID": 7,
+      "ID": 5,
       "Baujahr": 0,
       "Name": "dispositionresource-name-4447",
       "Typ": 1,
@@ -67,7 +67,7 @@
       ]
     },
     {
-      "ID": 9,
+      "ID": 6,
       "Baujahr": 0,
       "Name": "dispositionresource-name-4459",
       "Typ": 1,
@@ -78,7 +78,7 @@
       ]
     },
     {
-      "ID": 10,
+      "ID": 7,
       "Baujahr": 0,
       "Name": "dispositionresource-name-44610",
       "Typ": 1,
@@ -90,7 +90,7 @@
       ]
     },
     {
-      "ID": 11,
+      "ID": 8,
       "Baujahr": 0,
       "Name": "dispositionresource-name-44711",
       "Typ": 1,
@@ -99,7 +99,7 @@
       ]
     },
     {
-      "ID": 14,
+      "ID": 9,
       "Baujahr": 0,
       "Name": "dispositionresource-name-45014",
       "Typ": 1,
@@ -109,7 +109,7 @@
       ]
     },
     {
-      "ID": 15,
+      "ID": 10,
       "Baujahr": 0,
       "Name": "dispositionresource-name-45115",
       "Typ": 1,
@@ -119,7 +119,7 @@
       ]
     },
     {
-      "ID": 16,
+      "ID": 11,
       "Baujahr": 0,
       "Name": "dispositionresource-name-45216",
       "Typ": 1,
@@ -128,7 +128,7 @@
       ]
     },
     {
-      "ID": 20,
+      "ID": 12,
       "Baujahr": 0,
       "Name": "dispositionresource-name-45720",
       "Typ": 1,
@@ -138,7 +138,7 @@
       ]
     },
     {
-      "ID": 21,
+      "ID": 13,
       "Baujahr": 0,
       "Name": "dispositionresource-name-45821",
       "Typ": 1,
@@ -147,7 +147,7 @@
       ]
     },
     {
-      "ID": 22,
+      "ID": 14,
       "Baujahr": 0,
       "Name": "dispositionresource-name-45922",
       "Typ": 1,
@@ -158,7 +158,7 @@
       ]
     },
     {
-      "ID": 23,
+      "ID": 15,
       "Baujahr": 0,
       "Name": "dispositionresource-name-46023",
       "Typ": 1,
@@ -167,7 +167,7 @@
       ]
     },
     {
-      "ID": 24,
+      "ID": 16,
       "Baujahr": 0,
       "Name": "dispositionresource-name-2524",
       "Typ": 1,
@@ -178,7 +178,7 @@
       ]
     },
     {
-      "ID": 28,
+      "ID": 17,
       "Baujahr": 0,
       "Name": "dispositionresource-name-45128",
       "Typ": 1,
@@ -188,7 +188,7 @@
       ]
     },
     {
-      "ID": 29,
+      "ID": 18,
       "Baujahr": 0,
       "Name": "dispositionresource-name-46429",
       "Typ": 1,
@@ -198,7 +198,7 @@
       ]
     },
     {
-      "ID": 30,
+      "ID": 19,
       "Baujahr": 0,
       "Name": "dispositionresource-name-46530",
       "Typ": 1,
@@ -209,7 +209,7 @@
       ]
     },
     {
-      "ID": 31,
+      "ID": 20,
       "Baujahr": 0,
       "Name": "dispositionresource-name-46631",
       "Typ": 1,
@@ -220,7 +220,7 @@
       ]
     },
     {
-      "ID": 32,
+      "ID": 21,
       "Baujahr": 0,
       "Name": "dispositionresource-name-46732",
       "Typ": 1,
@@ -231,7 +231,7 @@
       ]
     },
     {
-      "ID": 33,
+      "ID": 22,
       "Baujahr": 0,
       "Name": "dispositionresource-name-46833",
       "Typ": 1,
@@ -241,7 +241,7 @@
       ]
     },
     {
-      "ID": 34,
+      "ID": 23,
       "Baujahr": 0,
       "Name": "dispositionresource-name-46934",
       "Typ": 1,
@@ -253,7 +253,7 @@
       ]
     },
     {
-      "ID": 35,
+      "ID": 24,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47035",
       "Typ": 1,
@@ -265,7 +265,7 @@
       ]
     },
     {
-      "ID": 36,
+      "ID": 25,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47136",
       "Typ": 1,
@@ -277,7 +277,7 @@
       ]
     },
     {
-      "ID": 37,
+      "ID": 26,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47237",
       "Typ": 1,
@@ -289,7 +289,7 @@
       ]
     },
     {
-      "ID": 38,
+      "ID": 27,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47338",
       "Typ": 1,
@@ -301,7 +301,7 @@
       ]
     },
     {
-      "ID": 40,
+      "ID": 28,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47440",
       "Typ": 1,
@@ -310,7 +310,7 @@
       ]
     },
     {
-      "ID": 41,
+      "ID": 29,
       "Baujahr": 0,
       "Name": "dispositionresource-name-45941",
       "Typ": 1,
@@ -321,7 +321,7 @@
       ]
     },
     {
-      "ID": 42,
+      "ID": 30,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47542",
       "Typ": 1,
@@ -332,7 +332,7 @@
       ]
     },
     {
-      "ID": 43,
+      "ID": 31,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47643",
       "Typ": 1,
@@ -344,7 +344,7 @@
       ]
     },
     {
-      "ID": 44,
+      "ID": 32,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47744",
       "Typ": 1,
@@ -355,7 +355,7 @@
       ]
     },
     {
-      "ID": 45,
+      "ID": 33,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47845",
       "Typ": 1,
@@ -367,7 +367,7 @@
       ]
     },
     {
-      "ID": 47,
+      "ID": 34,
       "Baujahr": 0,
       "Name": "dispositionresource-name-48847",
       "Typ": 1,
@@ -378,7 +378,7 @@
       ]
     },
     {
-      "ID": 48,
+      "ID": 35,
       "Baujahr": 0,
       "Name": "dispositionresource-name-48948",
       "Typ": 1,
@@ -389,7 +389,7 @@
       ]
     },
     {
-      "ID": 49,
+      "ID": 36,
       "Baujahr": 0,
       "Name": "dispositionresource-name-49049",
       "Typ": 1,
@@ -401,7 +401,7 @@
       ]
     },
     {
-      "ID": 50,
+      "ID": 37,
       "Baujahr": 0,
       "Name": "dispositionresource-name-49150",
       "Typ": 1,
@@ -412,7 +412,7 @@
       ]
     },
     {
-      "ID": 51,
+      "ID": 38,
       "Baujahr": 0,
       "Name": "dispositionresource-name-2551",
       "Typ": 1,
@@ -423,7 +423,7 @@
       ]
     },
     {
-      "ID": 52,
+      "ID": 39,
       "Baujahr": 0,
       "Name": "dispositionresource-name-49252",
       "Typ": 1,
@@ -432,7 +432,7 @@
       ]
     },
     {
-      "ID": 53,
+      "ID": 40,
       "Baujahr": 0,
       "Name": "dispositionresource-name-49353",
       "Typ": 1,
@@ -441,7 +441,7 @@
       ]
     },
     {
-      "ID": 54,
+      "ID": 41,
       "Baujahr": 0,
       "Name": "dispositionresource-name-49454",
       "Typ": 1,
@@ -452,7 +452,7 @@
       ]
     },
     {
-      "ID": 55,
+      "ID": 42,
       "Baujahr": 0,
       "Name": "dispositionresource-name-48955",
       "Typ": 1,
@@ -462,7 +462,7 @@
       ]
     },
     {
-      "ID": 56,
+      "ID": 43,
       "Baujahr": 0,
       "Name": "dispositionresource-name-54056",
       "Typ": 1,
@@ -472,7 +472,7 @@
       ]
     },
     {
-      "ID": 57,
+      "ID": 44,
       "Baujahr": 0,
       "Name": "dispositionresource-name-55257",
       "Typ": 1,
@@ -481,7 +481,7 @@
       ]
     },
     {
-      "ID": 58,
+      "ID": 45,
       "Baujahr": 0,
       "Name": "dispositionresource-name-55958",
       "Typ": 1,
@@ -491,7 +491,7 @@
       ]
     },
     {
-      "ID": 59,
+      "ID": 46,
       "Baujahr": 0,
       "Name": "dispositionresource-name-61859",
       "Typ": 1,
@@ -502,7 +502,7 @@
       ]
     },
     {
-      "ID": 60,
+      "ID": 47,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47360",
       "Typ": 1,
@@ -511,7 +511,7 @@
       ]
     },
     {
-      "ID": 61,
+      "ID": 48,
       "Baujahr": 0,
       "Name": "dispositionresource-name-63461",
       "Typ": 1,
@@ -522,7 +522,7 @@
       ]
     },
     {
-      "ID": 62,
+      "ID": 49,
       "Baujahr": 0,
       "Name": "dispositionresource-name-66162",
       "Typ": 1,
@@ -531,7 +531,7 @@
       ]
     },
     {
-      "ID": 63,
+      "ID": 50,
       "Baujahr": 0,
       "Name": "dispositionresource-name-66263",
       "Typ": 1,
@@ -541,7 +541,7 @@
       ]
     },
     {
-      "ID": 64,
+      "ID": 51,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47364",
       "Typ": 1,
@@ -553,7 +553,7 @@
       ]
     },
     {
-      "ID": 65,
+      "ID": 52,
       "Baujahr": 0,
       "Name": "dispositionresource-name-63465",
       "Typ": 1,
@@ -563,7 +563,7 @@
       ]
     },
     {
-      "ID": 66,
+      "ID": 53,
       "Baujahr": 0,
       "Name": "dispositionresource-name-66166",
       "Typ": 1,
@@ -573,7 +573,7 @@
       ]
     },
     {
-      "ID": 67,
+      "ID": 54,
       "Baujahr": 0,
       "Name": "dispositionresource-name-71167",
       "Typ": 1,
@@ -583,7 +583,7 @@
       ]
     },
     {
-      "ID": 68,
+      "ID": 55,
       "Baujahr": 0,
       "Name": "dispositionresource-name-72968",
       "Typ": 1,
@@ -593,7 +593,7 @@
       ]
     },
     {
-      "ID": 69,
+      "ID": 56,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47769",
       "Typ": 1,
@@ -602,7 +602,7 @@
       ]
     },
     {
-      "ID": 70,
+      "ID": 57,
       "Baujahr": 0,
       "Name": "dispositionresource-name-54070",
       "Typ": 1,
@@ -614,7 +614,7 @@
       ]
     },
     {
-      "ID": 71,
+      "ID": 58,
       "Baujahr": 0,
       "Name": "dispositionresource-name-77471",
       "Typ": 1,
@@ -624,7 +624,7 @@
       ]
     },
     {
-      "ID": 72,
+      "ID": 59,
       "Baujahr": 0,
       "Name": "dispositionresource-name-47372",
       "Typ": 1,
@@ -633,7 +633,7 @@
       ]
     },
     {
-      "ID": 73,
+      "ID": 60,
       "Baujahr": 0,
       "Name": "dispositionresource-name-46573",
       "Typ": 1,
@@ -642,7 +642,7 @@
       ]
     },
     {
-      "ID": 74,
+      "ID": 61,
       "Baujahr": 0,
       "Name": "dispositionresource-name-78874",
       "Typ": 1,
@@ -652,7 +652,7 @@
       ]
     },
     {
-      "ID": 75,
+      "ID": 62,
       "Baujahr": 0,
       "Name": "dispositionresource-name-46875",
       "Typ": 1,
@@ -664,7 +664,7 @@
       ]
     },
     {
-      "ID": 76,
+      "ID": 63,
       "Baujahr": 0,
       "Name": "dispositionresource-name-79676",
       "Typ": 1,
@@ -674,7 +674,7 @@
       ]
     },
     {
-      "ID": 77,
+      "ID": 64,
       "Baujahr": 0,
       "Name": "dispositionresource-name-79777",
       "Typ": 1,
@@ -5648,7 +5648,7 @@
     },
     {
       "Auftragsnummer": "1",
-      "Baustellennummer": 0,
+      "Baustellennummer": 1,
       "Start": "2024-03-16T06:00:00",
       "Ende": "2024-06-07T16:00:00",
       "BestellpositionenStrings": [
@@ -5661,7 +5661,7 @@
     },
     {
       "Auftragsnummer": "2",
-      "Baustellennummer": 0,
+      "Baustellennummer": 2,
       "Start": "2024-03-04T18:00:00",
       "Ende": "2024-03-28T05:00:00",
       "BestellpositionenStrings": [
@@ -5697,7 +5697,7 @@
     },
     {
       "Auftragsnummer": "3",
-      "Baustellennummer": 0,
+      "Baustellennummer": 3,
       "Start": "2024-01-15T18:00:00",
       "Ende": "2024-03-24T17:00:00",
       "BestellpositionenStrings": [
@@ -5721,7 +5721,7 @@
     },
     {
       "Auftragsnummer": "4",
-      "Baustellennummer": 0,
+      "Baustellennummer": 4,
       "Start": "2024-01-15T21:00:00",
       "Ende": "2024-03-16T04:00:00",
       "BestellpositionenStrings": [
@@ -5744,7 +5744,7 @@
     },
     {
       "Auftragsnummer": "5",
-      "Baustellennummer": 0,
+      "Baustellennummer": 5,
       "Start": "2024-01-15T21:00:00",
       "Ende": "2024-06-29T03:00:00",
       "BestellpositionenStrings": [
@@ -5776,7 +5776,7 @@
     },
     {
       "Auftragsnummer": "6",
-      "Baustellennummer": 0,
+      "Baustellennummer": 6,
       "Start": "2024-03-18T20:00:00",
       "Ende": "2024-03-28T04:00:00",
       "BestellpositionenStrings": [
@@ -5798,7 +5798,7 @@
     },
     {
       "Auftragsnummer": "7",
-      "Baustellennummer": 0,
+      "Baustellennummer": 7,
       "Start": "2024-03-07T08:00:00",
       "Ende": "2024-03-07T16:00:00",
       "BestellpositionenStrings": [
@@ -5811,7 +5811,7 @@
     },
     {
       "Auftragsnummer": "8",
-      "Baustellennummer": 0,
+      "Baustellennummer": 8,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-07-14T16:00:00",
       "BestellpositionenStrings": [
@@ -5854,7 +5854,7 @@
     },
     {
       "Auftragsnummer": "9",
-      "Baustellennummer": 0,
+      "Baustellennummer": 9,
       "Start": "2024-01-29T18:00:00",
       "Ende": "2024-03-28T05:00:00",
       "BestellpositionenStrings": [
@@ -5893,7 +5893,7 @@
     },
     {
       "Auftragsnummer": "10",
-      "Baustellennummer": 0,
+      "Baustellennummer": 10,
       "Start": "2024-03-18T21:00:00",
       "Ende": "2024-03-20T05:00:00",
       "BestellpositionenStrings": [
@@ -5907,7 +5907,7 @@
     },
     {
       "Auftragsnummer": "11",
-      "Baustellennummer": 0,
+      "Baustellennummer": 11,
       "Start": "2024-03-22T06:00:00",
       "Ende": "2024-03-22T14:00:00",
       "BestellpositionenStrings": [
@@ -5920,7 +5920,7 @@
     },
     {
       "Auftragsnummer": "12",
-      "Baustellennummer": 0,
+      "Baustellennummer": 12,
       "Start": "2024-03-12T06:00:00",
       "Ende": "2024-04-01T15:00:00",
       "BestellpositionenStrings": [
@@ -5950,7 +5950,7 @@
     },
     {
       "Auftragsnummer": "13",
-      "Baustellennummer": 0,
+      "Baustellennummer": 13,
       "Start": "2024-03-06T20:00:00",
       "Ende": "2024-03-07T06:00:00",
       "BestellpositionenStrings": [
@@ -5963,7 +5963,7 @@
     },
     {
       "Auftragsnummer": "14",
-      "Baustellennummer": 0,
+      "Baustellennummer": 14,
       "Start": "2024-03-20T06:00:00",
       "Ende": "2024-03-31T15:00:00",
       "BestellpositionenStrings": [
@@ -5994,7 +5994,7 @@
     },
     {
       "Auftragsnummer": "15",
-      "Baustellennummer": 0,
+      "Baustellennummer": 15,
       "Start": "2024-02-19T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -6027,7 +6027,7 @@
     },
     {
       "Auftragsnummer": "16",
-      "Baustellennummer": 0,
+      "Baustellennummer": 16,
       "Start": "2024-03-11T06:00:00",
       "Ende": "2024-03-13T16:00:00",
       "BestellpositionenStrings": [
@@ -6042,7 +6042,7 @@
     },
     {
       "Auftragsnummer": "17",
-      "Baustellennummer": 0,
+      "Baustellennummer": 17,
       "Start": "2024-03-11T20:30:00",
       "Ende": "2024-03-15T16:00:00",
       "BestellpositionenStrings": [
@@ -6058,7 +6058,7 @@
     },
     {
       "Auftragsnummer": "18",
-      "Baustellennummer": 0,
+      "Baustellennummer": 18,
       "Start": "2024-03-26T06:00:00",
       "Ende": "2024-04-02T15:00:00",
       "BestellpositionenStrings": [
@@ -6074,7 +6074,7 @@
     },
     {
       "Auftragsnummer": "19",
-      "Baustellennummer": 0,
+      "Baustellennummer": 19,
       "Start": "2024-02-19T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -6107,7 +6107,7 @@
     },
     {
       "Auftragsnummer": "20",
-      "Baustellennummer": 0,
+      "Baustellennummer": 20,
       "Start": "2024-03-01T18:00:00",
       "Ende": "2024-03-28T05:00:00",
       "BestellpositionenStrings": [
@@ -6146,7 +6146,7 @@
     },
     {
       "Auftragsnummer": "21",
-      "Baustellennummer": 0,
+      "Baustellennummer": 21,
       "Start": "2024-02-26T06:00:00",
       "Ende": "2024-08-16T16:00:00",
       "BestellpositionenStrings": [
@@ -6179,7 +6179,7 @@
     },
     {
       "Auftragsnummer": "22",
-      "Baustellennummer": 0,
+      "Baustellennummer": 22,
       "Start": "2024-03-16T06:30:00",
       "Ende": "2024-03-17T16:00:00",
       "BestellpositionenStrings": [
@@ -6193,7 +6193,7 @@
     },
     {
       "Auftragsnummer": "23",
-      "Baustellennummer": 0,
+      "Baustellennummer": 23,
       "Start": "2024-01-08T05:00:00",
       "Ende": "2024-12-20T13:30:00",
       "BestellpositionenStrings": [
@@ -6226,7 +6226,7 @@
     },
     {
       "Auftragsnummer": "24",
-      "Baustellennummer": 0,
+      "Baustellennummer": 24,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -6259,7 +6259,7 @@
     },
     {
       "Auftragsnummer": "25",
-      "Baustellennummer": 0,
+      "Baustellennummer": 25,
       "Start": "2024-02-19T06:00:00",
       "Ende": "2024-04-30T16:00:00",
       "BestellpositionenStrings": [
@@ -6292,7 +6292,7 @@
     },
     {
       "Auftragsnummer": "26",
-      "Baustellennummer": 0,
+      "Baustellennummer": 26,
       "Start": "2024-02-05T06:00:00",
       "Ende": "2024-03-16T17:00:00",
       "BestellpositionenStrings": [
@@ -6318,7 +6318,7 @@
     },
     {
       "Auftragsnummer": "27",
-      "Baustellennummer": 0,
+      "Baustellennummer": 27,
       "Start": "2024-03-16T21:30:00",
       "Ende": "2024-03-17T05:30:00",
       "BestellpositionenStrings": [
@@ -6331,7 +6331,7 @@
     },
     {
       "Auftragsnummer": "28",
-      "Baustellennummer": 0,
+      "Baustellennummer": 28,
       "Start": "2024-01-22T21:00:00",
       "Ende": "2024-03-01T16:00:00",
       "BestellpositionenStrings": [
@@ -6344,7 +6344,7 @@
     },
     {
       "Auftragsnummer": "29",
-      "Baustellennummer": 0,
+      "Baustellennummer": 29,
       "Start": "2024-03-05T20:00:00",
       "Ende": "2024-03-06T06:00:00",
       "BestellpositionenStrings": [
@@ -6357,7 +6357,7 @@
     },
     {
       "Auftragsnummer": "30",
-      "Baustellennummer": 0,
+      "Baustellennummer": 30,
       "Start": "2024-02-24T06:00:00",
       "Ende": "2024-03-16T04:00:00",
       "BestellpositionenStrings": [
@@ -6399,7 +6399,7 @@
     },
     {
       "Auftragsnummer": "31",
-      "Baustellennummer": 0,
+      "Baustellennummer": 31,
       "Start": "2024-02-26T06:00:00",
       "Ende": "2024-03-18T17:00:00",
       "BestellpositionenStrings": [
@@ -6416,7 +6416,7 @@
     },
     {
       "Auftragsnummer": "32",
-      "Baustellennummer": 0,
+      "Baustellennummer": 32,
       "Start": "2024-03-25T06:00:00",
       "Ende": "2024-03-28T16:00:00",
       "BestellpositionenStrings": [
@@ -6432,7 +6432,7 @@
     },
     {
       "Auftragsnummer": "33",
-      "Baustellennummer": 0,
+      "Baustellennummer": 33,
       "Start": "2024-03-30T06:00:00",
       "Ende": "2024-04-26T16:00:00",
       "BestellpositionenStrings": [
@@ -6445,7 +6445,7 @@
     },
     {
       "Auftragsnummer": "34",
-      "Baustellennummer": 0,
+      "Baustellennummer": 34,
       "Start": "2024-03-10T21:30:00",
       "Ende": "2024-03-15T05:00:00",
       "BestellpositionenStrings": [
@@ -6462,7 +6462,7 @@
     },
     {
       "Auftragsnummer": "35",
-      "Baustellennummer": 0,
+      "Baustellennummer": 35,
       "Start": "2024-03-14T04:00:00",
       "Ende": "2024-03-15T12:30:00",
       "BestellpositionenStrings": [
@@ -6476,7 +6476,7 @@
     },
     {
       "Auftragsnummer": "36",
-      "Baustellennummer": 0,
+      "Baustellennummer": 36,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-07-14T16:00:00",
       "BestellpositionenStrings": [
@@ -6519,7 +6519,7 @@
     },
     {
       "Auftragsnummer": "37",
-      "Baustellennummer": 0,
+      "Baustellennummer": 37,
       "Start": "2024-03-01T06:00:00",
       "Ende": "2024-04-01T04:00:00",
       "BestellpositionenStrings": [
@@ -6593,7 +6593,7 @@
     },
     {
       "Auftragsnummer": "38",
-      "Baustellennummer": 0,
+      "Baustellennummer": 38,
       "Start": "2024-03-06T20:00:00",
       "Ende": "2024-03-07T06:00:00",
       "BestellpositionenStrings": [
@@ -6606,7 +6606,7 @@
     },
     {
       "Auftragsnummer": "39",
-      "Baustellennummer": 0,
+      "Baustellennummer": 39,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -6639,7 +6639,7 @@
     },
     {
       "Auftragsnummer": "40",
-      "Baustellennummer": 0,
+      "Baustellennummer": 40,
       "Start": "2024-02-26T06:30:00",
       "Ende": "2024-03-01T16:30:00",
       "BestellpositionenStrings": [
@@ -6652,7 +6652,7 @@
     },
     {
       "Auftragsnummer": "41",
-      "Baustellennummer": 0,
+      "Baustellennummer": 41,
       "Start": "2024-01-08T18:00:00",
       "Ende": "2024-03-19T05:00:00",
       "BestellpositionenStrings": [
@@ -6674,7 +6674,7 @@
     },
     {
       "Auftragsnummer": "42",
-      "Baustellennummer": 0,
+      "Baustellennummer": 42,
       "Start": "2024-03-14T07:00:00",
       "Ende": "2024-03-15T18:00:00",
       "BestellpositionenStrings": [
@@ -6688,7 +6688,7 @@
     },
     {
       "Auftragsnummer": "43",
-      "Baustellennummer": 0,
+      "Baustellennummer": 43,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-07-14T16:00:00",
       "BestellpositionenStrings": [
@@ -6731,7 +6731,7 @@
     },
     {
       "Auftragsnummer": "44",
-      "Baustellennummer": 0,
+      "Baustellennummer": 44,
       "Start": "2024-02-25T21:00:00",
       "Ende": "2024-03-18T05:00:00",
       "BestellpositionenStrings": [
@@ -6746,7 +6746,7 @@
     },
     {
       "Auftragsnummer": "45",
-      "Baustellennummer": 0,
+      "Baustellennummer": 45,
       "Start": "2024-01-19T06:00:00",
       "Ende": "2024-03-27T17:00:00",
       "BestellpositionenStrings": [
@@ -6774,7 +6774,7 @@
     },
     {
       "Auftragsnummer": "46",
-      "Baustellennummer": 0,
+      "Baustellennummer": 46,
       "Start": "2024-02-19T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -6807,7 +6807,7 @@
     },
     {
       "Auftragsnummer": "47",
-      "Baustellennummer": 0,
+      "Baustellennummer": 47,
       "Start": "2024-02-29T06:00:00",
       "Ende": "2024-03-01T16:00:00",
       "BestellpositionenStrings": [
@@ -6820,7 +6820,7 @@
     },
     {
       "Auftragsnummer": "48",
-      "Baustellennummer": 0,
+      "Baustellennummer": 48,
       "Start": "2024-02-05T06:00:00",
       "Ende": "2024-03-16T17:00:00",
       "BestellpositionenStrings": [
@@ -6846,7 +6846,7 @@
     },
     {
       "Auftragsnummer": "49",
-      "Baustellennummer": 0,
+      "Baustellennummer": 49,
       "Start": "2024-03-14T06:00:00",
       "Ende": "2024-03-28T16:00:00",
       "BestellpositionenStrings": [
@@ -6871,7 +6871,7 @@
     },
     {
       "Auftragsnummer": "50",
-      "Baustellennummer": 0,
+      "Baustellennummer": 50,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -6904,7 +6904,7 @@
     },
     {
       "Auftragsnummer": "51",
-      "Baustellennummer": 0,
+      "Baustellennummer": 51,
       "Start": "2024-03-11T19:00:00",
       "Ende": "2024-03-13T05:00:00",
       "BestellpositionenStrings": [
@@ -6918,7 +6918,7 @@
     },
     {
       "Auftragsnummer": "52",
-      "Baustellennummer": 0,
+      "Baustellennummer": 52,
       "Start": "2024-02-26T06:00:00",
       "Ende": "2024-05-31T14:00:00",
       "BestellpositionenStrings": [
@@ -6951,7 +6951,7 @@
     },
     {
       "Auftragsnummer": "53",
-      "Baustellennummer": 0,
+      "Baustellennummer": 53,
       "Start": "2024-03-04T21:00:00",
       "Ende": "2024-03-09T04:00:00",
       "BestellpositionenStrings": [
@@ -6968,7 +6968,7 @@
     },
     {
       "Auftragsnummer": "54",
-      "Baustellennummer": 0,
+      "Baustellennummer": 54,
       "Start": "2024-03-22T06:00:00",
       "Ende": "2024-03-22T14:00:00",
       "BestellpositionenStrings": [
@@ -6981,7 +6981,7 @@
     },
     {
       "Auftragsnummer": "55",
-      "Baustellennummer": 0,
+      "Baustellennummer": 55,
       "Start": "2024-02-19T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -7014,7 +7014,7 @@
     },
     {
       "Auftragsnummer": "56",
-      "Baustellennummer": 0,
+      "Baustellennummer": 56,
       "Start": "2024-03-05T20:00:00",
       "Ende": "2024-03-06T06:00:00",
       "BestellpositionenStrings": [
@@ -7027,7 +7027,7 @@
     },
     {
       "Auftragsnummer": "57",
-      "Baustellennummer": 0,
+      "Baustellennummer": 57,
       "Start": "2024-01-22T06:00:00",
       "Ende": "2024-03-27T17:00:00",
       "BestellpositionenStrings": [
@@ -7059,7 +7059,7 @@
     },
     {
       "Auftragsnummer": "58",
-      "Baustellennummer": 0,
+      "Baustellennummer": 58,
       "Start": "2024-03-25T06:00:00",
       "Ende": "2024-03-28T16:00:00",
       "BestellpositionenStrings": [
@@ -7075,7 +7075,7 @@
     },
     {
       "Auftragsnummer": "59",
-      "Baustellennummer": 0,
+      "Baustellennummer": 59,
       "Start": "2024-03-01T06:00:00",
       "Ende": "2024-08-05T15:00:00",
       "BestellpositionenStrings": [
@@ -7108,7 +7108,7 @@
     },
     {
       "Auftragsnummer": "60",
-      "Baustellennummer": 0,
+      "Baustellennummer": 60,
       "Start": "2024-03-25T06:00:00",
       "Ende": "2024-04-04T15:00:00",
       "BestellpositionenStrings": [
@@ -7127,7 +7127,7 @@
     },
     {
       "Auftragsnummer": "61",
-      "Baustellennummer": 0,
+      "Baustellennummer": 61,
       "Start": "2024-03-04T06:30:00",
       "Ende": "2024-03-04T14:30:00",
       "BestellpositionenStrings": [
@@ -7140,7 +7140,7 @@
     },
     {
       "Auftragsnummer": "62",
-      "Baustellennummer": 0,
+      "Baustellennummer": 62,
       "Start": "2024-01-01T06:00:00",
       "Ende": "2024-12-31T17:00:00",
       "BestellpositionenStrings": [
@@ -7173,7 +7173,7 @@
     },
     {
       "Auftragsnummer": "63",
-      "Baustellennummer": 0,
+      "Baustellennummer": 63,
       "Start": "2024-03-17T21:00:00",
       "Ende": "2024-03-20T05:00:00",
       "BestellpositionenStrings": [
@@ -7188,7 +7188,7 @@
     },
     {
       "Auftragsnummer": "64",
-      "Baustellennummer": 0,
+      "Baustellennummer": 64,
       "Start": "2024-03-10T20:30:00",
       "Ende": "2024-03-11T05:00:00",
       "BestellpositionenStrings": [
@@ -7201,7 +7201,7 @@
     },
     {
       "Auftragsnummer": "65",
-      "Baustellennummer": 0,
+      "Baustellennummer": 65,
       "Start": "2024-03-25T06:00:00",
       "Ende": "2024-03-27T15:00:00",
       "BestellpositionenStrings": [
@@ -7216,7 +7216,7 @@
     },
     {
       "Auftragsnummer": "66",
-      "Baustellennummer": 0,
+      "Baustellennummer": 66,
       "Start": "2024-03-04T06:00:00",
       "Ende": "2024-03-27T17:00:00",
       "BestellpositionenStrings": [
@@ -7252,7 +7252,7 @@
     },
     {
       "Auftragsnummer": "67",
-      "Baustellennummer": 0,
+      "Baustellennummer": 67,
       "Start": "2024-01-08T06:00:00",
       "Ende": "2024-03-19T17:00:00",
       "BestellpositionenStrings": [
@@ -7273,7 +7273,7 @@
     },
     {
       "Auftragsnummer": "68",
-      "Baustellennummer": 0,
+      "Baustellennummer": 68,
       "Start": "2024-02-26T06:30:00",
       "Ende": "2024-03-01T16:00:00",
       "BestellpositionenStrings": [
@@ -7286,7 +7286,7 @@
     },
     {
       "Auftragsnummer": "69",
-      "Baustellennummer": 0,
+      "Baustellennummer": 69,
       "Start": "2024-03-07T06:00:00",
       "Ende": "2024-03-07T16:00:00",
       "BestellpositionenStrings": [
@@ -7299,7 +7299,7 @@
     },
     {
       "Auftragsnummer": "70",
-      "Baustellennummer": 0,
+      "Baustellennummer": 70,
       "Start": "2024-03-05T21:00:00",
       "Ende": "2024-03-06T05:00:00",
       "BestellpositionenStrings": [
@@ -7312,7 +7312,7 @@
     },
     {
       "Auftragsnummer": "71",
-      "Baustellennummer": 0,
+      "Baustellennummer": 71,
       "Start": "2024-01-01T06:00:00",
       "Ende": "2024-12-31T17:00:00",
       "BestellpositionenStrings": [
@@ -7345,7 +7345,7 @@
     },
     {
       "Auftragsnummer": "72",
-      "Baustellennummer": 0,
+      "Baustellennummer": 72,
       "Start": "2024-03-25T06:00:00",
       "Ende": "2024-03-28T16:00:00",
       "BestellpositionenStrings": [
@@ -7361,7 +7361,7 @@
     },
     {
       "Auftragsnummer": "73",
-      "Baustellennummer": 0,
+      "Baustellennummer": 73,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -7394,7 +7394,7 @@
     },
     {
       "Auftragsnummer": "74",
-      "Baustellennummer": 0,
+      "Baustellennummer": 74,
       "Start": "2024-01-01T06:00:00",
       "Ende": "2024-12-31T17:00:00",
       "BestellpositionenStrings": [
@@ -7427,7 +7427,7 @@
     },
     {
       "Auftragsnummer": "75",
-      "Baustellennummer": 0,
+      "Baustellennummer": 75,
       "Start": "2024-03-13T21:00:00",
       "Ende": "2024-03-14T05:00:00",
       "BestellpositionenStrings": [
@@ -7440,7 +7440,7 @@
     },
     {
       "Auftragsnummer": "76",
-      "Baustellennummer": 0,
+      "Baustellennummer": 76,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-03-27T17:00:00",
       "BestellpositionenStrings": [
@@ -7479,7 +7479,7 @@
     },
     {
       "Auftragsnummer": "77",
-      "Baustellennummer": 0,
+      "Baustellennummer": 77,
       "Start": "2024-02-19T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -7512,7 +7512,7 @@
     },
     {
       "Auftragsnummer": "78",
-      "Baustellennummer": 0,
+      "Baustellennummer": 78,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -7545,7 +7545,7 @@
     },
     {
       "Auftragsnummer": "79",
-      "Baustellennummer": 0,
+      "Baustellennummer": 79,
       "Start": "2024-03-20T21:00:00",
       "Ende": "2024-03-22T05:00:00",
       "BestellpositionenStrings": [
@@ -7559,7 +7559,7 @@
     },
     {
       "Auftragsnummer": "80",
-      "Baustellennummer": 0,
+      "Baustellennummer": 80,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -7592,7 +7592,7 @@
     },
     {
       "Auftragsnummer": "81",
-      "Baustellennummer": 0,
+      "Baustellennummer": 81,
       "Start": "2024-01-08T06:00:00",
       "Ende": "2024-03-19T17:00:00",
       "BestellpositionenStrings": [
@@ -7615,7 +7615,7 @@
     },
     {
       "Auftragsnummer": "82",
-      "Baustellennummer": 0,
+      "Baustellennummer": 82,
       "Start": "2024-01-08T06:00:00",
       "Ende": "2024-03-22T17:00:00",
       "BestellpositionenStrings": [
@@ -7640,7 +7640,7 @@
     },
     {
       "Auftragsnummer": "83",
-      "Baustellennummer": 0,
+      "Baustellennummer": 83,
       "Start": "2024-02-17T06:00:00",
       "Ende": "2024-12-20T16:00:00",
       "BestellpositionenStrings": [
@@ -7683,7 +7683,7 @@
     },
     {
       "Auftragsnummer": "84",
-      "Baustellennummer": 0,
+      "Baustellennummer": 84,
       "Start": "2024-02-19T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -7716,7 +7716,7 @@
     },
     {
       "Auftragsnummer": "85",
-      "Baustellennummer": 0,
+      "Baustellennummer": 85,
       "Start": "2024-01-08T06:00:00",
       "Ende": "2024-12-20T16:00:00",
       "BestellpositionenStrings": [
@@ -7749,7 +7749,7 @@
     },
     {
       "Auftragsnummer": "86",
-      "Baustellennummer": 0,
+      "Baustellennummer": 86,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-07-14T16:00:00",
       "BestellpositionenStrings": [
@@ -7792,7 +7792,7 @@
     },
     {
       "Auftragsnummer": "87",
-      "Baustellennummer": 0,
+      "Baustellennummer": 87,
       "Start": "2024-03-11T21:00:00",
       "Ende": "2024-03-16T05:00:00",
       "BestellpositionenStrings": [
@@ -7809,7 +7809,7 @@
     },
     {
       "Auftragsnummer": "88",
-      "Baustellennummer": 0,
+      "Baustellennummer": 88,
       "Start": "2024-03-22T06:00:00",
       "Ende": "2024-03-22T14:00:00",
       "BestellpositionenStrings": [
@@ -7822,7 +7822,7 @@
     },
     {
       "Auftragsnummer": "89",
-      "Baustellennummer": 0,
+      "Baustellennummer": 89,
       "Start": "2024-03-25T21:00:00",
       "Ende": "2024-04-26T16:00:00",
       "BestellpositionenStrings": [
@@ -7841,7 +7841,7 @@
     },
     {
       "Auftragsnummer": "90",
-      "Baustellennummer": 0,
+      "Baustellennummer": 90,
       "Start": "2024-01-29T18:00:00",
       "Ende": "2024-03-28T05:00:00",
       "BestellpositionenStrings": [
@@ -7870,7 +7870,7 @@
     },
     {
       "Auftragsnummer": "91",
-      "Baustellennummer": 0,
+      "Baustellennummer": 91,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -7903,7 +7903,7 @@
     },
     {
       "Auftragsnummer": "92",
-      "Baustellennummer": 0,
+      "Baustellennummer": 92,
       "Start": "2024-02-19T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -7936,7 +7936,7 @@
     },
     {
       "Auftragsnummer": "93",
-      "Baustellennummer": 0,
+      "Baustellennummer": 93,
       "Start": "2024-03-25T22:00:00",
       "Ende": "2024-03-26T08:00:00",
       "BestellpositionenStrings": [
@@ -7949,7 +7949,7 @@
     },
     {
       "Auftragsnummer": "94",
-      "Baustellennummer": 0,
+      "Baustellennummer": 94,
       "Start": "2024-03-15T05:00:00",
       "Ende": "2024-04-02T14:00:00",
       "BestellpositionenStrings": [
@@ -7963,7 +7963,7 @@
     },
     {
       "Auftragsnummer": "95",
-      "Baustellennummer": 0,
+      "Baustellennummer": 95,
       "Start": "2024-03-30T06:00:00",
       "Ende": "2024-04-09T04:00:00",
       "BestellpositionenStrings": [
@@ -7979,7 +7979,7 @@
     },
     {
       "Auftragsnummer": "96",
-      "Baustellennummer": 0,
+      "Baustellennummer": 96,
       "Start": "2024-03-11T06:00:00",
       "Ende": "2024-03-15T13:00:00",
       "BestellpositionenStrings": [
@@ -7993,7 +7993,7 @@
     },
     {
       "Auftragsnummer": "97",
-      "Baustellennummer": 0,
+      "Baustellennummer": 97,
       "Start": "2024-03-19T06:00:00",
       "Ende": "2024-03-19T16:00:00",
       "BestellpositionenStrings": [
@@ -8006,7 +8006,7 @@
     },
     {
       "Auftragsnummer": "98",
-      "Baustellennummer": 0,
+      "Baustellennummer": 98,
       "Start": "2024-03-18T06:00:00",
       "Ende": "2024-03-23T04:00:00",
       "BestellpositionenStrings": [
@@ -8023,7 +8023,7 @@
     },
     {
       "Auftragsnummer": "99",
-      "Baustellennummer": 0,
+      "Baustellennummer": 99,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -8056,7 +8056,7 @@
     },
     {
       "Auftragsnummer": "100",
-      "Baustellennummer": 0,
+      "Baustellennummer": 100,
       "Start": "2024-03-26T22:00:00",
       "Ende": "2024-03-28T08:00:00",
       "BestellpositionenStrings": [
@@ -8070,7 +8070,7 @@
     },
     {
       "Auftragsnummer": "101",
-      "Baustellennummer": 0,
+      "Baustellennummer": 101,
       "Start": "2024-01-08T19:00:00",
       "Ende": "2024-04-01T03:00:00",
       "BestellpositionenStrings": [
@@ -8113,7 +8113,7 @@
     },
     {
       "Auftragsnummer": "102",
-      "Baustellennummer": 0,
+      "Baustellennummer": 102,
       "Start": "2024-02-19T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -8146,7 +8146,7 @@
     },
     {
       "Auftragsnummer": "103",
-      "Baustellennummer": 0,
+      "Baustellennummer": 103,
       "Start": "2024-01-01T06:00:00",
       "Ende": "2024-12-31T17:00:00",
       "BestellpositionenStrings": [
@@ -8179,7 +8179,7 @@
     },
     {
       "Auftragsnummer": "104",
-      "Baustellennummer": 0,
+      "Baustellennummer": 104,
       "Start": "2024-02-19T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -8212,7 +8212,7 @@
     },
     {
       "Auftragsnummer": "105",
-      "Baustellennummer": 0,
+      "Baustellennummer": 105,
       "Start": "2024-01-15T06:00:00",
       "Ende": "2024-04-05T15:00:00",
       "BestellpositionenStrings": [
@@ -8245,7 +8245,7 @@
     },
     {
       "Auftragsnummer": "106",
-      "Baustellennummer": 0,
+      "Baustellennummer": 106,
       "Start": "2024-02-19T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -8278,7 +8278,7 @@
     },
     {
       "Auftragsnummer": "107",
-      "Baustellennummer": 0,
+      "Baustellennummer": 107,
       "Start": "2024-03-04T06:30:00",
       "Ende": "2024-03-04T14:30:00",
       "BestellpositionenStrings": [
@@ -8291,7 +8291,7 @@
     },
     {
       "Auftragsnummer": "108",
-      "Baustellennummer": 0,
+      "Baustellennummer": 108,
       "Start": "2024-03-25T20:00:00",
       "Ende": "2024-05-20T03:00:00",
       "BestellpositionenStrings": [
@@ -8310,7 +8310,7 @@
     },
     {
       "Auftragsnummer": "109",
-      "Baustellennummer": 0,
+      "Baustellennummer": 109,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -8343,7 +8343,7 @@
     },
     {
       "Auftragsnummer": "110",
-      "Baustellennummer": 0,
+      "Baustellennummer": 110,
       "Start": "2024-03-04T06:00:00",
       "Ende": "2024-03-22T16:00:00",
       "BestellpositionenStrings": [
@@ -8370,7 +8370,7 @@
     },
     {
       "Auftragsnummer": "111",
-      "Baustellennummer": 0,
+      "Baustellennummer": 111,
       "Start": "2024-02-12T06:00:00",
       "Ende": "2024-03-01T16:00:00",
       "BestellpositionenStrings": [
@@ -8383,7 +8383,7 @@
     },
     {
       "Auftragsnummer": "112",
-      "Baustellennummer": 0,
+      "Baustellennummer": 112,
       "Start": "2024-03-25T21:00:00",
       "Ende": "2024-03-26T05:00:00",
       "BestellpositionenStrings": [
@@ -8396,7 +8396,7 @@
     },
     {
       "Auftragsnummer": "113",
-      "Baustellennummer": 0,
+      "Baustellennummer": 113,
       "Start": "2024-03-03T21:00:00",
       "Ende": "2024-03-04T05:00:00",
       "BestellpositionenStrings": [
@@ -8409,7 +8409,7 @@
     },
     {
       "Auftragsnummer": "114",
-      "Baustellennummer": 0,
+      "Baustellennummer": 114,
       "Start": "2024-03-20T21:00:00",
       "Ende": "2024-03-21T05:00:00",
       "BestellpositionenStrings": [
@@ -8422,7 +8422,7 @@
     },
     {
       "Auftragsnummer": "115",
-      "Baustellennummer": 0,
+      "Baustellennummer": 115,
       "Start": "2024-02-24T19:00:00",
       "Ende": "2024-04-15T04:00:00",
       "BestellpositionenStrings": [
@@ -8444,7 +8444,7 @@
     },
     {
       "Auftragsnummer": "116",
-      "Baustellennummer": 0,
+      "Baustellennummer": 116,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-07-12T15:00:00",
       "BestellpositionenStrings": [
@@ -8477,7 +8477,7 @@
     },
     {
       "Auftragsnummer": "117",
-      "Baustellennummer": 0,
+      "Baustellennummer": 117,
       "Start": "2024-03-06T21:00:00",
       "Ende": "2024-03-07T05:00:00",
       "BestellpositionenStrings": [
@@ -8490,7 +8490,7 @@
     },
     {
       "Auftragsnummer": "118",
-      "Baustellennummer": 0,
+      "Baustellennummer": 118,
       "Start": "2024-01-08T05:00:00",
       "Ende": "2024-12-20T13:30:00",
       "BestellpositionenStrings": [
@@ -8523,7 +8523,7 @@
     },
     {
       "Auftragsnummer": "119",
-      "Baustellennummer": 0,
+      "Baustellennummer": 119,
       "Start": "2024-03-03T23:00:00",
       "Ende": "2024-03-15T05:00:00",
       "BestellpositionenStrings": [
@@ -8545,7 +8545,7 @@
     },
     {
       "Auftragsnummer": "120",
-      "Baustellennummer": 0,
+      "Baustellennummer": 120,
       "Start": "2024-02-25T22:00:00",
       "Ende": "2024-03-11T06:00:00",
       "BestellpositionenStrings": [
@@ -8561,7 +8561,7 @@
     },
     {
       "Auftragsnummer": "121",
-      "Baustellennummer": 0,
+      "Baustellennummer": 121,
       "Start": "2024-03-29T15:00:00",
       "Ende": "2024-03-29T23:00:00",
       "BestellpositionenStrings": [
@@ -8574,7 +8574,7 @@
     },
     {
       "Auftragsnummer": "122",
-      "Baustellennummer": 0,
+      "Baustellennummer": 122,
       "Start": "2024-01-29T06:00:00",
       "Ende": "2024-12-20T15:00:00",
       "BestellpositionenStrings": [
@@ -8607,7 +8607,7 @@
     },
     {
       "Auftragsnummer": "123",
-      "Baustellennummer": 0,
+      "Baustellennummer": 123,
       "Start": "2024-03-21T21:00:00",
       "Ende": "2024-03-23T05:00:00",
       "BestellpositionenStrings": [
@@ -8621,7 +8621,7 @@
     },
     {
       "Auftragsnummer": "124",
-      "Baustellennummer": 0,
+      "Baustellennummer": 124,
       "Start": "2024-03-11T21:00:00",
       "Ende": "2024-03-16T05:00:00",
       "BestellpositionenStrings": [
@@ -8638,7 +8638,7 @@
     },
     {
       "Auftragsnummer": "125",
-      "Baustellennummer": 0,
+      "Baustellennummer": 125,
       "Start": "2024-01-30T06:00:00",
       "Ende": "2024-06-08T15:00:00",
       "BestellpositionenStrings": [
@@ -8654,7 +8654,7 @@
     },
     {
       "Auftragsnummer": "126",
-      "Baustellennummer": 0,
+      "Baustellennummer": 126,
       "Start": "2024-01-30T06:00:00",
       "Ende": "2024-06-08T15:00:00",
       "BestellpositionenStrings": [
@@ -8670,7 +8670,7 @@
     },
     {
       "Auftragsnummer": "127",
-      "Baustellennummer": 0,
+      "Baustellennummer": 127,
       "Start": "2024-01-23T18:00:00",
       "Ende": "2024-07-16T04:00:00",
       "BestellpositionenStrings": [
@@ -8713,7 +8713,7 @@
     },
     {
       "Auftragsnummer": "128",
-      "Baustellennummer": 0,
+      "Baustellennummer": 128,
       "Start": "2024-01-23T18:00:00",
       "Ende": "2024-07-16T04:00:00",
       "BestellpositionenStrings": [
@@ -8756,7 +8756,7 @@
     },
     {
       "Auftragsnummer": "129",
-      "Baustellennummer": 0,
+      "Baustellennummer": 129,
       "Start": "2024-01-23T18:00:00",
       "Ende": "2024-07-16T04:00:00",
       "BestellpositionenStrings": [
@@ -8799,7 +8799,7 @@
     },
     {
       "Auftragsnummer": "130",
-      "Baustellennummer": 0,
+      "Baustellennummer": 130,
       "Start": "2024-01-23T18:00:00",
       "Ende": "2024-07-16T04:00:00",
       "BestellpositionenStrings": [
@@ -8842,7 +8842,7 @@
     },
     {
       "Auftragsnummer": "131",
-      "Baustellennummer": 0,
+      "Baustellennummer": 131,
       "Start": "2024-01-23T18:00:00",
       "Ende": "2024-07-16T04:00:00",
       "BestellpositionenStrings": [
@@ -8885,7 +8885,7 @@
     },
     {
       "Auftragsnummer": "132",
-      "Baustellennummer": 0,
+      "Baustellennummer": 132,
       "Start": "2024-01-23T18:00:00",
       "Ende": "2024-07-16T04:00:00",
       "BestellpositionenStrings": [
@@ -8928,7 +8928,7 @@
     },
     {
       "Auftragsnummer": "133",
-      "Baustellennummer": 0,
+      "Baustellennummer": 133,
       "Start": "2024-01-23T18:00:00",
       "Ende": "2024-07-16T04:00:00",
       "BestellpositionenStrings": [
@@ -8971,7 +8971,7 @@
     },
     {
       "Auftragsnummer": "134",
-      "Baustellennummer": 0,
+      "Baustellennummer": 134,
       "Start": "2024-01-22T06:00:00",
       "Ende": "2024-12-20T17:00:00",
       "BestellpositionenStrings": [
@@ -9014,7 +9014,7 @@
     },
     {
       "Auftragsnummer": "135",
-      "Baustellennummer": 0,
+      "Baustellennummer": 135,
       "Start": "2024-01-22T06:00:00",
       "Ende": "2024-12-20T17:00:00",
       "BestellpositionenStrings": [
@@ -9057,7 +9057,7 @@
     },
     {
       "Auftragsnummer": "136",
-      "Baustellennummer": 0,
+      "Baustellennummer": 136,
       "Start": "2024-01-22T06:00:00",
       "Ende": "2024-12-20T17:00:00",
       "BestellpositionenStrings": [
@@ -9100,7 +9100,7 @@
     },
     {
       "Auftragsnummer": "137",
-      "Baustellennummer": 0,
+      "Baustellennummer": 137,
       "Start": "2024-02-24T06:00:00",
       "Ende": "2024-03-16T04:00:00",
       "BestellpositionenStrings": [
@@ -9142,7 +9142,7 @@
     },
     {
       "Auftragsnummer": "138",
-      "Baustellennummer": 0,
+      "Baustellennummer": 138,
       "Start": "2024-01-08T06:00:00",
       "Ende": "2024-12-20T17:00:00",
       "BestellpositionenStrings": [
@@ -9185,7 +9185,7 @@
     },
     {
       "Auftragsnummer": "139",
-      "Baustellennummer": 0,
+      "Baustellennummer": 139,
       "Start": "2024-01-08T06:00:00",
       "Ende": "2024-12-20T17:00:00",
       "BestellpositionenStrings": [
@@ -9228,7 +9228,7 @@
     },
     {
       "Auftragsnummer": "140",
-      "Baustellennummer": 0,
+      "Baustellennummer": 140,
       "Start": "2024-01-23T06:00:00",
       "Ende": "2024-06-30T16:00:00",
       "BestellpositionenStrings": [
@@ -9271,7 +9271,7 @@
     },
     {
       "Auftragsnummer": "141",
-      "Baustellennummer": 0,
+      "Baustellennummer": 141,
       "Start": "2024-01-23T06:00:00",
       "Ende": "2024-06-30T16:00:00",
       "BestellpositionenStrings": [
@@ -9314,7 +9314,7 @@
     },
     {
       "Auftragsnummer": "142",
-      "Baustellennummer": 0,
+      "Baustellennummer": 142,
       "Start": "2024-01-23T06:00:00",
       "Ende": "2024-06-30T16:00:00",
       "BestellpositionenStrings": [
@@ -9357,7 +9357,7 @@
     },
     {
       "Auftragsnummer": "143",
-      "Baustellennummer": 0,
+      "Baustellennummer": 143,
       "Start": "2024-01-23T06:00:00",
       "Ende": "2024-06-30T16:00:00",
       "BestellpositionenStrings": [
@@ -9400,7 +9400,7 @@
     },
     {
       "Auftragsnummer": "144",
-      "Baustellennummer": 0,
+      "Baustellennummer": 144,
       "Start": "2024-01-23T06:00:00",
       "Ende": "2024-06-30T16:00:00",
       "BestellpositionenStrings": [
@@ -9443,7 +9443,7 @@
     },
     {
       "Auftragsnummer": "145",
-      "Baustellennummer": 0,
+      "Baustellennummer": 145,
       "Start": "2024-03-04T19:30:00",
       "Ende": "2024-03-10T15:00:00",
       "BestellpositionenStrings": [
@@ -9461,7 +9461,7 @@
     },
     {
       "Auftragsnummer": "146",
-      "Baustellennummer": 0,
+      "Baustellennummer": 146,
       "Start": "2024-03-04T19:30:00",
       "Ende": "2024-03-10T15:00:00",
       "BestellpositionenStrings": [
@@ -9479,7 +9479,7 @@
     },
     {
       "Auftragsnummer": "147",
-      "Baustellennummer": 0,
+      "Baustellennummer": 147,
       "Start": "2024-03-04T19:30:00",
       "Ende": "2024-03-10T15:00:00",
       "BestellpositionenStrings": [
@@ -9497,7 +9497,7 @@
     },
     {
       "Auftragsnummer": "148",
-      "Baustellennummer": 0,
+      "Baustellennummer": 148,
       "Start": "2024-03-04T19:30:00",
       "Ende": "2024-03-10T15:00:00",
       "BestellpositionenStrings": [
@@ -9510,7 +9510,7 @@
     },
     {
       "Auftragsnummer": "149",
-      "Baustellennummer": 0,
+      "Baustellennummer": 149,
       "Start": "2024-03-03T20:00:00",
       "Ende": "2024-03-24T04:00:00",
       "BestellpositionenStrings": [
@@ -9543,7 +9543,7 @@
     },
     {
       "Auftragsnummer": "150",
-      "Baustellennummer": 0,
+      "Baustellennummer": 150,
       "Start": "2024-03-03T20:00:00",
       "Ende": "2024-03-24T04:00:00",
       "BestellpositionenStrings": [
@@ -9576,7 +9576,7 @@
     },
     {
       "Auftragsnummer": "151",
-      "Baustellennummer": 0,
+      "Baustellennummer": 151,
       "Start": "2024-01-08T06:00:00",
       "Ende": "2024-05-31T14:30:00",
       "BestellpositionenStrings": [
@@ -9609,7 +9609,7 @@
     },
     {
       "Auftragsnummer": "152",
-      "Baustellennummer": 0,
+      "Baustellennummer": 152,
       "Start": "2024-01-08T06:00:00",
       "Ende": "2024-05-31T14:30:00",
       "BestellpositionenStrings": [
@@ -9642,7 +9642,7 @@
     },
     {
       "Auftragsnummer": "153",
-      "Baustellennummer": 0,
+      "Baustellennummer": 153,
       "Start": "2024-01-08T06:00:00",
       "Ende": "2024-05-31T14:30:00",
       "BestellpositionenStrings": [
@@ -9675,7 +9675,7 @@
     },
     {
       "Auftragsnummer": "154",
-      "Baustellennummer": 0,
+      "Baustellennummer": 154,
       "Start": "2024-01-08T18:00:00",
       "Ende": "2024-06-01T04:00:00",
       "BestellpositionenStrings": [
@@ -9718,7 +9718,7 @@
     },
     {
       "Auftragsnummer": "155",
-      "Baustellennummer": 0,
+      "Baustellennummer": 155,
       "Start": "2024-01-08T18:00:00",
       "Ende": "2024-06-01T04:00:00",
       "BestellpositionenStrings": [
@@ -9761,7 +9761,7 @@
     },
     {
       "Auftragsnummer": "156",
-      "Baustellennummer": 0,
+      "Baustellennummer": 156,
       "Start": "2024-03-21T06:00:00",
       "Ende": "2024-03-29T23:00:00",
       "BestellpositionenStrings": [
@@ -9782,7 +9782,7 @@
     },
     {
       "Auftragsnummer": "157",
-      "Baustellennummer": 0,
+      "Baustellennummer": 157,
       "Start": "2024-03-21T06:00:00",
       "Ende": "2024-03-29T23:00:00",
       "BestellpositionenStrings": [
@@ -9796,7 +9796,7 @@
     },
     {
       "Auftragsnummer": "158",
-      "Baustellennummer": 0,
+      "Baustellennummer": 158,
       "Start": "2024-03-25T06:00:00",
       "Ende": "2024-05-17T15:00:00",
       "BestellpositionenStrings": [
@@ -9812,7 +9812,7 @@
     },
     {
       "Auftragsnummer": "159",
-      "Baustellennummer": 0,
+      "Baustellennummer": 159,
       "Start": "2024-03-25T06:00:00",
       "Ende": "2024-05-17T15:00:00",
       "BestellpositionenStrings": [
@@ -9828,7 +9828,7 @@
     },
     {
       "Auftragsnummer": "160",
-      "Baustellennummer": 0,
+      "Baustellennummer": 160,
       "Start": "2024-03-25T19:30:00",
       "Ende": "2024-03-28T04:00:00",
       "BestellpositionenStrings": [
@@ -9843,7 +9843,7 @@
     },
     {
       "Auftragsnummer": "161",
-      "Baustellennummer": 0,
+      "Baustellennummer": 161,
       "Start": "2024-03-25T19:30:00",
       "Ende": "2024-03-28T04:00:00",
       "BestellpositionenStrings": [
@@ -9858,7 +9858,7 @@
     },
     {
       "Auftragsnummer": "162",
-      "Baustellennummer": 0,
+      "Baustellennummer": 162,
       "Start": "2024-03-25T19:30:00",
       "Ende": "2024-03-28T04:00:00",
       "BestellpositionenStrings": [
@@ -9873,7 +9873,7 @@
     },
     {
       "Auftragsnummer": "163",
-      "Baustellennummer": 0,
+      "Baustellennummer": 163,
       "Start": "2024-01-08T06:00:00",
       "Ende": "2024-12-20T16:00:00",
       "BestellpositionenStrings": [
@@ -9906,7 +9906,7 @@
     },
     {
       "Auftragsnummer": "164",
-      "Baustellennummer": 0,
+      "Baustellennummer": 164,
       "Start": "2024-01-08T06:00:00",
       "Ende": "2024-12-20T16:00:00",
       "BestellpositionenStrings": [
@@ -9939,7 +9939,7 @@
     },
     {
       "Auftragsnummer": "165",
-      "Baustellennummer": 0,
+      "Baustellennummer": 165,
       "Start": "2024-02-21T06:00:00",
       "Ende": "2024-03-01T16:00:00",
       "BestellpositionenStrings": [
@@ -9952,7 +9952,7 @@
     },
     {
       "Auftragsnummer": "166",
-      "Baustellennummer": 0,
+      "Baustellennummer": 166,
       "Start": "2024-02-21T06:00:00",
       "Ende": "2024-03-01T16:00:00",
       "BestellpositionenStrings": [
@@ -9965,7 +9965,7 @@
     },
     {
       "Auftragsnummer": "167",
-      "Baustellennummer": 0,
+      "Baustellennummer": 167,
       "Start": "2024-01-23T06:00:00",
       "Ende": "2024-06-30T16:00:00",
       "BestellpositionenStrings": [
@@ -10008,7 +10008,7 @@
     },
     {
       "Auftragsnummer": "168",
-      "Baustellennummer": 0,
+      "Baustellennummer": 168,
       "Start": "2024-01-23T06:00:00",
       "Ende": "2024-06-30T16:00:00",
       "BestellpositionenStrings": [
@@ -10051,7 +10051,7 @@
     },
     {
       "Auftragsnummer": "169",
-      "Baustellennummer": 0,
+      "Baustellennummer": 169,
       "Start": "2024-01-23T06:00:00",
       "Ende": "2024-06-30T16:00:00",
       "BestellpositionenStrings": [
@@ -10094,7 +10094,7 @@
     },
     {
       "Auftragsnummer": "170",
-      "Baustellennummer": 0,
+      "Baustellennummer": 170,
       "Start": "2024-01-23T06:00:00",
       "Ende": "2024-06-30T16:00:00",
       "BestellpositionenStrings": [
@@ -10137,7 +10137,7 @@
     },
     {
       "Auftragsnummer": "171",
-      "Baustellennummer": 0,
+      "Baustellennummer": 171,
       "Start": "2024-01-23T06:00:00",
       "Ende": "2024-06-30T16:00:00",
       "BestellpositionenStrings": [
@@ -10180,7 +10180,7 @@
     },
     {
       "Auftragsnummer": "172",
-      "Baustellennummer": 0,
+      "Baustellennummer": 172,
       "Start": "2024-01-23T19:00:00",
       "Ende": "2024-12-16T05:00:00",
       "BestellpositionenStrings": [
@@ -10223,7 +10223,7 @@
     },
     {
       "Auftragsnummer": "173",
-      "Baustellennummer": 0,
+      "Baustellennummer": 173,
       "Start": "2024-01-23T19:00:00",
       "Ende": "2024-12-16T05:00:00",
       "BestellpositionenStrings": [
@@ -10266,7 +10266,7 @@
     },
     {
       "Auftragsnummer": "174",
-      "Baustellennummer": 0,
+      "Baustellennummer": 174,
       "Start": "2024-01-23T19:00:00",
       "Ende": "2024-12-16T05:00:00",
       "BestellpositionenStrings": [
@@ -10309,7 +10309,7 @@
     },
     {
       "Auftragsnummer": "175",
-      "Baustellennummer": 0,
+      "Baustellennummer": 175,
       "Start": "2024-03-23T06:00:00",
       "Ende": "2024-03-30T17:00:00",
       "BestellpositionenStrings": [
@@ -10328,7 +10328,7 @@
     },
     {
       "Auftragsnummer": "176",
-      "Baustellennummer": 0,
+      "Baustellennummer": 176,
       "Start": "2024-03-23T06:00:00",
       "Ende": "2024-03-30T17:00:00",
       "BestellpositionenStrings": [
@@ -10347,7 +10347,7 @@
     },
     {
       "Auftragsnummer": "177",
-      "Baustellennummer": 0,
+      "Baustellennummer": 177,
       "Start": "2024-01-08T20:00:00",
       "Ende": "2024-10-01T04:00:00",
       "BestellpositionenStrings": [
@@ -10390,7 +10390,7 @@
     },
     {
       "Auftragsnummer": "178",
-      "Baustellennummer": 0,
+      "Baustellennummer": 178,
       "Start": "2024-01-08T20:00:00",
       "Ende": "2024-10-01T04:00:00",
       "BestellpositionenStrings": [
@@ -10433,7 +10433,7 @@
     },
     {
       "Auftragsnummer": "179",
-      "Baustellennummer": 0,
+      "Baustellennummer": 179,
       "Start": "2024-03-09T16:30:00",
       "Ende": "2024-03-10T17:00:00",
       "BestellpositionenStrings": [
@@ -10448,7 +10448,7 @@
     },
     {
       "Auftragsnummer": "180",
-      "Baustellennummer": 0,
+      "Baustellennummer": 180,
       "Start": "2024-03-11T19:30:00",
       "Ende": "2024-03-18T03:00:00",
       "BestellpositionenStrings": [
@@ -10467,7 +10467,7 @@
     },
     {
       "Auftragsnummer": "181",
-      "Baustellennummer": 0,
+      "Baustellennummer": 181,
       "Start": "2024-03-11T19:30:00",
       "Ende": "2024-03-18T03:00:00",
       "BestellpositionenStrings": [
@@ -10486,7 +10486,7 @@
     },
     {
       "Auftragsnummer": "182",
-      "Baustellennummer": 0,
+      "Baustellennummer": 182,
       "Start": "2024-03-11T19:30:00",
       "Ende": "2024-03-18T03:00:00",
       "BestellpositionenStrings": [
@@ -10501,7 +10501,7 @@
     },
     {
       "Auftragsnummer": "183",
-      "Baustellennummer": 0,
+      "Baustellennummer": 183,
       "Start": "2024-02-24T06:00:00",
       "Ende": "2024-03-16T04:00:00",
       "BestellpositionenStrings": [
@@ -10543,7 +10543,7 @@
     },
     {
       "Auftragsnummer": "184",
-      "Baustellennummer": 0,
+      "Baustellennummer": 184,
       "Start": "2024-02-19T05:30:00",
       "Ende": "2024-03-10T16:00:00",
       "BestellpositionenStrings": [
@@ -10569,7 +10569,7 @@
     },
     {
       "Auftragsnummer": "185",
-      "Baustellennummer": 0,
+      "Baustellennummer": 185,
       "Start": "2024-02-19T05:30:00",
       "Ende": "2024-03-10T16:00:00",
       "BestellpositionenStrings": [
@@ -10590,7 +10590,7 @@
     },
     {
       "Auftragsnummer": "186",
-      "Baustellennummer": 0,
+      "Baustellennummer": 186,
       "Start": "2024-02-19T05:30:00",
       "Ende": "2024-03-10T16:00:00",
       "BestellpositionenStrings": [
