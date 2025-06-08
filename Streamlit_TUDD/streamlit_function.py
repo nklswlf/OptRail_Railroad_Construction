@@ -26,7 +26,8 @@ class SolutionApp:
             self.number_shifts = len(self.instance_data["Bestellpositionen"])
             self.number_machines = len(self.instance_data["Maschinen"])
             self.number_worker = len(self.instance_data["Arbeiter"])
-            self.number_attachments = len(self.instance_data["Anbaugeraete"])
+            if "Anbaugeraete" in self.instance_data:
+                self.number_attachments = len(self.instance_data["Anbaugeraete"])
 
     def upload_solution(self, key):
         uploaded_solution = st.file_uploader("Lösungsdatei hochladen", type=["json"], key=f"solution_uploader_{key}")
@@ -146,9 +147,9 @@ class SolutionApp:
             return
 
         # Statistikdaten
-        stunden_in_nutzung_dict = df_machine.groupby('Maschine')['Dauer'].sum().to_dict()
-        tage_in_nutzung_dict = {k: v / 24 for k, v in stunden_in_nutzung_dict.items()}
-        maschinen_anzahl_baustellen_dict = df_machine.groupby('Maschine')['Baustelle'].nunique().to_dict()
+        solution_data.stunden_in_nutzung_dict = df_machine.groupby('Maschine')['Dauer'].sum().to_dict()
+        solution_data.tage_in_nutzung_dict = {k: v / 24 for k, v in solution_data.stunden_in_nutzung_dict.items()}
+        solution_data.maschinen_anzahl_baustellen_dict = df_machine.groupby('Maschine')['Baustelle'].nunique().to_dict()
 
         # Farben für Baustellen
         unique_sites = sorted(df_machine['Baustelle'].unique(), key=lambda x: int(x))
@@ -245,6 +246,14 @@ class SolutionApp:
             worker = str(worker.split("_")[1])
             solution_data.worker_hours[worker] = sum(shift['Dauer'] for shift in shifts)
 
+        # Nutzungsstunden der Maschinen
+        for machine, shifts in solution_data.machine_assignments.items():
+            solution_data.machine_hours[machine] = sum(shift['Dauer'] for shift in shifts)
+
+        # Nutzungsstunden der Anbaugeräte
+        for attachment, shifts in solution_data.attachment_assignments.items():
+            solution_data.attachment_hours[attachment] = sum(shift['Dauer'] for shift in shifts)
+
 
     def construction_statistics(self, solution_data):
         
@@ -320,9 +329,6 @@ class SolutionApp:
 
 
         # --- Tabelle: Arbeitszeiten der Arbeiter ---
-        solution_data.df_worker = pd.DataFrame(solution_data.worker_rows)
-
-        # Arbeitszeiten-Tabelle anzeigen
         df_arbeitszeiten = pd.DataFrame.from_dict(solution_data.worker_hours, orient='index', columns=['Gesamtstunden'])
         df_arbeitszeiten.index.name = 'Arbeiter_ID'
         df_arbeitszeiten['Auslastung'] = ((df_arbeitszeiten['Gesamtstunden'] / 160) * 100).round(1).astype(str) + '%'
@@ -332,6 +338,43 @@ class SolutionApp:
         df_arbeitszeiten['Arbeitsweg'] = [round(solution_data.raw["Arbeiterloesung"]["BerechneteKilometer"].get(f"Arbeiter_{k}", 0), 2)for k in df_arbeitszeiten.index]
         st.dataframe(df_arbeitszeiten)
         st.write(f"➡️ **Anzahl nicht eingesetzter Arbeiter:** {solution_data.unued_worker_count}")
+
+        # --- Histogramm: Arbeitsstundenverteilung der Arbeiter ---
+        # Nur Arbeiter mit mehr als 0 Stunden berücksichtigen
+        worker_hours_values = [v for v in solution_data.worker_hours.values() if v > 0]
+        # Definiere die Bins explizit, damit 140-160 ein 20er Bin ist
+        bins = [0, 20, 40, 60, 80, 100, 120, 140, 160]
+        fig = px.histogram(
+            x=worker_hours_values,
+            category_orders={"x": bins},
+            title="Auslastungsverteilung der Arbeitszeiten",
+            labels={'x': 'Arbeitsstunden'},
+            histnorm='percent',  # Prozentuale Darstellung auf der Y-Achse
+            color_discrete_sequence=['#636EFA'],
+            nbins=len(bins)-1
+        )
+        fig.update_traces(
+            xbins=dict(
+            start=bins[0],
+            end=bins[-1],
+            size=20  # 20er Bins ab 140-160
+            ),
+            hovertemplate="<b>Arbeitsstunden:</b> %{x}<br><b>Anteil Arbeiter:</b> %{y:.1f}%<extra></extra>"
+        )
+        # vertikale rote dashen Linie hinzufügen bis zu maximalen y-Wert
+        fig.add_vline(x=140, line_dash="dash", line_color="red")
+
+        # Y-Achsen-Label und X-Achsen-Bereich festlegen
+        fig.update_layout(
+            yaxis_title='Anteil der eingesetzten Arbeiter (%)',
+            bargap=0.1,
+            xaxis_title='Arbeitsstunden',
+            xaxis=dict(range=[0, 160])  # X-Achse immer von 0 bis 160 anzeigen
+        )
+
+        # Diagramm in Streamlit anzeigen
+        st.plotly_chart(fig, key=f"arbeitszeiten_histogram_{solution_data.key}")
+
     
     def machine_statistics(self, solution_data):
 
@@ -342,6 +385,15 @@ class SolutionApp:
         st.write(f"**Gesamttransportdistanz der Maschinen:** {solution_data.transport_distance_machine:.1f} km")
         st.write("")
 
+        # --- Tabelle: Maschinennutzung ---
+        df_maschinennutzung = pd.DataFrame.from_dict(solution_data.machine_hours, orient='index', columns=['Gesamtstunden'])
+        df_maschinennutzung.index.name = 'Maschine'
+        df_maschinennutzung['Baustellen'] = [solution_data.maschinen_anzahl_baustellen_dict.get(k, 0) for k in df_maschinennutzung.index]
+        df_maschinennutzung['Tage in Nutzung'] = [round(solution_data.tage_in_nutzung_dict.get(k, 0), 2) for k in df_maschinennutzung.index]
+        df_maschinennutzung['Transportdistanz'] = [round(solution_data.raw["MaschinenLoesung"]["BerechneteKilometer"].get(k, 0), 2) for k in df_maschinennutzung.index]
+        df_maschinennutzung['Stammfahrerverletzungen'] = [solution_data.raw["MaschinenLoesung"]["BerechneteStammfahrerVerletzungenProMaschine"].get(k, 0) for k in df_maschinennutzung.index]
+        st.dataframe(df_maschinennutzung)
+        st.write(f"➡️ **Anzahl nicht eingesetzter Maschinen:** {solution_data.unued_machine_count}")
 
     def attachment_statistics(self, solution_data):
         
@@ -351,6 +403,16 @@ class SolutionApp:
         st.write(f"**Anteil genutzte Anbaugeräte:** {solution_data.attachment_count} von {self.number_attachments} ➡️ {solution_data.attachment_count_percentage:.1f}%")
         st.write(f"**Gesamttransportdistanz der Anbaugeräte:** {solution_data.transport_distance_attachment:.1f} km")
         st.write("")
+
+        # --- Tabelle: Anbaugerätenutzung ---
+        df_anbaugerätenutzung = pd.DataFrame.from_dict(solution_data.attachment_hours, orient='index', columns=['Gesamtstunden'])
+        df_anbaugerätenutzung.index.name = 'Anbaugerät'
+        df_anbaugerätenutzung['Baustellen'] = [solution_data.maschinen_anzahl_baustellen_dict.get(k, 0) for k in df_anbaugerätenutzung.index]
+        df_anbaugerätenutzung['Tage in Nutzung'] = [round(solution_data.tage_in_nutzung_dict.get(k, 0), 2) for k in df_anbaugerätenutzung.index]
+        df_anbaugerätenutzung['Transportdistanz'] = [round(solution_data.raw["AnbaugeraeteLoesung"]["BerechneteKilometer"].get(k, 0), 2) for k in df_anbaugerätenutzung.index]
+        st.dataframe(df_anbaugerätenutzung)
+        st.write(f"➡️ **Anzahl nicht eingesetzter Anbaugeräte:** {solution_data.unued_attachment_count}")
+
 
 
     def streamlit(self, key):
@@ -442,6 +504,8 @@ class SolutionData:
         self.attachment_assignments = raw_data.get("AnbaugeraeteLoesung", {}).get("Anbaugeraetzuweisung", {})
 
         self.worker_hours = dict()
+        self.machine_hours = dict()
+        self.attachment_hours = dict()
 
 
     def to_dict(self):
