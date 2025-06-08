@@ -29,6 +29,59 @@ class SolutionApp:
             if "Anbaugeraete" in self.instance_data:
                 self.number_attachments = len(self.instance_data["Anbaugeraete"])
 
+            # Instanzdaten als Info ausgeben
+            st.info(
+                f"**Instanzdaten:**\n"
+                f"- Anzahl Baustellen: {self.number_sites}\n"
+                f"- Anzahl Bestellpositionen: {self.number_shifts}\n"
+                f"- Anzahl Arbeiter: {self.number_worker}\n"
+                f"- Anzahl Maschinen: {self.number_machines}\n"
+                f"- Anzahl Anbaugeräte: {self.number_attachments}"
+            )
+
+
+            self.worker_location = [
+                [worker["Wohnort"]["Item1"], worker["Wohnort"]["Item2"]]
+                for worker in self.instance_data["Arbeiter"]
+            ]
+
+            self.site_location = [
+                [site["Standort"]["Item1"], site["Standort"]["Item2"]]
+                for site in self.instance_data["Auftraege"]
+            ]
+
+            # Karte mit Standorten der Arbeiter und Baustellen anzeigen
+            st.write("### Standorte der Arbeiter und Baustellen")
+
+            # DataFrame für die Standorte erstellen
+            df_workers = pd.DataFrame(self.worker_location, columns=["lat", "lon"])
+            df_workers["Typ"] = "Arbeiter"
+            df_sites = pd.DataFrame(self.site_location, columns=["lat", "lon"])
+            df_sites["Typ"] = "Baustelle"
+
+            df_map = pd.concat([df_workers, df_sites], ignore_index=True)
+
+            # Farben für die Typen
+            color_map = {"Arbeiter": "blue", "Baustelle": "red"}
+            df_map["Farbe"] = df_map["Typ"].map(color_map)
+
+            # Plotly Scattermapbox verwenden
+            fig = px.scatter_mapbox(
+                df_map,
+                lat="lat",
+                lon="lon",
+                color="Typ",
+                color_discrete_map=color_map,
+                hover_name="Typ",
+                zoom=6,
+                height=500,
+            )
+
+            fig.update_layout(mapbox_style="open-street-map")
+            fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+            st.plotly_chart(fig, use_container_width=True)
+
     def upload_solution(self, key):
         uploaded_solution = st.file_uploader("Lösungsdatei hochladen", type=["json"], key=f"solution_uploader_{key}")
         if uploaded_solution:
@@ -438,7 +491,92 @@ class SolutionApp:
 
 
     def compare_results(self):
-        pass
+        st.write("## Vergleich der Lösungen")
+
+        if len(self.solution_data) < 2:
+            st.info("Bitte mindestens zwei Lösungen hochladen, um einen Vergleich anzuzeigen.")
+            return
+
+        # Instanzdaten als Info ausgeben
+        st.info(
+            f"**Instanzdaten:**\n"
+            f"- Anzahl Baustellen: {self.number_sites}\n"
+            f"- Anzahl Bestellpositionen: {self.number_shifts}\n"
+            f"- Anzahl Arbeiter: {self.number_worker}\n"
+            f"- Anzahl Maschinen: {self.number_machines}\n"
+            f"- Anzahl Anbaugeräte: {self.number_attachments}"
+        )
+
+        # Liste der Keys und Emojis für die Lösungen
+        solution_keys = list(self.solution_data.keys())
+        emojis = st.session_state.get("solution_emojis", [f"Lösung {i+1}" for i in solution_keys])
+
+        # Vergleichstabelle der wichtigsten Kennzahlen (absolute Werte) – nur Lösungen
+        rows = []
+        for idx, key in enumerate(solution_keys):
+            sol = self.solution_data[key]
+            row = {
+                "Lösung": emojis[idx] if idx < len(emojis) else f"Lösung {key+1}",
+                "Erreichte Baustellen": sol.finished_sites,
+                "Erreichte Bestellpositionen": sol.finished_shifts,
+                "Stammfahrerverletzungen": sol.non_regular_driver,
+                "Genutzte Arbeiter": sol.worker_count,
+                "Genutzte Maschinen": sol.machine_count,
+                "Genutzte Anbaugeräte": sol.attachment_count,
+                "Arbeitswegedistanz (km)": f"{sol.comute_distance_worker:.1f}",
+                "Maschinentransport (km)": f"{sol.transport_distance_machine:.1f}",
+                "Anbaugerätetransport (km)": f"{sol.transport_distance_attachment:.1f}",
+                "Rechenzeit (min)": f"{sol.run_time_minutes:.1f}",
+            }
+            rows.append(row)
+
+        df_compare = pd.DataFrame(rows)
+        df_compare = df_compare.set_index("Lösung")
+        # Tabelle transponieren: Zeilen werden Spalten, Spalten werden Zeilen
+        df_compare_transposed = df_compare.transpose()
+
+        # Die erste Spalte so breit machen wie der längste Text
+        # Ermittle die maximale Textlänge in der ersten Spalte
+        max_len = df_compare_transposed.index.str.len().max()
+        # Setze die Breite (z.B. 8 Pixel pro Zeichen, min 120, max 400)
+        col_width = min(max(120, max_len * 8), 400)
+        # Zeige die Tabelle mit angepasster erster Spaltenbreite
+        st.dataframe(
+            df_compare_transposed,
+            column_config={df_compare_transposed.columns[0]: st.column_config.Column(width=col_width)}
+        )
+
+        # Optional: Balkendiagramm für ausgewählte absolute Kennzahlen
+        metrics = [
+            ("Erreichte Baustellen", "Erreichte Baustellen"),
+            ("Erreichte Bestellpositionen", "Erreichte Bestellpositionen"),
+            ("Genutzte Arbeiter", "Genutzte Arbeiter"),
+            ("Genutzte Maschinen", "Genutzte Maschinen"),
+            ("Genutzte Anbaugeräte", "Genutzte Anbaugeräte"),
+        ]
+        instanz_values = {
+            "Erreichte Baustellen": self.number_sites,
+            "Erreichte Bestellpositionen": self.number_shifts,
+            "Genutzte Arbeiter": self.number_worker,
+            "Genutzte Maschinen": self.number_machines,
+            "Genutzte Anbaugeräte": self.number_attachments,
+        }
+        for metric, title in metrics:
+            df_compare_numeric = df_compare.reset_index().copy()
+            df_compare_numeric[metric] = pd.to_numeric(df_compare_numeric[metric], errors="coerce")
+            fig = px.bar(
+            df_compare_numeric,
+            x="Lösung",
+            y=metric,
+            title=title,
+            color="Lösung",
+            color_discrete_sequence=px.colors.qualitative.Plotly
+            )
+            # Instanzwert als horizontale Linie
+            instanz_value = instanz_values.get(metric)
+            if pd.api.types.is_number(instanz_value):
+                fig.add_hline(y=instanz_value, line_dash="dash", line_color="black", annotation_text="Instanz", annotation_position="top left")
+                st.plotly_chart(fig, use_container_width=True)
 
 
     def run(self):
