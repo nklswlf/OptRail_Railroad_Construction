@@ -42,8 +42,6 @@ instances = ["Construction_RealLife_2024_3.json",
             "Construction_RealLife_2024_11.json"]
 '''
 
-instances = ["Construction_a10_o107_m5_an57_ar12.json"]
-
 
 
 neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace_Shift_Attachment',
@@ -90,7 +88,7 @@ algortihm = 'DBSA'
 
 algortihms = ['PSA', 'DBSA', 'TPSA']
                 
-seeds = [100]#,101,102,103,104,105,107,109,110,111,112,113]
+seeds = [100,101,102,103,104,105,107,109,110,111,112,113]
 
 def main(): 
     for seed in seeds:
@@ -150,7 +148,6 @@ def main():
                                                         max_iterations=100,
                                                         fallback_threshold=0, # Currently not used
                                                         scaling_energy=50,
-                                                        weight_alpha=1.1,
                                                         max_single_move_tries=30,
                                                         parallel_runs=8)
 

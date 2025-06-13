@@ -932,7 +932,6 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                  max_iterations:int,
                  fallback_threshold:int,
                  scaling_energy:int,
-                 weight_alpha:float,
                  max_single_move_tries:int,
                  parallel_runs:int):
         super().__init__(inputData)
@@ -947,7 +946,6 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         self.MaxSingleMoveTries = max_single_move_tries
         self.ParallelRuns = parallel_runs
         
-        self.WeightAlpha = weight_alpha
 
 
         self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
@@ -1217,7 +1215,6 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                 )
 
         combined_solutions = []
-        # collect results and sum up counters
         for result_front in [t.result() for t in tasks]:
             combined_solutions.extend(result_front)
         results = combined_solutions
@@ -1239,20 +1236,26 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                 seed = self.RNG.integers(0, 1_000_000)
                 self.EvaluationLogic.evaluate(local_solution)
                 local_pareto_front = [s for s in self.ParetoSolutions.ParetoFront if s != local_solution]
-                for s in local_pareto_front:
-                    self.EvaluationLogic.evaluate(s)
                 tasks.append(
                     executor.submit(self.second_phase, local_solution, local_pareto_front, seed)
                 )
-            combined_solutions = []
-            for result_front in [t.result() for t in tasks]:
-                combined_solutions.extend(result_front)
-            self.ParetoSolutions.ParetoFront = combined_solutions
-            self.ParetoSolutions.PurgeParetoFront()
-            self.ParetoSolutions.SortParetoFront()
-            print("\nPareto Front after Second Phase:")
-            self.ParetoSolutions.ShowFront()
-            self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
+        
+        
+        combined_solutions = []
+        for result_front in [t.result() for t in tasks]:
+            combined_solutions.extend(result_front)
+        self.ParetoSolutions.ParetoFront = combined_solutions
+        self.ParetoSolutions.PurgeParetoFront()
+        self.ParetoSolutions.SortParetoFront()
+
+        for solution_check in self.ParetoSolutions.ParetoFront:
+            feasible = solution_check.feasibility_check()
+            if not feasible:
+                raise Exception('Solution is not feasible after two phase simulated annealing')
+
+        print("\nPareto Front after Second Phase:")
+        self.ParetoSolutions.ShowFront()
+        self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
 
         
 
