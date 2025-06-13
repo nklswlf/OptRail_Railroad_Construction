@@ -30,7 +30,7 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                                                             # Reached after pre-processing in InputData
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
-
+'''
 instances = ["Construction_RealLife_2024_3.json",
             "Construction_RealLife_2024_4.json",
             "Construction_RealLife_2024_5.json",
@@ -40,6 +40,7 @@ instances = ["Construction_RealLife_2024_3.json",
             "Construction_RealLife_2024_9.json",
             "Construction_RealLife_2024_10.json",
             "Construction_RealLife_2024_11.json"]
+'''
 
 
 
@@ -85,9 +86,9 @@ step = None
 
 algortihm = 'DBSA'
 
-algortihms = ['PSA','DBSA']
+algortihms = ['PSA', 'DBSA', 'TPSA']
                 
-seeds = [100]#,101,102,103,104,105,107,109,110,111,112,113]
+seeds = [100,101,102,103,104,105,107,109,110,111,112,113]
 
 def main(): 
     for seed in seeds:
@@ -141,20 +142,14 @@ def main():
                 
                 elif algortihm == 'TPSA':
                     algo = TwoPhaseSimulatedAnnealing(  inputData=data,
-                                                        start_temp_individual=20,
-                                                        min_temp_individual=0.1,
-                                                        cooling_rate_individual=0.95,
-                                                        max_iterations_individual=500,
-                                                        fallback_threshold_individual=25,
-                                                        scaling_energy_individual=30,
-
-                                                        start_temp_dominance=20,
-                                                        min_temp_dominance=0.1,
-                                                        cooling_rate_dominance=0.95,
-                                                        max_iterations_dominance=500,
-                                                        fallback_threshold_dominance=25,
-                                                        scaling_energy_dominance=30,
-                                                        max_single_move_tries_dominance=30)
+                                                        start_temp=50,
+                                                        min_temp=0.1,
+                                                        cooling_rate=0.95,
+                                                        max_iterations=100,
+                                                        fallback_threshold=0, # Currently not used
+                                                        scaling_energy=50,
+                                                        max_single_move_tries=30,
+                                                        parallel_runs=8)
 
                 if step == 'Bound':
                     bound_time = solver.RunBound(UB_technique="LP")
