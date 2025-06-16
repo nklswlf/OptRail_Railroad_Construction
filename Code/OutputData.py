@@ -6,7 +6,7 @@ import os
 from datetime import timedelta
 from collections import Counter
 import numpy as np
-import pygmo as pg
+#import pygmo as pg
 import math
 from numba import njit
 
@@ -939,16 +939,16 @@ class ParetoSolutions:
         objs = np.array(objs)
         
         # Create a Hypervolume object with the objectives
-        hv = pg.hypervolume(objs)
+        #hv = pg.hypervolume(objs)
         
         # Calculate the hypervolume using the reference point
-        hv_value = hv.compute(self.ReferencePoint)
+        #hv_value = hv.compute(self.ReferencePoint)
 
         # Adjust hypervolume for comparison
-        hv_log = math.log10(hv_value) * 10
-        hv_sqrt = math.sqrt(hv_value)
+        #hv_log = math.log10(hv_value) * 10
+        #hv_sqrt = math.sqrt(hv_value)
         
-        return hv_value, hv_log, hv_sqrt
+        #return hv_value, hv_log, hv_sqrt
 
     def CalculateSpread(self):
         """

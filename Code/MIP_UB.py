@@ -380,7 +380,7 @@ class UpperBound:
         else:
             self.model.setParam('OutputFlag', 0)
             self.model.setParam('TimeLimit', 3600)
-            self.model.setParam("Threads", 12)
+            self.model.setParam("Threads", 8)
 
 
 

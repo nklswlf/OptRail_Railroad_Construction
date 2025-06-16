@@ -116,7 +116,7 @@ import numpy as np
 from scipy.spatial.distance import cdist
 import matplotlib.pyplot as plt
 
-from pymoo.indicators.hv import HV
+#from pymoo.indicators.hv import HV
 import numpy as np
 import pandas as pd
 
@@ -577,7 +577,8 @@ def calculate_exact_hypervolume(single_pareto_fronts_normalized=None, print_debu
         # Reference point for normalized data (all ones) --> New Reference point for normalized data (ref, ref, ..., ref)
         ref_point = np.ones(front.shape[1]) * ref
         # Calculate Hypervolume
-        hv = HV(ref_point)
+        #hv = HV(ref_point)
+        hv = "filler"
         hypervolume_value = hv.do(front)
         hypervolume_results[method] = hypervolume_value
         debug_print(f"[DEBUG] {method} hypervolume: {hypervolume_value:.6f}", print_debug)
