@@ -31,16 +31,22 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 '''
-instances = ["Construction_RealLife_2024_3.json",
-            "Construction_RealLife_2024_4.json",
-            "Construction_RealLife_2024_5.json",
-            "Construction_RealLife_2024_6.json",
-            "Construction_RealLife_2024_7.json",
+instances = ["Construction_RealLife_2024_3.json", # Location: 0/0
+            "Construction_RealLife_2024_4.json", # Location: 0/0
+            "Construction_RealLife_2024_5.json", # Location: 0/0
+            "Construction_RealLife_2024_6.json", # Location: 0/0
+            "Construction_RealLife_2024_7.json", # checked
+            "Construction_RealLife_2024_8.json", # checked
+            "Construction_RealLife_2024_9.json", # checked
+            "Construction_RealLife_2024_10.json", # checked
+            "Construction_RealLife_2024_11.json"] # checked
+'''
+
+instances = ["Construction_RealLife_2024_7.json",
             "Construction_RealLife_2024_8.json",
             "Construction_RealLife_2024_9.json",
             "Construction_RealLife_2024_10.json",
             "Construction_RealLife_2024_11.json"]
-'''
 
 
 
