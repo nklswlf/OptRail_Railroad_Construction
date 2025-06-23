@@ -400,7 +400,11 @@ class UpperBound:
             if self.bound_technique == 'BIP':
                 x = self.model.addVars(all_indices, vtype=GRB.BINARY, name="x")
             elif self.bound_technique == 'LP':
-                x = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="x")
+                for idx in all_indices:
+                    x[idx] = self.model.addVar(vtype=GRB.CONTINUOUS, lb=0, ub=1, name=f"x^{idx[0]}_{idx[1]}_{idx[2]}")
+                #x = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="x")
+
+            self.model.update()  # Update the model to reflect the new variables
 
         if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
 
@@ -413,7 +417,11 @@ class UpperBound:
             if self.bound_technique == 'BIP':
                 y = self.model.addVars(all_indices, vtype=GRB.BINARY, name="y")
             elif self.bound_technique == 'LP':
-                y = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="y")
+                for idx in all_indices:
+                    y[idx] = self.model.addVar(vtype=GRB.CONTINUOUS, lb=0, ub=1, name=f"y^{idx[0]}_{idx[1]}_{idx[2]}")
+                #y = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="y")
+
+            self.model.update()  # Update the model to reflect the new variables
 
         if self.upper_bound == 'attachment' or self.upper_bound == "all":
 
@@ -427,13 +435,19 @@ class UpperBound:
             if self.bound_technique == 'BIP':
                 z = self.model.addVars(all_indices, vtype=GRB.BINARY, name="z")
             elif self.bound_technique == 'LP':
-                z = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="z")
+                for idx in all_indices:
+                    z[idx] = self.model.addVar(vtype=GRB.CONTINUOUS, lb=0, ub=1, name=f"z^{idx[0]}_{idx[1]}_{idx[2]}")
+                #z = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="z")
+
+            self.model.update()  # Update the model to reflect the new variables
 
         # Site completion variables
         if self.bound_technique == 'BIP':
             u = self.model.addVars(self.C, vtype=GRB.BINARY, name="u")
         elif self.bound_technique == 'LP':
             u = self.model.addVars(self.C, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="u")
+
+        self.model.update()  # Update the model to reflect the new variables
 
         # ========================
         # 2. Set Objective Function
@@ -508,6 +522,7 @@ class UpperBound:
                         name=f"machine_start_constraint_{m}"
                     )
 
+        self.model.update()  # Update the model to reflect the new variables
 
         if self.upper_bound == 'attachment' or self.upper_bound == "all":
             # Attachment flow balance constraints
@@ -527,6 +542,7 @@ class UpperBound:
                         name=f"attachment_start_constraint_{a}"
                     )
 
+        self.model.update()  # Update the model to reflect the new variables
 
         if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
 
@@ -581,6 +597,7 @@ class UpperBound:
                     name=f"work_time_constraint_{w}"
                 )
 
+        self.model.update()  # Update the model to reflect the new variables
 
         # Site completion constraints
         if self.upper_bound == 'machine':
@@ -642,11 +659,14 @@ class UpperBound:
                             )
 
             
+        self.model.update()  # Update the model to reflect the new variables
         
-        
+
         elapsed_time = time.time() - current_time
         print(f" Model created successfully after {elapsed_time:.2f} seconds")
 
+        print(f"Variablen: {self.model.NumVars}")
+        print(f"Constraints: {self.model.NumConstrs}")
 
     def solve_model(self):
         """Solve the optimization model."""
