@@ -400,6 +400,7 @@ class UpperBound:
             if self.bound_technique == 'BIP':
                 x = self.model.addVars(all_indices, vtype=GRB.BINARY, name="x")
             elif self.bound_technique == 'LP':
+                x = {}
                 for idx in all_indices:
                     x[idx] = self.model.addVar(vtype=GRB.CONTINUOUS, lb=0, ub=1, name=f"x^{idx[0]}_{idx[1]}_{idx[2]}")
                 #x = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="x")
@@ -417,6 +418,7 @@ class UpperBound:
             if self.bound_technique == 'BIP':
                 y = self.model.addVars(all_indices, vtype=GRB.BINARY, name="y")
             elif self.bound_technique == 'LP':
+                y = {}
                 for idx in all_indices:
                     y[idx] = self.model.addVar(vtype=GRB.CONTINUOUS, lb=0, ub=1, name=f"y^{idx[0]}_{idx[1]}_{idx[2]}")
                 #y = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="y")
@@ -435,6 +437,7 @@ class UpperBound:
             if self.bound_technique == 'BIP':
                 z = self.model.addVars(all_indices, vtype=GRB.BINARY, name="z")
             elif self.bound_technique == 'LP':
+                z = {}
                 for idx in all_indices:
                     z[idx] = self.model.addVar(vtype=GRB.CONTINUOUS, lb=0, ub=1, name=f"z^{idx[0]}_{idx[1]}_{idx[2]}")
                 #z = self.model.addVars(all_indices, vtype=GRB.CONTINUOUS, lb=0, ub=1, name="z")
