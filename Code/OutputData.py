@@ -199,7 +199,7 @@ class Solution:
                 distance = self.data.transport_routes[order_i.site_number][order_j.site_number]
                 travel_time_double = distance / self.data._transport_speed_kmh
                 travel_time = timedelta(hours=travel_time_double)
-                if order_item_i.end_time + travel_time >= order_item_j.start_time:
+                if order_item_i.end_time + travel_time > order_item_j.start_time:
                     print(f"In machine route: {machine_name}, Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
                     return False
 
@@ -229,7 +229,7 @@ class Solution:
                 order_item_j = order_item_objects[i + 1]
                 break_time_double = self.data._hours_between_shifts
                 break_time = timedelta(hours=break_time_double)
-                if order_item_i.end_time + break_time >= order_item_j.start_time:
+                if order_item_i.end_time + break_time > order_item_j.start_time:
                     print(f"In worker route: {worker_id}, Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
                     return False
 
@@ -301,7 +301,7 @@ class Solution:
                 distance = self.data.transport_routes[order_i.site_number][order_j.site_number]
                 travel_time_double = distance / self.data._transport_speed_kmh
                 travel_time = timedelta(hours=travel_time_double)
-                if order_item_i.end_time + travel_time >= order_item_j.start_time:
+                if order_item_i.end_time + travel_time > order_item_j.start_time:
                     print(f"Route {route}")
                     print(f"In attachment {attachment_id} route: Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
                     return False
