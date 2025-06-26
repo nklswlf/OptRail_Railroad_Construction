@@ -42,11 +42,16 @@ instances = ["Construction_RealLife_2024_3.json", # Location: 0/0
             "Construction_RealLife_2024_11.json"] # checked
 '''
 
-instances = ["Construction_RealLife_2024_7.json",
-            "Construction_RealLife_2024_8.json",
-            "Construction_RealLife_2024_9.json",
-            "Construction_RealLife_2024_10.json",
-            "Construction_RealLife_2024_11.json"]
+instances = ["Construction_RealLife_2024_7_1.json",
+             "Construction_RealLife_2024_7_2.json",
+            "Construction_RealLife_2024_8_1.json",
+            "Construction_RealLife_2024_8_2.json",
+            "Construction_RealLife_2024_9_1.json",
+            "Construction_RealLife_2024_9_2.json",
+            "Construction_RealLife_2024_10_1.json",
+            "Construction_RealLife_2024_10_2.json",
+            "Construction_RealLife_2024_11_1.json",
+            "Construction_RealLife_2024_11_2.json"]
 
 
 
