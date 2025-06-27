@@ -1231,7 +1231,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         # Second Phase
         tasks = []
         with ProcessPoolExecutor() as executor:
-            for i in range(self.ParallelRuns):
+            for i in range(4):
                 local_solution = self.RNG.choice(self.ParetoSolutions.ParetoFront).clone()
                 seed = self.RNG.integers(0, 1_000_000)
                 self.EvaluationLogic.evaluate(local_solution)
