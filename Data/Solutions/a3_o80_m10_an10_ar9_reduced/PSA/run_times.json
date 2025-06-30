@@ -1,7 +1,7 @@
 {
-    "Bound Time": 3.4422271251678467,
-    "Greedy Time": 0.033785343170166016,
-    "Building Time": 0.00099945068359375,
-    "Improvement Time": 239.22849798202515,
-    "Total Time": 242.70550990104675
+    "Bound Time": 1.9375324249267578,
+    "Greedy Time": 0.031853437423706055,
+    "Building Time": 0.0,
+    "Improvement Time": 235.16652941703796,
+    "Total Time": 237.13591527938843
 }
