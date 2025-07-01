@@ -95,9 +95,9 @@ step = None
 
 algortihm = 'DBSA'
 
-algortihms = ['PSA', 'DBSA', 'TPSA']
+algortihms = ['PSA', 'DBSA']#, 'TPSA']
                 
-seeds = [100, 101,102,103,104,105,107,109,110,111,112,113]
+seeds = [100,101,102,103,104,105,107,109,110,111]#,112,113]
 
 def main(): 
     for seed in seeds:
@@ -142,11 +142,11 @@ def main():
                                                             start_temp=50,
                                                             min_temp=0.1,
                                                             cooling_rate=0.95,
-                                                            max_iterations=100,
+                                                            max_iterations=300,
                                                             fallback_threshold=0, # Currently not used
                                                             scaling_energy=0, # Currently not used
                                                             max_single_move_tries=30,
-                                                            parallel_runs=8)
+                                                            parallel_runs=0)
 
                 
                 elif algortihm == 'TPSA':

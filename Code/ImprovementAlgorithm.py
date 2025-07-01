@@ -836,42 +836,59 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         self.InitializeNeighborhoods(list(self.NeighborhoodTypes.keys()))
         self.ParetoSolutions.UpdateParetoFront(solution)
 
-        while len(self.ParetoSolutions.ParetoFront) < self.ParallelRuns:
-            self.MutateSolution(solution)
-        print(f"Initial Solution Pool:")
-        self.ParetoSolutions.SortParetoFront()
-        self.ParetoSolutions.ShowFront()
+        
 
-        if len(self.ParetoSolutions.ParetoFront) != self.ParallelRuns:
-            raise Exception(f"Not enough solutions in Pareto Front: {len(self.ParetoSolutions.ParetoFront)}")
+        multiprocessing = False
+        
+        if multiprocessing:
 
-        # ===== parallel execution with counter aggregation =====
-        tasks = []
-        with ProcessPoolExecutor() as executor:
-            for sol in self.ParetoSolutions.ParetoFront:
-                local_solution = sol.clone()
-                seed = self.RNG.integers(0, 1_000_000)
-                self.EvaluationLogic.evaluate(local_solution)
-                local_pareto_front = [s for s in self.ParetoSolutions.ParetoFront if s != local_solution]
-                for s in local_pareto_front:
-                    self.EvaluationLogic.evaluate(s)
-                # submit wrapper that returns both front and counters
-                tasks.append(
-                    executor.submit(self._dbsa_with_counts, local_solution, local_pareto_front, seed)
-                )
+            while len(self.ParetoSolutions.ParetoFront) < self.ParallelRuns:
+                self.MutateSolution(solution)
+            print(f"Initial Solution Pool:")
+            self.ParetoSolutions.SortParetoFront()
+            self.ParetoSolutions.ShowFront()
 
-        combined_solutions = []
-        # collect results and sum up counters
-        for result_front, mov_counts, none_counts in [t.result() for t in tasks]:
-            combined_solutions.extend(result_front)
-            for nt, c in mov_counts.items():
-                self.Move_Counter[nt] += c
-            for nt, c in none_counts.items():
-                self.None_Move_Counter[nt] += c
-        results = combined_solutions
+            if len(self.ParetoSolutions.ParetoFront) != self.ParallelRuns:
+                raise Exception(f"Not enough solutions in Pareto Front: {len(self.ParetoSolutions.ParetoFront)}")
 
-        # update Pareto front
-        self.ParetoSolutions.ParetoFront = results
+            # ===== parallel execution with counter aggregation =====
+            tasks = []
+            with ProcessPoolExecutor() as executor:
+                for sol in self.ParetoSolutions.ParetoFront:
+                    local_solution = sol.clone()
+                    seed = self.RNG.integers(0, 1_000_000)
+                    self.EvaluationLogic.evaluate(local_solution)
+                    local_pareto_front = [s for s in self.ParetoSolutions.ParetoFront if s != local_solution]
+                    for s in local_pareto_front:
+                        self.EvaluationLogic.evaluate(s)
+                    # submit wrapper that returns both front and counters
+                    tasks.append(
+                        executor.submit(self._dbsa_with_counts, local_solution, local_pareto_front, seed)
+                    )
+
+            combined_solutions = []
+            # collect results and sum up counters
+            for result_front, mov_counts, none_counts in [t.result() for t in tasks]:
+                combined_solutions.extend(result_front)
+                for nt, c in mov_counts.items():
+                    self.Move_Counter[nt] += c
+                for nt, c in none_counts.items():
+                    self.None_Move_Counter[nt] += c
+            results = combined_solutions
+
+            # update Pareto front
+            self.ParetoSolutions.ParetoFront = results
+
+        else:
+            print(f"Initial Solution:")
+            self.ParetoSolutions.ShowFront()
+            local_solution = solution
+            seed = self.RNG.integers(0, 1_000_000)
+            local_pareto_front = [s for s in self.ParetoSolutions.ParetoFront]
+
+            result_front = self.DBSA(local_solution, local_pareto_front, seed)
+            self.ParetoSolutions.ParetoFront = result_front
+
         self.ParetoSolutions.PurgeParetoFront()
         self.ParetoSolutions.SortParetoFront()
 
