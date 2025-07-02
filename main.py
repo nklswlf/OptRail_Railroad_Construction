@@ -41,16 +41,21 @@ instances = ["Construction_RealLife_2024_3.json", # Location: 0/0
             "Construction_RealLife_2024_10.json", # checked
             "Construction_RealLife_2024_11.json"] # empty instance
 
+
 instances = ["Construction_RealLife_2024_7_1.json",
             "Construction_RealLife_2024_7_2.json",
+            "Construction_RealLife_2024_7_3.json",
             "Construction_RealLife_2024_8_1.json",
             "Construction_RealLife_2024_8_2.json",
+            "Construction_RealLife_2024_8_3.json",
             "Construction_RealLife_2024_9_1.json",
             "Construction_RealLife_2024_9_2.json",
+            "Construction_RealLife_2024_9_3.json",
             "Construction_RealLife_2024_10_1.json",
-            "Construction_RealLife_2024_10_2.json"]
-'''
+            "Construction_RealLife_2024_10_2.json",
+            "Construction_RealLife_2024_10_3.json"]
 
+'''
 
 
 neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace_Shift_Attachment',
@@ -97,7 +102,7 @@ algortihm = 'DBSA'
 
 algortihms = ['PSA', 'DBSA', 'TPSA']
                 
-seeds = [100, 101,102,103,104,105,107,109,110,111,112,113]
+seeds = [100,101,102,103,104,105,107,109,110,111,112,113]
 
 def main(): 
     for seed in seeds:
