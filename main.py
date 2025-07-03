@@ -119,7 +119,7 @@ step = None
 
 algortihm = 'DBSA'
 
-algortihms = ['PSA', 'DBSA']#, 'TPSA']
+algortihms = ['PSA', 'DBSA']
                 
 
 seeds = [100,101,102,103,104,105,107,109,110,111]#,112,113]
@@ -147,7 +147,7 @@ def main():
                                                             start_temp=20,
                                                             min_temp=0.1,
                                                             cooling_rate=0.95,
-                                                            max_iterations=300,
+                                                            max_iterations=3000,
                                                             fallback_threshold=25,
                                                             scaling_energy=30)
                                                         
@@ -168,7 +168,7 @@ def main():
                                                             start_temp=50,
                                                             min_temp=0.1,
                                                             cooling_rate=0.95,
-                                                            max_iterations=300,
+                                                            max_iterations=400,
                                                             fallback_threshold=0, # Currently not used
                                                             scaling_energy=0, # Currently not used
                                                             max_single_move_tries=30,
