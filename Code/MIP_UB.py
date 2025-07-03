@@ -95,7 +95,7 @@ class UpperBound:
         
     def preprocess_data(self):
         """Preprocess the input data for optimization."""
-        print("\n Preprocessing data for BIP...")
+        print("\n Preprocessing data for Model...")
         current_time = time.time()
         
         # ========================
@@ -359,7 +359,7 @@ class UpperBound:
 
 
         current_time = time.time()
-        print("\n Creating BIP...")
+        print("\n Creating Model...")
         self.model = gp.Model("Flow_Formulation")
 
         
@@ -665,14 +665,13 @@ class UpperBound:
         print(f" Number of Constraints: {self.model.NumConstrs}")
         print(f" Model created successfully after {elapsed_time:.2f} seconds")
 
-        
 
     def solve_model(self):
         """Solve the optimization model."""
-        print("\n Solving BIP...")
+        print("\n Solving...")
         self.model.optimize()
 
-        print(" BIP solved after {:.2f} seconds".format(self.model.Runtime))
+        print(" Solved after {:.2f} seconds".format(self.model.Runtime))
    
             
     def extract_routes_from_solution(self):
