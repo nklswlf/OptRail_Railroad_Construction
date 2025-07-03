@@ -58,6 +58,25 @@ instances = ["Construction_RealLife_2024_7_1.json",
 '''
 
 
+instances = ["Construction_RealLife_2024_7_A.json",
+            "Construction_RealLife_2024_7_B.json",
+            "Construction_RealLife_2024_7_C.json",
+            "Construction_RealLife_2024_7_D.json",
+            "Construction_RealLife_2024_8_A.json",
+            "Construction_RealLife_2024_8_B.json",
+            "Construction_RealLife_2024_8_C.json",
+            "Construction_RealLife_2024_8_D.json",
+            "Construction_RealLife_2024_9_A.json",
+            "Construction_RealLife_2024_9_B.json",
+            "Construction_RealLife_2024_9_C.json",
+            "Construction_RealLife_2024_9_D.json",
+            "Construction_RealLife_2024_10_A.json",
+            "Construction_RealLife_2024_10_B.json",
+            "Construction_RealLife_2024_10_C.json",
+            "Construction_RealLife_2024_10_D.json"]
+
+
+
 neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace_Shift_Attachment',
                        'Swap_Shift_Worker', 'Swap_Shift_Machine', 'Swap_Shift_Attachment',
                        'Swap_Shift_External', 'Insert_Shift']
