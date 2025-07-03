@@ -97,16 +97,21 @@ class Solver:
 
     def RunBuilding(self, UB_technique, greedy_technique, building_algorithm):
         ''' Run the building phase and return the solution'''
-
+        
+        start_time = time.time()
         self.BoundPhase(UB_technique)
-
-        startSolution = self.ConstructionPhase(greedy_technique)
+        bound_time = time.time() - start_time
+        print("Bound Time:", bound_time)
 
         start_time = time.time()
+        startSolution = self.ConstructionPhase(greedy_technique)
+        greedy_time = time.time() - start_time
+        print("Greedy Time:", greedy_time)
 
+        start_time = time.time()
         staffed_solution = self.BuildingPhase(startSolution, building_algorithm)
-
         building_time = time.time() - start_time
+        print("Building Time:", building_time)
 
         return staffed_solution, building_time
 

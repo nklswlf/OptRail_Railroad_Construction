@@ -40,42 +40,19 @@ instances = ["Construction_RealLife_2024_3.json", # Location: 0/0
             "Construction_RealLife_2024_9.json", # checked
             "Construction_RealLife_2024_10.json", # checked
             "Construction_RealLife_2024_11.json"] # empty instance
-
-
-instances = ["Construction_RealLife_2024_7_1.json",
-            "Construction_RealLife_2024_7_2.json",
-            "Construction_RealLife_2024_7_3.json",
-            "Construction_RealLife_2024_8_1.json",
-            "Construction_RealLife_2024_8_2.json",
-            "Construction_RealLife_2024_8_3.json",
-            "Construction_RealLife_2024_9_1.json",
-            "Construction_RealLife_2024_9_2.json",
-            "Construction_RealLife_2024_9_3.json",
-            "Construction_RealLife_2024_10_1.json",
-            "Construction_RealLife_2024_10_2.json",
-            "Construction_RealLife_2024_10_3.json"]
-
-
-
-instances = ["Construction_RealLife_2024_7_A.json",
-            "Construction_RealLife_2024_7_B.json",
-            "Construction_RealLife_2024_7_C.json",
-            "Construction_RealLife_2024_7_D.json",
-            "Construction_RealLife_2024_8_A.json",
-            "Construction_RealLife_2024_8_B.json",
-            "Construction_RealLife_2024_8_C.json",
-            "Construction_RealLife_2024_8_D.json",
-            "Construction_RealLife_2024_9_A.json",
-            "Construction_RealLife_2024_9_B.json",
-            "Construction_RealLife_2024_9_C.json",
-            "Construction_RealLife_2024_9_D.json",
-            "Construction_RealLife_2024_10_A.json",
-            "Construction_RealLife_2024_10_B.json",
-            "Construction_RealLife_2024_10_C.json",
-            "Construction_RealLife_2024_10_D.json"]
-
-
 '''
+
+instances = ["Construction_RealLife_2024_7_1_2.json",
+            "Construction_RealLife_2024_8_1_2.json",
+            "Construction_RealLife_2024_9_1_2.json",
+            "Construction_RealLife_2024_10_1_2.json",
+            "Construction_RealLife_2024_7_2_2.json",
+            "Construction_RealLife_2024_8_2_2.json",
+            "Construction_RealLife_2024_9_2_2.json",
+            "Construction_RealLife_2024_10_2_2.json"]
+
+
+
 
 neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace_Shift_Attachment',
                        'Swap_Shift_Worker', 'Swap_Shift_Machine', 'Swap_Shift_Attachment',
@@ -115,14 +92,14 @@ greedy_techniques = [greedy_technique_a, greedy_technique_b]
 step = None
 #step = 'Bound'
 #step = 'Greedy'
-#step = 'Building'
+step = 'Building'
 
 algortihm = 'DBSA'
 
-algortihms = ['PSA', 'DBSA']
+algortihms = ['PSA']
                 
 
-seeds = [100,101,102,103,104,105,107,109,110,111]#,112,113]
+seeds = [100]#,101,102,103,104,105,107,109,110,111]#,112,113]
 
 
 def main(): 
