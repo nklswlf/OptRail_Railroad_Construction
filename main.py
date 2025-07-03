@@ -126,7 +126,7 @@ def main():
                                                             start_temp=20,
                                                             min_temp=0.1,
                                                             cooling_rate=0.95,
-                                                            max_iterations=3000,
+                                                            max_iterations=300,
                                                             fallback_threshold=25,
                                                             scaling_energy=30)
                                                         
