@@ -661,10 +661,10 @@ class UpperBound:
         
 
         elapsed_time = time.time() - current_time
+        print(f" Number of Variables: {self.model.NumVars}")
+        print(f" Number of Constraints: {self.model.NumConstrs}")
         print(f" Model created successfully after {elapsed_time:.2f} seconds")
 
-        print(f" Number of Decision Variables: {self.model.NumVars}")
-        print(f" Number of Constraints: {self.model.NumConstrs}")
 
     def solve_model(self):
         """Solve the optimization model."""

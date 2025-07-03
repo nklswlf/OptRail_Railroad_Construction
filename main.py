@@ -41,15 +41,39 @@ instances = ["Construction_RealLife_2024_3.json", # Location: 0/0
             "Construction_RealLife_2024_10.json", # checked
             "Construction_RealLife_2024_11.json"] # empty instance
 
+
 instances = ["Construction_RealLife_2024_7_1.json",
             "Construction_RealLife_2024_7_2.json",
+            "Construction_RealLife_2024_7_3.json",
             "Construction_RealLife_2024_8_1.json",
             "Construction_RealLife_2024_8_2.json",
+            "Construction_RealLife_2024_8_3.json",
             "Construction_RealLife_2024_9_1.json",
             "Construction_RealLife_2024_9_2.json",
+            "Construction_RealLife_2024_9_3.json",
             "Construction_RealLife_2024_10_1.json",
-            "Construction_RealLife_2024_10_2.json"]
+            "Construction_RealLife_2024_10_2.json",
+            "Construction_RealLife_2024_10_3.json"]
+
 '''
+
+
+instances = ["Construction_RealLife_2024_7_A.json",
+            "Construction_RealLife_2024_7_B.json",
+            "Construction_RealLife_2024_7_C.json",
+            "Construction_RealLife_2024_7_D.json",
+            "Construction_RealLife_2024_8_A.json",
+            "Construction_RealLife_2024_8_B.json",
+            "Construction_RealLife_2024_8_C.json",
+            "Construction_RealLife_2024_8_D.json",
+            "Construction_RealLife_2024_9_A.json",
+            "Construction_RealLife_2024_9_B.json",
+            "Construction_RealLife_2024_9_C.json",
+            "Construction_RealLife_2024_9_D.json",
+            "Construction_RealLife_2024_10_A.json",
+            "Construction_RealLife_2024_10_B.json",
+            "Construction_RealLife_2024_10_C.json",
+            "Construction_RealLife_2024_10_D.json"]
 
 
 
@@ -97,7 +121,9 @@ algortihm = 'DBSA'
 
 algortihms = ['PSA', 'DBSA']#, 'TPSA']
                 
+
 seeds = [100,101,102,103,104,105,107,109,110,111]#,112,113]
+
 
 def main(): 
     for seed in seeds:
@@ -121,7 +147,7 @@ def main():
                                                             start_temp=20,
                                                             min_temp=0.1,
                                                             cooling_rate=0.95,
-                                                            max_iterations=3000,
+                                                            max_iterations=300,
                                                             fallback_threshold=25,
                                                             scaling_energy=30)
                                                         

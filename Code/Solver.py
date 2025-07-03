@@ -119,13 +119,6 @@ class Solver:
         start_time = time.time()
 
         self.BoundPhase(UB_technique)
-        '''
-        order_numbers = [order.order_number for order in self.InputData.orders]
-        num_to_choose = int(len(order_numbers) * 0.7)
-        chosen_orders = self.RNG.choice(order_numbers, size=num_to_choose, replace=False)
-        for order_number in chosen_orders:
-            self.InputData.activate_order(order_number)
-        '''
         
         bound_time = time.time() - start_time
 

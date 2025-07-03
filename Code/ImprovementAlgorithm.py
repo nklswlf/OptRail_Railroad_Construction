@@ -175,23 +175,27 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
 
     def Run(self, solution:Solution) -> Solution:
         ''' Run simulated annealing algorithm with given solutions and parameters'''
-        
         current_temperature = self.StartTemperature
         self.InitializeNeighborhoods(list(self.DistanceTypes.keys()) + [self.FulfillmentType])
 
+        highest_number_of_fully_staffed_orders = 0
+        highest_dynamic_percentage = 0
 
         while current_temperature > self.MinTemperature:
-
-            print(f"\nSolution order item count: {solution.number_of_finished_order_items}")
-            print(f"Solution distances: {solution.total_distance}")
-            best_distance = solution.total_distance
-            fallback_counter = 0
+            
+            number_of_needed_orders = len(self.InputData.orders) - len(solution.not_recognized_orders)
+            print(f"\nSolution order count: {solution.number_of_finished_orders} of {number_of_needed_orders} needed orders")
+            self.EvaluationLogic.calculate_finished_order_items(solution)
+            number_of_needed_order_items = len(self.InputData.order_items) - len(solution.not_recognized_order_item_ids)
+            print(f"Solution order item count: {solution.number_of_finished_order_items} of {number_of_needed_order_items} needed order items")
+            print(f"Not started order items: {solution.not_started_order_item_ids}")
 
             for i in range(self.MaxIterations):
 
                 # Check if solution is fully staffed
                 if solution.total_dynamic_percentage == self.InputData.site_fulfillment:
                     print("\nFound fully staffed solution:")
+                    self.EvaluationLogic.evaluate(solution)
                     print(solution)
                     #self.ParetoSolutions.SetReferencePoint(solution)
                     return solution
@@ -212,7 +216,6 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
                         value += move.DeltaDetails[obj]
                 else:
                     value = -1
-
                 if value <= 0:
                     pass
                 elif value > 0:
@@ -221,22 +224,71 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
 
                     if prob < random_number:
                         continue
-
+                
                 
                 # Rethink this solution creation strategy: Compare to IM Challenge --> Changing the solution in place instead of creating a new one
                 # Evaluate distances and dynamic percentage ONLY maybe
                 worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
-                solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
-                self.EvaluationLogic.evaluate(solution)
+                solution.route_plan_worker = worker_route_plan
+                solution.route_plan_machine = machine_route_plan
+                solution.route_plan_attachment = attachment_route_plan
+
+                #solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                #self.EvaluationLogic.evaluate(solution)
+                self.EvaluationLogic.categorizing_orders(solution)
+                #self.EvaluationLogic.calculate_finished_order_items(solution)
+                self.EvaluationLogic.calculate_dynamic_percentage_order(solution)
+                self.EvaluationLogic.calculate_worker_count_and_utilization_time(solution)
+                
+                if len(solution.finished_orders) >= highest_number_of_fully_staffed_orders:
+                    if solution.total_dynamic_percentage > highest_dynamic_percentage:
+                        saved_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                        highest_number_of_fully_staffed_orders = len(solution.finished_orders)
+                        highest_dynamic_percentage = solution.total_dynamic_percentage
 
 
-
-            
             # Update the temperature
             current_temperature *= self.CoolingRate
 
+            #print(solution.dynamic_percentage_order)
+
         if solution.total_dynamic_percentage != self.InputData.site_fulfillment:
-            raise Exception(f"Solution is not fully staffed after simulated annealing: {solution.total_dynamic_percentage} != {self.InputData.site_fulfillment}")
+            self.EvaluationLogic.evaluate(saved_solution)
+
+            all_order_items = {
+                item for sublist in saved_solution.route_plan_machine.values()
+                for item in sublist
+            }
+
+            # Auftrag mit den meisten nicht enthaltenen Order Items finden
+            number_of_not_included = {}
+            for order in self.InputData.orders:
+                if not order.status:
+                    continue
+                missing_count = sum(1 for item in order.order_items if item.id not in all_order_items)
+                number_of_not_included[order.order_number] = missing_count
+
+            order_id_to_delete = max(number_of_not_included, key=number_of_not_included.get)
+            print(number_of_not_included)
+            print(order_id_to_delete)
+
+            self.InputData.deactivate_order(order_id_to_delete)
+            order_to_delete = self.InputData.orders[order_id_to_delete]
+
+            for order_item in order_to_delete.order_items:
+                oid = order_item.id
+                # Worker
+                next((v.remove(oid) for v in saved_solution.route_plan_worker.values() if oid in v), None)
+                # Machine
+                next((v.remove(oid) for v in saved_solution.route_plan_machine.values() if oid in v), None)
+                # Attachment
+                for v in saved_solution.route_plan_attachment.values():
+                    v[:] = [x for x in v if x != oid]
+
+            print("Retrying BuildingSimulatedAnnealing with new solution...")
+            self.EvaluationLogic.evaluate(saved_solution)
+            return self.Run(saved_solution)
+
 
 
 
