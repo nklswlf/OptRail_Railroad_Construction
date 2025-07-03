@@ -760,7 +760,7 @@ class UpperBound:
         if self.model.SolCount > 0:
             var_names = self.model.getAttr("VarName", self.model.getVars())
             var_values = self.model.getAttr("X", self.model.getVars())
-
+            print(f" Model objective value: {self.model.objVal}")
             u_vars = [
                 (int(name.split("[")[1].split("]")[0]), val, len(self.N_c[int(name.split("[")[1].split("]")[0])]))
                 for name, val in zip(var_names, var_values)
