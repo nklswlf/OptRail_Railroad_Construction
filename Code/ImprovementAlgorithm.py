@@ -998,7 +998,8 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                  start_temp:int,
                  min_temp:int,
                  cooling_rate:float,
-                 max_iterations:int,
+                 max_iterations_first:int,
+                 max_iterations_second:int,
                  fallback_threshold:int,
                  scaling_energy:int,
                  max_single_move_tries:int,
@@ -1008,7 +1009,8 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         self.StartTemperature = start_temp
         self.MinTemperature = min_temp
         self.CoolingRate = cooling_rate
-        self.MaxIterations = max_iterations
+        self.MaxIterationsFirstPhase = max_iterations_first
+        self.MaxIterationsSecondPhase = max_iterations_second
         self.FallbackThreshold = 0 # Currently not used
         self.ScalingEnergy = scaling_energy
 
@@ -1074,7 +1076,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
 
         while current_temperature > self.MinTemperature:
 
-            for i in range(self.MaxIterations):
+            for i in range(self.MaxIterationsFirstPhase):
 
                 
                 neighborhoodType = local_rng.choice(valid_types)
@@ -1198,7 +1200,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
 
         while current_temperature > self.MinTemperature:
 
-            for i in range(self.MaxIterations):
+            for i in range(self.MaxIterationsSecondPhase):
 
                 move_type = local_rng.choice(['traversal', 'location'])
     
@@ -1298,22 +1300,31 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
 
 
         # Second Phase
-        tasks = []
-        with ProcessPoolExecutor() as executor:
-            for i in range(4):
-                local_solution = self.RNG.choice(self.ParetoSolutions.ParetoFront).clone()
-                seed = self.RNG.integers(0, 1_000_000)
-                self.EvaluationLogic.evaluate(local_solution)
-                local_pareto_front = [s for s in self.ParetoSolutions.ParetoFront if s != local_solution]
-                tasks.append(
-                    executor.submit(self.second_phase, local_solution, local_pareto_front, seed)
-                )
-        
-        
-        combined_solutions = []
-        for result_front in [t.result() for t in tasks]:
-            combined_solutions.extend(result_front)
-        self.ParetoSolutions.ParetoFront = combined_solutions
+        multiprocessing = False
+        if multiprocessing:
+            tasks = []
+            with ProcessPoolExecutor() as executor:
+                for i in range(4):
+                    local_solution = self.RNG.choice(self.ParetoSolutions.ParetoFront).clone()
+                    seed = self.RNG.integers(0, 1_000_000)
+                    self.EvaluationLogic.evaluate(local_solution)
+                    local_pareto_front = [s for s in self.ParetoSolutions.ParetoFront if s != local_solution]
+                    tasks.append(
+                        executor.submit(self.second_phase, local_solution, local_pareto_front, seed)
+                    )
+            
+            
+            combined_solutions = []
+            for result_front in [t.result() for t in tasks]:
+                combined_solutions.extend(result_front)
+            self.ParetoSolutions.ParetoFront = combined_solutions
+
+        else:
+            local_solution = self.RNG.choice(self.ParetoSolutions.ParetoFront).clone()
+            seed = self.RNG.integers(0, 1_000_000)
+            local_pareto_front = [s for s in self.ParetoSolutions.ParetoFront if s != local_solution]
+            self.ParetoSolutions.ParetoFront = self.second_phase(local_solution, local_pareto_front, seed)
+
         self.ParetoSolutions.PurgeParetoFront()
         self.ParetoSolutions.SortParetoFront()
 

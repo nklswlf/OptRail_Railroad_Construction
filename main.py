@@ -18,16 +18,13 @@ instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",
                 "Construction_a5_o96_m10_an10_ar10_reduced.json",
                 "Construction_a10_o107_m5_an57_ar12.json",
                 "Construction_a10_o114_m6_an57_ar11.json",
-                "Construction_a10_o128_m6_an51_ar13.json", # UB not reached!!! because not enough worker with qualification (q = 9,4) are available for shifts at the same time
-                                                            # Reached after Edit Sites
+                "Construction_a10_o128_m6_an51_ar13.json",
                 "Construction_a10_o144_m6_an53_ar12.json",
                 "Construction_a15_o170_m9_an80_ar18.json",
-                "Construction_a20_o236_m12_an106_ar24.json", # UB not reached!!! because not enough attachment types (type = 8) are available for shifts at the same time
-                                                            # Check with UB LP Relaxation including ATTACHMENTS
+                "Construction_a20_o236_m12_an106_ar24.json",
                 "Construction_a25_o306_m13_an127_ar31.json",
-             "Construction_a30_o355_m18_an148_ar42.json",
-                "Construction_a40_o476_m22_an215_ar51.json", # UB not reached!!! because machine type 2 does not exist for a machine in the instance
-                                                            # Reached after pre-processing in InputData
+                "Construction_a30_o355_m18_an148_ar42.json",
+                "Construction_a40_o476_m22_an215_ar51.json",
                 "Construction_a50_o578_m28_an276_ar66.json"]
 
 '''
@@ -40,7 +37,7 @@ instances = ["Construction_RealLife_2024_3.json", # Location: 0/0
             "Construction_RealLife_2024_9.json", # checked
             "Construction_RealLife_2024_10.json", # checked
             "Construction_RealLife_2024_11.json"] # empty instance
-'''
+
 
 instances = ["Construction_RealLife_2024_7_1_2.json",
             "Construction_RealLife_2024_8_1_2.json",
@@ -51,7 +48,7 @@ instances = ["Construction_RealLife_2024_7_1_2.json",
             "Construction_RealLife_2024_9_2_2.json",
             "Construction_RealLife_2024_10_2_2.json"]
 
-
+'''
 
 
 neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace_Shift_Attachment',
@@ -92,14 +89,14 @@ greedy_techniques = [greedy_technique_a, greedy_technique_b]
 step = None
 #step = 'Bound'
 #step = 'Greedy'
-step = 'Building'
+#step = 'Building'
 
 algortihm = 'DBSA'
 
-algortihms = ['PSA']
+algortihms = ['PSA', 'DBSA', 'TPSA'] 
                 
 
-seeds = [100]#,101,102,103,104,105,107,109,110,111]#,112,113]
+seeds = [100,101,102,103,104]#,105,107,109,110,111]#,112,113]
 
 
 def main(): 
@@ -157,7 +154,8 @@ def main():
                                                         start_temp=50,
                                                         min_temp=0.1,
                                                         cooling_rate=0.95,
-                                                        max_iterations=100,
+                                                        max_iterations_first=100,
+                                                        max_iterations_second=400,
                                                         fallback_threshold=0, # Currently not used
                                                         scaling_energy=50,
                                                         max_single_move_tries=30,
