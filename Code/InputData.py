@@ -46,7 +46,13 @@ class InputData:
         self._max_consecutive_night_shifts = 5 # Max consecutive night shifts
         self._max_shifts_in_time_period = 10 # Max shifts in a time period
         self._time_period_for_max_shifts = timedelta(days=14) # Time period for max shifts in days
-        self._max_working_hours = 160/2 # Max working hours in the full planning horizon
+        
+        if self._parent_folder == "2_piece":
+            self._max_working_hours = 160/2 # Max working hours in the full planning horizon for real instances
+        else:
+            self._max_working_hours = 160 # Max working hours in the full planning horizon for test instances
+        print(f"Max working hours: {self._max_working_hours}")
+        
         self._day_and_night_shift_boundary = 12 # Start before 12 is day shift, after 12 is night shift
 
         # Default values for Machine and Worker characteristics
