@@ -48,6 +48,8 @@ instances = ["Construction_RealLife_2024_7_1_2.json",
             "Construction_RealLife_2024_9_2_2.json",
             "Construction_RealLife_2024_10_2_2.json"]
 
+instances = ["Construction_RealLife_2024_7_1_2.json"]
+
 '''
 
 
@@ -159,7 +161,7 @@ def main():
                                                         fallback_threshold=0, # Currently not used
                                                         scaling_energy=50,
                                                         max_single_move_tries=30,
-                                                        parallel_runs=8)
+                                                        parallel_runs=0)
 
                 if step == 'Bound':
                     bound_time = solver.RunBound(UB_technique="LP")
