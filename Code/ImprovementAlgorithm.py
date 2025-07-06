@@ -1016,6 +1016,8 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
 
         self.MaxSingleMoveTries = max_single_move_tries
         self.ParallelRuns = parallel_runs
+
+        self.NumberOfSolutions = {}
         
 
 
@@ -1063,6 +1065,11 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
 
         local_rng = np.random.default_rng(seed)
 
+        number_of_solutions = {}
+        iteration = 0
+        number_of_solutions[iteration] = len(local_pareto_front)
+        
+
         current_temperature = self.StartTemperature
         local_pareto_solutions = ParetoSolutions(self.InputData,  local_rng)
         local_pareto_solutions.ParetoFront = local_pareto_front
@@ -1077,7 +1084,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         while current_temperature > self.MinTemperature:
 
             for i in range(self.MaxIterationsFirstPhase):
-
+                iteration += 1
                 
                 neighborhoodType = local_rng.choice(valid_types)
                 objectives = self.NeighborhoodTypes[neighborhoodType]
@@ -1122,11 +1129,19 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                 local_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
                 self.EvaluationLogic.evaluate(local_solution)
 
-                local_pareto_solutions.UpdateParetoFront(local_solution)
+                added = local_pareto_solutions.UpdateParetoFront(local_solution)
 
+                if not added:
+                    # If the solution was not added, we can skip the rest of the iteration
+                    continue
+                number_of_solutions[iteration] = len(local_pareto_solutions.ParetoFront)
 
             current_temperature *= self.CoolingRate
 
+        #dict to csv
+        df = pd.DataFrame.from_dict(number_of_solutions, orient='index', columns=['Number of Solutions'])
+        df.index.name = 'Time (s)'
+        df.to_csv(f'NumberOfSolutions_{focused_objective}.csv')
 
         return local_pareto_solutions.ParetoFront
     
@@ -1248,8 +1263,13 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                 self.EvaluationLogic.evaluate(local_solution)
 
                 if dominating_count_new == 0:
-                    local_pareto_solutions.UpdateParetoFront(local_solution)
+                    added = local_pareto_solutions.UpdateParetoFront(local_solution)
 
+                    if not added:
+                        # If the solution was not added, we can skip the rest of the iteration
+                        continue
+                    current_time = time.time() - self.start_time
+                    self.NumberOfSolutions[current_time] = len(local_pareto_solutions.ParetoFront)
 
             current_temperature *= self.CoolingRate
 
@@ -1259,16 +1279,21 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
 
     def Run(self, solution:Solution) -> Solution:
         ''' Run simulated annealing algorithm with given solutions and parameters'''
-
+        self.start_time = time.time()
         # Initialize Model
         self.InitializeNeighborhoods(list(self.NeighborhoodTypes.keys()))
         self.ParetoSolutions.UpdateParetoFront(solution)
+
+        self.NumberOfSolutions[0] = len(self.ParetoSolutions.ParetoFront)
 
         # Mutate the initial solution to create a starting population
         while len(self.ParetoSolutions.ParetoFront) < len(self.objectives):
             self.MutateSolution(solution)
         print(f"Initial Solution Pool:")
         self.ParetoSolutions.ShowFront()
+        
+        current_time = time.time() - self.start_time
+        self.NumberOfSolutions[current_time] = len(self.ParetoSolutions.ParetoFront)
 
 
         # First Phase
@@ -1297,7 +1322,8 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         self.ParetoSolutions.ShowFront()
 
         self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
-
+        current_time = time.time() - self.start_time
+        self.NumberOfSolutions[current_time] = len(self.ParetoSolutions.ParetoFront)
 
         # Second Phase
         multiprocessing = False
@@ -1325,6 +1351,9 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
             local_pareto_front = [s for s in self.ParetoSolutions.ParetoFront if s != local_solution]
             self.ParetoSolutions.ParetoFront = self.second_phase(local_solution, local_pareto_front, seed)
 
+        current_time = time.time() - self.start_time
+        self.NumberOfSolutions[current_time] = len(self.ParetoSolutions.ParetoFront)
+
         self.ParetoSolutions.PurgeParetoFront()
         self.ParetoSolutions.SortParetoFront()
 
@@ -1336,6 +1365,12 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         print("\nPareto Front after Second Phase:")
         self.ParetoSolutions.ShowFront()
         self.ParetoSolutions.SelectRandomBestSolution(all_values=True)
+
+        #dict to csv
+        df = pd.DataFrame.from_dict(self.NumberOfSolutions, orient='index', columns=['Number of Solutions'])
+        df.index.name = 'Time (s)'
+        df.to_csv('NumberOfSolutions.csv')
+
 
         
 
