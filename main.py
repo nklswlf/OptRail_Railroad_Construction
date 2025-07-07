@@ -38,7 +38,7 @@ instances = ["Construction_RealLife_2024_3.json", # Location: 0/0
             "Construction_RealLife_2024_10.json", # checked
             "Construction_RealLife_2024_11.json"] # empty instance
 
-
+'''
 instances = ["Construction_RealLife_2024_7_1_2.json",
             "Construction_RealLife_2024_8_1_2.json",
             "Construction_RealLife_2024_9_1_2.json",
@@ -47,8 +47,7 @@ instances = ["Construction_RealLife_2024_7_1_2.json",
             "Construction_RealLife_2024_8_2_2.json",
             "Construction_RealLife_2024_9_2_2.json",
             "Construction_RealLife_2024_10_2_2.json"]
-'''
-instances = ["Construction_RealLife_2024_7_1_2.json"]
+
 
 
 

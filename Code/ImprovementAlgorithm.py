@@ -1141,7 +1141,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         #dict to csv
         df = pd.DataFrame.from_dict(number_of_solutions, orient='index', columns=['Number of Solutions'])
         df.index.name = 'Time (s)'
-        df.to_csv(f'NumberOfSolutions_{focused_objective}.csv')
+        df.to_csv(self.InputData.solutions_path/f'NumberOfSolutions_{focused_objective}.csv')
 
         return local_pareto_solutions.ParetoFront
     
@@ -1369,7 +1369,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         #dict to csv
         df = pd.DataFrame.from_dict(self.NumberOfSolutions, orient='index', columns=['Number of Solutions'])
         df.index.name = 'Time (s)'
-        df.to_csv('NumberOfSolutions.csv')
+        df.to_csv(self.InputData.solutions_path/'NumberOfSolutions.csv')
 
 
         
