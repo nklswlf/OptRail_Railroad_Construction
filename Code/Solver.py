@@ -5,6 +5,8 @@ from Code.EvaluationLogic import *
 import time
 from Code.MIP_UB import *
 import numpy
+import os
+import json
 
 class Solver:
     ''' Orchestrates all single pieces to form one strong algorithm to solve flowshop problems
@@ -136,6 +138,31 @@ class Solver:
         building_time = time.time() - start_time - bound_time - greedy_time
 
         self.ImprovementPhase(staffed_solution, improvement_algorithm)
+
+
+        output_file = os.path.join(self.InputData.solutions_path, "pareto_solutions.json")
+
+        solutions_data = {}
+        for idx, solution in enumerate(self.ParetoSolutions.ParetoFront):
+            solutions_data[idx + 1] = {
+            "worker_route_plan": getattr(solution, "route_plan_worker", None),
+            "attachment_route_plan": getattr(solution, "route_plan_attachment", None),
+            "machine_route_plan": getattr(solution, "route_plan_machine", None),
+            "Orders": getattr(solution, "number_of_finished_orders", None),
+            "Order Items": getattr(solution, "number_of_finished_order_items", None),
+            "Driver Violation": getattr(solution, "driver_violation", None),
+            "Commute Distance": round(getattr(solution, "total_commute_distance", 0), 2) if hasattr(solution, "total_commute_distance") else None,
+            "Transport Machines": round(getattr(solution, "total_transport_distance", 0), 2) if hasattr(solution, "total_transport_distance") else None,
+            "Transport Attachments": round(getattr(solution, "total_transport_distance_attachments", 0), 2) if hasattr(solution, "total_transport_distance_attachments") else None,
+            "Machines": getattr(solution, "number_of_machines", None),
+            "Workers": getattr(solution, "number_of_workers", None),
+            "Attachments": getattr(solution, "number_of_attachments", None)
+            }
+
+        with open(output_file, "w") as f:
+            json.dump(solutions_data, f, indent=2)
+
+
 
         improvement_time = time.time() - start_time - bound_time - greedy_time - building_time
 

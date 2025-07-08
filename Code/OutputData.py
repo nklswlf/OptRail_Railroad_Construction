@@ -809,8 +809,9 @@ class ParetoSolutions:
 
         # Create a list of dictionaries for the solutions
         solutions = []
-        for solution in self.ParetoFront:
+        for idx,solution in enumerate(self.ParetoFront):
             solutions.append({
+                "Solution ID": idx + 1,
                 "Orders": solution.number_of_finished_orders,
                 "Order Items": solution.number_of_finished_order_items,
                 "Driver Violation": solution.driver_violation,
