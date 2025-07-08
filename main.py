@@ -49,7 +49,8 @@ instances = ["Construction_RealLife_2024_7_1_2.json",
             "Construction_RealLife_2024_10_2_2.json"]
 
 
-instances = ["Construction_RealLife_2023_5.json"]
+instances = ["Construction_RealLife_2023_5.json",
+             "Construction_RealLife_2024_7_1_2.json"]
 
 
 neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace_Shift_Attachment',
