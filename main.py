@@ -38,7 +38,7 @@ instances = ["Construction_RealLife_2024_3.json", # Location: 0/0
             "Construction_RealLife_2024_10.json", # checked
             "Construction_RealLife_2024_11.json"] # empty instance
 
-
+'''
 instances = ["Construction_RealLife_2024_7_1_2.json",
             "Construction_RealLife_2024_8_1_2.json",
             "Construction_RealLife_2024_9_1_2.json",
@@ -48,9 +48,8 @@ instances = ["Construction_RealLife_2024_7_1_2.json",
             "Construction_RealLife_2024_9_2_2.json",
             "Construction_RealLife_2024_10_2_2.json"]
 
-instances = ["Construction_RealLife_2024_7_1_2.json"]
 
-'''
+
 
 
 neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace_Shift_Attachment',
@@ -95,10 +94,10 @@ step = None
 
 algortihm = 'DBSA'
 
-algortihms = ['PSA', 'DBSA', 'TPSA'] 
+algortihms = ['TPSA'] 
                 
 
-seeds = [100,101,102,103]#,105,107,109,110,111]#,112,113]
+seeds = [104]#,105,107,109,110,111]#,112,113]
 
 
 def main(): 
@@ -156,7 +155,7 @@ def main():
                                                         start_temp=50,
                                                         min_temp=0.1,
                                                         cooling_rate=0.95,
-                                                        max_iterations_first=100,
+                                                        max_iterations_first=400,
                                                         max_iterations_second=400,
                                                         fallback_threshold=0, # Currently not used
                                                         scaling_energy=50,
