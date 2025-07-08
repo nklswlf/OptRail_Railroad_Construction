@@ -81,37 +81,54 @@ class InputData:
         solutions_path = Path.cwd().parent / "OptRail_Railroad_Construction" / "Data" / "Solutions" / self.instance / self.algo
         solutions_path.mkdir(parents=True, exist_ok=True)
         self.solutions_path = solutions_path
-
-
+        
+          
         print(f"Data loaded from '{self.instance_filename}' in folder '{self._parent_folder}'.")
 
     def check_order_usability(self):
-        '''
-        Check if the orders are unuseable and set the status accordingly.
-        '''
+        """
+        Check if the orders are unusable and set the status accordingly.
+        """
         for order in self.orders:
-            '''
-            if not all(
-                order_item.machine_type in {machine.type for machine in self.machines} and
-                set(order_item.equipment_types).issubset({attachment.type for attachment in self.attachments}) and
-                any(set(order_item.worker_qualifications).issubset(worker.qualifications) for worker in self.workers)
+            is_usable = True
+
+            # Check machine types
+            machine_types_available = {machine.type for machine in self.machines}
+            missing_machine_types = {
+                order_item.machine_type
                 for order_item in order.order_items
-            ):
-                order.unuseable = True
-            '''
-            if not all(order_item.machine_type in {machine.type for machine in self.machines} for order_item in order.order_items):
-                not_found_machine_type = set(order_item.machine_type for order_item in order.order_items) - {machine.type for machine in self.machines}
-                print(f"Order {order.order_number} is not useable because of machine type(s): {not_found_machine_type}.")
+                if order_item.machine_type not in machine_types_available
+            }
+            if missing_machine_types:
+                print(f"Order {order.order_number} is not useable because of machine type(s): {missing_machine_types}.")
+                is_usable = False
 
-            if not all(set(order_item.equipment_types).issubset({attachment.type for attachment in self.attachments}) for order_item in order.order_items):
-                not_found_attachment_type = set(order_item.equipment_types for order_item in order.order_items) - {attachment.type for attachment in self.attachments}
-                print(f"Order {order.order_number} is not useable because of attachment type(s): {not_found_attachment_type}.")
+            # Check attachment types
+            attachment_types_available = {attachment.type for attachment in self.attachments}
+            required_attachment_types = {
+                atype
+                for order_item in order.order_items
+                for atype in order_item.equipment_types
+            }
+            missing_attachment_types = required_attachment_types - attachment_types_available
+            if missing_attachment_types:
+                print(f"Order {order.order_number} is not useable because of attachment type(s): {missing_attachment_types}.")
+                is_usable = False
 
-            if not all(any(set(order_item.worker_qualifications).issubset(worker.qualifications) for worker in self.workers) for order_item in order.order_items):
-                not_found_worker_qualification = set(order_item.worker_qualifications for order_item in order.order_items) - {worker.qualifications for worker in self.workers}
-                print(f"Order {order.order_number} is not useable because of worker qualifications: {not_found_worker_qualification}.")
+            # Check worker qualifications
+            all_worker_qualifications = [worker.qualifications for worker in self.workers]
+            missing_qualifications = []
+            for order_item in order.order_items:
+                if not any(set(order_item.worker_qualifications).issubset(q) for q in all_worker_qualifications):
+                    missing_qualifications.append(order_item.worker_qualifications)
 
-            else:
+            if missing_qualifications:
+                print(f"Order {order.order_number} is not useable because of worker qualification(s): {missing_qualifications}.")
+                is_usable = False
+
+            # Set usability status
+            order.unuseable = not is_usable
+            if is_usable:
                 print(f"Order {order.order_number} is useable.")
                           
     def activate_order(self, order_number: int) -> None:
