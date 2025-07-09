@@ -135,28 +135,43 @@ class Solver:
 
         staffed_solution = self.BuildingPhase(startSolution, building_algorithm)
 
+    
+        print(f"Route Plan Worker: {staffed_solution.route_plan_worker}")
+        print(f"Route Plan Machine: {staffed_solution.route_plan_machine}")
+        print(f"Route Plan Attachments: {staffed_solution.route_plan_attachment}")
+
+
+
         building_time = time.time() - start_time - bound_time - greedy_time
 
         self.ImprovementPhase(staffed_solution, improvement_algorithm)
 
-
         output_file = os.path.join(self.InputData.solutions_path, "pareto_solutions.json")
+
+        def safe_val(val):
+            if isinstance(val, (np.integer,)):
+                return int(val)
+            elif isinstance(val, (np.floating,)):
+                return float(val)
+            elif isinstance(val, np.ndarray):
+                return val.tolist()
+            return val
 
         solutions_data = {}
         for idx, solution in enumerate(self.ParetoSolutions.ParetoFront):
             solutions_data[idx + 1] = {
-            "worker_route_plan": getattr(solution, "route_plan_worker", None),
-            "attachment_route_plan": getattr(solution, "route_plan_attachment", None),
-            "machine_route_plan": getattr(solution, "route_plan_machine", None),
-            "Orders": getattr(solution, "number_of_finished_orders", None),
-            "Order Items": getattr(solution, "number_of_finished_order_items", None),
-            "Driver Violation": getattr(solution, "driver_violation", None),
-            "Commute Distance": round(getattr(solution, "total_commute_distance", 0), 2) if hasattr(solution, "total_commute_distance") else None,
-            "Transport Machines": round(getattr(solution, "total_transport_distance", 0), 2) if hasattr(solution, "total_transport_distance") else None,
-            "Transport Attachments": round(getattr(solution, "total_transport_distance_attachments", 0), 2) if hasattr(solution, "total_transport_distance_attachments") else None,
-            "Machines": getattr(solution, "number_of_machines", None),
-            "Workers": getattr(solution, "number_of_workers", None),
-            "Attachments": getattr(solution, "number_of_attachments", None)
+                "worker_route_plan": safe_val(getattr(solution, "route_plan_worker", None)),
+                "attachment_route_plan": safe_val(getattr(solution, "route_plan_attachment", None)),
+                "machine_route_plan": safe_val(getattr(solution, "route_plan_machine", None)),
+                "Orders": safe_val(getattr(solution, "number_of_finished_orders", None)),
+                "Order Items": safe_val(getattr(solution, "number_of_finished_order_items", None)),
+                "Driver Violation": safe_val(getattr(solution, "driver_violation", None)),
+                "Commute Distance": safe_val(round(getattr(solution, "total_commute_distance", 0), 2)),
+                "Transport Machines": safe_val(round(getattr(solution, "total_transport_distance", 0), 2)),
+                "Transport Attachments": safe_val(round(getattr(solution, "total_transport_distance_attachments", 0), 2)),
+                "Machines": safe_val(getattr(solution, "number_of_machines", None)),
+                "Workers": safe_val(getattr(solution, "number_of_workers", None)),
+                "Attachments": safe_val(getattr(solution, "number_of_attachments", None))
             }
 
         with open(output_file, "w") as f:
