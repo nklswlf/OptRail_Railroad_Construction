@@ -50,7 +50,6 @@ instances = ["Construction_RealLife_2024_7_1_2.json",
 
 
 instances = [
-             "Construction_RealLife_2024_7_1_2.json",
              "Construction_RealLife_2023_5.json"]
 
 
