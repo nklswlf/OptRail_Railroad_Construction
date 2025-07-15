@@ -384,13 +384,86 @@ class SolutionApp:
         # --- Tabelle: Arbeitszeiten der Arbeiter ---
         df_arbeitszeiten = pd.DataFrame.from_dict(solution_data.worker_hours, orient='index', columns=['Gesamtstunden'])
         df_arbeitszeiten.index.name = 'Arbeiter_ID'
-        df_arbeitszeiten['Auslastung'] = ((df_arbeitszeiten['Gesamtstunden'] / 160) * 100).round(1).astype(str) + '%'
+        df_arbeitszeiten['Auslastung'] = ((df_arbeitszeiten['Gesamtstunden'] / 80) * 100).round(1).astype(str) + '%'
         df_arbeitszeiten['Frühschichten'] = [solution_data.worker_shift_type_count.get(k, {}).get('Frühschicht', 0) for k in df_arbeitszeiten.index]
         df_arbeitszeiten['Spätschichten'] = [solution_data.worker_shift_type_count.get(k, {}).get('Spätschicht', 0) for k in df_arbeitszeiten.index]
         df_arbeitszeiten['Baustellen'] = [solution_data.worker_site_count.get(k, 0) for k in df_arbeitszeiten.index]
         df_arbeitszeiten['Arbeitsweg'] = [round(solution_data.raw["Arbeiterloesung"]["BerechneteKilometer"].get(f"Arbeiter_{k}", 0), 2)for k in df_arbeitszeiten.index]
         st.dataframe(df_arbeitszeiten)
         st.write(f"➡️ **Anzahl nicht eingesetzter Arbeiter:** {solution_data.unued_worker_count}")
+
+        # Durchschnitts-, Minimal- und Maximalwerte unter der Tabelle anzeigen
+        # Nur Zeilen mit Gesamtstunden > 0 berücksichtigen
+        df_arbeitszeiten_nonzero = df_arbeitszeiten[df_arbeitszeiten['Gesamtstunden'] > 0]
+        if not df_arbeitszeiten_nonzero.empty:
+            avg_gesamtstunden = df_arbeitszeiten_nonzero['Gesamtstunden'].mean()
+            min_gesamtstunden = df_arbeitszeiten_nonzero['Gesamtstunden'].min()
+            max_gesamtstunden = df_arbeitszeiten_nonzero['Gesamtstunden'].max()
+
+            avg_frueh = df_arbeitszeiten_nonzero['Frühschichten'].mean()
+            min_frueh = df_arbeitszeiten_nonzero['Frühschichten'].min()
+            max_frueh = df_arbeitszeiten_nonzero['Frühschichten'].max()
+
+            avg_spaet = df_arbeitszeiten_nonzero['Spätschichten'].mean()
+            min_spaet = df_arbeitszeiten_nonzero['Spätschichten'].min()
+            max_spaet = df_arbeitszeiten_nonzero['Spätschichten'].max()
+
+            avg_baustellen = df_arbeitszeiten_nonzero['Baustellen'].mean()
+            min_baustellen = df_arbeitszeiten_nonzero['Baustellen'].min()
+            max_baustellen = df_arbeitszeiten_nonzero['Baustellen'].max()
+
+            avg_arbeitsweg = df_arbeitszeiten_nonzero['Arbeitsweg'].mean()
+            min_arbeitsweg = df_arbeitszeiten_nonzero['Arbeitsweg'].min()
+            max_arbeitsweg = df_arbeitszeiten_nonzero['Arbeitsweg'].max()
+
+    
+            st.markdown(
+            f"**Durchschnitt:** "
+            f"Gesamtstunden: {avg_gesamtstunden:.1f} | "
+            f"Frühschichten: {avg_frueh:.1f} | "
+            f"Spätschichten: {avg_spaet:.1f} | "
+            f"Baustellen: {avg_baustellen:.1f} | "
+            f"Arbeitsweg: {avg_arbeitsweg:.1f} km"
+            )
+            st.markdown(
+            f"**Minimum:** "
+            f"Gesamtstunden: {min_gesamtstunden:.1f} | "
+            f"Frühschichten: {min_frueh:.1f} | "
+            f"Spätschichten: {min_spaet:.1f} | "
+            f"Baustellen: {min_baustellen:.1f} | "
+            f"Arbeitsweg: {min_arbeitsweg:.1f} km"
+            )
+            st.markdown(
+            f"**Maximum:** "
+            f"Gesamtstunden: {max_gesamtstunden:.1f} | "
+            f"Frühschichten: {max_frueh:.1f} | "
+            f"Spätschichten: {max_spaet:.1f} | "
+            f"Baustellen: {max_baustellen:.1f} | "
+            f"Arbeitsweg: {max_arbeitsweg:.1f} km"
+            )
+
+            solution_data.averages["Arbeiter"] = {
+                # Arbeitsstunden
+                "Gesamtstunden Durchschnitt": avg_gesamtstunden,
+                "Gesamtstunden Minimum": min_gesamtstunden,
+                "Gesamtstunden Maximum": max_gesamtstunden,
+                # Frühschichten
+                "Frühschichten Durchschnitt": avg_frueh,
+                "Frühschichten Minimum": min_frueh,
+                "Frühschichten Maximum": max_frueh,
+                # Spätschichten
+                "Spätschichten Durchschnitt": avg_spaet,
+                "Spätschichten Minimum": min_spaet,
+                "Spätschichten Maximum": max_spaet,
+                # Baustellen
+                "Baustellen Durchschnitt": avg_baustellen,
+                "Baustellen Minimum": min_baustellen,
+                "Baustellen Maximum": max_baustellen,
+                # Arbeitsweg
+                "Arbeitsweg Durchschnitt": avg_arbeitsweg,
+                "Arbeitsweg Minimum": min_arbeitsweg,
+                "Arbeitsweg Maximum": max_arbeitsweg,
+            }
 
         # --- Histogramm: Arbeitsstundenverteilung der Arbeiter ---
         # Nur Arbeiter mit mehr als 0 Stunden berücksichtigen
@@ -447,6 +520,76 @@ class SolutionApp:
         df_maschinennutzung['Stammfahrerverletzungen'] = [solution_data.raw["MaschinenLoesung"]["BerechneteStammfahrerVerletzungenProMaschine"].get(k, 0) for k in df_maschinennutzung.index]
         st.dataframe(df_maschinennutzung)
         st.write(f"➡️ **Anzahl nicht eingesetzter Maschinen:** {solution_data.unued_machine_count}")
+        # Durchschnitts-, Minimal- und Maximalwerte unter der Tabelle anzeigen
+        # Nur Zeilen mit Gesamtstunden > 0 berücksichtigen
+        df_maschinennutzung_nonzero = df_maschinennutzung[df_maschinennutzung['Gesamtstunden'] > 0]
+        if not df_maschinennutzung_nonzero.empty:
+            avg_gesamtstunden = df_maschinennutzung_nonzero['Gesamtstunden'].mean()
+            min_gesamtstunden = df_maschinennutzung_nonzero['Gesamtstunden'].min()
+            max_gesamtstunden = df_maschinennutzung_nonzero['Gesamtstunden'].max()
+
+            avg_baustellen = df_maschinennutzung_nonzero['Baustellen'].mean()
+            min_baustellen = df_maschinennutzung_nonzero['Baustellen'].min()
+            max_baustellen = df_maschinennutzung_nonzero['Baustellen'].max()
+
+            avg_tage_nutzung = df_maschinennutzung_nonzero['Tage in Nutzung'].mean()
+            min_tage_nutzung = df_maschinennutzung_nonzero['Tage in Nutzung'].min()
+            max_tage_nutzung = df_maschinennutzung_nonzero['Tage in Nutzung'].max()
+
+            avg_transportdistanz = df_maschinennutzung_nonzero['Transportdistanz'].mean()
+            min_transportdistanz = df_maschinennutzung_nonzero['Transportdistanz'].min()
+            max_transportdistanz = df_maschinennutzung_nonzero['Transportdistanz'].max()
+
+            avg_stammfahrer = df_maschinennutzung_nonzero['Stammfahrerverletzungen'].mean()
+            min_stammfahrer = df_maschinennutzung_nonzero['Stammfahrerverletzungen'].min()
+            max_stammfahrer = df_maschinennutzung_nonzero['Stammfahrerverletzungen'].max()
+
+            st.markdown(
+            f"**Durchschnitt:** "
+            f"Gesamtstunden: {avg_gesamtstunden:.1f} | "
+            f"Baustellen: {avg_baustellen:.1f} | "
+            f"Tage in Nutzung: {avg_tage_nutzung:.2f} | "
+            f"Transportdistanz: {avg_transportdistanz:.2f} km | "
+            f"Stammfahrerverletzungen: {avg_stammfahrer:.1f}"
+            )
+            st.markdown(
+            f"**Minimum:** "
+            f"Gesamtstunden: {min_gesamtstunden:.1f} | "
+            f"Baustellen: {min_baustellen:.1f} | "
+            f"Tage in Nutzung: {min_tage_nutzung:.2f} | "
+            f"Transportdistanz: {min_transportdistanz:.2f} km | "
+            f"Stammfahrerverletzungen: {min_stammfahrer:.1f}"
+            )
+            st.markdown(
+            f"**Maximum:** "
+            f"Gesamtstunden: {max_gesamtstunden:.1f} | "
+            f"Baustellen: {max_baustellen:.1f} | "
+            f"Tage in Nutzung: {max_tage_nutzung:.2f} | "
+            f"Transportdistanz: {max_transportdistanz:.2f} km | "
+            f"Stammfahrerverletzungen: {max_stammfahrer:.1f}"
+            )
+            solution_data.averages["Maschine"] = {
+                # Nutzungsdauer
+                "Gesamtstunden Durchschnitt": avg_gesamtstunden,
+                "Gesamtstunden Minimum": min_gesamtstunden,
+                "Gesamtstunden Maximum": max_gesamtstunden,
+                # Anzahl Baustellen
+                "Baustellen Durchschnitt": avg_baustellen,
+                "Baustellen Minimum": min_baustellen,
+                "Baustellen Maximum": max_baustellen,
+                # Nutzungstage
+                "Tage in Nutzung Durchschnitt": avg_tage_nutzung,
+                "Tage in Nutzung Minimum": min_tage_nutzung,
+                "Tage in Nutzung Maximum": max_tage_nutzung,
+                # Transportdistanz
+                "Transportdistanz Durchschnitt": avg_transportdistanz,
+                "Transportdistanz Minimum": min_transportdistanz,
+                "Transportdistanz Maximum": max_transportdistanz,
+                # Stammfahrerverletzungen
+                "Stammfahrerverletzungen Durchschnitt": avg_stammfahrer,
+                "Stammfahrerverletzungen Minimum": min_stammfahrer,
+                "Stammfahrerverletzungen Maximum": max_stammfahrer,
+            }
 
     def attachment_statistics(self, solution_data):
         
@@ -465,11 +608,67 @@ class SolutionApp:
         df_anbaugerätenutzung['Transportdistanz'] = [round(solution_data.raw["AnbaugeraeteLoesung"]["BerechneteKilometer"].get(k, 0), 2) for k in df_anbaugerätenutzung.index]
         st.dataframe(df_anbaugerätenutzung)
         st.write(f"➡️ **Anzahl nicht eingesetzter Anbaugeräte:** {solution_data.unued_attachment_count}")
+        # Durchschnitts-, Minimal- und Maximalwerte unter der Tabelle anzeigen
+        # Nur Zeilen mit Gesamtstunden > 0 berücksichtigen
+        df_anbaugerätenutzung_nonzero = df_anbaugerätenutzung[df_anbaugerätenutzung['Gesamtstunden'] > 0]
+        if not df_anbaugerätenutzung_nonzero.empty:
+            avg_gesamtstunden = df_anbaugerätenutzung_nonzero['Gesamtstunden'].mean()
+            min_gesamtstunden = df_anbaugerätenutzung_nonzero['Gesamtstunden'].min()
+            max_gesamtstunden = df_anbaugerätenutzung_nonzero['Gesamtstunden'].max()
+
+            avg_baustellen = df_anbaugerätenutzung_nonzero['Baustellen'].mean()
+            min_baustellen = df_anbaugerätenutzung_nonzero['Baustellen'].min()
+            max_baustellen = df_anbaugerätenutzung_nonzero['Baustellen'].max()
+
+            avg_tage_nutzung = df_anbaugerätenutzung_nonzero['Tage in Nutzung'].mean()
+            min_tage_nutzung = df_anbaugerätenutzung_nonzero['Tage in Nutzung'].min()
+            max_tage_nutzung = df_anbaugerätenutzung_nonzero['Tage in Nutzung'].max()
+
+            avg_transportdistanz = df_anbaugerätenutzung_nonzero['Transportdistanz'].mean()
+            min_transportdistanz = df_anbaugerätenutzung_nonzero['Transportdistanz'].min()
+            max_transportdistanz = df_anbaugerätenutzung_nonzero['Transportdistanz'].max()
+
+            st.markdown(
+            f"**Durchschnitt:** "
+            f"Gesamtstunden: {avg_gesamtstunden:.1f} | "
+            f"Baustellen: {avg_baustellen:.1f} | "
+            f"Tage in Nutzung: {avg_tage_nutzung:.2f} | "
+            f"Transportdistanz: {avg_transportdistanz:.2f} km"
+            )
+            st.markdown(
+            f"**Minimum:** "
+            f"Gesamtstunden: {min_gesamtstunden:.1f} | "
+            f"Baustellen: {min_baustellen:.1f} | "
+            f"Tage in Nutzung: {min_tage_nutzung:.2f} | "
+            f"Transportdistanz: {min_transportdistanz:.2f} km"
+            )
+            st.markdown(
+            f"**Maximum:** "
+            f"Gesamtstunden: {max_gesamtstunden:.1f} | "
+            f"Baustellen: {max_baustellen:.1f} | "
+            f"Tage in Nutzung: {max_tage_nutzung:.2f} | "
+            f"Transportdistanz: {max_transportdistanz:.2f} km"
+            )
+            solution_data.averages["Anbaugerät"] = {
+                "Gesamtstunden Durchschnitt": avg_gesamtstunden,
+                "Gesamtstunden Minimum": min_gesamtstunden,
+                "Gesamtstunden Maximum": max_gesamtstunden,
+                "Baustellen Durchschnitt": avg_baustellen,
+                "Baustellen Minimum": min_baustellen,
+                "Baustellen Maximum": max_baustellen,
+                "Tage in Nutzung Durchschnitt": avg_tage_nutzung,
+                "Tage in Nutzung Minimum": min_tage_nutzung,
+                "Tage in Nutzung Maximum": max_tage_nutzung,
+                "Transportdistanz Durchschnitt": avg_transportdistanz,
+                "Transportdistanz Minimum": min_transportdistanz,
+                "Transportdistanz Maximum": max_transportdistanz,
+            }
 
 
 
     def streamlit(self, key):
         current_solution_data = self.solution_data[key]
+        current_solution_data.averages = {}
 
         # --- Gantt-Diagramm ---
         st.subheader("Gantt-Diagrammme")
@@ -545,6 +744,34 @@ class SolutionApp:
             df_compare_transposed,
             column_config={df_compare_transposed.columns[0]: st.column_config.Column(width=col_width)}
         )
+        
+
+        # Vergleichstabelle der Durchschnittswerte für alle Lösungen
+        st.write("### Durchschnittswerte der Lösungen")
+
+        # Sammle alle möglichen Kategorien aus allen Lösungen
+        all_categories = set()
+        for sol in self.solution_data.values():
+            all_categories.update(sol.averages.keys())
+
+        # Für jede Kategorie eine Tabelle anzeigen
+        for category in sorted(all_categories):
+            rows = []
+            columns = set()
+            for idx, key in enumerate(solution_keys):
+                sol = self.solution_data[key]
+                avg = sol.averages.get(category, {})
+                row = {"Lösung": emojis[idx] if idx < len(emojis) else f"Lösung {key+1}"}
+                row.update(avg)
+                columns.update(avg.keys())
+                rows.append(row)
+            if rows:
+                df_avg = pd.DataFrame(rows)
+                df_avg = df_avg.set_index("Lösung")
+                # Nur die Spalten anzeigen, die auch in dieser Kategorie vorkommen
+                df_avg = df_avg[list(sorted(columns))]
+                st.write(f"**{category.capitalize()}**")
+                st.dataframe(df_avg)
 
         # Optional: Balkendiagramm für ausgewählte absolute Kennzahlen
         metrics = [
