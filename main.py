@@ -36,9 +36,11 @@ instances = ["Construction_RealLife_2024_3.json", # Location: 0/0
             "Construction_RealLife_2024_8.json", # checked
             "Construction_RealLife_2024_9.json", # checked
             "Construction_RealLife_2024_10.json", # checked
-            "Construction_RealLife_2024_11.json"] # empty instance
+            "Construction_RealLife_2024_11.json", # empty instance
+            "Construction_RealLife_2023_5.json"] # Older (smaller) instance
 
-'''
+
+
 instances = ["Construction_RealLife_2024_7_1_2.json",
             "Construction_RealLife_2024_8_1_2.json",
             "Construction_RealLife_2024_9_1_2.json",
@@ -49,10 +51,8 @@ instances = ["Construction_RealLife_2024_7_1_2.json",
             "Construction_RealLife_2024_10_2_2.json"]
 
 
-instances = [
-             "Construction_RealLife_2023_5.json"]
-
-
+instances = ["Construction_RealLife_2024_7_1_2.json"]
+'''
 
 
 neighboorhood_types = ['Replace_Shift_Worker', 'Replace_Shift_Machine', 'Replace_Shift_Attachment',
@@ -95,12 +95,11 @@ step = None
 #step = 'Greedy'
 #step = 'Building'
 
-algortihm = 'DBSA'
 
-algortihms = ['TPSA'] 
+algortihms = ['PSA', 'DBSA', 'TPSA'] 
                 
 
-seeds = [104]#,105,107,109,110,111]#,112,113]
+seeds = [100]# [101, 102, 103]
 
 
 def main(): 
@@ -171,13 +170,13 @@ def main():
                 
                 elif step == 'Greedy':
                     solution, time = solver.RunConstructive(UB_technique="LP",
-                            greedy_technique=None)
+                            greedy_technique=greedy_technique_a)
                     print("\nGreedy Time: ", round(time, 2))
 
                     # Extract relevant solution attributes
                     solution_attributes = {
                         "Instance": data.instance,
-                        "Greedy_Technique": None,
+                        "Greedy_Technique": greedy_technique_a,
                         "Finished_Orders": solution.number_of_finished_orders,
                         "Finished_Order_Items": solution.number_of_finished_order_items,
                         "Total_Time": round(time, 2)

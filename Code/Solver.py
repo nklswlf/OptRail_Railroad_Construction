@@ -135,12 +135,6 @@ class Solver:
 
         staffed_solution = self.BuildingPhase(startSolution, building_algorithm)
 
-    
-        print(f"Route Plan Worker: {staffed_solution.route_plan_worker}")
-        print(f"Route Plan Machine: {staffed_solution.route_plan_machine}")
-        print(f"Route Plan Attachments: {staffed_solution.route_plan_attachment}")
-
-
 
         building_time = time.time() - start_time - bound_time - greedy_time
 
@@ -186,7 +180,6 @@ class Solver:
 
             solutions_data[idx + 1] = convert_numpy(raw_entry)
         
-        print(solutions_data)
 
         with open(output_file, "w") as f:
             json.dump(solutions_data, f, indent=2)
