@@ -7,9 +7,6 @@ This module provides comprehensive data management functionality for railroad co
 scheduling optimization problems. It handles the loading, transformation, and preparation
 of construction project data for various optimization algorithms.
 
-========================================================================
-CORE FUNCTIONALITY:
-========================================================================
 
 1. **Data Loading and Parsing**
    - JSON instance file parsing with comprehensive error handling
@@ -35,74 +32,7 @@ CORE FUNCTIONALITY:
    - Distance normalization for optimization algorithms
    - Priority and complexity ranking systems
 
-5. **Analysis and Optimization Support**
-   - Analytic Hierarchy Process (AHP) weight calculation
-   - Borda Count ranking for multi-criteria decision making
-   - Complexity classification for scheduling prioritization
-   - Resource utilization tracking and validation
 
-========================================================================
-SUPPORTED OPTIMIZATION ALGORITHMS:
-========================================================================
-
-- **PSA (Pareto Simulated Annealing)**
-- **DBSA (Dominance-Based Simulated Annealing)**  
-- **TPSA (Two-Phase Simulated Annealing)**
-- **Mathematical Programming Models (BIP/LP)**
-- **Constructive Heuristics**
-
-========================================================================
-DATA STRUCTURE HIERARCHY:
-========================================================================
-
-InputData
-├── Orders (construction sites with time windows)
-│   └── OrderItems (individual work tasks)
-├── Machines (construction equipment with capabilities)
-├── Workers (skilled personnel with qualifications)
-├── Attachments (specialized equipment)
-└── Route Matrices (transportation distances)
-
-========================================================================
-REAL-WORLD APPLICATION:
-========================================================================
-
-This module supports real-world railroad construction projects by:
-- Managing complex resource allocation scenarios
-- Enforcing safety and regulatory compliance
-- Optimizing multi-objective scheduling problems
-- Supporting large-scale industrial deployment
-
-========================================================================
-TECHNICAL SPECIFICATIONS:
-========================================================================
-
-- **File Format**: JSON with nested dictionary structure
-- **Time Handling**: ISO 8601 datetime format with timezone support
-- **Distance Units**: Kilometers for transportation calculations
-- **Performance**: Optimized for instances with 400+ construction operations
-- **Memory Usage**: Efficient sparse matrix representation
-- **Extensibility**: Plugin architecture for new optimization algorithms
-
-========================================================================
-USAGE EXAMPLE:
-========================================================================
-
-```python
-# Initialize data manager with instance file and algorithm
-input_data = InputData("Construction_Instance_400.json", "PSA")
-
-# Access structured data for optimization
-orders = input_data.orders
-machines = input_data.machines
-transport_matrix = input_data.transport_routes_order_item
-
-# Validate resource availability
-input_data.check_order_usability()
-
-# Generate priority rankings
-input_data.create_priorities_orders()
-```
 """
 
 import json
