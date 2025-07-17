@@ -1,4 +1,8 @@
 """
+===============================================================================
+                              NEIGHBORHOOD MODULE
+===============================================================================
+
 Neighborhood Search Operations for Railroad Construction Optimization
 
 This module implements a comprehensive framework of neighborhood search algorithms and move operations

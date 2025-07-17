@@ -1,6 +1,9 @@
-
-
 """
+
+===============================================================================
+                            INPUT DATA MODULE
+===============================================================================
+
 InputData.py - Railroad Construction Optimization Instance Data Management
 
 This module provides comprehensive data management functionality for railroad construction

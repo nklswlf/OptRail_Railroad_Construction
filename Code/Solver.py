@@ -1,4 +1,8 @@
 """
+===============================================================================
+                    SOLVER MODULE
+===============================================================================
+
 Solver Module for Railroad Construction Optimization
 
 This module provides the main orchestration framework for solving complex railroad

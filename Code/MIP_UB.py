@@ -1,4 +1,8 @@
 """
+===============================================================================
+                              MATH UB MODULE
+===============================================================================
+
 Mixed Integer Programming Upper Bound Formulation for Railroad Construction Optimization
 
 This module implements various upper bound calculation techniques for the railroad construction

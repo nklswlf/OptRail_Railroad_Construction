@@ -1,4 +1,8 @@
 """
+===============================================================================
+                    OUTPUT DATA MODULE
+===============================================================================
+
 Output Data Management for Railroad Construction Optimization
 
 This module provides comprehensive data structures and algorithms for managing
