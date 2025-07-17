@@ -1,3 +1,120 @@
+"""
+===============================================================================
+                              IMPROVEMENT ALGORITHM MODULE
+===============================================================================
+
+This module provides a comprehensive framework for improvement algorithms in the 
+OptRail railroad construction scheduling optimization system. It implements various 
+metaheuristic approaches including local search, simulated annealing variants, 
+and multi-objective optimization strategies for solving complex railroad 
+construction scheduling problems.
+
+CORE FUNCTIONALITY:
+------------------
+1. Base Algorithm Framework
+   - Common interface for all improvement algorithms
+   - Neighborhood management and factory pattern implementation
+   - Solution evaluation and move acceptance logic
+   - Multi-threaded and parallel processing support
+
+2. Local Search Optimization
+   - Iterative improvement with variable neighborhood descent
+   - Best improvement and first improvement strategies
+   - Sequential exploration of multiple neighborhood types
+
+3. Simulated Annealing Variants
+   - Building Simulated Annealing: Focus on fully staffed solutions
+   - Pareto Simulated Annealing: Multi-objective optimization with agents
+   - Dominance-Based Simulated Annealing: Pareto dominance energy calculation
+   - Two-Phase Simulated Annealing: Combined objective-focused and dominance-based
+
+4. Multi-Objective Optimization
+   - Pareto front maintenance and management
+   - Adaptive weight adjustment strategies
+   - Dominance relationship evaluation
+   - Non-dominated solution filtering
+
+5. Parallel Processing Support
+   - Thread-based parallel agent execution
+   - Process-based parallel optimization runs
+   - Efficient solution space exploration
+   - Scalable multi-core utilization
+
+ALGORITHM IMPLEMENTATIONS:
+-------------------------
+• IterativeImprovement: Sequential variable neighborhood descent
+• BuildingSimulatedAnnealing: Staffing-focused optimization with temperature control
+• ParetoSimulatedAnnealing: Multi-agent parallel optimization with adaptive weights
+• DominanceBasedSimulatedAnnealing: Energy calculation based on Pareto dominance
+• TwoPhaseSimulatedAnnealing: Hybrid approach combining focused and dominance-based search
+
+OPTIMIZATION OBJECTIVES:
+-----------------------
+• Driver Violation: Minimizing driver working time violations
+• Commute Distance: Reducing worker travel distances to work sites
+• Transport Distance: Minimizing machine transportation costs
+• Attachment Distance: Optimizing attachment transportation efficiency
+• Worker Count: Reducing total workforce requirements
+• Machine Count: Minimizing required machinery resources
+• Attachment Count: Optimizing attachment resource allocation
+
+NEIGHBORHOOD OPERATIONS:
+-----------------------
+• Insert_Shift: Order item insertion and scheduling optimization
+• Replace_Shift_Worker: Worker assignment replacement operations
+• Replace_Shift_Machine: Machine assignment replacement operations
+• Replace_Shift_Attachment: Attachment assignment replacement operations
+• Swap_Shift_Worker: Worker assignment swapping operations
+• Swap_Shift_Machine: Machine assignment swapping operations
+• Swap_Shift_Attachment: Attachment assignment swapping operations
+• Swap_Shift_External: External resource swapping operations
+
+TECHNICAL ARCHITECTURE:
+----------------------
+• Multi-threading: Concurrent agent execution in Pareto Simulated Annealing
+• Multiprocessing: Parallel algorithm runs in Dominance-Based approach
+• Memory Management: Efficient solution cloning and evaluation
+• Performance Profiling: Integrated cProfile support for algorithm analysis
+• Statistical Tracking: Move success rates and algorithm convergence monitoring
+
+REAL-WORLD APPLICATION:
+----------------------
+This module is designed for large-scale railroad construction project scheduling
+where multiple objectives must be balanced simultaneously. The algorithms handle
+complex constraints including worker availability, machine capacity, attachment
+requirements, and transportation logistics while maintaining solution feasibility.
+
+USAGE EXAMPLE:
+-------------
+```python
+# Initialize algorithm with input data
+psa = ParetoSimulatedAnnealing(
+    inputData=input_data,
+    start_temp=1000,
+    min_temp=1,
+    cooling_rate=0.95,
+    max_iterations=100,
+    weight_alpha=0.8,
+    start_size_population=20
+)
+
+# Initialize with evaluation logic and Pareto solutions
+psa.Initialize(evaluation_logic, pareto_solutions, rng)
+
+# Execute optimization
+final_pareto_front = psa.Run(initial_solution)
+```
+
+DEPENDENCIES:
+------------
+• numpy: Numerical computations and random number generation
+• pandas: Data analysis and CSV output generation
+• concurrent.futures: Parallel processing infrastructure
+• joblib: Efficient parallel execution utilities
+• cProfile/pstats: Performance profiling and analysis
+===============================================================================
+"""
+
 from Code.Neighborhood import *
 import math
 from copy import deepcopy
