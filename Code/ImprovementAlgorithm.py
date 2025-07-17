@@ -184,9 +184,7 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
                  start_temp:int,
                  min_temp:int,
                  cooling_rate:float,
-                 max_iterations:int,
-                 fallback_threshold:int,
-                 scaling_energy:int):
+                 max_iterations:int):
         super().__init__(inputData)
 
         # Simulated annealing temperature parameters
@@ -196,8 +194,7 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
 
         # Iteration and optimization parameters
         self.MaxIterations = max_iterations  # Maximum iterations per temperature level
-        self.FallbackThreshold = fallback_threshold  # Currently not used
-        self.ScalingEnergy = scaling_energy  # Scaling factor for energy calculations
+        self.ScalingEnergy = 30  # Scaling factor for energy calculations
 
         # Neighborhood types mapped to their objective functions for evaluation
         self.DistanceTypes = {  'Swap_Shift_External': ['commute_distance', 'transport_distance', 'attachment_distance'],
@@ -356,10 +353,7 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                  min_temp:int,
                  cooling_rate:float,
                  max_iterations:int,
-                 fallback_threshold:int,
-                 scaling_energy:int,
                  weight_alpha:float,
-                 max_single_move_tries:int,
                  start_size_population:int):
         super().__init__(inputData)
 
@@ -368,11 +362,10 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         self.MinTemperature = min_temp
         self.CoolingRate = cooling_rate
         self.MaxIterations = max_iterations
-        self.FallbackThreshold = 0  # Currently not used
-        self.ScalingEnergy = scaling_energy
+        self.ScalingEnergy = 50
 
         # Algorithm-specific parameters
-        self.MaxSingleMoveTries = max_single_move_tries  # Maximum attempts to find valid move
+        self.MaxSingleMoveTries = 30  # Maximum attempts to find valid move
         self.SizeStartPopulation = start_size_population  # Initial population size
         self.WeightAlpha = weight_alpha  # Weight adjustment factor for objectives
 
@@ -751,11 +744,7 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                  start_temp:int,
                  min_temp:int,
                  cooling_rate:float,
-                 max_iterations:int,
-                 fallback_threshold:int,
-                 scaling_energy:int,
-                 max_single_move_tries:int,
-                 parallel_runs:int):
+                 max_iterations:int):
         super().__init__(inputData)
 
         # Simulated annealing parameters
@@ -763,15 +752,12 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         self.MinTemperature = min_temp
         self.CoolingRate = cooling_rate
         self.MaxIterations = max_iterations
-        self.FallbackThreshold = 0  # Currently not used
-        self.ScalingEnergy = None  # Currently not used (dominance-based energy)
-        self.MaxSingleMoveTries = max_single_move_tries
-        self.ParallelRuns = parallel_runs
+        self.MaxSingleMoveTries = 30
+        self.ParallelRuns = 0 # Not used in this implementation --> currently single agent optimization
 
         # Move configuration parameters
         self.max_traversal_moves = 1  # Maximum moves for traversal operations
         self.max_location_moves = 4  # Maximum moves for location operations
-        self.fallback_strategy = None  # Currently not used
 
         # Neighborhood types with their corresponding objectives
         self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
@@ -926,7 +912,6 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         local_pareto_solutions = ParetoSolutions(self.InputData, local_rng)
         local_pareto_solutions.ParetoFront = local_pareto_front
 
-        fallback_counter = 0
 
         # Main simulated annealing loop
         while current_temperature > self.MinTemperature:
@@ -983,19 +968,7 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                 # Update Pareto front if solution is non-dominated
                 if dominating_count_new == 0:
                     added = local_pareto_solutions.UpdateParetoFront(local_solution)
-                    if not added:
-                        fallback_counter += 1
-                    else:
-                        fallback_counter = 0
-                else:
-                    fallback_counter += 1
 
-                # Apply fallback strategy if needed
-                if fallback_counter >= self.FallbackThreshold:
-                    if self.fallback_strategy == 'random':
-                        local_solution = local_rng.choice(local_pareto_solutions.ParetoFront)
-                    elif self.fallback_strategy == 'best':
-                        local_solution = local_pareto_solutions.SelectRandomBestSolution()
 
             # Cool down temperature
             current_temperature *= self.CoolingRate
@@ -1124,11 +1097,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                  min_temp:int,
                  cooling_rate:float,
                  max_iterations_first:int,
-                 max_iterations_second:int,
-                 fallback_threshold:int,
-                 scaling_energy:int,
-                 max_single_move_tries:int,
-                 parallel_runs:int):
+                 max_iterations_second:int):
         super().__init__(inputData)
 
         # Temperature and cooling parameters
@@ -1141,10 +1110,9 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         self.MaxIterationsSecondPhase = max_iterations_second
         
         # Algorithm parameters
-        self.FallbackThreshold = 0  # Currently not used
-        self.ScalingEnergy = scaling_energy
-        self.MaxSingleMoveTries = max_single_move_tries
-        self.ParallelRuns = parallel_runs
+        self.ScalingEnergy = 50
+        self.MaxSingleMoveTries = 30
+        self.ParallelRuns = 0  # Not used in this implementation --> currently single agent optimization in second phase
 
         # Tracking solution count over time
         self.NumberOfSolutions = {}
@@ -1502,7 +1470,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
             # Parallel execution for second phase (alternative implementation)
             tasks = []
             with ProcessPoolExecutor() as executor:
-                for i in range(4):  # Run 4 parallel second phase processes
+                for i in range(self.ParallelRuns):  # Run parallel second phase processes
                     # Select random solution from first phase results
                     local_solution = self.RNG.choice(self.ParetoSolutions.ParetoFront).clone()
                     seed = self.RNG.integers(0, 1_000_000)

@@ -47,8 +47,8 @@ from pathlib import Path
 # Test instances with varying complexity levels
 # Format: Construction_a{orders}_o{order_items}_m{machines}_an{attachments}_ar{worker}.json
 instances = [   "Construction_a3_o80_m10_an10_ar9_reduced.json",      # Small instance
-                "Construction_a5_o96_m10_an10_ar10_reduced.json",     # 
-                "Construction_a10_o107_m5_an57_ar12.json",            # 
+                "Construction_a5_o96_m10_an10_ar10_reduced.json",      
+                "Construction_a10_o107_m5_an57_ar12.json",             
                 "Construction_a10_o114_m6_an57_ar11.json",
                 "Construction_a10_o128_m6_an51_ar13.json",
                 "Construction_a10_o144_m6_an53_ar12.json",
@@ -203,14 +203,12 @@ def main():
                 local_search = IterativeImprovement(inputData=data,
                                                     neighborhoodTypes=neighboorhood_types_local_search)
 
-                # Building phase simulated annealing for resource optimization
+                # Building phase simulated annealing
                 building_sa = BuildingSimulatedAnnealing(  inputData=data,
                                                             start_temp=20,        # Initial temperature
                                                             min_temp=0.1,         # Final temperature
                                                             cooling_rate=0.95,    # Temperature reduction factor
-                                                            max_iterations=3000,  # Maximum iterations
-                                                            fallback_threshold=25,# Diversification trigger
-                                                            scaling_energy=30)    # Energy scaling factor
+                                                            max_iterations=3000)  # Maximum inner iterations
                                                         
                 # Configure metaheuristic algorithm based on selection
                 if algortihm == 'PSA':
@@ -219,11 +217,8 @@ def main():
                                                     start_temp=50,              # Initial temperature
                                                     min_temp=0.1,               # Final temperature
                                                     cooling_rate=0.95,          # Cooling schedule
-                                                    max_iterations=100,         # Iteration limit
-                                                    fallback_threshold=0,       # Currently not used
-                                                    scaling_energy=50,          # Energy normalization
+                                                    max_iterations=100,         # inner iteration limit
                                                     weight_alpha=1.1,           # Pareto weight factor
-                                                    max_single_move_tries=30,   # Move attempt limit
                                                     start_size_population=8)    # Initial population size
 
                 elif algortihm == 'DBSA':
@@ -232,11 +227,7 @@ def main():
                                                             start_temp=50,              # Initial temperature
                                                             min_temp=0.1,               # Final temperature
                                                             cooling_rate=0.95,          # Cooling schedule
-                                                            max_iterations=400,         # Iteration limit
-                                                            fallback_threshold=0,       # Currently not used
-                                                            scaling_energy=0,           # Currently not used
-                                                            max_single_move_tries=30,   # Move attempt limit
-                                                            parallel_runs=0)            # Parallel execution count
+                                                            max_iterations=400)         # Iteration limit
 
                 elif algortihm == 'TPSA':
                     # Two-Phase Simulated Annealing configuration
@@ -244,12 +235,8 @@ def main():
                                                         start_temp=50,              # Initial temperature
                                                         min_temp=0.1,               # Final temperature
                                                         cooling_rate=0.95,          # Cooling schedule
-                                                        max_iterations_first=400,   # First phase iterations
-                                                        max_iterations_second=400,  # Second phase iterations
-                                                        fallback_threshold=0,       # Currently not used
-                                                        scaling_energy=50,          # Energy normalization
-                                                        max_single_move_tries=30,   # Move attempt limit
-                                                        parallel_runs=0)            # Parallel execution count
+                                                        max_iterations_first=100,   # First phase iterations
+                                                        max_iterations_second=400)  # Second phase iterations
 
                 # =============================================================================
                 # EXECUTION PHASE CONTROL
