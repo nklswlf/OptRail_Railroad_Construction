@@ -6,6 +6,7 @@ import plotly.express as px
 import random
 import datetime as dt
 
+include_attachments = False
 
 class SolutionApp:
     def __init__(self):
@@ -26,18 +27,27 @@ class SolutionApp:
             self.number_shifts = len(self.instance_data["Bestellpositionen"])
             self.number_machines = len(self.instance_data["Maschinen"])
             self.number_worker = len(self.instance_data["Arbeiter"])
-            if "Anbaugeraete" in self.instance_data:
+            if include_attachments:
                 self.number_attachments = len(self.instance_data["Anbaugeraete"])
 
             # Instanzdaten als Info ausgeben
-            st.info(
-                f"**Instanzdaten:**\n"
-                f"- Anzahl Baustellen: {self.number_sites}\n"
-                f"- Anzahl Bestellpositionen: {self.number_shifts}\n"
-                f"- Anzahl Arbeiter: {self.number_worker}\n"
-                f"- Anzahl Maschinen: {self.number_machines}\n"
-                f"- Anzahl Anbaugeräte: {self.number_attachments}"
-            )
+            if include_attachments:
+                st.info(
+                    f"**Instanzdaten:**\n"
+                    f"- Anzahl Baustellen: {self.number_sites}\n"
+                    f"- Anzahl Bestellpositionen: {self.number_shifts}\n"
+                    f"- Anzahl Arbeiter: {self.number_worker}\n"
+                    f"- Anzahl Maschinen: {self.number_machines}\n"
+                    f"- Anzahl Anbaugeräte: {self.number_attachments}"
+                )
+            else:
+                st.info(
+                    f"**Instanzdaten:**\n"
+                    f"- Anzahl Baustellen: {self.number_sites}\n"
+                    f"- Anzahl Bestellpositionen: {self.number_shifts}\n"
+                    f"- Anzahl Arbeiter: {self.number_worker}\n"
+                    f"- Anzahl Maschinen: {self.number_machines}"
+                )
 
 
             self.worker_location = [
@@ -94,15 +104,15 @@ class SolutionApp:
         # --- Gantt-Diagramm: Arbeiter ---
         #st.subheader("Gantt-Diagramm: Arbeiter")
         worker_assignments = solution_data.worker_assignments
-        
+
         # Daten aufbereiten
         solution_data.worker_rows = [
             {
-                'Arbeiter': worker,
-                'Start': shift['Start'],
-                'Ende': shift['Ende'],
-                'Schichttyp': 'Frühschicht' if pd.to_datetime(shift['Start']).hour < 14 else 'Spätschicht',
-                'Baustelle': shift['Auftragsnummer']
+            'Arbeiter': worker,
+            'Start': shift['Start'],
+            'Ende': shift['Ende'],
+            'Schichttyp': 'Frühschicht' if pd.to_datetime(shift['Start']).hour < 14 else 'Spätschicht',
+            'Baustelle': shift['Auftragsnummer']#.split("-")[0]
             }
             for worker, shifts in worker_assignments.items() for shift in shifts
         ]
@@ -170,7 +180,8 @@ class SolutionApp:
     def show_machine_gantt(self, solution_data, key):
         # --- Gantt-Diagramm: Maschinen + Anbaugeräte ---
         machine_assignments = solution_data.machine_assignments
-        attachment_assignments = solution_data.attachment_assignments
+        if include_attachments:
+            attachment_assignments = solution_data.attachment_assignments
 
         # Daten aufbereiten
         solution_data.machine_rows = [
@@ -178,22 +189,26 @@ class SolutionApp:
                 'Maschine': machine,
                 'Start': usage['Start'],
                 'Ende': usage['Ende'],
-                'Baustelle': usage['Auftragsnummer'],
+                'Baustelle': usage['Auftragsnummer'],#.split("-")[0],
                 'Dauer': usage['Dauer']
             }
             for machine, usages in machine_assignments.items() for usage in usages
         ]
-        solution_data.attachment_rows = [
-            {
-                'Maschine': attachment,
-                'Start': usage['Start'],
-                'Ende': usage['Ende'],
-                'Baustelle': usage['Auftragsnummer'],
-                'Dauer': usage['Dauer']
-            }
-            for attachment, usages in attachment_assignments.items() for usage in usages
-        ]
-        df_machine = pd.DataFrame(solution_data.machine_rows + solution_data.attachment_rows)
+        if include_attachments:
+            solution_data.attachment_rows = [
+                {
+                    'Maschine': attachment,
+                    'Start': usage['Start'],
+                    'Ende': usage['Ende'],
+                    'Baustelle': usage['Auftragsnummer'],#.split("-")[0],
+                    'Dauer': usage['Dauer']
+                }
+                for attachment, usages in attachment_assignments.items() for usage in usages
+            ]
+            df_machine = pd.DataFrame(solution_data.machine_rows + solution_data.attachment_rows)
+
+        else:
+            df_machine = pd.DataFrame(solution_data.machine_rows)
 
         if df_machine.empty:
             st.info("Keine Maschinenzuweisungen vorhanden.")
@@ -205,14 +220,17 @@ class SolutionApp:
         solution_data.maschinen_anzahl_baustellen_dict = df_machine.groupby('Maschine')['Baustelle'].nunique().to_dict()
 
         # Farben für Baustellen
-        unique_sites = sorted(df_machine['Baustelle'].unique(), key=lambda x: int(x))
+        unique_sites = sorted(df_machine['Baustelle'].unique())
         color_map = {
             site: px.colors.qualitative.Plotly[i % len(px.colors.qualitative.Plotly)]
             for i, site in enumerate(unique_sites)
         }
 
         # Maschinenreihenfolge (erst Maschinen, dann Anbaugeräte)
-        ordered_names = list(dict.fromkeys([row["Maschine"] for row in solution_data.machine_rows + solution_data.attachment_rows]))
+        if include_attachments:
+            ordered_names = list(dict.fromkeys([row["Maschine"] for row in solution_data.machine_rows + solution_data.attachment_rows]))
+        else:
+            ordered_names = list(dict.fromkeys([row["Maschine"] for row in solution_data.machine_rows]))
 
         # Gantt-Diagramm erstellen
         fig_machine = px.timeline(
@@ -280,10 +298,11 @@ class SolutionApp:
         solution_data.worker_count_percentage = (solution_data.worker_count / self.number_worker) * 100
         solution_data.unued_worker_count = self.number_worker - solution_data.worker_count
 
-        # Anteil genutzter Anbaugeräte
-        solution_data.attachment_count = sum(solution_data.raw["AnbaugeraeteLoesung"]["BerechnetAnbaugeraetGenutzt"].values())
-        solution_data.attachment_count_percentage = (solution_data.attachment_count / self.number_attachments) * 100
-        solution_data.unued_attachment_count = self.number_attachments - solution_data.attachment_count
+        if include_attachments:
+            # Anteil genutzter Anbaugeräte
+            solution_data.attachment_count = sum(solution_data.raw["AnbaugeraeteLoesung"]["BerechnetAnbaugeraetGenutzt"].values())
+            solution_data.attachment_count_percentage = (solution_data.attachment_count / self.number_attachments) * 100
+            solution_data.unued_attachment_count = self.number_attachments - solution_data.attachment_count
 
         # Gesamttransportdistanz der Maschinen
         solution_data.transport_distance_machine = sum(solution_data.raw["MaschinenLoesung"]["BerechneteKilometer"].values())
@@ -291,8 +310,9 @@ class SolutionApp:
         # Gesamtarbeitswege der Arbeiter
         solution_data.comute_distance_worker = sum(solution_data.raw["Arbeiterloesung"]["BerechneteKilometer"].values())
 
-        # Gesamttransportdistanz der Anbaugeräte
-        solution_data.transport_distance_attachment = sum(solution_data.raw["AnbaugeraeteLoesung"]["BerechneteKilometer"].values())
+        if include_attachments:
+            # Gesamttransportdistanz der Anbaugeräte
+            solution_data.transport_distance_attachment = sum(solution_data.raw["AnbaugeraeteLoesung"]["BerechneteKilometer"].values())
 
         # Arbeitszeiten der Arbeiter
         for worker, shifts in solution_data.worker_assignments.items():
@@ -303,9 +323,10 @@ class SolutionApp:
         for machine, shifts in solution_data.machine_assignments.items():
             solution_data.machine_hours[machine] = sum(shift['Dauer'] for shift in shifts)
 
-        # Nutzungsstunden der Anbaugeräte
-        for attachment, shifts in solution_data.attachment_assignments.items():
-            solution_data.attachment_hours[attachment] = sum(shift['Dauer'] for shift in shifts)
+        if include_attachments:
+            # Nutzungsstunden der Anbaugeräte
+            for attachment, shifts in solution_data.attachment_assignments.items():
+                solution_data.attachment_hours[attachment] = sum(shift['Dauer'] for shift in shifts)
 
 
     def construction_statistics(self, solution_data):
@@ -324,7 +345,12 @@ class SolutionApp:
         for order in self.instance_data["Auftraege"]:
             order_number = int(order["Auftragsnummer"])
             order_item_count = len(order["BestellpositionenStrings"])
-            status = solution_data.raw["BerechnetAuftragBearbeitet"][f"Auftrag {str(order_number)}"]
+            # Status anhand von "BerechnetAuftragBearbeitet" bestimmen, wobei der Key mit "Auftrag <order_number>" beginnt
+            status = False
+            for k, v in solution_data.raw["BerechnetAuftragBearbeitet"].items():
+                if k.startswith(f"Auftrag {order_number}"):
+                    status = v
+                    break
 
             baustellen_rows.append({
                 "Baustelle": order_number,
@@ -384,7 +410,7 @@ class SolutionApp:
         # --- Tabelle: Arbeitszeiten der Arbeiter ---
         df_arbeitszeiten = pd.DataFrame.from_dict(solution_data.worker_hours, orient='index', columns=['Gesamtstunden'])
         df_arbeitszeiten.index.name = 'Arbeiter_ID'
-        df_arbeitszeiten['Auslastung'] = ((df_arbeitszeiten['Gesamtstunden'] / 80) * 100).round(1).astype(str) + '%'
+        df_arbeitszeiten['Auslastung'] = ((df_arbeitszeiten['Gesamtstunden'] / 160) * 100).round(1).astype(str) + '%'
         df_arbeitszeiten['Frühschichten'] = [solution_data.worker_shift_type_count.get(k, {}).get('Frühschicht', 0) for k in df_arbeitszeiten.index]
         df_arbeitszeiten['Spätschichten'] = [solution_data.worker_shift_type_count.get(k, {}).get('Spätschicht', 0) for k in df_arbeitszeiten.index]
         df_arbeitszeiten['Baustellen'] = [solution_data.worker_site_count.get(k, 0) for k in df_arbeitszeiten.index]
@@ -684,8 +710,9 @@ class SolutionApp:
         self.worker_statistics(current_solution_data)
         # Maschinen
         self.machine_statistics(current_solution_data)
-        # Anbaugeräte
-        self.attachment_statistics(current_solution_data)
+        if include_attachments:
+            # Anbaugeräte
+            self.attachment_statistics(current_solution_data)
 
 
 
@@ -697,113 +724,218 @@ class SolutionApp:
             return
 
         # Instanzdaten als Info ausgeben
-        st.info(
-            f"**Instanzdaten:**\n"
-            f"- Anzahl Baustellen: {self.number_sites}\n"
-            f"- Anzahl Bestellpositionen: {self.number_shifts}\n"
-            f"- Anzahl Arbeiter: {self.number_worker}\n"
-            f"- Anzahl Maschinen: {self.number_machines}\n"
-            f"- Anzahl Anbaugeräte: {self.number_attachments}"
-        )
+        if include_attachments:
+            st.info(
+                f"**Instanzdaten:**\n"
+                f"- Anzahl Baustellen: {self.number_sites}\n"
+                f"- Anzahl Bestellpositionen: {self.number_shifts}\n"
+                f"- Anzahl Arbeiter: {self.number_worker}\n"
+                f"- Anzahl Maschinen: {self.number_machines}\n"
+                f"- Anzahl Anbaugeräte: {self.number_attachments}"
+            )
+            # Liste der Keys und Emojis für die Lösungen
+            solution_keys = list(self.solution_data.keys())
+            emojis = st.session_state.get("solution_emojis", [f"Lösung {i+1}" for i in solution_keys])
 
-        # Liste der Keys und Emojis für die Lösungen
-        solution_keys = list(self.solution_data.keys())
-        emojis = st.session_state.get("solution_emojis", [f"Lösung {i+1}" for i in solution_keys])
-
-        # Vergleichstabelle der wichtigsten Kennzahlen (absolute Werte) – nur Lösungen
-        rows = []
-        for idx, key in enumerate(solution_keys):
-            sol = self.solution_data[key]
-            row = {
-                "Lösung": emojis[idx] if idx < len(emojis) else f"Lösung {key+1}",
-                "Erreichte Baustellen": sol.finished_sites,
-                "Erreichte Bestellpositionen": sol.finished_shifts,
-                "Stammfahrerverletzungen": sol.non_regular_driver,
-                "Genutzte Arbeiter": sol.worker_count,
-                "Genutzte Maschinen": sol.machine_count,
-                "Genutzte Anbaugeräte": sol.attachment_count,
-                "Arbeitswegedistanz (km)": f"{sol.comute_distance_worker:.1f}",
-                "Maschinentransport (km)": f"{sol.transport_distance_machine:.1f}",
-                "Anbaugerätetransport (km)": f"{sol.transport_distance_attachment:.1f}",
-                "Rechenzeit (min)": f"{sol.run_time_minutes:.1f}",
-            }
-            rows.append(row)
-
-        df_compare = pd.DataFrame(rows)
-        df_compare = df_compare.set_index("Lösung")
-        # Tabelle transponieren: Zeilen werden Spalten, Spalten werden Zeilen
-        df_compare_transposed = df_compare.transpose()
-
-        # Die erste Spalte so breit machen wie der längste Text
-        # Ermittle die maximale Textlänge in der ersten Spalte
-        max_len = df_compare_transposed.index.str.len().max()
-        # Setze die Breite (z.B. 8 Pixel pro Zeichen, min 120, max 400)
-        col_width = min(max(120, max_len * 8), 400)
-        # Zeige die Tabelle mit angepasster erster Spaltenbreite
-        st.dataframe(
-            df_compare_transposed,
-            column_config={df_compare_transposed.columns[0]: st.column_config.Column(width=col_width)}
-        )
-        
-
-        # Vergleichstabelle der Durchschnittswerte für alle Lösungen
-        st.write("### Durchschnittswerte der Lösungen")
-
-        # Sammle alle möglichen Kategorien aus allen Lösungen
-        all_categories = set()
-        for sol in self.solution_data.values():
-            all_categories.update(sol.averages.keys())
-
-        # Für jede Kategorie eine Tabelle anzeigen
-        for category in sorted(all_categories):
+            # Vergleichstabelle der wichtigsten Kennzahlen (absolute Werte) – nur Lösungen
             rows = []
-            columns = set()
             for idx, key in enumerate(solution_keys):
                 sol = self.solution_data[key]
-                avg = sol.averages.get(category, {})
-                row = {"Lösung": emojis[idx] if idx < len(emojis) else f"Lösung {key+1}"}
-                row.update(avg)
-                columns.update(avg.keys())
+                row = {
+                    "Lösung": emojis[idx] if idx < len(emojis) else f"Lösung {key+1}",
+                    "Erreichte Baustellen": sol.finished_sites,
+                    "Erreichte Bestellpositionen": sol.finished_shifts,
+                    "Stammfahrerverletzungen": sol.non_regular_driver,
+                    "Genutzte Arbeiter": sol.worker_count,
+                    "Genutzte Maschinen": sol.machine_count,
+                    "Genutzte Anbaugeräte": sol.attachment_count,
+                    "Arbeitswegedistanz (km)": f"{sol.comute_distance_worker:.1f}",
+                    "Maschinentransport (km)": f"{sol.transport_distance_machine:.1f}",
+                    "Anbaugerätetransport (km)": f"{sol.transport_distance_attachment:.1f}",
+                    "Rechenzeit (min)": f"{sol.run_time_minutes:.1f}",
+                }
                 rows.append(row)
-            if rows:
-                df_avg = pd.DataFrame(rows)
-                df_avg = df_avg.set_index("Lösung")
-                # Nur die Spalten anzeigen, die auch in dieser Kategorie vorkommen
-                df_avg = df_avg[list(sorted(columns))]
-                st.write(f"**{category.capitalize()}**")
-                st.dataframe(df_avg)
 
-        # Optional: Balkendiagramm für ausgewählte absolute Kennzahlen
-        metrics = [
-            ("Erreichte Baustellen", "Erreichte Baustellen"),
-            ("Erreichte Bestellpositionen", "Erreichte Bestellpositionen"),
-            ("Genutzte Arbeiter", "Genutzte Arbeiter"),
-            ("Genutzte Maschinen", "Genutzte Maschinen"),
-            ("Genutzte Anbaugeräte", "Genutzte Anbaugeräte"),
-        ]
-        instanz_values = {
-            "Erreichte Baustellen": self.number_sites,
-            "Erreichte Bestellpositionen": self.number_shifts,
-            "Genutzte Arbeiter": self.number_worker,
-            "Genutzte Maschinen": self.number_machines,
-            "Genutzte Anbaugeräte": self.number_attachments,
-        }
-        for metric, title in metrics:
-            df_compare_numeric = df_compare.reset_index().copy()
-            df_compare_numeric[metric] = pd.to_numeric(df_compare_numeric[metric], errors="coerce")
-            fig = px.bar(
-            df_compare_numeric,
-            x="Lösung",
-            y=metric,
-            title=title,
-            color="Lösung",
-            color_discrete_sequence=px.colors.qualitative.Plotly
+            df_compare = pd.DataFrame(rows)
+            df_compare = df_compare.set_index("Lösung")
+            # Tabelle transponieren: Zeilen werden Spalten, Spalten werden Zeilen
+            df_compare_transposed = df_compare.transpose()
+
+            # Die erste Spalte so breit machen wie der längste Text
+            # Ermittle die maximale Textlänge in der ersten Spalte
+            max_len = df_compare_transposed.index.str.len().max()
+            # Setze die Breite (z.B. 8 Pixel pro Zeichen, min 120, max 400)
+            col_width = min(max(120, max_len * 8), 400)
+            # Zeige die Tabelle mit angepasster erster Spaltenbreite
+            st.dataframe(
+                df_compare_transposed,
+                column_config={df_compare_transposed.columns[0]: st.column_config.Column(width=col_width)}
             )
-            # Instanzwert als horizontale Linie
-            instanz_value = instanz_values.get(metric)
-            if pd.api.types.is_number(instanz_value):
-                fig.add_hline(y=instanz_value, line_dash="dash", line_color="black", annotation_text="Instanz", annotation_position="top left")
-                st.plotly_chart(fig, use_container_width=True)
+            
+
+            # Vergleichstabelle der Durchschnittswerte für alle Lösungen
+            st.write("### Durchschnittswerte der Lösungen")
+
+            # Sammle alle möglichen Kategorien aus allen Lösungen
+            all_categories = set()
+            for sol in self.solution_data.values():
+                all_categories.update(sol.averages.keys())
+
+            # Für jede Kategorie eine Tabelle anzeigen
+            for category in sorted(all_categories):
+                rows = []
+                columns = set()
+                for idx, key in enumerate(solution_keys):
+                    sol = self.solution_data[key]
+                    avg = sol.averages.get(category, {})
+                    row = {"Lösung": emojis[idx] if idx < len(emojis) else f"Lösung {key+1}"}
+                    row.update(avg)
+                    columns.update(avg.keys())
+                    rows.append(row)
+                if rows:
+                    df_avg = pd.DataFrame(rows)
+                    df_avg = df_avg.set_index("Lösung")
+                    # Nur die Spalten anzeigen, die auch in dieser Kategorie vorkommen
+                    df_avg = df_avg[list(sorted(columns))]
+                    st.write(f"**{category.capitalize()}**")
+                    st.dataframe(df_avg)
+
+            # Optional: Balkendiagramm für ausgewählte absolute Kennzahlen
+            metrics = [
+                ("Erreichte Baustellen", "Erreichte Baustellen"),
+                ("Erreichte Bestellpositionen", "Erreichte Bestellpositionen"),
+                ("Genutzte Arbeiter", "Genutzte Arbeiter"),
+                ("Genutzte Maschinen", "Genutzte Maschinen"),
+                ("Genutzte Anbaugeräte", "Genutzte Anbaugeräte"),
+            ]
+            instanz_values = {
+                "Erreichte Baustellen": self.number_sites,
+                "Erreichte Bestellpositionen": self.number_shifts,
+                "Genutzte Arbeiter": self.number_worker,
+                "Genutzte Maschinen": self.number_machines,
+                "Genutzte Anbaugeräte": self.number_attachments,
+            }
+            for metric, title in metrics:
+                df_compare_numeric = df_compare.reset_index().copy()
+                df_compare_numeric[metric] = pd.to_numeric(df_compare_numeric[metric], errors="coerce")
+                fig = px.bar(
+                df_compare_numeric,
+                x="Lösung",
+                y=metric,
+                title=title,
+                color="Lösung",
+                color_discrete_sequence=px.colors.qualitative.Plotly
+                )
+                # Instanzwert als horizontale Linie
+                instanz_value = instanz_values.get(metric)
+                if pd.api.types.is_number(instanz_value):
+                    fig.add_hline(y=instanz_value, line_dash="dash", line_color="black", annotation_text="Instanz", annotation_position="top left")
+                    st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info(
+                f"**Instanzdaten:**\n"
+                f"- Anzahl Baustellen: {self.number_sites}\n"
+                f"- Anzahl Bestellpositionen: {self.number_shifts}\n"
+                f"- Anzahl Arbeiter: {self.number_worker}\n"
+                f"- Anzahl Maschinen: {self.number_machines}"
+            )
+
+            # Liste der Keys und Emojis für die Lösungen
+            solution_keys = list(self.solution_data.keys())
+            emojis = st.session_state.get("solution_emojis", [f"Lösung {i+1}" for i in solution_keys])
+
+            # Vergleichstabelle der wichtigsten Kennzahlen (absolute Werte) – nur Lösungen
+            rows = []
+            for idx, key in enumerate(solution_keys):
+                sol = self.solution_data[key]
+                row = {
+                    "Lösung": emojis[idx] if idx < len(emojis) else f"Lösung {key+1}",
+                    "Erreichte Baustellen": sol.finished_sites,
+                    "Erreichte Bestellpositionen": sol.finished_shifts,
+                    "Stammfahrerverletzungen": sol.non_regular_driver,
+                    "Genutzte Arbeiter": sol.worker_count,
+                    "Genutzte Maschinen": sol.machine_count,
+                    "Arbeitswegedistanz (km)": f"{sol.comute_distance_worker:.1f}",
+                    "Maschinentransport (km)": f"{sol.transport_distance_machine:.1f}",
+                    "Rechenzeit (min)": f"{sol.run_time_minutes:.1f}",
+                }
+                rows.append(row)
+
+            df_compare = pd.DataFrame(rows)
+            df_compare = df_compare.set_index("Lösung")
+            # Tabelle transponieren: Zeilen werden Spalten, Spalten werden Zeilen
+            df_compare_transposed = df_compare.transpose()
+
+            # Die erste Spalte so breit machen wie der längste Text
+            # Ermittle die maximale Textlänge in der ersten Spalte
+            max_len = df_compare_transposed.index.str.len().max()
+            # Setze die Breite (z.B. 8 Pixel pro Zeichen, min 120, max 400)
+            col_width = min(max(120, max_len * 8), 400)
+            # Zeige die Tabelle mit angepasster erster Spaltenbreite
+            st.dataframe(
+                df_compare_transposed,
+                column_config={df_compare_transposed.columns[0]: st.column_config.Column(width=col_width)}
+            )
+            
+
+            # Vergleichstabelle der Durchschnittswerte für alle Lösungen
+            st.write("### Durchschnittswerte der Lösungen")
+
+            # Sammle alle möglichen Kategorien aus allen Lösungen
+            all_categories = set()
+            for sol in self.solution_data.values():
+                all_categories.update(sol.averages.keys())
+
+            # Für jede Kategorie eine Tabelle anzeigen
+            for category in sorted(all_categories):
+                rows = []
+                columns = set()
+                for idx, key in enumerate(solution_keys):
+                    sol = self.solution_data[key]
+                    avg = sol.averages.get(category, {})
+                    row = {"Lösung": emojis[idx] if idx < len(emojis) else f"Lösung {key+1}"}
+                    row.update(avg)
+                    columns.update(avg.keys())
+                    rows.append(row)
+                if rows:
+                    df_avg = pd.DataFrame(rows)
+                    df_avg = df_avg.set_index("Lösung")
+                    # Nur die Spalten anzeigen, die auch in dieser Kategorie vorkommen
+                    df_avg = df_avg[list(sorted(columns))]
+                    st.write(f"**{category.capitalize()}**")
+                    st.dataframe(df_avg)
+
+            # Optional: Balkendiagramm für ausgewählte absolute Kennzahlen
+            metrics = [
+                ("Erreichte Baustellen", "Erreichte Baustellen"),
+                ("Erreichte Bestellpositionen", "Erreichte Bestellpositionen"),
+                ("Genutzte Arbeiter", "Genutzte Arbeiter"),
+                ("Genutzte Maschinen", "Genutzte Maschinen"),
+            ]
+            instanz_values = {
+                "Erreichte Baustellen": self.number_sites,
+                "Erreichte Bestellpositionen": self.number_shifts,
+                "Genutzte Arbeiter": self.number_worker,
+                "Genutzte Maschinen": self.number_machines,
+            }
+            for metric, title in metrics:
+                df_compare_numeric = df_compare.reset_index().copy()
+                df_compare_numeric[metric] = pd.to_numeric(df_compare_numeric[metric], errors="coerce")
+                fig = px.bar(
+                df_compare_numeric,
+                x="Lösung",
+                y=metric,
+                title=title,
+                color="Lösung",
+                color_discrete_sequence=px.colors.qualitative.Plotly
+                )
+                # Instanzwert als horizontale Linie
+                instanz_value = instanz_values.get(metric)
+                if pd.api.types.is_number(instanz_value):
+                    fig.add_hline(y=instanz_value, line_dash="dash", line_color="black", annotation_text="Instanz", annotation_position="top left")
+                    st.plotly_chart(fig, use_container_width=True)
+
+        
 
 
     def run(self):
@@ -864,13 +996,51 @@ class SolutionData:
     def __init__(self, raw_data: dict, key: int):
         self.key = key
         self.raw = raw_data
-        self.worker_assignments = raw_data.get("Arbeiterloesung", {}).get("Arbeiterzuweisung", {})
-        self.machine_assignments = raw_data.get("MaschinenLoesung", {}).get("Maschinenzuweisung", {})
-        self.attachment_assignments = raw_data.get("AnbaugeraeteLoesung", {}).get("Anbaugeraetzuweisung", {})
 
+        self.worker_assignments = dict()
+        self.worker_blocking = dict()
         self.worker_hours = dict()
+
+        for worker, shifts in raw_data.get("Arbeiterloesung", {}).get("Arbeiterzuweisung", {}).items():
+            self.worker_assignments[worker] = []
+            self.worker_blocking[worker] = []
+
+            for shift in shifts:
+                if shift.get("Typ") == "blocking":
+                    self.worker_blocking[worker].append(shift)
+                else:
+                    self.worker_assignments[worker].append(shift)
+
+        self.machine_assignments = dict()
+        self.machine_blocking = dict()
         self.machine_hours = dict()
-        self.attachment_hours = dict()
+
+        for machine, usages in raw_data.get("MaschinenLoesung", {}).get("Maschinenzuweisung", {}).items():
+            self.machine_assignments[machine] = []
+            self.machine_blocking[machine] = []
+
+            for usage in usages:
+                if usage.get("Typ") == "blocking":
+                    self.machine_blocking[machine].append(usage)
+                else:
+                    self.machine_assignments[machine].append(usage)
+
+        if include_attachments:
+            self.attachment_assignments = dict()
+            self.attachment_blocking = dict()
+            self.attachment_hours = dict()
+
+            for attachment, usages in raw_data.get("AnbaugeraeteLoesung", {}).get("Anbaugeraetzuweisung", {}).items():
+                self.attachment_assignments[attachment] = []
+                self.attachment_blocking[attachment] = []
+
+                for usage in usages:
+                    if usage.get("Typ") == "blocking":
+                        self.attachment_blocking[attachment].append(usage)
+                    else:
+                        self.attachment_assignments[attachment].append(usage)
+
+                
 
 
     def to_dict(self):
