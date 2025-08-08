@@ -859,6 +859,8 @@ class SolutionApp:
                     "Erreichte Baustellen": sol.finished_sites,
                     "Erreichte Bestellpositionen": sol.finished_shifts,
                     "Stammfahrerverletzungen": sol.non_regular_driver,
+                    "Baustellenkenntnisverletzungen": sol.total_site_knowledge_violation,
+                    "Abweichung Zielstunden": sol.total_deviation_from_target,
                     "Genutzte Arbeiter": sol.worker_count,
                     "Genutzte Maschinen": sol.machine_count,
                     "Genutzte Anbaugeräte": sol.attachment_count,
@@ -923,7 +925,9 @@ class SolutionApp:
                 ("Arbeitswegedistanz (km)", "Arbeitswegedistanz (km)"),
                 ("Maschinentransport (km)", "Maschinentransport (km)"),
                 ("Anbaugerätetransport (km)", "Anbaugerätetransport (km)"),
-                ("Stammfahrerverletzungen", "Stammfahrerverletzungen")
+                ("Stammfahrerverletzungen", "Stammfahrerverletzungen"),
+                ("Baustellenkenntnisverletzungen", "Baustellenkenntnisverletzungen"),
+                ("Abweichung Zielstunden", "Abweichung Zielstunden")
             ]
             instanz_values = {
                 "Erreichte Baustellen": self.number_sites,
@@ -971,6 +975,7 @@ class SolutionApp:
                     "Erreichte Bestellpositionen": sol.finished_shifts,
                     "Stammfahrerverletzungen": sol.non_regular_driver,
                     "Baustellenkenntnisverletzungen": sol.total_site_knowledge_violation,
+                    "Abweichung Zielstunden": sol.total_deviation_from_target,
                     "Arbeitswegedistanz (km)": round(sol.comute_distance_worker, 1),
                     "Maschinentransport (km)": round(sol.transport_distance_machine, 1),
                     "Rechenzeit (min)": round(sol.run_time_minutes, 1),
@@ -1029,6 +1034,7 @@ class SolutionApp:
                 ("Erreichte Bestellpositionen", "Erreichte Bestellpositionen"),
                 ("Stammfahrerverletzungen", "Stammfahrerverletzungen"),
                 ("Baustellenkenntnisverletzungen", "Baustellenkenntnisverletzungen"),
+                ("Abweichung Zielstunden", "Abweichung Zielstunden"),
                 ("Arbeitswegedistanz (km)", "Arbeitswegedistanz (km)"),
                 ("Maschinentransport (km)", "Maschinentransport (km)"),
                 ("Genutzte Arbeiter", "Genutzte Arbeiter"),
