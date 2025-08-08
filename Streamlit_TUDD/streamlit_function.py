@@ -7,6 +7,7 @@ import random
 import datetime as dt
 
 include_attachments = False
+include_blocking_in_gantt = True
 
 class SolutionApp:
     def __init__(self):
@@ -101,136 +102,216 @@ class SolutionApp:
             return True
 
     def show_worker_gantt(self, solution_data, key):
-        # --- Gantt-Diagramm: Arbeiter ---
-        #st.subheader("Gantt-Diagramm: Arbeiter")
         worker_assignments = solution_data.worker_assignments
 
-        # Daten aufbereiten
+        # --- reguläre Schichten
         solution_data.worker_rows = [
             {
-            'Arbeiter': worker,
-            'Start': shift['Start'],
-            'Ende': shift['Ende'],
-            'Schichttyp': 'Frühschicht' if pd.to_datetime(shift['Start']).hour < 14 else 'Spätschicht',
-            'Baustelle': shift['Auftragsnummer']#.split("-")[0]
+                'Arbeiter': worker,
+                'Start': shift['Start'],
+                'Ende': shift['Ende'],
+                'Schichttyp': 'Frühschicht' if pd.to_datetime(shift['Start']).hour < 14 else 'Spätschicht',
+                'Baustelle': shift['Auftragsnummer']
             }
             for worker, shifts in worker_assignments.items() for shift in shifts
         ]
-        solution_data.df_worker = pd.DataFrame(solution_data.worker_rows)
-        
+        df_regular = pd.DataFrame(solution_data.worker_rows)
+
+        # --- optional: blocking Schichten
+        if include_blocking_in_gantt:
+            worker_blocking = getattr(solution_data, "worker_blocking", {})
+            blocking_rows = [
+                {
+                    'Arbeiter': worker,
+                    'Start': shift['Start'],
+                    'Ende': shift['Ende'],
+                    'Schichttyp': 'Blockiert',
+                    'Baustelle': None
+                }
+                for worker, shifts in worker_blocking.items() for shift in shifts
+            ]
+            df_blocking = pd.DataFrame(blocking_rows) if blocking_rows else pd.DataFrame(columns=df_regular.columns)
+            solution_data.df_worker = pd.concat([df_regular, df_blocking], ignore_index=True)
+        else:
+            solution_data.df_worker = df_regular.copy()
+
         if solution_data.df_worker.empty:
             st.info("Keine Arbeiterzuweisungen vorhanden.")
-        else:
-            # Arbeiter sortieren in umgekehrter Reihenfolge
-            solution_data.df_worker['Arbeiter'] = pd.Categorical(
-                solution_data.df_worker['Arbeiter'],
-                categories=sorted(solution_data.df_worker['Arbeiter'].unique(), key=lambda x: int(x.split('_')[1]), reverse=True)
-            )
-            sorted_workers = sorted(solution_data.df_worker['Arbeiter'].unique(), key=lambda x: int(x.split('_')[1]), reverse=True)
+            return
 
-            # Anzahl verschiedener Baustellen pro Arbeiter zählen
+        # Sortierung wie gehabt
+        solution_data.df_worker['Arbeiter'] = pd.Categorical(
+            solution_data.df_worker['Arbeiter'],
+            categories=sorted(solution_data.df_worker['Arbeiter'].dropna().unique(), key=lambda x: int(x.split('_')[1]), reverse=True)
+        )
+        sorted_workers = sorted(solution_data.df_worker['Arbeiter'].dropna().unique(), key=lambda x: int(x.split('_')[1]), reverse=True)
+
+        # Kennzahlen nur aus regulären Schichten
+        if not df_regular.empty:
             solution_data.worker_site_count = (
-                solution_data.df_worker.groupby('Arbeiter', observed=False)['Baustelle']
-                .nunique()
-                .to_dict()
+                df_regular.groupby('Arbeiter', observed=False)['Baustelle'].nunique().to_dict()
             )
-            solution_data.worker_site_count = {str(worker.split('_')[1]): sites for worker, sites in solution_data.worker_site_count.items()}
-        
-            # Anzahl der Schichten pro Arbeiter und Schichttyp
+            solution_data.worker_site_count = {str(w.split('_')[1]): s for w, s in solution_data.worker_site_count.items()}
+
             solution_data.worker_shift_type_count = (
-                solution_data.df_worker.groupby(['Arbeiter', 'Schichttyp'], observed=False)
-                .size()
-                .unstack(fill_value=0)
-                .rename_axis(None, axis=1)
-                .to_dict(orient='index')
+                df_regular.assign(
+                    Schichttyp=df_regular['Start'].apply(lambda x: 'Frühschicht' if pd.to_datetime(x).hour < 14 else 'Spätschicht')
+                )
+                .groupby(['Arbeiter', 'Schichttyp'], observed=False)
+                .size().unstack(fill_value=0).rename_axis(None, axis=1).to_dict(orient='index')
             )
-            solution_data.worker_shift_type_count = {str(worker.split('_')[1]): shifts for worker, shifts in solution_data.worker_shift_type_count.items()}
-        
-            # Gantt-Diagramm
-            fig_worker = px.timeline(
-                solution_data.df_worker,
-                x_start="Start",
-                x_end="Ende",
-                y="Arbeiter",
-                color="Schichttyp",
-                title="Arbeiterzuweisungen nach Schichttyp",
-                color_discrete_map={"Frühschicht": "lightblue", "Spätschicht": "lightcoral"},
-                category_orders={"Arbeiter": sorted_workers}
+            solution_data.worker_shift_type_count = {str(w.split('_')[1]): d for w, d in solution_data.worker_shift_type_count.items()}
+        else:
+            solution_data.worker_site_count = {}
+            solution_data.worker_shift_type_count = {}
+
+        # Farben
+        color_map = {"Frühschicht": "red", "Spätschicht": "blue"}
+        if include_blocking_in_gantt:
+            color_map["Blockiert"] = "black"
+
+        # Gantt
+        fig_worker = px.timeline(
+            solution_data.df_worker,
+            x_start="Start",
+            x_end="Ende",
+            y="Arbeiter",
+            color="Schichttyp",
+            title="Arbeiterzuweisungen nach Schichttyp" + (" (inkl. Blockierungen)" if include_blocking_in_gantt else ""),
+            color_discrete_map=color_map,
+            category_orders={"Arbeiter": sorted_workers}
+        )
+
+        # “Blockiert”-Balken schraffieren
+        if include_blocking_in_gantt:
+            fig_worker.for_each_trace(
+                lambda tr: tr.update(
+                    marker=dict(
+                        color="black",
+                        pattern=dict(
+                            shape="/",       # Muster: Schräg rechts
+                            size=8,          # Mustergröße
+                            solidity=0.5     # Muster-Deckung (0=transparent, 1=voll)
+                        ),
+                        line=dict(color="black", width=0.001)  # optional: Umrandung
+                    ),
+                    opacity=0.9
+                ) if tr.name == "Blockiert" else ()
             )
-        
-            # Wochenenden hervorheben
-            start_date = pd.to_datetime(solution_data.df_worker['Start']).min().date()
-            end_date = pd.to_datetime(solution_data.df_worker['Ende']).max().date()
-            current_date = start_date
-            while current_date <= end_date:
-                if current_date.weekday() in [5, 6]:
-                    fig_worker.add_vrect(
-                        x0=dt.datetime.combine(current_date, dt.datetime.min.time()),
-                        x1=dt.datetime.combine(current_date + dt.timedelta(days=1), dt.datetime.min.time()),
-                        fillcolor="lightgrey",
-                        opacity=0.3,
-                        layer="below",
-                        line_width=0,
-                    )
-                current_date += dt.timedelta(days=1)
-        
-            # Diagramm anzeigen
-            st.plotly_chart(fig_worker, key=f"worker_gantt_{key}")
+
+        # Wochenenden hervorheben
+        start_date = pd.to_datetime(solution_data.df_worker['Start']).min().date()
+        end_date = pd.to_datetime(solution_data.df_worker['Ende']).max().date()
+        current_date = start_date
+        while current_date <= end_date:
+            if current_date.weekday() in [5, 6]:
+                fig_worker.add_vrect(
+                    x0=dt.datetime.combine(current_date, dt.datetime.min.time()),
+                    x1=dt.datetime.combine(current_date + dt.timedelta(days=1), dt.datetime.min.time()),
+                    fillcolor="lightgrey",
+                    opacity=0.3,
+                    layer="below",
+                    line_width=0,
+                )
+            current_date += dt.timedelta(days=1)
+
+        st.plotly_chart(fig_worker, key=f"worker_gantt_{key}")
 
     def show_machine_gantt(self, solution_data, key):
-        # --- Gantt-Diagramm: Maschinen + Anbaugeräte ---
+        # --- Gantt-Diagramm: Maschinen + (optional) Anbaugeräte ---
         machine_assignments = solution_data.machine_assignments
+        machine_blocking = getattr(solution_data, "machine_blocking", {})
+
         if include_attachments:
             attachment_assignments = solution_data.attachment_assignments
+            attachment_blocking = getattr(solution_data, "attachment_blocking", {})
 
-        # Daten aufbereiten
+        # --- Nutzungszeilen (produktive Einsätze) ---
         solution_data.machine_rows = [
             {
                 'Maschine': machine,
                 'Start': usage['Start'],
                 'Ende': usage['Ende'],
-                'Baustelle': usage['Auftragsnummer'],#.split("-")[0],
-                'Dauer': usage['Dauer']
+                'Baustelle': usage['Auftragsnummer'],  # .split("-")[0] falls nötig
+                'Dauer': usage['Dauer'],
+                'Typ': 'Einsatz'
             }
             for machine, usages in machine_assignments.items() for usage in usages
         ]
+
         if include_attachments:
             solution_data.attachment_rows = [
                 {
                     'Maschine': attachment,
                     'Start': usage['Start'],
                     'Ende': usage['Ende'],
-                    'Baustelle': usage['Auftragsnummer'],#.split("-")[0],
-                    'Dauer': usage['Dauer']
+                    'Baustelle': usage['Auftragsnummer'],
+                    'Dauer': usage['Dauer'],
+                    'Typ': 'Einsatz'
                 }
                 for attachment, usages in attachment_assignments.items() for usage in usages
             ]
-            df_machine = pd.DataFrame(solution_data.machine_rows + solution_data.attachment_rows)
-
         else:
-            df_machine = pd.DataFrame(solution_data.machine_rows)
+            solution_data.attachment_rows = []
+
+        # --- Blocking-Zeilen (Urlaub/Wartung/Sperre etc.) ---
+        if include_blocking_in_gantt:
+            machine_block_rows = [
+                {
+                    'Maschine': machine,
+                    'Start': blk['Start'],
+                    'Ende': blk['Ende'],
+                    'Baustelle': "Blockiert",
+                    'Dauer': blk.get('Dauer', (pd.to_datetime(blk['Ende']) - pd.to_datetime(blk['Start'])).total_seconds() / 3600.0),
+                    'Typ': 'Blockiert'
+                }
+                for machine, blks in machine_blocking.items() for blk in blks
+            ]
+            if include_attachments:
+                attachment_block_rows = [
+                    {
+                        'Maschine': attachment,
+                        'Start': blk['Start'],
+                        'Ende': blk['Ende'],
+                        'Baustelle': "Blockiert",
+                        'Dauer': blk.get('Dauer', (pd.to_datetime(blk['Ende']) - pd.to_datetime(blk['Start'])).total_seconds() / 3600.0),
+                        'Typ': 'Blockiert'
+                    }
+                    for attachment, blks in attachment_blocking.items() for blk in blks
+                ]
+            else:
+                attachment_block_rows = []
+        else:
+            machine_block_rows = []
+            attachment_block_rows = []
+
+        # --- DataFrame bauen ---
+        df_machine = pd.DataFrame(
+            solution_data.machine_rows + solution_data.attachment_rows + machine_block_rows + attachment_block_rows
+        )
 
         if df_machine.empty:
             st.info("Keine Maschinenzuweisungen vorhanden.")
             return
 
-        # Statistikdaten
-        solution_data.stunden_in_nutzung_dict = df_machine.groupby('Maschine')['Dauer'].sum().to_dict()
+        # Statistikdaten (nur auf echter Nutzung basieren, nicht auf Blockings)
+        df_usage_only = df_machine[df_machine['Typ'] == 'Einsatz'].copy()
+        solution_data.stunden_in_nutzung_dict = df_usage_only.groupby('Maschine')['Dauer'].sum().to_dict()
         solution_data.tage_in_nutzung_dict = {k: v / 24 for k, v in solution_data.stunden_in_nutzung_dict.items()}
-        solution_data.maschinen_anzahl_baustellen_dict = df_machine.groupby('Maschine')['Baustelle'].nunique().to_dict()
+        solution_data.maschinen_anzahl_baustellen_dict = df_usage_only.groupby('Maschine')['Baustelle'].nunique().to_dict()
 
         # Farben für Baustellen
-        unique_sites = sorted(df_machine['Baustelle'].unique())
+        unique_sites = sorted(df_usage_only['Baustelle'].unique())  # Farben nur für echte Baustellen
         color_map = {
             site: px.colors.qualitative.Plotly[i % len(px.colors.qualitative.Plotly)]
             for i, site in enumerate(unique_sites)
         }
+        # Farbe/Muster für Blockings ergänzen, falls sichtbar
+        if include_blocking_in_gantt:
+            color_map["Blockiert"] = "black"
 
-        # Maschinenreihenfolge (erst Maschinen, dann Anbaugeräte)
-        if include_attachments:
-            ordered_names = list(dict.fromkeys([row["Maschine"] for row in solution_data.machine_rows + solution_data.attachment_rows]))
-        else:
-            ordered_names = list(dict.fromkeys([row["Maschine"] for row in solution_data.machine_rows]))
+        # Maschinenreihenfolge (erst Maschinen, dann Anbaugeräte — in Eingabereihenfolge)
+        ordered_names = list(dict.fromkeys(df_machine['Maschine'].tolist()))
 
         # Gantt-Diagramm erstellen
         fig_machine = px.timeline(
@@ -242,11 +323,28 @@ class SolutionApp:
             title="Maschinen- und Anbaugerätezuweisungen nach Baustelle",
             color_discrete_map=color_map,
             category_orders={
-                "Baustelle": unique_sites,
+                "Baustelle": (unique_sites + (["Blockiert"] if include_blocking_in_gantt else [])),
                 "Maschine": ordered_names
             }
         )
         fig_machine.update_yaxes(autorange="reversed")
+
+        # “Blockiert” schraffieren & dunkler zeichnen (nur wenn aktiv)
+        if include_blocking_in_gantt:
+            fig_machine.for_each_trace(
+                lambda tr: tr.update(
+                    marker=dict(
+                        color="black",
+                        pattern=dict(
+                            shape="/",   # Schräg rechts
+                            size=8,
+                            solidity=0.5
+                        ),
+                        line=dict(color="black", width=1)  # schwarze Kontur
+                    ),
+                    opacity=0.9
+                ) if tr.name == "Blockiert" else ()
+            )
 
         # Wochenenden hervorheben
         start_date = pd.to_datetime(df_machine['Start']).min().date()
@@ -274,7 +372,7 @@ class SolutionApp:
         solution_data.run_time_minutes = solution_data.raw["RechenzeitInSekunden"] / 60
 
         # Erreichte Baustellen (%)
-        solution_data.finished_sites = sum(solution_data.raw["BerechnetAuftragBearbeitet"].values())
+        solution_data.finished_sites = len({key.split("-")[0] for key, val in solution_data.raw["BerechnetAuftragBearbeitet"].items() if val})
         solution_data.finished_sites_percentage = (solution_data.finished_sites / self.number_sites) * 100
 
         # Erreichte Bestellpositionen (%)
@@ -285,8 +383,15 @@ class SolutionApp:
         solution_data.finished_shifts_percentage = (solution_data.finished_shifts / self.number_shifts) * 100
 
         # Bestellpositionen welche von nicht regulären Arbeitern bearbeitet wurden
-        solution_data.non_regular_driver = solution_data.raw["MaschinenLoesung"]["AnzahlStammfahrerVerletzungen"]
+        solution_data.non_regular_driver = sum(solution_data.raw["MaschinenLoesung"]["BerechneteStammfahrerVerletzungenProMaschine"].values())
         solution_data.non_regular_driver_percentage = (solution_data.non_regular_driver / solution_data.finished_shifts) * 100
+
+        # Anzahl BaustellKenntnis Verletzungen
+        solution_data.total_site_knowledge_violation = sum(solution_data.raw["Arbeiterloesung"]["AnzahlBaustellKenntnisVerletzungen"].values())
+        solution_data.site_knowledge_violation = {}
+        for worker, violations in solution_data.raw["Arbeiterloesung"]["AnzahlBaustellKenntnisVerletzungen"].items():
+            worker = str(worker.split("_")[1])
+            solution_data.site_knowledge_violation[worker] = violations
 
         # Anteil genutzter Maschinen
         solution_data.machine_count = sum(solution_data.raw["MaschinenLoesung"]["BerechnetMaschineGenutzt"].values())
@@ -318,6 +423,9 @@ class SolutionApp:
         for worker, shifts in solution_data.worker_assignments.items():
             worker = str(worker.split("_")[1])
             solution_data.worker_hours[worker] = sum(shift['Dauer'] for shift in shifts)
+
+        solution_data.target_average_work_hours = sum(dauer for dauer in solution_data.worker_hours.values()) / solution_data.worker_count
+        solution_data.total_deviation_from_target = sum(abs(dauer - solution_data.target_average_work_hours) for dauer in solution_data.worker_hours.values())
 
         # Nutzungsstunden der Maschinen
         for machine, shifts in solution_data.machine_assignments.items():
@@ -404,16 +512,21 @@ class SolutionApp:
         st.write("#### Arbeiter")
         st.write(f"**Anteil genutzte Arbeiter:** {solution_data.worker_count} von {self.number_worker} ➡️ {solution_data.worker_count_percentage:.1f}%")
         st.write(f"**Gesamtarbeitswegedistanz:** {solution_data.comute_distance_worker:.1f} km")
+        st.write(f"**Ziel Durchschnittsstunden:** {solution_data.target_average_work_hours:.1f} Stunden")
+        st.write(f"**Gesamtabweichung vom Ziel:** {solution_data.total_deviation_from_target:.1f} Stunden")
+        st.write(f"**Anzahl Baustellkenntnis Verletzungen:** {solution_data.total_site_knowledge_violation}")
         st.write("")
 
 
         # --- Tabelle: Arbeitszeiten der Arbeiter ---
         df_arbeitszeiten = pd.DataFrame.from_dict(solution_data.worker_hours, orient='index', columns=['Gesamtstunden'])
         df_arbeitszeiten.index.name = 'Arbeiter_ID'
-        df_arbeitszeiten['Auslastung'] = ((df_arbeitszeiten['Gesamtstunden'] / 160) * 100).round(1).astype(str) + '%'
+        df_arbeitszeiten['Abweichung Ziel'] = round(df_arbeitszeiten['Gesamtstunden'] - (sum(dauer for dauer in solution_data.worker_hours.values()) / solution_data.worker_count), 1)
+        df_arbeitszeiten['Monatsauslastung'] = ((df_arbeitszeiten['Gesamtstunden'] / 160) * 100).round(1).astype(str) + '%'
         df_arbeitszeiten['Frühschichten'] = [solution_data.worker_shift_type_count.get(k, {}).get('Frühschicht', 0) for k in df_arbeitszeiten.index]
         df_arbeitszeiten['Spätschichten'] = [solution_data.worker_shift_type_count.get(k, {}).get('Spätschicht', 0) for k in df_arbeitszeiten.index]
         df_arbeitszeiten['Baustellen'] = [solution_data.worker_site_count.get(k, 0) for k in df_arbeitszeiten.index]
+        df_arbeitszeiten['Baustellenverletzung'] = [solution_data.site_knowledge_violation.get(k, 0) for k in df_arbeitszeiten.index]
         df_arbeitszeiten['Arbeitsweg'] = [round(solution_data.raw["Arbeiterloesung"]["BerechneteKilometer"].get(f"Arbeiter_{k}", 0), 2)for k in df_arbeitszeiten.index]
         st.dataframe(df_arbeitszeiten)
         st.write(f"➡️ **Anzahl nicht eingesetzter Arbeiter:** {solution_data.unued_worker_count}")
@@ -509,12 +622,12 @@ class SolutionApp:
             xbins=dict(
             start=bins[0],
             end=bins[-1],
-            size=20  # 20er Bins ab 140-160
+            size=20  # 20er Bins
             ),
             hovertemplate="<b>Arbeitsstunden:</b> %{x}<br><b>Anteil Arbeiter:</b> %{y:.1f}%<extra></extra>"
         )
         # vertikale rote dashen Linie hinzufügen bis zu maximalen y-Wert
-        fig.add_vline(x=140, line_dash="dash", line_color="red")
+        fig.add_vline(x=solution_data.target_average_work_hours, line_dash="dash", line_color="red")
 
         # Y-Achsen-Label und X-Achsen-Bereich festlegen
         fig.update_layout(
@@ -807,6 +920,10 @@ class SolutionApp:
                 ("Genutzte Arbeiter", "Genutzte Arbeiter"),
                 ("Genutzte Maschinen", "Genutzte Maschinen"),
                 ("Genutzte Anbaugeräte", "Genutzte Anbaugeräte"),
+                ("Arbeitswegedistanz (km)", "Arbeitswegedistanz (km)"),
+                ("Maschinentransport (km)", "Maschinentransport (km)"),
+                ("Anbaugerätetransport (km)", "Anbaugerätetransport (km)"),
+                ("Stammfahrerverletzungen", "Stammfahrerverletzungen")
             ]
             instanz_values = {
                 "Erreichte Baustellen": self.number_sites,
@@ -853,11 +970,12 @@ class SolutionApp:
                     "Erreichte Baustellen": sol.finished_sites,
                     "Erreichte Bestellpositionen": sol.finished_shifts,
                     "Stammfahrerverletzungen": sol.non_regular_driver,
+                    "Baustellenkenntnisverletzungen": sol.total_site_knowledge_violation,
+                    "Arbeitswegedistanz (km)": round(sol.comute_distance_worker, 1),
+                    "Maschinentransport (km)": round(sol.transport_distance_machine, 1),
+                    "Rechenzeit (min)": round(sol.run_time_minutes, 1),
                     "Genutzte Arbeiter": sol.worker_count,
                     "Genutzte Maschinen": sol.machine_count,
-                    "Arbeitswegedistanz (km)": f"{sol.comute_distance_worker:.1f}",
-                    "Maschinentransport (km)": f"{sol.transport_distance_machine:.1f}",
-                    "Rechenzeit (min)": f"{sol.run_time_minutes:.1f}",
                 }
                 rows.append(row)
 
@@ -909,6 +1027,10 @@ class SolutionApp:
             metrics = [
                 ("Erreichte Baustellen", "Erreichte Baustellen"),
                 ("Erreichte Bestellpositionen", "Erreichte Bestellpositionen"),
+                ("Stammfahrerverletzungen", "Stammfahrerverletzungen"),
+                ("Baustellenkenntnisverletzungen", "Baustellenkenntnisverletzungen"),
+                ("Arbeitswegedistanz (km)", "Arbeitswegedistanz (km)"),
+                ("Maschinentransport (km)", "Maschinentransport (km)"),
                 ("Genutzte Arbeiter", "Genutzte Arbeiter"),
                 ("Genutzte Maschinen", "Genutzte Maschinen"),
             ]
@@ -934,7 +1056,8 @@ class SolutionApp:
                 if pd.api.types.is_number(instanz_value):
                     fig.add_hline(y=instanz_value, line_dash="dash", line_color="black", annotation_text="Instanz", annotation_position="top left")
                     st.plotly_chart(fig, use_container_width=True)
-
+                else:
+                    st.plotly_chart(fig, use_container_width=True)
         
 
 
@@ -1024,6 +1147,7 @@ class SolutionData:
                     self.machine_blocking[machine].append(usage)
                 else:
                     self.machine_assignments[machine].append(usage)
+
 
         if include_attachments:
             self.attachment_assignments = dict()
