@@ -125,7 +125,7 @@ class SolutionApp:
                     'Arbeiter': worker,
                     'Start': shift['Start'],
                     'Ende': shift['Ende'],
-                    'Schichttyp': 'Blockiert',
+                    'Schichttyp': 'Block',
                     'Baustelle': None
                 }
                 for worker, shifts in worker_blocking.items() for shift in shifts
@@ -168,7 +168,7 @@ class SolutionApp:
         # Farben
         color_map = {"Frühschicht": "red", "Spätschicht": "blue"}
         if include_blocking_in_gantt:
-            color_map["Blockiert"] = "black"
+            color_map["Block"] = "black"
 
         # Gantt
         fig_worker = px.timeline(
@@ -182,7 +182,7 @@ class SolutionApp:
             category_orders={"Arbeiter": sorted_workers}
         )
 
-        # “Blockiert”-Balken schraffieren
+        # “Block”-Balken schraffieren
         if include_blocking_in_gantt:
             fig_worker.for_each_trace(
                 lambda tr: tr.update(
@@ -196,7 +196,7 @@ class SolutionApp:
                         line=dict(color="black", width=0.001)  # optional: Umrandung
                     ),
                     opacity=0.9
-                ) if tr.name == "Blockiert" else ()
+                ) if tr.name == "Block" else ()
             )
 
         # Wochenenden hervorheben
@@ -261,9 +261,9 @@ class SolutionApp:
                     'Maschine': machine,
                     'Start': blk['Start'],
                     'Ende': blk['Ende'],
-                    'Baustelle': "Blockiert",
+                    'Baustelle': "Block",
                     'Dauer': blk.get('Dauer', (pd.to_datetime(blk['Ende']) - pd.to_datetime(blk['Start'])).total_seconds() / 3600.0),
-                    'Typ': 'Blockiert'
+                    'Typ': 'Block'
                 }
                 for machine, blks in machine_blocking.items() for blk in blks
             ]
@@ -273,9 +273,9 @@ class SolutionApp:
                         'Maschine': attachment,
                         'Start': blk['Start'],
                         'Ende': blk['Ende'],
-                        'Baustelle': "Blockiert",
+                        'Baustelle': "Block",
                         'Dauer': blk.get('Dauer', (pd.to_datetime(blk['Ende']) - pd.to_datetime(blk['Start'])).total_seconds() / 3600.0),
-                        'Typ': 'Blockiert'
+                        'Typ': 'Block'
                     }
                     for attachment, blks in attachment_blocking.items() for blk in blks
                 ]
@@ -308,7 +308,7 @@ class SolutionApp:
         }
         # Farbe/Muster für Blockings ergänzen, falls sichtbar
         if include_blocking_in_gantt:
-            color_map["Blockiert"] = "black"
+            color_map["Block"] = "black"
 
         # Maschinenreihenfolge (erst Maschinen, dann Anbaugeräte — in Eingabereihenfolge)
         ordered_names = list(dict.fromkeys(df_machine['Maschine'].tolist()))
@@ -323,13 +323,13 @@ class SolutionApp:
             title="Maschinen- und Anbaugerätezuweisungen nach Baustelle",
             color_discrete_map=color_map,
             category_orders={
-                "Baustelle": (unique_sites + (["Blockiert"] if include_blocking_in_gantt else [])),
+                "Baustelle": (unique_sites + (["Block"] if include_blocking_in_gantt else [])),
                 "Maschine": ordered_names
             }
         )
         fig_machine.update_yaxes(autorange="reversed")
 
-        # “Blockiert” schraffieren & dunkler zeichnen (nur wenn aktiv)
+        # “Block” schraffieren & dunkler zeichnen (nur wenn aktiv)
         if include_blocking_in_gantt:
             fig_machine.for_each_trace(
                 lambda tr: tr.update(
@@ -343,7 +343,7 @@ class SolutionApp:
                         line=dict(color="black", width=1)  # schwarze Kontur
                     ),
                     opacity=0.9
-                ) if tr.name == "Blockiert" else ()
+                ) if tr.name == "Block" else ()
             )
 
         # Wochenenden hervorheben
@@ -1067,56 +1067,108 @@ class SolutionApp:
         
 
 
+    def _ensure_solution_emojis(self, n: int):
+        """Ensure we have exactly n stable emojis in session state."""
+        if "solution_emojis" not in st.session_state:
+            st.session_state.solution_emojis = []
+        base = ["🚄", "🛤️", "🚆", "🚇", "🚈", "🚉", "🚋", "🚝", "🚞", "🚊"]
+        # grow to n
+        while len(st.session_state.solution_emojis) < n:
+            # prefer unused ones
+            available = [e for e in base if e not in st.session_state.solution_emojis]
+            pick = random.choice(available) if available else random.choice(base)
+            st.session_state.solution_emojis.append(pick)
+        # shrink to n
+        if len(st.session_state.solution_emojis) > n:
+            st.session_state.solution_emojis = st.session_state.solution_emojis[:n]
+
     def run(self):
 
-        selected = False
-        if not selected:
-            # Anzahl Lösungen Button
-            if "num_solutions" not in st.session_state:
-                st.session_state.num_solutions = 2
-            if "confirmed_num_solutions" not in st.session_state:
-                st.session_state.confirmed_num_solutions = False
-            if not st.session_state.confirmed_num_solutions:
-                num_selected = st.slider(
-                        "Anzahl der Lösungen zum Vergleichen:",
-                        min_value=2,
-                        max_value=6,
-                        value=2,
-                        step=1)
-                if st.button("Bestätigen"):
-                    st.session_state.num_solutions = num_selected
-                    st.session_state.confirmed_num_solutions = True
-                    st.rerun()
-                st.stop()
-            # Anzahl Lösungen Definition
-            num_solutions = st.session_state.num_solutions
-            selected = True
-
-
-        # Tabs erstellen
+        # --- Session-State vorbereiten ---
+        if "solutions" not in st.session_state:
+            st.session_state.solutions = []              # list of raw JSON dicts
+        if "solution_names" not in st.session_state:
+            st.session_state.solution_names = []         # list of file-base-names for display
         if "solution_emojis" not in st.session_state:
-            emojis = ["🚄", "🛤️", "🚆", "🚇", "🚈", "🚉", "🚋"]
-            st.session_state.solution_emojis = random.sample(emojis, st.session_state.num_solutions)
+            st.session_state.solution_emojis = []
 
-        tab_labels = ["🗺️ Instanz"]
-        for i in range(st.session_state.num_solutions):
-            tab_labels.append(f"{st.session_state.solution_emojis[i]} Lösung {i + 1}")
+        num_solutions = len(st.session_state.solutions)
+
+        # --- Tabs dynamisch aufbauen: Instanz | Upload | (eine pro Lösung) | Vergleich ---
+        tab_labels = ["🗺️ Instanz", "📥 Lösungen"]
+        self._ensure_solution_emojis(num_solutions)
+        for i in range(num_solutions):
+            name = (
+                st.session_state.solution_names[i]
+                if i < len(st.session_state.solution_names)
+                else f"Lösung {i + 1}"
+            )
+            # Nur das Symbol im Tab anzeigen
+            tab_labels.append(f"{st.session_state.solution_emojis[i]}")
         tab_labels.append("📊 Vergleich")
         tabs = st.tabs(tab_labels)
 
-        # Tab 0: Instanz
+        # --- Tab 0: Instanz ---
         with tabs[0]:
             self.upload_instance()
 
-        # Tabs 1 bis n: Lösungen
+        # --- Tab 1: Mehrfach-Upload von Lösungen ---
+        with tabs[1]:
+            st.write("### Lösungsdateien hochladen")
+            uploaded_files = st.file_uploader(
+                "Wähle eine oder mehrere JSON-Lösungen",
+                type=["json"],
+                accept_multiple_files=True,
+                key="solutions_multi",
+            )
+            c1, c2 = st.columns(2)
+            with c1:
+                add_disabled = not uploaded_files
+                if st.button("Hinzufügen", disabled=add_disabled):
+                    added = 0
+                    for f in uploaded_files:
+                        try:
+                            raw = json.load(f)
+                            st.session_state.solutions.append(raw)
+                            st.session_state.solution_names.append(os.path.splitext(os.path.basename(f.name))[0])
+                            added += 1
+                        except Exception as e:
+                            st.warning(f"{getattr(f, 'name', 'Datei')} konnte nicht geladen werden: {e}")
+                    if added:
+                        st.success(f"{added} Lösung(en) hinzugefügt.")
+                        st.rerun()
+            with c2:
+                if st.button("Alle Lösungen entfernen"):
+                    st.session_state.solutions = []
+                    st.session_state.solution_names = []
+                    st.session_state.solution_emojis = []
+                    self.solution_data.clear()
+                    st.rerun()
+
+            if st.session_state.solutions:
+                st.info(f"Aktuell gespeicherte Lösungen: {len(st.session_state.solutions)}")
+                st.write(", ".join(st.session_state.solution_names))
+
+        # --- SolutionData-Objekte aus Session-State bauen ---
+        self.solution_data = {}
+        for idx, raw in enumerate(st.session_state.solutions):
+            self.solution_data[idx] = SolutionData(raw, idx)
+
+        # --- Je Lösung einen Tab rendern ---
         for i in range(num_solutions):
-            with tabs[i + 1]:
-                uploaded = self.upload_solution(i)
-                if uploaded:
-                    self.streamlit(i)
+            with tabs[2 + i]:
+                name = (
+                    st.session_state.solution_names[i]
+                    if i < len(st.session_state.solution_names)
+                    else f"Lösung {i + 1}")
+                st.markdown(
+                        f"<span style='font-size:1.3rem; font-weight:700'>Datei:</span> "
+                        f"<span style='font-style:italic; font-size:1.3rem; font-weight:400'>{name}</span>",
+                        unsafe_allow_html=True)
+                st.markdown("___________")
+                self.streamlit(i)
 
-
-        # Letzter Tab: Vergleich
+        # --- Letzter Tab: Vergleich ---
         with tabs[-1]:
             self.compare_results()
 
