@@ -630,7 +630,7 @@ class InputData:
             # Create object collections from JSON data
             self._orders = [Order(order) for order in data.get("Auftraege", [])]
             self._order_items = [OrderItem(item) for item in data.get("Bestellpositionen", [])]
-            self._attachments = [Attachment(attachment) for attachment in data.get("Anbaugeraete", [])]
+            #self._attachments = [Attachment(attachment) for attachment in data.get("Anbaugeraete", [])]
             self._workers = [Worker(worker) for worker in data.get("Arbeiter", [])]
             self._machines = [Machine(machine) for machine in data.get("Maschinen", [])]
 
@@ -661,8 +661,6 @@ class InputData:
             machine.add_data(self)  # Add predecessor/successor relationships
         for worker in self.workers:
             worker.add_data(self)   # Add possible assignments and constraints
-        for attachment in self.attachments:
-            attachment.add_data(self)  # Add compatibility and routing data
 
         # Calculate distance statistics for normalization in optimization algorithms
         self._average_transport_distance = sum(sum(row) for row in self._transport_routes) / (len(self._transport_routes)*len(self._transport_routes[0]))
@@ -784,10 +782,10 @@ class InputData:
         """Returns list of all individual work tasks within orders."""
         return self._order_items
 
-    @property
-    def attachments(self) -> List['Attachment']:
-        """Returns list of all available construction attachments."""
-        return self._attachments
+#   @property
+#   def attachments(self) -> List['Attachment']:
+#       """Returns list of all available construction attachments."""
+#       return self._attachments
 
     @property
     def workers(self) -> List['Worker']:

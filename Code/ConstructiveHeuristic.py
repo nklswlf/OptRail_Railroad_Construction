@@ -71,7 +71,6 @@ class ConstructiveHeuristics:
         # Initialization of route plans for different resource types
         self.route_plan_worker = dict()      # Assignment of tasks to workers
         self.route_plan_machine = dict()     # Assignment of tasks to machines
-        self.route_plan_attachment = dict()  # Assignment of tasks to attachments
 
 
 
@@ -504,7 +503,7 @@ class ConstructiveHeuristics:
         1. Sort order items by start time
         2. For each order item, find best worker
         3. For assigned worker, find best machine  
-        4. For assigned worker/machine, find best attachments
+        4. For assigned worker/machine
         
         Returns:
             Solution: Feasible solution or Exception if infeasible
@@ -522,7 +521,6 @@ class ConstructiveHeuristics:
         # Create tracking dictionaries for resource planning status
         worker_planned = dict()      # Track if worker has been assigned tasks
         machine_planned = dict()     # Track if machine has been assigned tasks
-        attachment_planned = dict()  # Track if attachment has been assigned tasks
 
         # Initialize route plans for all workers
         for worker in self.data.workers:
@@ -534,10 +532,6 @@ class ConstructiveHeuristics:
             self.route_plan_machine[machine.id] = list()
             machine_planned[machine] = False
 
-        # Initialize route plans for all attachments
-        for attachment in self.data.attachments:
-            self.route_plan_attachment[attachment.id] = list()
-            attachment_planned[attachment] = False
 
         # Main loop: Process each order item in chronological order
         for order_item in sorted_greedy_order_items:
@@ -661,84 +655,9 @@ class ConstructiveHeuristics:
                             machine_index += 1  # Try next machine
                             continue
 
-                # ===== ATTACHMENT ASSIGNMENT =====
-                # If order item is assigned to worker and machine, proceed with attachment assignment
-                if machine_task_assigned:
-                    
-                    attachment_info = list()      # Store assigned attachment IDs
-                    order_item_impossible = False # Flag for impossible assignment
-                    
-                    # Process each required equipment type
-                    if len(order_item.equipment_types) > 0:
-                        
-                        for equipment_type in order_item.equipment_types:
-
-                            if order_item_impossible:
-                                break  # Skip if already marked impossible
- 
-                            # Calculate attachment attractiveness for this equipment type
-                            attachment_attractiveness = dict()
-                            for attachment in self.data.attachments:
-                                # Skip if attachment already assigned to this order item
-                                if attachment.id in attachment_info:
-                                    continue
-                                # Check compatibility
-                                if (order_item.id in attachment._possible_order_item_ids[order_item.order_number] and 
-                                    attachment.type == equipment_type):
-                                    attachment_attractiveness[attachment] = {
-                                        "attachment_planned": attachment_planned[attachment]
-                                    }
-                            
-                            # Sort attachments by attractiveness or mark as impossible
-                            if len(attachment_attractiveness) > 0:
-                                sorted_attachment_attractiveness = self.attachment_attractiveness_function(attachment_attractiveness)
-                            else:
-                                attachment_task_assigned = False
-                                break  # No suitable attachment for this equipment type
-                            
-                            # Try to assign order item to an attachment
-                            attachment_index = 0
-                            attachment_task_assigned = False
-
-                            while not attachment_task_assigned:
-                                # No more attachments to try
-                                if attachment_index == len(sorted_attachment_attractiveness):
-                                    order_item_impossible = True
-                                    break
-
-                                # Select best available attachment
-                                best_attachment = sorted_attachment_attractiveness[attachment_index]
-
-                                # Case 1: Attachment has no planned order items yet
-                                if len(self.route_plan_attachment[best_attachment.id]) == 0:
-                                    attachment_info.append(best_attachment.id)
-                                    attachment_task_assigned = True
-                                    break
-
-                                # Case 2: Attachment has existing route - check predecessor relationships
-                                elif len(self.route_plan_attachment[best_attachment.id]) > 0:
-                                    # Get last order item in attachment's route
-                                    order_item_index_attachment_route = len(self.route_plan_attachment[best_attachment.id]) - 1
-                                    order_item_id = self.route_plan_attachment[best_attachment.id][order_item_index_attachment_route]
-
-                                    current_order_item = self.data.order_items[order_item_id]
-
-                                    # Check if current item is predecessor of new order item
-                                    if current_order_item in best_attachment._predecessors[order_item]:
-                                        attachment_info.append(best_attachment.id)
-                                        attachment_task_assigned = True
-                                        break
-                                    else:
-                                        attachment_index += 1  # Try next attachment
-                                        continue
-
-                    else:
-                        # No equipment types required - assignment successful
-                        attachment_task_assigned = True
-
             # ===== FINAL ASSIGNMENT =====
             # If all resources (worker, machine, attachments) are successfully assigned
-            if worker_task_assigned and machine_task_assigned and attachment_task_assigned:
+            if worker_task_assigned and machine_task_assigned:
                 
                 # Add order item to worker's route and update status
                 self.route_plan_worker[best_worker.personal_number].append(order_item.id)
@@ -749,13 +668,8 @@ class ConstructiveHeuristics:
                 self.route_plan_machine[best_machine.id].append(order_item.id)
                 machine_planned[best_machine] = True
 
-                # Add order item to all required attachments' routes
-                for attachment_id in attachment_info:
-                    self.route_plan_attachment[attachment_id].append(order_item.id)
-                    attachment_planned[attachment_id] = True
-
         # Create and validate final solution
-        greedy_solution = Solution(self.route_plan_worker, self.route_plan_machine, self.route_plan_attachment, self.data)
+        greedy_solution = Solution(self.route_plan_worker, self.route_plan_machine, self.data)
         self.EvaluationLogic.evaluate(greedy_solution)
 
         # Check feasibility of the solution

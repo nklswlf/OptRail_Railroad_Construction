@@ -139,10 +139,8 @@ def Run(instance, algorithms):
         "Driver Violation",      # Constraint violation penalties
         "Commute Distance",      # Worker travel distances
         "Transport Machines",    # Machine transportation costs
-        "Transport Attachments", # Attachment transportation costs
         "Machines",             # Required machine resources
-        "Workers",              # Required worker resources
-        "Attachments"           # Required attachment resources
+        "Workers"              # Required worker resources
     ]
 
     # === Data loading and preprocessing ===
@@ -1136,8 +1134,8 @@ def plot_aggregated_3d(single_pareto_fronts_normalized, instance_name=None):
     for method, df in single_pareto_fronts_normalized.items():
         # Aggregate related objectives for meaningful 3D visualization
         x = df["Driver Violation"]  # Constraint violation component
-        y = df[["Commute Distance", "Transport Machines", "Transport Attachments"]].sum(axis=1)  # Transport costs
-        z = df[["Machines", "Workers", "Attachments"]].sum(axis=1)  # Resource requirements
+        y = df[["Commute Distance", "Transport Machines"]].sum(axis=1)  # Transport costs
+        z = df[["Machines", "Workers"]].sum(axis=1)  # Resource requirements
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -1245,8 +1243,8 @@ def plot_aggregated_3d_combined(single_pareto_fronts_normalized, instance_name=N
     for method, df in single_pareto_fronts_normalized.items():
         # Aggregate objectives for meaningful 3D representation
         x = df["Driver Violation"]
-        y = df[["Commute Distance", "Transport Machines", "Transport Attachments"]].sum(axis=1)
-        z = df[["Machines", "Workers", "Attachments"]].sum(axis=1)
+        y = df[["Commute Distance", "Transport Machines"]].sum(axis=1)
+        z = df[["Machines", "Workers"]].sum(axis=1)
         color = method_to_color[method]
         
         # Create scatter plot with transparency for overlap handling
@@ -1310,8 +1308,8 @@ def plot_aggregated_3d_combined_global(global_pareto_front_normalized, instance_
         
         # Aggregate objectives for 3D visualization
         x = df["Driver Violation"]
-        y = df[["Commute Distance", "Transport Machines", "Transport Attachments"]].sum(axis=1)
-        z = df[["Machines", "Workers", "Attachments"]].sum(axis=1)
+        y = df[["Commute Distance", "Transport Machines"]].sum(axis=1)
+        z = df[["Machines", "Workers"]].sum(axis=1)
         color = method_to_color[method]
         
         scatter = ax.scatter(x, y, z, c=color, marker='o', label=method, alpha=0.7)
@@ -1498,10 +1496,8 @@ if __name__ == "__main__":
         "Driver Violation",      # Constraint violation penalties
         "Commute Distance",      # Worker commuting costs
         "Transport Machines",    # Machine transportation costs
-        "Transport Attachments", # Attachment transportation costs
         "Machines",             # Machine resource requirements
-        "Workers",              # Worker resource requirements
-        "Attachments"           # Attachment resource requirements
+        "Workers"               # Worker resource requirements
     ]
 
     # === Analysis Pipeline Execution ===

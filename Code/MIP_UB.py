@@ -108,11 +108,6 @@ class UpperBound:
             self.N_w = {}       # Dictionary: Worker -> Qualified order items
             
         # Attachment-related sets (enabled for attachment or all bounds)
-        if self.upper_bound == 'attachment' or self.upper_bound == "all":
-            self.A = []         # List of attachment IDs
-            self.N_a = {}       # Dictionary: Attachment -> Compatible order items
-            self.K = set()      # Set of all attachment types required
-            self.A_k = {}       # Dictionary: Attachment type -> Available attachments
         
         # Universal sets (always required)
         self.N = []             # List of all order item IDs
@@ -225,17 +220,6 @@ class UpperBound:
         # 3. Attachment Equipment Processing - Extract equipment compatibility
         # ========================
         
-        if self.upper_bound == 'attachment' or self.upper_bound == 'all':
-            
-            for attachment in self.data.attachments:
-                # Register attachment identifier
-                self.A.append(attachment.id)
-                
-                # Find all order items that require this attachment type
-                self.N_a[attachment.id] = []
-                for orderItem in self.data.order_items:
-                    if attachment.type in orderItem.equipment_types:
-                        self.N_a[attachment.id].append(orderItem.id)
 
         # ========================
         # 4. Construction Site Processing - Group orders by location
@@ -310,27 +294,6 @@ class UpperBound:
         # ========================
         # 6. Attachment Type Mapping - Process equipment requirements
         # ========================
-        if self.upper_bound == 'attachment' or self.upper_bound == 'all':
-            for order_item in self.data.order_items:
-                # Initialize attachment requirements dictionary for this order
-                self.a_ok[order_item.id] = dict()
-                
-                for equipment in order_item.equipment_types:
-                    # Count quantity of each equipment type needed
-                    if equipment not in self.a_ok[order_item.id]:
-                        self.a_ok[order_item.id][equipment] = 0
-                    self.a_ok[order_item.id][equipment] += 1
-                    
-                    # Register equipment type globally
-                    self.K.add(equipment)
-
-                    # Map equipment type to available attachments
-                    if equipment not in self.A_k:
-                        self.A_k[equipment] = []
-                    for attachment in self.data.attachments:
-                        if attachment.type == equipment:
-                            if attachment.id not in self.A_k[equipment]:
-                                self.A_k[equipment].append(attachment.id)
 
                 
         # ========================
@@ -401,38 +364,7 @@ class UpperBound:
                                 self.S_mn[m, n].append(i)
 
         # Attachment scheduling dependencies (same logic as machines)
-        if self.upper_bound == 'attachment' or self.upper_bound == "all":
-            for a in self.A:
-                for n in self.N_a[a]:
-                    # Initialize virtual start and end nodes
-                    if (a, self.start) not in self.P_an:
-                        self.P_an[a, self.start] = []
-                        self.S_an[a, self.start] = [self.end]
-                    if (a, self.end) not in self.P_an:
-                        self.P_an[a, self.end] = []
-                        self.S_an[a, self.end] = [self.start]
 
-                    # Every order can start from virtual start and end at virtual end
-                    self.P_an[a, n] = [self.start]
-                    self.S_an[a, self.start].append(n)
-                    self.P_an[a, self.end].append(n)
-                    self.S_an[a, n] = [self.end]
-
-                    # Calculate feasible order sequences based on transport time
-                    for i in self.N_a[a]:
-                        if n != i:
-                            start_time_n = self.O_t_start_inverted[n]
-                            end_time_n = self.O_t_end_inverted[n]
-                            start_time_i = self.O_t_start_inverted[i]
-                            end_time_i = self.O_t_end_inverted[i]
-
-                            # Order i can precede order n if there's sufficient transport time
-                            if start_time_n >= end_time_i + self.d_ij[i][n] / self.TRANSPORT_SPEED:
-                                self.P_an[a, n].append(i)
-
-                            # Order n can precede order i if there's sufficient transport time
-                            if start_time_i > end_time_n + self.d_ij[n][i] / self.TRANSPORT_SPEED:
-                                self.S_an[a, n].append(i)
         
         # Worker scheduling dependencies (based on rest time requirements)
         if self.upper_bound == 'worker' or self.upper_bound == "both" or self.upper_bound == 'all':
@@ -571,26 +503,7 @@ class UpperBound:
             self.model.update()  # Update model to reflect new variables
 
         # Attachment flow variables (if attachment constraints are considered)
-        if self.upper_bound == 'attachment' or self.upper_bound == "all":
-
-            # Define all possible attachment flow arcs in the network
-            indices_1 = [(a, i, j) for a in self.A for i in self.N_a[a] for j in self.N_a[a]]  # Order-to-order flows
-            indices_2 = [(a, self.start, j) for a in self.A for j in self.N_a[a]]             # Start-to-order flows
-            indices_3 = [(a, i, self.end) for a in self.A for i in self.N_a[a]]               # Order-to-end flows
-            indices_4 = [(a, self.start, self.end) for a in self.A]                           # Direct start-to-end (unused)
-            all_indices = indices_1 + indices_2 + indices_3 + indices_4
-            
-            # Create variables based on bound technique
-            if self.bound_technique == 'BIP':
-                # Binary variables for exact integer solution
-                z = self.model.addVars(all_indices, vtype=GRB.BINARY, name="z")
-            elif self.bound_technique == 'LP':
-                # Continuous variables for LP relaxation upper bound
-                z = {}
-                for idx in all_indices:
-                    z[idx] = self.model.addVar(vtype=GRB.CONTINUOUS, lb=0, ub=1, name=f"z^{idx[0]}_{idx[1]}_{idx[2]}")
-
-            self.model.update()  # Update model to reflect new variables
+        
 
         # Site completion variables (always required)
         if self.bound_technique == 'BIP':
@@ -648,7 +561,6 @@ class UpperBound:
                 # Resource usage minimization (total number of resources activated)
                 self.machine_usage = gp.quicksum(x[m, self.start, j] for m in self.M for j in self.N_m[m])
                 self.worker_usage = gp.quicksum(y[w, self.start, j] for w in self.W for j in self.N_w[w])
-                self.attachment_usage = gp.quicksum(z[a, self.start, j] for a in self.A for j in self.N_a[a])
                 self.resource_usage = self.machine_usage + self.worker_usage + self.attachment_usage
 
                 # Four-level hierarchical optimization
@@ -698,24 +610,10 @@ class UpperBound:
         self.model.update()  # Update model to reflect new constraints
 
         # Attachment flow balance constraints (if attachment bounds are calculated)
-        if self.upper_bound == 'attachment' or self.upper_bound == "all":
-            
-            # Flow conservation: flow into node equals flow out of node
-            for a in self.A:
-                for i in self.N_a[a]:
-                    self.model.addConstr(
-                        gp.quicksum(z[a, j, i] for j in self.P_an[a, i]) ==
-                        gp.quicksum(z[a, i, j] for j in self.S_an[a, i]),
-                        name=f"attachment_flow_balance_{a}_{i}"
-                    )
+       
 
             # Attachment activation constraints: each attachment used exactly once from start
-            for a in self.A:
-                if (a, self.start) in self.S_an:
-                    self.model.addConstr(
-                        gp.quicksum(z[a, self.start, j] for j in self.S_an[a, self.start]) == 1,
-                        name=f"attachment_start_constraint_{a}"
-                    )
+
 
         self.model.update()  # Update model to reflect new constraints
 
@@ -804,17 +702,7 @@ class UpperBound:
                     )
 
         # Attachment-only upper bound: sites completed when attachments process all orders
-        if self.upper_bound == 'attachment':
-            for c in self.C:
-                for i in self.N_c[c]:
-                    # For each attachment type required by order item i
-                    for k in self.K:
-                        if k in self.a_ok[i]:
-                            # Required quantity of attachment type k must be allocated to order i
-                            self.model.addConstr(
-                                gp.quicksum(z[a, i, j] for a in self.A_k[k] if (a, i) in self.S_an for j in self.S_an[a, i]) == self.a_ok[i][k] * u[c],
-                                name=f"attachment_site_fulfillment_site{c}_order{i}_type{k}"
-                            )
+        
 
         # Combined machine and worker upper bound: both resources must process orders
         if self.upper_bound == 'both':
@@ -844,13 +732,6 @@ class UpperBound:
                         gp.quicksum(y[w, i, j] for w in self.W if (w, i) in self.S_wn for j in self.S_wn[w, i]) == u[c],
                         name=f"worker_site_fulfillment_site{c}_order{i}"
                     )
-                    # Site c completed only if all required attachments process order i
-                    for k in self.K:
-                        if k in self.a_ok[i]:
-                            self.model.addConstr(
-                                gp.quicksum(z[a, i, j] for a in self.A_k[k] if (a, i) in self.S_an for j in self.S_an[a, i]) == self.a_ok[i][k] * u[c],
-                                name=f"attachment_site_fulfillment_site{c}_order{i}_type{k}"
-                            )
 
         self.model.update()  # Update model to reflect new constraints
         
@@ -943,12 +824,12 @@ class UpperBound:
             return path
 
         # Initialize route storage for all resource types
-        routes = {'x': defaultdict(list), 'y': defaultdict(list), 'z': defaultdict(list)}
+        routes = {'x': defaultdict(list), 'y': defaultdict(list)}
 
         # Extract active flow variables from optimization solution
         for var in self.model.getVars():
-            if var.VarName.startswith(("x[", "y[", "z[")) and round(var.X) == 1:
-                var_type = var.VarName[0]  # x, y, or z
+            if var.VarName.startswith(("x[", "y[")) and round(var.X) == 1:
+                var_type = var.VarName[0]  # x or y
                 key = var.VarName.split('[')[1].split(']')[0]
                 ent, f, t = key.split(',')
 
@@ -974,7 +855,7 @@ class UpperBound:
 
         # Build complete routes for each resource
         final_routes = {}
-        for k in ['x', 'y', 'z']:
+        for k in ['x', 'y']:
             max_id = max(routes[k].keys()) if routes[k] else -1
             filled = {}
             for i in range(max_id + 1):
@@ -1059,8 +940,8 @@ class UpperBound:
                     # Extract detailed routing information from flow variables
                     routes = self.extract_routes_from_solution()
                     
-                    # Create Solution object with worker, machine, and attachment routes
-                    solution = Solution(routes['y'], routes['x'], routes['z'], self.data)
+                    # Create Solution object with worker, machine routes
+                    solution = Solution(routes['y'], routes['x'], self.data)
                 elif self.model.status == GRB.INFEASIBLE:
                     # No feasible solution exists
                     solution = None

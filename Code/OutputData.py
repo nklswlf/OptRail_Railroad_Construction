@@ -53,7 +53,7 @@ class Solution:
     order completion status.
     """
 
-    def __init__(self, route_plan_worker:dict, route_plan_machine:dict, route_plan_attachment:dict, data:InputData):
+    def __init__(self, route_plan_worker:dict, route_plan_machine:dict, data:InputData):
         """
         Initialize a complete solution with route plans for all resource types.
         
@@ -67,7 +67,6 @@ class Solution:
         self.data = data
         self.route_plan_worker = route_plan_worker
         self.route_plan_machine = route_plan_machine
-        self.route_plan_attachment = route_plan_attachment
         
         # Order completion status tracking
         self.finished_orders = []              # Completely finished orders
@@ -90,27 +89,21 @@ class Solution:
         self.used_workers = []                 # Active worker IDs
         self.unused_machines = []              # Idle machine IDs
         self.unused_workers = []               # Idle worker IDs
-        self.used_attachments = []             # Active attachment IDs
-        self.unused_attachments = []           # Idle attachment IDs
 
         # Distance and transportation metrics
         self.transport_distance_per_machine = {}     # Machine-specific transport distances
         self.total_transport_distance = -0           # Total machine transport distance
         self.commute_distance_per_worker = {}        # Worker-specific commute distances
         self.total_commute_distance = -0             # Total worker commute distance
-        self.transport_distance_per_attachment = {}  # Attachment-specific transport distances
-        self.total_transport_distance_attachments = -0  # Total attachment transport distance
         
         # Resource count metrics
         self.number_of_workers = -0            # Count of utilized workers
         self.number_of_machines = -0           # Count of utilized machines
-        self.number_of_attachments = -0        # Count of utilized attachments
         self.driver_violation = -0             # Safety constraint violations
         
         # Resource utilization time tracking
         self.worker_work_time = {}             # Working hours per worker
         self.machine_utilization_time = {}     # Utilization hours per machine
-        self.attachment_utilization_time = {}  # Utilization hours per attachment
 
         # Dynamic resource allocation metrics
         self.dynamic_percentage_order = {}     # Dynamic allocation percentage per order
@@ -137,10 +130,8 @@ class Solution:
                 f"Driver violation: {self.driver_violation}\n"
                 f"Commute distance: {round(self.total_commute_distance, 2)}\n"
                 f"Transport distance: {round(self.total_transport_distance, 2)}\n"
-                f"Transport distance attachment: {round(self.total_transport_distance_attachments, 2)}\n"
                 f"Number of machines: {self.number_of_machines}\n"
-                f"Number of workers: {self.number_of_workers}\n"
-                f"Number of attachments: {self.number_of_attachments}")
+                f"Number of workers: {self.number_of_workers}")
 
     def feasibility_check(self, verbose=False, allverbose=False):
         """
@@ -155,7 +146,6 @@ class Solution:
         1. Order Item Feasibility: Consistency across all route plans
         2. Machine Route Feasibility: Timing and capability constraints  
         3. Worker Route Feasibility: Skills, working hours, and safety regulations
-        4. Attachment Route Feasibility: Equipment type compatibility and timing
         
         Args:
             verbose: Enable detailed output for individual constraint checks
@@ -210,47 +200,6 @@ class Solution:
         if len(all_machine_order_items) != len(set(all_machine_order_items)):
             print("An order item has been assigned to more than one machine.")
             return False
-
-        # Check for duplicate order items within individual attachment routes
-        # Note: Order items may appear in multiple attachment routes but not duplicated within same route
-        for attachment_id, route in self.route_plan_attachment.items():
-            if len(route) != len(set(route)):
-                print(f"Attachment {attachment_id} has duplicate order items in its route: {route}")
-                return False
-
-        # Validate attachment assignments against equipment requirements
-        for machine_route_order_items in self.route_plan_machine.values():
-            for order_item_id in machine_route_order_items:
-                order_item_object = next((o for o in self.data.order_items if o.id == order_item_id), None)
-                if order_item_object is None:
-                    print(f"Order Item {order_item_id} was not found in the data.")
-                    return False
-                
-                # Check equipment type requirements if any
-                if order_item_object.equipment_types:
-                    assigned_types = []
-                    # Collect assigned attachment types for this order item
-                    for attachment_id, route in self.route_plan_attachment.items():
-                        if order_item_id in route:
-                            attachment_object = self.data.attachments[int(attachment_id)]
-                            assigned_types.append(attachment_object.type)
-
-                    required_counts = Counter(order_item_object.equipment_types)
-                    assigned_counts = Counter(assigned_types)
-
-                    # Verify sufficient attachments for each required equipment type
-                    for equipment_type, required_count in required_counts.items():
-                        if assigned_counts[equipment_type] < required_count:
-                            print(f"Order Item {order_item_id} needs {required_count}x Equipment-Type {equipment_type}, "
-                                f"but there are only {assigned_counts[equipment_type]} assigned.")
-                            return False
-
-                    # Verify no excess attachments are assigned
-                    for equipment_type, assigned_count in assigned_counts.items():
-                        if assigned_count > required_counts.get(equipment_type, 0):
-                            print(f"Order Item {order_item_id} has {assigned_count}x Equipment-Type {equipment_type} assigned, "
-                                f"but only {required_counts.get(equipment_type, 0)} are needed.")
-                            return False
 
         if verbose:
             print("The assigned order items are present in both route plans.")
@@ -374,47 +323,6 @@ class Solution:
             if verbose:
                 print(f"Route for worker {worker_id} is feasible.")
 
-        # ========================
-        # 4. Attachment Route Feasibility Validation
-        # ========================
-        for attachment_id, route in self.route_plan_attachment.items():
-            if verbose:
-                print(f"\nChecking route for attachment {attachment_id}...")
-
-            attachment_object = next((a for a in self.data.attachments if a.id == attachment_id), None)
-            order_item_objects = [next((o for o in self.data.order_items if o.id == order_id), None) for order_id in route]
-
-            # Validate attachment type compatibility with order item requirements
-            for order_item in order_item_objects:
-                if attachment_object.type not in order_item.equipment_types:
-                    print(f"Attachment {attachment_id} is not correctly assigned to order item {order_item.id}.")
-                    return False
-
-            # Validate timing constraints and transportation between consecutive order items
-            for i in range(len(order_item_objects) - 1):
-                order_item_i = order_item_objects[i]
-                order_item_j = order_item_objects[i + 1]
-                
-                # Find parent orders for distance calculation
-                order_i = next((order for order in self.data.orders 
-                                if int(order_item_i.id) in [int(item) for item in order.order_item_ids]), None)
-                order_j = next((order for order in self.data.orders 
-                                if int(order_item_j.id) in [int(item) for item in order.order_item_ids]), None)
-                
-                # Calculate travel time between sites
-                distance = self.data.transport_routes[order_i.site_number][order_j.site_number]
-                travel_time_double = distance / self.data._transport_speed_kmh
-                travel_time = timedelta(hours=travel_time_double)
-                
-                # Check timing feasibility with travel time
-                if order_item_i.end_time + travel_time > order_item_j.start_time:
-                    print(f"Route {route}")
-                    print(f"In attachment {attachment_id} route: Order item {order_item_i.id} is not correctly sequenced with order item {order_item_j.id}.")
-                    return False
-
-            if verbose:
-                print(f"Route for attachment {attachment_id} is feasible.")
-
         if allverbose:
             print("\nFeasibility check completed. Solution is feasible.")
         return True    
@@ -433,12 +341,10 @@ class Solution:
         # Create shallow copies of route plans to avoid modification conflicts
         machine_route_plan = {k: v[:] for k, v in self.route_plan_machine.items()}
         worker_route_plan = {k: v[:] for k, v in self.route_plan_worker.items()}
-        attachment_route_plan = {k: v[:] for k, v in self.route_plan_attachment.items()}
 
         return Solution(
             route_plan_worker=worker_route_plan,
             route_plan_machine=machine_route_plan,
-            route_plan_attachment=attachment_route_plan,
             data=self.data  # Shared reference to immutable input data
         )
        
@@ -483,11 +389,9 @@ class ParetoSolutions:
         self.objectives = [
             ("total_commute_distance", "min"),           # Worker commute distance
             ("total_transport_distance", "min"),         # Machine transport distance  
-            ("total_transport_distance_attachments", "min"),  # Attachment transport distance
             ("driver_violation", "min"),                  # Safety constraint violations
             ("number_of_workers", "min"),                # Worker count minimization
             ("number_of_machines", "min"),               # Machine count minimization
-            ("number_of_attachments", "min")             # Attachment count minimization
         ]
 
     def PurgeParetoFront(self):
@@ -515,11 +419,9 @@ class ParetoSolutions:
             obj_tuple = (
                 sol.total_commute_distance,
                 sol.total_transport_distance,
-                sol.total_transport_distance_attachments,
                 sol.driver_violation,
                 sol.number_of_workers,
-                sol.number_of_machines,
-                sol.number_of_attachments
+                sol.number_of_machines
             )
             
             # Check for duplicate objective values
@@ -665,7 +567,7 @@ class ParetoSolutions:
         if len(self.ParetoFront) < 2:
             return interpolated_points
 
-        D = 7  # Number of objectives
+        D = 5  # Number of objectives
         
         # Stack objective vectors into (N, D) NumPy array for vectorized operations
         arr = np.vstack([
@@ -673,10 +575,8 @@ class ParetoSolutions:
                 sol.driver_violation,
                 sol.total_commute_distance,
                 sol.total_transport_distance,
-                sol.total_transport_distance_attachments,
                 sol.number_of_workers,
-                sol.number_of_machines,
-                sol.number_of_attachments
+                sol.number_of_machines
             ]
             for sol in self.ParetoFront
         ])
@@ -705,10 +605,8 @@ class ParetoSolutions:
                         "driver_violation": float(v[0]),
                         "commute_distance": float(v[1]),
                         "transport_distance": float(v[2]),
-                        "attachment_distance": float(v[3]),
-                        "worker_count": float(v[4]),
-                        "machine_count": float(v[5]),
-                        "attachment_count": float(v[6])
+                        "worker_count": float(v[3]),
+                        "machine_count": float(v[4])
                     })
                     break
 
@@ -810,10 +708,8 @@ class ParetoSolutions:
                 "driver_violation": new_solution.driver_violation,
                 "commute_distance": new_solution.total_commute_distance,
                 "transport_distance": new_solution.total_transport_distance,
-                "attachment_distance": new_solution.total_transport_distance_attachments,
                 "worker_count": new_solution.number_of_workers,
-                "machine_count": new_solution.number_of_machines,
-                "attachment_count": new_solution.number_of_attachments
+                "machine_count": new_solution.number_of_machines
             }
         elif isinstance(new_solution, dict):
             objective_dict = new_solution
@@ -879,10 +775,8 @@ class ParetoSolutions:
                 "driver_violation": current_solution.driver_violation,
                 "commute_distance": current_solution.total_commute_distance,
                 "transport_distance": current_solution.total_transport_distance,
-                "attachment_distance": current_solution.total_transport_distance_attachments,
                 "machine_count": current_solution.number_of_machines,
-                "worker_count": current_solution.number_of_workers,
-                "attachment_count": current_solution.number_of_attachments
+                "worker_count": current_solution.number_of_workers
             }
 
         # Check dominance conditions for all minimization objectives
@@ -893,10 +787,8 @@ class ParetoSolutions:
             "driver_violation",
             "commute_distance", 
             "transport_distance",
-            "attachment_distance",
             "machine_count",
-            "worker_count",
-            "attachment_count"
+            "worker_count"
         ]
 
         for key in objectives:
@@ -941,10 +833,8 @@ class ParetoSolutions:
             ("driver_violation", lambda x: x.driver_violation),
             ("commute_distance", lambda x: x.total_commute_distance),
             ("transport_distance", lambda x: x.total_transport_distance),
-            ("attachment_distance", lambda x: x.total_transport_distance_attachments),
             ("machines", lambda x: x.number_of_machines),
-            ("workers", lambda x: x.number_of_workers),
-            ("attachments", lambda x: x.number_of_attachments)
+            ("workers", lambda x: x.number_of_workers)
         ]
 
         def sort_key(x):
@@ -1002,10 +892,8 @@ class ParetoSolutions:
             "driver_violation": lambda x: x.driver_violation,
             "commute_distance": lambda x: x.total_commute_distance,
             "transport_distance": lambda x: x.total_transport_distance,
-            "attachment_distance": lambda x: x.total_transport_distance_attachments,
             "machines": lambda x: x.number_of_machines,
-            "workers": lambda x: x.number_of_workers,
-            "attachments": lambda x: x.number_of_attachments
+            "workers": lambda x: x.number_of_workers
         }
 
         selected_solutions = []
@@ -1109,10 +997,8 @@ class ParetoSolutions:
                 "Driver Violation": solution.driver_violation,
                 "Commute Distance": round(solution.total_commute_distance, 2),
                 "Transport Machines": round(solution.total_transport_distance, 2),
-                "Transport Attachments": round(solution.total_transport_distance_attachments, 2),
                 "Machines": solution.number_of_machines,
-                "Workers": solution.number_of_workers,
-                "Attachments": solution.number_of_attachments
+                "Workers": solution.number_of_workers
             })
 
         # Create formatted DataFrame
@@ -1121,9 +1007,9 @@ class ParetoSolutions:
         # Apply hierarchical sorting (primary completion metrics, then secondary objectives)
         df = df.sort_values(
             by=["Orders", "Order Items", "Driver Violation", "Commute Distance",
-                "Transport Machines", "Transport Attachments", 
-                "Machines", "Workers", "Attachments"],
-            ascending=[False, False, True, True, True, True, True, True, True]
+                "Transport Machines", 
+                "Machines", "Workers"],
+            ascending=[False, False, True, True, True, True, True]
         )
 
         # Display formatted table
@@ -1207,10 +1093,8 @@ class ParetoSolutions:
         driver = solution.driver_violation * epsilon
         commute = solution.total_commute_distance * epsilon_2
         transport = solution.total_transport_distance * epsilon_2
-        attachments = solution.total_transport_distance_attachments * epsilon_2
         workers = solution.number_of_workers * epsilon
         machines = solution.number_of_machines * epsilon
-        attach_count = solution.number_of_attachments * epsilon
 
         # Add numerical stability epsilon
         epsilon = 1e-6  
@@ -1218,10 +1102,8 @@ class ParetoSolutions:
             driver + epsilon,
             commute + epsilon,
             transport + epsilon,
-            attachments + epsilon,
             workers + epsilon,
-            machines + epsilon,
-            attach_count + epsilon
+            machines + epsilon
         ])
 
     def CalculateHypervolume(self) -> float:

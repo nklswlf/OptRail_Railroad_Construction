@@ -241,13 +241,11 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
         self.ScalingEnergy = 30  # Scaling factor for energy calculations
 
         # Neighborhood types mapped to their objective functions for evaluation
-        self.DistanceTypes = {  'Swap_Shift_External': ['commute_distance', 'transport_distance', 'attachment_distance'],
+        self.DistanceTypes = {  'Swap_Shift_External': ['commute_distance', 'transport_distance'],
                                 'Replace_Shift_Worker': ['commute_distance'],
                                 'Replace_Shift_Machine': ['transport_distance'],
-                                'Replace_Shift_Attachment': ['attachment_distance'],
                                 'Swap_Shift_Worker': ['commute_distance'],
                                 'Swap_Shift_Machine': ['transport_distance'],
-                                'Swap_Shift_Attachment': ['attachment_distance'],
                                 'Insert_Shift': None}
         
         self.FulfillmentType = 'Insert_Shift'  # Neighborhood type for order fulfillment
@@ -321,10 +319,9 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
                         continue
                 
                 # Apply move to solution and update route plans
-                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, solution)
+                worker_route_plan, machine_route_plan = neighborhood.constructCompleteRoutes(move, solution)
                 solution.route_plan_worker = worker_route_plan
                 solution.route_plan_machine = machine_route_plan
-                solution.route_plan_attachment = attachment_route_plan
 
                 # Update solution metrics for tracking progress
                 self.EvaluationLogic.categorizing_orders(solution)
@@ -334,7 +331,7 @@ class BuildingSimulatedAnnealing(ImprovementAlgorithm):
                 # Save best solution found so far
                 if len(solution.finished_orders) >= highest_number_of_fully_staffed_orders:
                     if solution.total_dynamic_percentage > highest_dynamic_percentage:
-                        saved_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                        saved_solution = Solution(worker_route_plan, machine_route_plan, self.InputData)
                         highest_number_of_fully_staffed_orders = len(solution.finished_orders)
                         highest_dynamic_percentage = solution.total_dynamic_percentage
 
@@ -416,13 +413,11 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
         # Neighborhood types mapped to their relevant objective functions
         self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
                                     'Replace_Shift_Machine': ['driver_violation', 'transport_distance', 'machine_count'],
-                                    'Replace_Shift_Attachment': ['attachment_distance', 'attachment_count'],
                                     'Swap_Shift_Worker': ['driver_violation', 'commute_distance'],
-                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance'],
-                                    'Swap_Shift_Attachment': ['attachment_distance']}
+                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance']}
         
         # List of all optimization objectives
-        self.objectives = ['driver_violation', 'commute_distance', 'transport_distance', 'attachment_distance', 'worker_count', 'machine_count', 'attachment_count']
+        self.objectives = ['driver_violation', 'commute_distance', 'transport_distance', 'worker_count', 'machine_count']
 
 
 
@@ -450,8 +445,8 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                 move = neighborhood.SingleMove(current_solution)
 
             # Apply move and create new solution
-            worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
-            current_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+            worker_route_plan, machine_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
+            current_solution = Solution(worker_route_plan, machine_route_plan, self.InputData)
             self.EvaluationLogic.evaluate(current_solution)
 
         # Add mutated solution to Pareto front
@@ -640,8 +635,8 @@ class ParetoSimulatedAnnealing(ImprovementAlgorithm):
                     }
 
         # Accept move, construct new solution
-        w, m, a = neighborhood.constructCompleteRoutes(move, x)
-        x_new = Solution(w, m, a, self.InputData)
+        w, m = neighborhood.constructCompleteRoutes(move, x)
+        x_new = Solution(w, m, self.InputData)
         self.EvaluationLogic.evaluate(x_new)
 
         return {
@@ -806,10 +801,8 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
         # Neighborhood types with their corresponding objectives
         self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
                                     'Replace_Shift_Machine': ['driver_violation', 'transport_distance', 'machine_count'],
-                                    'Replace_Shift_Attachment': ['attachment_distance', 'attachment_count'],
                                     'Swap_Shift_Worker': ['driver_violation', 'commute_distance'],
-                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance'],
-                                    'Swap_Shift_Attachment': ['attachment_distance']}
+                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance']}
 
         # Counters for tracking move success rates
         self.None_Move_Counter = {}  # Count of failed move attempts
@@ -843,8 +836,8 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                 move = neighborhood.SingleMove(current_solution)
 
             # Apply move to create new solution
-            worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
-            current_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+            worker_route_plan, machine_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
+            current_solution = Solution(worker_route_plan, machine_route_plan, self.InputData)
             self.EvaluationLogic.evaluate(current_solution)
 
         # Add to Pareto front
@@ -909,11 +902,11 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                 objectives.add(obj)
 
             # Apply move to solution
-            worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
-            current_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+            worker_route_plan, machine_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
+            current_solution = Solution(worker_route_plan, machine_route_plan, self.InputData)
             self.EvaluationLogic.calculate_worker_count_and_utilization_time(current_solution)
 
-        return delta_details, objectives, worker_route_plan, machine_route_plan, attachment_route_plan
+        return delta_details, objectives, worker_route_plan, machine_route_plan
     
 
     def unnormalize_value(self, value:float, objective:str) -> float:
@@ -969,17 +962,15 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                 move_type = local_rng.choice(['traversal', 'location'])
     
                 # Apply multiple moves and get combined effect
-                delta_details, objectives, worker_route_plan, machine_route_plan, attachment_route_plan = self.multiple_moves(local_solution, move_type, local_rng)
+                delta_details, objectives, worker_route_plan, machine_route_plan = self.multiple_moves(local_solution, move_type, local_rng)
  
                 # Create objective dictionary with current solution values
                 objective_dict = {
                     "driver_violation": local_solution.driver_violation,
                     "commute_distance": local_solution.total_commute_distance,
                     "transport_distance": local_solution.total_transport_distance,
-                    "attachment_distance": local_solution.total_transport_distance_attachments,
                     "worker_count": local_solution.number_of_workers,
                     "machine_count": local_solution.number_of_machines,
-                    "attachment_count": local_solution.number_of_attachments
                 }
 
                 # Update affected objectives with delta values
@@ -1006,7 +997,7 @@ class DominanceBasedSimulatedAnnealing(ImprovementAlgorithm):
                     continue  # Reject move
 
                 # Accept move and create new solution
-                local_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                local_solution = Solution(worker_route_plan, machine_route_plan, self.InputData)
                 self.EvaluationLogic.evaluate(local_solution)
 
                 # Update Pareto front if solution is non-dominated
@@ -1164,13 +1155,11 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         # Neighborhood types with their corresponding objectives
         self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
                                     'Replace_Shift_Machine': ['driver_violation', 'transport_distance', 'machine_count'],
-                                    'Replace_Shift_Attachment': ['attachment_distance', 'attachment_count'],
                                     'Swap_Shift_Worker': ['driver_violation', 'commute_distance'],
-                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance'],
-                                    'Swap_Shift_Attachment': ['attachment_distance']}
+                                    'Swap_Shift_Machine': ['driver_violation', 'transport_distance']}
         
         # Complete list of optimization objectives
-        self.objectives = ['driver_violation', 'commute_distance', 'transport_distance', 'attachment_distance', 'worker_count', 'machine_count', 'attachment_count']
+        self.objectives = ['driver_violation', 'commute_distance', 'transport_distance', 'worker_count', 'machine_count']
 
         # Move type configuration
         self.max_traversal_moves = 1
@@ -1196,8 +1185,8 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                 neighborhood = self.Neighborhoods[random_type]
                 move = neighborhood.SingleMove(current_solution)
 
-            worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
-            current_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+            worker_route_plan, machine_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
+            current_solution = Solution(worker_route_plan, machine_route_plan, self.InputData)
             self.EvaluationLogic.evaluate(current_solution)
 
         self.ParetoSolutions.UpdateParetoFront(current_solution)
@@ -1273,8 +1262,8 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                     continue
 
                 # Apply move and update solution
-                worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, local_solution)
-                local_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                worker_route_plan, machine_route_plan = neighborhood.constructCompleteRoutes(move, local_solution)
+                local_solution = Solution(worker_route_plan, machine_route_plan, self.InputData)
                 self.EvaluationLogic.evaluate(local_solution)
 
                 # Update Pareto front and track solution count
@@ -1355,11 +1344,11 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                 objectives.add(obj)
 
             # Apply move
-            worker_route_plan, machine_route_plan, attachment_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
-            current_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+            worker_route_plan, machine_route_plan = neighborhood.constructCompleteRoutes(move, current_solution)
+            current_solution = Solution(worker_route_plan, machine_route_plan, self.InputData)
             self.EvaluationLogic.calculate_worker_count_and_utilization_time(current_solution)
 
-        return delta_details, objectives, worker_route_plan, machine_route_plan, attachment_route_plan
+        return delta_details, objectives, worker_route_plan, machine_route_plan
     
     def second_phase(self, local_solution:Solution, local_pareto_front: list = None, seed = None) -> list[Solution]:
         """
@@ -1385,17 +1374,15 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
             for i in range(self.MaxIterationsSecondPhase):
                 # Choose move type and apply multiple moves
                 move_type = local_rng.choice(['traversal', 'location'])
-                delta_details, objectives, worker_route_plan, machine_route_plan, attachment_route_plan = self.multiple_moves(local_solution, move_type, local_rng)
+                delta_details, objectives, worker_route_plan, machine_route_plan = self.multiple_moves(local_solution, move_type, local_rng)
  
                 # Create objective dictionary with current values
                 objective_dict = {
                     "driver_violation": local_solution.driver_violation,
                     "commute_distance": local_solution.total_commute_distance,
                     "transport_distance": local_solution.total_transport_distance,
-                    "attachment_distance": local_solution.total_transport_distance_attachments,
                     "worker_count": local_solution.number_of_workers,
-                    "machine_count": local_solution.number_of_machines,
-                    "attachment_count": local_solution.number_of_attachments
+                    "machine_count": local_solution.number_of_machines
                 }
 
                 # Update affected objectives with delta values
@@ -1422,7 +1409,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                     continue
 
                 # Accept move and update solution
-                local_solution = Solution(worker_route_plan, machine_route_plan, attachment_route_plan, self.InputData)
+                local_solution = Solution(worker_route_plan, machine_route_plan, self.InputData)
                 self.EvaluationLogic.evaluate(local_solution)
 
                 # Update Pareto front if solution is non-dominated
