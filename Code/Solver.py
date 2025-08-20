@@ -387,6 +387,9 @@ class Solver:
         self.BoundPhase(UB_technique)
         bound_time = time.time() - start_time
 
+        # Update work hour sum after orders are chosen
+        self.InputData.work_hour_sum = sum(order_item.duration for order in self.InputData.orders for order_item in order.order_items if order.status == True)
+
         # Phase 2: Generate initial feasible solution
         startSolution = self.ConstructionPhase(greedy_technique)
         greedy_time = time.time() - start_time - bound_time
@@ -394,6 +397,9 @@ class Solver:
         # Phase 3: Optimize resource allocation and staffing
         staffed_solution = self.BuildingPhase(startSolution, building_algorithm)
         building_time = time.time() - start_time - bound_time - greedy_time
+
+        # Update work hour sum after orders are chosen
+        self.InputData.work_hour_sum = sum(order_item.duration for order in self.InputData.orders for order_item in order.order_items if order.status == True)
 
         # Phase 4: Execute metaheuristic improvement for Pareto front construction
         self.ImprovementPhase(staffed_solution, improvement_algorithm)

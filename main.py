@@ -82,10 +82,10 @@ instances = ["Construction_RealLife_2024_7_1_2.json",
             "Construction_RealLife_2024_8_2_2.json",
             "Construction_RealLife_2024_9_2_2.json",
             "Construction_RealLife_2024_10_2_2.json"]
-
-# Single instance for focused testing and development --> used in thesis
-instances = ["Construction_RealLife_2024_7_1_2.json"]
 '''
+# Single instance for focused testing and development --> used in thesis
+instances = ["Construction_a10_o107_m5_an57_ar12.json"]
+
 
 
 # =============================================================================
@@ -149,6 +149,9 @@ step = None          # Full pipeline execution (all phases)
 algortihms = ['PSA',     # Pareto Simulated Annealing
               'DBSA',    # Dominance-Based Simulated Annealing  
               'TPSA']    # Two-Phase Simulated Annealing
+
+algortihms = ['TPSA']    # Two-Phase Simulated Annealing
+
 
 # Random seeds for reproducible experiments
 seeds = [100]  # Single seed for testing

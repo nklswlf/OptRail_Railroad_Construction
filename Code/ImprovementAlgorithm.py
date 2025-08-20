@@ -1379,6 +1379,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                 # Create objective dictionary with current values
                 objective_dict = {
                     "driver_violation": local_solution.driver_violation,
+                    "deviation_from_desired_hours": local_solution.deviation_from_desired_hours,
                     "commute_distance": local_solution.total_commute_distance,
                     "transport_distance": local_solution.total_transport_distance,
                     "worker_count": local_solution.number_of_workers,

@@ -122,6 +122,9 @@ class InputData:
         # Dynamic tracking of solution quality
         self.site_fulfillment = 0  # Number of sites that can be fulfilled with current resources
 
+        # Work hour sum after orders are chosen
+        self.work_hour_sum = None
+
         # Load and process data from JSON file
         self._load_data()
 

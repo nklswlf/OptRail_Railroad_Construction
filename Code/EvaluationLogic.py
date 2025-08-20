@@ -689,8 +689,21 @@ class EvaluationLogic:
         self.calculate_dynamic_percentage_order(solution)               # Calculate order completion percentages
         self.calculate_cummulative_distance(solution)                   # Sum all distance components
         self.calculate_machine_count_and_utilization_time(solution)     # Calculate machine/attachment metrics
+        self.calculate_desired_work_hours(solution)
 
-    
+    def calculate_desired_work_hours(self, solution: Solution):
+        """
+        Calculate desired work hours based on planned order items.
+        """
+        solution.desired_work_hours = self.data.work_hour_sum / solution.number_of_workers
+
+        solution.deviation_from_desired_hours = 0
+
+        for worker_id, route in solution.route_plan_worker.items():
+            duration = sum(self.data.order_items[oid].duration for oid in route)
+            solution.worker_work_time[worker_id] = duration
+            solution.deviation_from_desired_hours += abs(duration - solution.desired_work_hours)
+
     def calculate_cummulative_distance(self, solution: Solution):
         """
         Calculate total distance by summing all distance components.
