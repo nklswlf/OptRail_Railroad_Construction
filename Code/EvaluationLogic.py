@@ -512,15 +512,38 @@ class EvaluationLogic:
         if move.WorkerID2 in machine_1.default_drivers:
             delta_driver_violation -= 1  # Worker2 becomes better fit
 
+        
+        # Calculate the change in deviation from desired hours
+        delta_hours_deviation = 0
+        duration_worker_1 = sum(self.data.order_items[oid].duration for oid in move.WorkerRoute1)
+        duration_worker_2 = sum(self.data.order_items[oid].duration for oid in move.WorkerRoute2)
+
+        distance_prev_worker_1 = abs(move.PreviousDurationWorker1 - move.DesiredWorkHours)
+        distance_worker_1 = abs(duration_worker_1 - move.DesiredWorkHours)
+
+        distance_prev_worker_2 = abs(move.PreviousDurationWorker2 - move.DesiredWorkHours)
+        distance_worker_2 = abs(duration_worker_2 - move.DesiredWorkHours)
+
+
+        if distance_prev_worker_1 < distance_worker_1:
+            delta_hours_deviation += abs(duration_worker_1 - move.PreviousDurationWorker1) / abs(self.data.min_duration - self.data.max_duration)
+        elif distance_prev_worker_1 > distance_worker_1:
+            delta_hours_deviation -= abs(duration_worker_1 - move.PreviousDurationWorker1) / abs(self.data.min_duration - self.data.max_duration)
+
+        if distance_prev_worker_2 < distance_worker_2:
+            delta_hours_deviation += abs(duration_worker_2 - move.PreviousDurationWorker2) / abs(self.data.min_duration - self.data.max_duration)
+        elif distance_prev_worker_2 > distance_worker_2:
+            delta_hours_deviation -= abs(duration_worker_2 - move.PreviousDurationWorker2) / abs(self.data.min_duration - self.data.max_duration)
 
         # Store individual delta components for detailed analysis
         delta_details = {
             "commute_distance": delta_commute_distance,
             "driver_violation": delta_driver_violation,
+            "deviation_from_desired_hours": delta_hours_deviation
         }
 
         # Create scalar summary (sum of both components)
-        delta_summary = delta_details["commute_distance"] + delta_details["driver_violation"]
+        delta_summary = delta_details["commute_distance"] + delta_details["driver_violation"] + delta_details["deviation_from_desired_hours"]
 
         # Return both detailed breakdown and scalar summary
         return delta_summary, delta_details
@@ -650,11 +673,39 @@ class EvaluationLogic:
         if len(move.WorkerRoute2) == 1:
             delta_worker_count += 1  # Worker 2 becomes used
 
+
+        # Calculate change in hours deviation
+        delta_hours_deviation = 0
+        worker_count = move.PreviousWorkerCount + delta_worker_count
+
+        previous_desired_hours = self.data.work_hour_sum / move.PreviousWorkerCount
+        desired_hours = self.data.work_hour_sum / worker_count
+
+        duration_worker_1 = sum(self.data.order_items[oid].duration for oid in move.WorkerRoute1)
+        duration_worker_2 = sum(self.data.order_items[oid].duration for oid in move.WorkerRoute2)
+
+        distance_prev_worker_1 = abs(move.PreviousDurationWorker1 - previous_desired_hours)
+        distance_worker_1 = abs(duration_worker_1 - desired_hours)
+
+        distance_prev_worker_2 = abs(move.PreviousDurationWorker2 - previous_desired_hours)
+        distance_worker_2 = abs(duration_worker_2 - desired_hours)
+
+        if distance_prev_worker_1 < distance_worker_1:
+            delta_hours_deviation += abs(duration_worker_1 - move.PreviousDurationWorker1) / abs(self.data.min_duration - self.data.max_duration)
+        elif distance_prev_worker_1 > distance_worker_1:
+            delta_hours_deviation -= abs(duration_worker_1 - move.PreviousDurationWorker1) / abs(self.data.min_duration - self.data.max_duration)
+
+        if distance_prev_worker_2 < distance_worker_2:
+            delta_hours_deviation += abs(duration_worker_2 - move.PreviousDurationWorker2) / abs(self.data.min_duration - self.data.max_duration)
+        elif distance_prev_worker_2 > distance_worker_2:
+            delta_hours_deviation -= abs(duration_worker_2 - move.PreviousDurationWorker2) / abs(self.data.min_duration - self.data.max_duration)
+
         # Store detailed breakdown
         delta_details = {
             "commute_distance": delta_commute_distance,
             "driver_violation": delta_driver_violation,
             "worker_count": delta_worker_count,
+            "deviation_from_desired_hours": delta_hours_deviation
         }
 
         # Create scalar summary

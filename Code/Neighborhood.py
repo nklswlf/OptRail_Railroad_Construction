@@ -308,7 +308,6 @@ class InsertShiftMove(BaseMove):
     def __str__(self):
         return f"Machine: {self.MachineID} \nMachine Route: {self.MachineRoute} \nMachine Route Index: {self.MachineRouteIndex} \nWorker: {self.WorkerID} \nWorker Route: {self.WorkerRoute} \nWorker Route Index: {self.WorkerRouteIndex} \nOrder Item ID: {self.OrderItemID} \nDynamic Percentage: {self.DynamicPercentage}"
 
-
 class InsertShiftNeighborhood(OutputNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
 
@@ -701,8 +700,6 @@ class SwapShiftExternalMove(BaseMove):
             self.MachineRouteExt.insert(self.MachineRouteIndexExt, self.OrderItemIDExt)
 
             self.MachineRouteInt.remove(self.OrderItemIDInt)
-
-
 
 class SwapShiftExternalNeighborhood(OutputNeighborhood):
     
@@ -2693,7 +2690,7 @@ class SwapShiftMachineNeighborhood(TimeNeighborhood):
 class ReplaceShiftWorkerMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
     
-    def __init__(self, worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index, order_item_id, machine_id):
+    def __init__(self, worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index, order_item_id, machine_id, worker_count, previous_duration_worker_1, previous_duration_worker_2):
 
         self.WorkerRoute1 = list(worker_route_1)
         self.WorkerRoute2 = list(worker_route_2)
@@ -2710,6 +2707,11 @@ class ReplaceShiftWorkerMove(BaseMove):
         self.WorkerRoute1.remove(self.OrderItemID)
 
         self.MachineID = machine_id
+
+        self.PreviousWorkerCount = worker_count
+
+        self.PreviousDurationWorker1 = previous_duration_worker_1
+        self.PreviousDurationWorker2 = previous_duration_worker_2
 
 class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
@@ -2866,7 +2868,7 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
                             machine_id = m_id
                             break
                     if machine_id is not None:
-                        move = ReplaceShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, insertion_position, order_item_id, machine_id)
+                        move = ReplaceShiftWorkerMove(worker_id_1, worker_id_2, worker_route_1, worker_route_2, insertion_position, order_item_id, machine_id, solution.number_of_workers, solution.worker_work_time[worker_id_1], solution.worker_work_time[worker_id_2])
                         # Check if the move is feasible for both workers
                         self.Moves.append(move)
 
@@ -2912,11 +2914,13 @@ class ReplaceShiftWorkerNeighborhood(TimeNeighborhood):
 
 class SwapShiftWorkerMove(BaseMove):
     """ Represents the swap of the element at IndexA with the element at IndexB for a given permutation (= solution). """
-    
-    def __init__(self, worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index_1, worker_route_index_2, order_item_id_1, order_item_id_2, machine_id_1, machine_id_2):
+
+    def __init__(self, worker_id_1, worker_id_2, worker_route_1, worker_route_2, worker_route_index_1, worker_route_index_2, order_item_id_1, order_item_id_2, machine_id_1, machine_id_2, desired_work_hours, previous_duration_worker_1, previous_duration_worker_2):
 
         self.WorkerRoute1 = list(worker_route_1)
         self.WorkerRoute2 = list(worker_route_2)
+        self.PreviousDurationWorker1 = previous_duration_worker_1
+        self.PreviousDurationWorker2 = previous_duration_worker_2
 
         self.WorkerRouteIndex1 = worker_route_index_1
         self.WorkerRouteIndex2 = worker_route_index_2
@@ -2935,6 +2939,9 @@ class SwapShiftWorkerMove(BaseMove):
 
         self.MachineID1 = machine_id_1
         self.MachineID2 = machine_id_2
+
+        self.DesiredWorkHours = desired_work_hours
+
 
 class SwapShiftWorkerNeighborhood(TimeNeighborhood):
     """ Contains all $n choose 2$ swap moves for a given permutation (= solution). """
@@ -3221,7 +3228,7 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
                         worker_route_1, worker_route_2,
                         pos_1, pos_2,
                         order_item_id_1, order_item_id_2,
-                        machine_id_1, machine_id_2
+                        machine_id_1, machine_id_2, solution.desired_work_hours, solution.worker_work_time[worker_id_1], solution.worker_work_time[worker_id_2]
                     )
                     valid_moves.append(move)
             # Case 2: Swap moves where both order items go into the same position.
@@ -3239,7 +3246,7 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
                             worker_route_1, worker_route_2,
                             pos_info1[0], pos_info2[0],
                             order_item_id_1, order_item_id_2,
-                            machine_id_1, machine_id_2
+                            machine_id_1, machine_id_2, solution.desired_work_hours, solution.worker_work_time[worker_id_1], solution.worker_work_time[worker_id_2]
                         )
                         valid_moves.append(move)
             # Case 3: Swap moves where one order item moves to the same position and the other to a different position.
@@ -3257,7 +3264,7 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
                             worker_route_1, worker_route_2,
                             pos_info1[0], pos_2,
                             order_item_id_1, order_item_id_2,
-                            machine_id_1, machine_id_2
+                            machine_id_1, machine_id_2, solution.desired_work_hours, solution.worker_work_time[worker_id_1], solution.worker_work_time[worker_id_2]
                         )
                         valid_moves.append(move)
             # Case 4: The other way around.
@@ -3275,7 +3282,7 @@ class SwapShiftWorkerNeighborhood(TimeNeighborhood):
                             worker_route_1, worker_route_2,
                             pos_1, pos_info2[0],
                             order_item_id_1, order_item_id_2,
-                            machine_id_1, machine_id_2
+                            machine_id_1, machine_id_2, solution.desired_work_hours, solution.worker_work_time[worker_id_1], solution.worker_work_time[worker_id_2]
                         )
                         valid_moves.append(move)
 

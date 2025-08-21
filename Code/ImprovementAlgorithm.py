@@ -1153,13 +1153,13 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         self.NumberOfSolutions = {}
 
         # Neighborhood types with their corresponding objectives
-        self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count'],
+        self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count', 'deviation_from_desired_hours'],
                                     'Replace_Shift_Machine': ['driver_violation', 'transport_distance', 'machine_count'],
-                                    'Swap_Shift_Worker': ['driver_violation', 'commute_distance'],
+                                    'Swap_Shift_Worker': ['driver_violation', 'commute_distance', 'deviation_from_desired_hours'],
                                     'Swap_Shift_Machine': ['driver_violation', 'transport_distance']}
         
         # Complete list of optimization objectives
-        self.objectives = ['driver_violation', 'commute_distance', 'transport_distance', 'worker_count', 'machine_count']
+        self.objectives = ['driver_violation', 'deviation_from_desired_hours', 'commute_distance', 'transport_distance', 'worker_count', 'machine_count']
 
         # Move type configuration
         self.max_traversal_moves = 1
@@ -1294,11 +1294,11 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         Returns:
             Unnormalized value
         """
-        if objective == 'transport_distance' or objective == 'attachment_distance':
+        if objective == 'transport_distance':
             return value * (self.InputData.max_transport_distance - self.InputData.min_transport_distance) + self.InputData.min_transport_distance
         elif objective == 'commute_distance':
             return value * (self.InputData.max_work_distance + self.InputData.min_work_distance) + self.InputData.min_work_distance
-        elif objective == 'driver_violation' or objective == 'attachment_count' or objective == 'worker_count' or objective == 'machine_count':
+        elif objective == 'driver_violation' or objective == 'worker_count' or objective == 'machine_count' or objective == 'deviation_from_desired_hours':
             return value
     
     def multiple_moves(self, solution:Solution, move_type:str, local_rng):

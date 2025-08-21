@@ -672,6 +672,8 @@ class InputData:
         self._average_work_distance = sum(sum(row) for row in self._work_routes) / (len(self._work_routes)*len(self._work_routes[0]))
         self._min_work_distance = (min(min(row) for row in self._work_routes if any(row)))
         self._max_work_distance = (max(max(row) for row in self._work_routes if any(row)))
+        self._max_duration = max(order_item.duration for order_item in self._order_items)
+        self._min_duration = min(order_item.duration for order_item in self._order_items)
 
         # Establish order-to-order-item hierarchical relationships
         self.connect_order_item_to_order()
@@ -864,6 +866,16 @@ class InputData:
     def max_work_distance(self) -> float:
         """Returns the maximum work commute distance for normalization."""
         return self._max_work_distance
+
+    @property
+    def min_duration(self) -> float:
+        """Returns the minimum duration of all order items for normalization."""
+        return self._min_duration
+
+    @property
+    def max_duration(self) -> float:
+        """Returns the maximum duration of all order items for normalization."""
+        return self._max_duration
 
 
 class Order:
