@@ -535,15 +535,29 @@ class EvaluationLogic:
         elif distance_prev_worker_2 > distance_worker_2:
             delta_hours_deviation -= abs(duration_worker_2 - move.PreviousDurationWorker2) / abs(self.data.min_duration - self.data.max_duration)
 
+        # Calculate the change in site knowledge violation
+        delta_site_knowledge = 0
+        if self.data.order_items[move.OrderItemID1].site_number in self.data.workers[move.WorkerID2].site_knowledge:
+            delta_site_knowledge -= 1  # Improvement: Worker2 is familiar with the site of OrderItemID1
+        if self.data.order_items[move.OrderItemID2].site_number in self.data.workers[move.WorkerID1].site_knowledge:
+            delta_site_knowledge -= 1  # Improvement: Worker1 is familiar with the site of OrderItemID2
+        if self.data.order_items[move.OrderItemID1].site_number in self.data.workers[move.WorkerID1].site_knowledge:
+            delta_site_knowledge += 1  # Deterioration: Worker1 is no longer linked to the site of OrderItemID1
+        if self.data.order_items[move.OrderItemID2].site_number in self.data.workers[move.WorkerID2].site_knowledge:
+            delta_site_knowledge += 1  # Deterioration: Worker2 is no longer linked to the site of OrderItemID2
+
+        
+
         # Store individual delta components for detailed analysis
         delta_details = {
             "commute_distance": delta_commute_distance,
             "driver_violation": delta_driver_violation,
+            "site_knowledge_violation": delta_site_knowledge,
             "deviation_from_desired_hours": delta_hours_deviation
         }
 
         # Create scalar summary (sum of both components)
-        delta_summary = delta_details["commute_distance"] + delta_details["driver_violation"] + delta_details["deviation_from_desired_hours"]
+        delta_summary = delta_details["commute_distance"] + delta_details["driver_violation"] + delta_details["site_knowledge_violation"] + delta_details["deviation_from_desired_hours"]
 
         # Return both detailed breakdown and scalar summary
         return delta_summary, delta_details
@@ -700,10 +714,20 @@ class EvaluationLogic:
         elif distance_prev_worker_2 > distance_worker_2:
             delta_hours_deviation -= abs(duration_worker_2 - move.PreviousDurationWorker2) / abs(self.data.min_duration - self.data.max_duration)
 
+        # Calculate change in site knowledge violation
+        delta_site_knowledge_violation = 0
+        if self.data.order_items[move.OrderItemID].site_number in self.data.workers[move.WorkerID1].site_knowledge:
+            delta_site_knowledge_violation += 1  # Worker 1 loses good assignment
+        if self.data.order_items[move.OrderItemID].site_number in self.data.workers[move.WorkerID2].site_knowledge:
+            delta_site_knowledge_violation -= 1   # Worker 2 gains good assignment
+
+
+
         # Store detailed breakdown
         delta_details = {
             "commute_distance": delta_commute_distance,
             "driver_violation": delta_driver_violation,
+            "site_knowledge_violation": delta_site_knowledge_violation,
             #"worker_count": delta_worker_count,
             "deviation_from_desired_hours": delta_hours_deviation
         }
@@ -712,6 +736,8 @@ class EvaluationLogic:
         delta_summary = (
             delta_details["commute_distance"]
             + delta_details["driver_violation"]
+            + delta_details["site_knowledge_violation"]
+            + delta_details["deviation_from_desired_hours"]
             #+ delta_details["worker_count"]
         )
 
@@ -741,6 +767,22 @@ class EvaluationLogic:
         self.calculate_cummulative_distance(solution)                   # Sum all distance components
         self.calculate_machine_count_and_utilization_time(solution)     # Calculate machine/attachment metrics
         self.calculate_desired_work_hours(solution)
+        self.calculate_site_knowledge_violation(solution)                     # Calculate site knowledge metric
+
+
+    def calculate_site_knowledge_violation(self, solution: Solution):
+        
+        solution.site_knowledge_violation = 0
+
+        # Check for violations
+        for worker_id, route in solution.route_plan_worker.items():
+            for order_item_id in route:
+                order_item = self.data.order_items[order_item_id]
+                worker = self.data.workers[worker_id]
+                if order_item.site_number not in worker.site_knowledge:
+                    solution.site_knowledge_violation += 1
+
+
 
     def calculate_desired_work_hours(self, solution: Solution):
         """

@@ -84,7 +84,7 @@ instances = ["Construction_RealLife_2024_7_1_2.json",
             "Construction_RealLife_2024_10_2_2.json"]
 '''
 # Single instance for focused testing and development --> used in thesis
-instances = ["Construction_a10_o107_m5_an57_ar12.json"]
+instances = ["Construction_a10_o107_m5_an57_ar12_paper.json"]
 
 
 

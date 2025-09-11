@@ -242,10 +242,18 @@ class InputData:
         """
         for order in self.orders:
             order.order_items = [order_item for order_item in self.order_items if order_item.order_number == order.order_number]
+        
+        # Add site number to order items for site knowledge checks
+        for order_item in self.order_items:
+            for order in self.orders:
+                if order_item.order_number == order.order_number:
+                    order_item.site_number = order.site_number
+                    #print(f"Order item {order_item.id} assigned to site {order_item.site_number}.")
+                    break
 
-
-
-
+        
+            
+        
 
     def calculate_complexity(self):
         """
@@ -287,7 +295,7 @@ class InputData:
         # 3. Rank by average worker commute distance (longer = higher complexity)
         worker_distances = {
             order.order_number: sum(
-                self.work_routes[worker.personal_number][order.site_number]
+                self.work_routes[worker.personal_number][order.order_number]
                 for worker in self.workers
             ) / len(self.workers)
             for order in self.orders
@@ -302,7 +310,7 @@ class InputData:
         # 4. Rank by average transport distance to other sites (longer = higher complexity)
         transport_distances = {
             order.order_number: sum(
-                self.transport_routes[order.site_number][site]
+                self.transport_routes[order.order_number][site]
                 for site in range(len(self.transport_routes))
             ) / len(self.transport_routes)
             for order in self.orders
@@ -468,7 +476,7 @@ class InputData:
         # 3. Rank by average worker commute distance (shorter = higher priority)
         worker_distances = {
             order.order_number: sum(
-                self.work_routes[worker.personal_number][order.site_number]
+                self.work_routes[worker.personal_number][order.order_number]
                 for worker in self.workers
             ) / len(self.workers)
             for order in self.orders
@@ -482,7 +490,7 @@ class InputData:
         # 4. Rank by average transport distance (shorter = higher priority)
         transport_distances = {
             order.order_number: sum(
-                self.transport_routes[order.site_number][site]
+                self.transport_routes[order.order_number][site]
                 for site in range(len(self.transport_routes))
             ) / len(self.transport_routes)
             for order in self.orders
@@ -1252,6 +1260,7 @@ class Worker:
         self._name = str(json_data.get("Name", ""))
         self._qualifications = json_data.get("Qualifikationen", [])
         self._residence = json_data.get("Wohnort", {"Item1": 0.0, "Item2": 0.0})
+        self._site_knowledge = json_data.get("BaustellenKenntnisse", [])
         
         # Scheduling and compatibility data (populated during data transformation)
         self._possible_order_items = dict()     # Order items this worker can perform
@@ -1408,6 +1417,11 @@ class Worker:
     def night_shift_ids(self) -> List[int]:
         """Returns list of night shift order item IDs for compliance tracking."""
         return self._night_shift_ids
+    
+    @property
+    def site_knowledge(self) -> List[int]:
+        """Returns list of construction site numbers this worker is familiar with."""
+        return self._site_knowledge
 
     def __str__(self):
         """Returns string representation of the worker with key information."""

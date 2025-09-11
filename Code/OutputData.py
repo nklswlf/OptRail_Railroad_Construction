@@ -100,6 +100,7 @@ class Solution:
         self.number_of_workers = -0            # Count of utilized workers
         self.number_of_machines = -0           # Count of utilized machines
         self.driver_violation = -0             # Safety constraint violations
+        self.site_knowledge_violation = -0      # Site knowledge constraint violations
         self.desired_work_hours = -0
         self.deviation_from_desired_hours = -0
 
@@ -130,6 +131,7 @@ class Solution:
                 #f"Dynamic percentage: {self.total_dynamic_percentage}\n"
                 #f"Number of finished order items: {self.number_of_finished_order_items}\n"
                 f"Driver violation: {self.driver_violation}\n"
+                f"Site knowledge violation: {self.site_knowledge_violation}\n"
                 f"Deviation from desired work hours: {round(self.deviation_from_desired_hours, 2)}\n"
                 f"Commute distance: {round(self.total_commute_distance, 2)}\n"
                 f"Transport distance: {round(self.total_transport_distance, 2)}\n"
@@ -395,6 +397,7 @@ class ParetoSolutions:
             ("total_transport_distance", "min"),         # Machine transport distance  
             ("driver_violation", "min"),                  # Safety constraint violations
             ("deviation_from_desired_hours", "min"),     # Work hours deviation
+            ("site_knowledge_violation", "min"),         # Site knowledge constraint violations
             #("number_of_workers", "min"),                # Worker count minimization
             #("number_of_machines", "min"),               # Machine count minimization
         ]
@@ -426,6 +429,7 @@ class ParetoSolutions:
                 sol.total_transport_distance,
                 sol.driver_violation,
                 sol.deviation_from_desired_hours,
+                sol.site_knowledge_violation,
                 sol.number_of_workers,
                 sol.number_of_machines
             )
@@ -580,10 +584,9 @@ class ParetoSolutions:
             [
                 sol.driver_violation,
                 sol.deviation_from_desired_hours,
+                sol.site_knowledge_violation,
                 sol.total_commute_distance,
                 sol.total_transport_distance,
-                sol.number_of_workers,
-                sol.number_of_machines
             ]
             for sol in self.ParetoFront
         ])
@@ -612,7 +615,8 @@ class ParetoSolutions:
                         "driver_violation": float(v[0]),
                         "deviation_from_desired_hours": float(v[1]),
                         "commute_distance": float(v[2]),
-                        "transport_distance": float(v[3])
+                        "transport_distance": float(v[3]),
+                        "site_knowledge_violation": float(v[4]),
                         #"worker_count": float(v[4]),
                         #"machine_count": float(v[5])
                     })
@@ -715,6 +719,7 @@ class ParetoSolutions:
             objective_dict = {
                 "driver_violation": new_solution.driver_violation,
                 "deviation_from_desired_hours": new_solution.deviation_from_desired_hours,
+                "site_knowledge_violation": new_solution.site_knowledge_violation,
                 "commute_distance": new_solution.total_commute_distance,
                 "transport_distance": new_solution.total_transport_distance
                 #"worker_count": new_solution.number_of_workers,
@@ -783,6 +788,7 @@ class ParetoSolutions:
             curr_obj = {
                 "driver_violation": current_solution.driver_violation,
                 "deviation_from_desired_hours": current_solution.deviation_from_desired_hours,
+                "site_knowledge_violation": current_solution.site_knowledge_violation,
                 "commute_distance": current_solution.total_commute_distance,
                 "transport_distance": current_solution.total_transport_distance
                 #"machine_count": current_solution.number_of_machines,
@@ -796,6 +802,7 @@ class ParetoSolutions:
         objectives = [
             "driver_violation",
             "deviation_from_desired_hours",
+            "site_knowledge_violation",
             "commute_distance",
             "transport_distance"
             #"machine_count",
@@ -843,6 +850,7 @@ class ParetoSolutions:
         ordered_objectives = [
             ("driver_violation", lambda x: x.driver_violation),
             ("deviation_from_desired_hours", lambda x: x.deviation_from_desired_hours),
+            ("site_knowledge_violation", lambda x: x.site_knowledge_violation),
             ("commute_distance", lambda x: x.total_commute_distance),
             ("transport_distance", lambda x: x.total_transport_distance),
             ("machines", lambda x: x.number_of_machines),
@@ -902,11 +910,12 @@ class ParetoSolutions:
         # Define objective extraction functions
         objective_map = {
             "driver_violation": lambda x: x.driver_violation,
+            "site_knowledge_violation": lambda x: x.site_knowledge_violation,
             "deviation_from_desired_hours": lambda x: x.deviation_from_desired_hours,
             "commute_distance": lambda x: x.total_commute_distance,
             "transport_distance": lambda x: x.total_transport_distance,
-            "machines": lambda x: x.number_of_machines,
-            "workers": lambda x: x.number_of_workers
+            #"machines": lambda x: x.number_of_machines,
+            #"workers": lambda x: x.number_of_workers
         }
 
         selected_solutions = []
@@ -1008,6 +1017,7 @@ class ParetoSolutions:
                 "Orders": solution.number_of_finished_orders,
                 "Order Items": solution.number_of_finished_order_items,
                 "Driver Violation": solution.driver_violation,
+                "Site Knowledge Violation": solution.site_knowledge_violation,
                 "Deviation from Desired Hours": round(solution.deviation_from_desired_hours, 2),
                 "Commute Distance": round(solution.total_commute_distance, 2),
                 "Transport Machines": round(solution.total_transport_distance, 2),
@@ -1020,10 +1030,10 @@ class ParetoSolutions:
 
         # Apply hierarchical sorting (primary completion metrics, then secondary objectives)
         df = df.sort_values(
-            by=["Orders", "Order Items", "Driver Violation", "Deviation from Desired Hours", "Commute Distance",
+            by=["Orders", "Order Items",  "Driver Violation", "Site Knowledge Violation", "Deviation from Desired Hours", "Commute Distance",
                 "Transport Machines"],
                 #"Machines", "Workers"],
-            ascending=[False, False, True, True, True, True]
+            ascending=[False, False, True, True, True, True, True]
         )
 
         # Display formatted table
