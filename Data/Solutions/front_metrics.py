@@ -135,12 +135,21 @@ def Run(instance, algorithms):
 
     # === Problem objectives definition ===
     global objectives
+    #objectives = [
+    #    "Driver Violation",      # Constraint violation penalties
+    #    "Commute Distance",      # Worker travel distances
+    #    "Transport Machines",    # Machine transportation costs
+    #    "Machines",             # Required machine resources
+    #    "Workers"              # Required worker resources
+    #]
+    # === Erweiterte Problemziele (Objectives) ===
+    # Beispiel: Neue Objectives für zusätzliche Analyse
+    # Sie können beliebige neue Ziele hinzufügen, z.B.:
     objectives = [
-        "Driver Violation",      # Constraint violation penalties
-        "Commute Distance",      # Worker travel distances
-        "Transport Machines",    # Machine transportation costs
-        "Machines",             # Required machine resources
-        "Workers"              # Required worker resources
+        "Driver Violation",                  # Constraint violation penalties
+        "Deviation from Desired Hours",      # Abweichung von Soll-Arbeitsstunden
+        "Commute Distance",                  # Worker travel distances
+        "Transport Machines"                 # Machine transportation distances
     ]
 
     # === Data loading and preprocessing ===

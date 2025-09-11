@@ -150,8 +150,8 @@ class EvaluationLogic:
             "commute_distance": delta_commute_distance,                   # Extra worker commute distance
             "transport_distance": delta_transport_distance,               # Extra machine transport distance
             "driver_violation": delta_driver_violation,                   # Driver assignment violation penalty
-            "machine_count": delta_machine_count,                         # Number of new machines used
-            "worker_count": delta_worker_count                            # Number of new workers used
+            #"machine_count": delta_machine_count,                         # Number of new machines used
+            #"worker_count": delta_worker_count                            # Number of new workers used
         }
 
 
@@ -163,8 +163,8 @@ class EvaluationLogic:
             delta_details["commute_distance"]
             + delta_details["transport_distance"]
             + delta_details["driver_violation"]
-            + delta_details["machine_count"]
-            + delta_details["worker_count"]
+            #+ delta_details["machine_count"]
+            #+ delta_details["worker_count"]
         ]
 
 
@@ -312,7 +312,7 @@ class EvaluationLogic:
             "commute_distance": delta_commute_distance,                   # Change in worker commute distance
             "transport_distance": delta_transport_distance,               # Change in machine transport distance
             "driver_violation": delta_driver_violation,                   # Change in driver assignment violations
-            "machine_count": delta_machine_count                          # Change in number of machines used
+            #"machine_count": delta_machine_count                          # Change in number of machines used
 
         }
 
@@ -324,7 +324,7 @@ class EvaluationLogic:
             delta_details["commute_distance"]
             + delta_details["transport_distance"]
             + delta_details["driver_violation"]
-            + delta_details["machine_count"],
+            #+ delta_details["machine_count"],
         ]
 
         # Return both detailed breakdown and aggregated summary
@@ -628,14 +628,14 @@ class EvaluationLogic:
         delta_details = {
             "transport_distance": delta_transport_distance,
             "driver_violation": delta_driver_violation,
-            "machine_count": delta_machine_count,
+            #"machine_count": delta_machine_count,
         }
 
         # Create scalar summary
         delta_summary = (
             delta_details["transport_distance"]
             + delta_details["driver_violation"]
-            + delta_details["machine_count"]
+            #+ delta_details["machine_count"]
         )
 
         return delta_summary, delta_details
@@ -704,7 +704,7 @@ class EvaluationLogic:
         delta_details = {
             "commute_distance": delta_commute_distance,
             "driver_violation": delta_driver_violation,
-            "worker_count": delta_worker_count,
+            #"worker_count": delta_worker_count,
             "deviation_from_desired_hours": delta_hours_deviation
         }
 
@@ -712,7 +712,7 @@ class EvaluationLogic:
         delta_summary = (
             delta_details["commute_distance"]
             + delta_details["driver_violation"]
-            + delta_details["worker_count"]
+            #+ delta_details["worker_count"]
         )
 
         return delta_summary, delta_details

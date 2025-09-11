@@ -395,8 +395,8 @@ class ParetoSolutions:
             ("total_transport_distance", "min"),         # Machine transport distance  
             ("driver_violation", "min"),                  # Safety constraint violations
             ("deviation_from_desired_hours", "min"),     # Work hours deviation
-            ("number_of_workers", "min"),                # Worker count minimization
-            ("number_of_machines", "min"),               # Machine count minimization
+            #("number_of_workers", "min"),                # Worker count minimization
+            #("number_of_machines", "min"),               # Machine count minimization
         ]
 
     def PurgeParetoFront(self):
@@ -612,9 +612,9 @@ class ParetoSolutions:
                         "driver_violation": float(v[0]),
                         "deviation_from_desired_hours": float(v[1]),
                         "commute_distance": float(v[2]),
-                        "transport_distance": float(v[3]),
-                        "worker_count": float(v[4]),
-                        "machine_count": float(v[5])
+                        "transport_distance": float(v[3])
+                        #"worker_count": float(v[4]),
+                        #"machine_count": float(v[5])
                     })
                     break
 
@@ -716,9 +716,9 @@ class ParetoSolutions:
                 "driver_violation": new_solution.driver_violation,
                 "deviation_from_desired_hours": new_solution.deviation_from_desired_hours,
                 "commute_distance": new_solution.total_commute_distance,
-                "transport_distance": new_solution.total_transport_distance,
-                "worker_count": new_solution.number_of_workers,
-                "machine_count": new_solution.number_of_machines
+                "transport_distance": new_solution.total_transport_distance
+                #"worker_count": new_solution.number_of_workers,
+                #"machine_count": new_solution.number_of_machines
             }
         elif isinstance(new_solution, dict):
             objective_dict = new_solution
@@ -784,9 +784,9 @@ class ParetoSolutions:
                 "driver_violation": current_solution.driver_violation,
                 "deviation_from_desired_hours": current_solution.deviation_from_desired_hours,
                 "commute_distance": current_solution.total_commute_distance,
-                "transport_distance": current_solution.total_transport_distance,
-                "machine_count": current_solution.number_of_machines,
-                "worker_count": current_solution.number_of_workers
+                "transport_distance": current_solution.total_transport_distance
+                #"machine_count": current_solution.number_of_machines,
+                #"worker_count": current_solution.number_of_workers
             }
 
         # Check dominance conditions for all minimization objectives
@@ -797,9 +797,9 @@ class ParetoSolutions:
             "driver_violation",
             "deviation_from_desired_hours",
             "commute_distance",
-            "transport_distance",
-            "machine_count",
-            "worker_count"
+            "transport_distance"
+            #"machine_count",
+            #"worker_count"
         ]
 
         for key in objectives:
@@ -1011,8 +1011,8 @@ class ParetoSolutions:
                 "Deviation from Desired Hours": round(solution.deviation_from_desired_hours, 2),
                 "Commute Distance": round(solution.total_commute_distance, 2),
                 "Transport Machines": round(solution.total_transport_distance, 2),
-                "Machines": solution.number_of_machines,
-                "Workers": solution.number_of_workers
+                #"Machines": solution.number_of_machines,
+                #"Workers": solution.number_of_workers
             })
 
         # Create formatted DataFrame
@@ -1021,9 +1021,9 @@ class ParetoSolutions:
         # Apply hierarchical sorting (primary completion metrics, then secondary objectives)
         df = df.sort_values(
             by=["Orders", "Order Items", "Driver Violation", "Deviation from Desired Hours", "Commute Distance",
-                "Transport Machines", 
-                "Machines", "Workers"],
-            ascending=[False, False, True, True, True, True, True, True]
+                "Transport Machines"],
+                #"Machines", "Workers"],
+            ascending=[False, False, True, True, True, True]
         )
 
         # Display formatted table

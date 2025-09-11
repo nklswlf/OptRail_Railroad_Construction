@@ -1153,13 +1153,13 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
         self.NumberOfSolutions = {}
 
         # Neighborhood types with their corresponding objectives
-        self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'worker_count', 'deviation_from_desired_hours'],
-                                    'Replace_Shift_Machine': ['driver_violation', 'transport_distance', 'machine_count'],
+        self.NeighborhoodTypes = {  'Replace_Shift_Worker': ['driver_violation', 'commute_distance', 'deviation_from_desired_hours'],# 'worker_count'],
+                                    'Replace_Shift_Machine': ['driver_violation', 'transport_distance'],# 'machine_count'],
                                     'Swap_Shift_Worker': ['driver_violation', 'commute_distance', 'deviation_from_desired_hours'],
                                     'Swap_Shift_Machine': ['driver_violation', 'transport_distance']}
         
         # Complete list of optimization objectives
-        self.objectives = ['driver_violation', 'deviation_from_desired_hours', 'commute_distance', 'transport_distance', 'worker_count', 'machine_count']
+        self.objectives = ['driver_violation', 'deviation_from_desired_hours', 'commute_distance', 'transport_distance']#, 'worker_count', 'machine_count']
 
         # Move type configuration
         self.max_traversal_moves = 1
@@ -1298,7 +1298,7 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
             return value * (self.InputData.max_transport_distance - self.InputData.min_transport_distance) + self.InputData.min_transport_distance
         elif objective == 'commute_distance':
             return value * (self.InputData.max_work_distance + self.InputData.min_work_distance) + self.InputData.min_work_distance
-        elif objective == 'driver_violation' or objective == 'worker_count' or objective == 'machine_count' or objective == 'deviation_from_desired_hours':
+        elif objective == 'driver_violation' or objective == 'deviation_from_desired_hours': # or objective == 'machine_count' or objective == 'worker_count':
             return value
     
     def multiple_moves(self, solution:Solution, move_type:str, local_rng):
@@ -1381,9 +1381,9 @@ class TwoPhaseSimulatedAnnealing(ImprovementAlgorithm):
                     "driver_violation": local_solution.driver_violation,
                     "deviation_from_desired_hours": local_solution.deviation_from_desired_hours,
                     "commute_distance": local_solution.total_commute_distance,
-                    "transport_distance": local_solution.total_transport_distance,
-                    "worker_count": local_solution.number_of_workers,
-                    "machine_count": local_solution.number_of_machines
+                    "transport_distance": local_solution.total_transport_distance
+                    #"worker_count": local_solution.number_of_workers,
+                    #"machine_count": local_solution.number_of_machines
                 }
 
                 # Update affected objectives with delta values
